@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  * SeatSBT = "цифровой гражданин" (Soulbound)
  * - не передается
  * - хранит статус
- * - хранит привязанный SeatTamga (смарт-кошелек)
+ * - хранит привязанный SeatAccount (смарт-кошелек)
  */
 contract SeatSBT is ERC721, AccessControl {
     bytes32 public constant REGISTRAR_ROLE = keccak256("REGISTRAR_ROLE");
@@ -23,7 +23,7 @@ contract SeatSBT is ERC721, AccessControl {
     uint256 public nextId = 1;
 
     mapping(uint256 => Status) public statusOf;
-    mapping(uint256 => address) public tamgaOf; // seatId -> SeatTamga
+    mapping(uint256 => address) public accountOf; // seatId -> SeatAccount
 
     constructor() ERC721("INOMAD Seat", "SEAT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -41,9 +41,9 @@ contract SeatSBT is ERC721, AccessControl {
         statusOf[seatId] = s;
     }
 
-    function setTamga(uint256 seatId, address seatTamga) external onlyRole(REGISTRAR_ROLE) {
+    function setAccount(uint256 seatId, address seatAccount) external onlyRole(REGISTRAR_ROLE) {
         require(_ownerOf(seatId) != address(0), "Seat: nonexistent");
-        tamgaOf[seatId] = seatTamga;
+        accountOf[seatId] = seatAccount;
     }
 
     function isCitizen(uint256 seatId) external view returns (bool) {

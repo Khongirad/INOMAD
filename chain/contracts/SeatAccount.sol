@@ -5,12 +5,12 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 
 /**
- * SeatTamga = "печать/исполнитель/счет" для SeatSBT
- * - привязана к seatId (SeatSBT)
+ * SeatAccount = "печать/исполнитель/счет" для SeatSBT
+ * - привязан к seatId (SeatSBT)
  * - controller = EOA (MVP)
  * Позже controller заменяем на Passkey/WebAuthn или AA / multisig.
  */
-contract SeatTamga {
+contract SeatAccount {
     using Address for address;
 
     address public immutable seatSbt;
@@ -47,8 +47,8 @@ contract SeatTamga {
     receive() external payable {}
 }
 
-contract SeatTamgaFactory {
-    event TamgaCreated(uint256 indexed seatId, address tamga, address controller, bytes32 salt);
+contract SeatAccountFactory {
+    event AccountCreated(uint256 indexed seatId, address account, address controller, bytes32 salt);
 
     address public immutable seatSbt;
 
@@ -58,7 +58,7 @@ contract SeatTamgaFactory {
 
     function predictAddress(uint256 seatId, address controller, bytes32 salt) public view returns (address) {
         bytes memory bytecode = abi.encodePacked(
-            type(SeatTamga).creationCode,
+            type(SeatAccount).creationCode,
             abi.encode(seatSbt, seatId, controller)
         );
         bytes32 codeHash = keccak256(bytecode);
@@ -67,15 +67,18 @@ contract SeatTamgaFactory {
         )))));
     }
 
-    function createTamga(uint256 seatId, address controller, bytes32 salt) external returns (address tamga) {
+    function createAccount(uint256 seatId, address controller, bytes32 salt)
+        external
+        returns (address account)
+    {
         bytes memory bytecode = abi.encodePacked(
-            type(SeatTamga).creationCode,
+            type(SeatAccount).creationCode,
             abi.encode(seatSbt, seatId, controller)
         );
         assembly {
-            tamga := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
-            if iszero(tamga) { revert(0, 0) }
+            account := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+            if iszero(account) { revert(0, 0) }
         }
-        emit TamgaCreated(seatId, tamga, controller, salt);
+        emit AccountCreated(seatId, account, controller, salt);
     }
 }

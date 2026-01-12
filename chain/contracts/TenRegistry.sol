@@ -5,14 +5,14 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 
 import "./SeatSBT.sol";
-import "./SeatTamga.sol";
+import "./SeatAccount.sol";
 import "./CentralBank.sol";
 
 contract TenRegistry is AccessControl {
     bytes32 public constant REGISTRAR_ROLE = keccak256("REGISTRAR_ROLE");
 
     SeatSBT public immutable seat;
-    SeatTamgaFactory public immutable factory;
+    SeatAccountFactory public immutable factory;
     CentralBank public immutable bank;
 
     struct Ten {
@@ -26,9 +26,9 @@ contract TenRegistry is AccessControl {
     event TenProposed(uint256 indexed tenId, address indexed proposer);
     event TenApproved(uint256 indexed tenId);
 
-    constructor(address seatSbt, address seatTamgaFactory, address centralBank) {
+    constructor(address seatSbt, address seatAccountFactory, address centralBank) {
         seat = SeatSBT(seatSbt);
-        factory = SeatTamgaFactory(seatTamgaFactory);
+        factory = SeatAccountFactory(seatAccountFactory);
         bank = CentralBank(centralBank);
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -41,11 +41,7 @@ contract TenRegistry is AccessControl {
             require(IERC721(address(seat)).ownerOf(seatIds[i]) != address(0), "Seat nonexistent");
         }
 
-        tens.push(Ten({
-            seats: seatIds,
-            approved: false,
-            proposer: msg.sender
-        }));
+        tens.push(Ten({ seats: seatIds, approved: false, proposer: msg.sender }));
 
         tenId = tens.length - 1;
         emit TenProposed(tenId, msg.sender);
@@ -59,20 +55,20 @@ contract TenRegistry is AccessControl {
             uint256 seatId = t.seats[i];
             address owner = IERC721(address(seat)).ownerOf(seatId);
 
-            // 1) создаем SeatTamga если нет
-            address tamga = seat.tamgaOf(seatId);
-            if (tamga == address(0)) {
-                // salt = keccak256(...) (детерминированно)
-                bytes32 salt = keccak256(abi.encodePacked("SEAT_TAMGA", seatId));
-                tamga = factory.createTamga(seatId, owner, salt);
-                seat.setTamga(seatId, tamga);
+            // 1) создаем SeatAccount если нет
+            address account = seat.accountOf(seatId);
+            if (account == address(0)) {
+                // salt детерминированный
+                bytes32 salt = keccak256(abi.encodePacked("SEAT_ACCOUNT", seatId));
+                account = factory.createAccount(seatId, owner, salt);
+                seat.setAccount(seatId, account);
             }
 
             // 2) ставим статус Verified10
             seat.setStatus(seatId, SeatSBT.Status.Verified10);
 
-            // 3) начисляем ALTAN на SeatTamga
-            bank.issue(tamga, bank.tenRewardPerSeat());
+            // 3) начисляем ALTAN на SeatAccount
+            bank.issue(account, bank.tenRewardPerSeat());
         }
 
         t.approved = true;
