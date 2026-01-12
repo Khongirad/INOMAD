@@ -26,6 +26,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <NavItem href="/dashboard" label="Central Bank (draft)" />
             <NavItem href="/dashboard" label="State Chancellery (draft)" />
             <NavItem href="/dashboard" label="Court (draft)" />
+            <NavItem href="/identity/create" label="Identity (Create)" />
+
           </nav>
         </aside>
 

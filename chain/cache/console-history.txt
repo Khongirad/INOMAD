@@ -1,0 +1,23 @@
+.exit
+inomad-client %
+Object.keys(seat.interface.functions)
+const seat = await ethers.getContractAt("SeatSBT", addresses.seatSBT)
+addresses
+const addresses = require("./addresses.json")
+.exit
+await seat.symbol()
+await seat.name()
+const seat = await ethers.getContractAt("SeatSBT", addresses.seatSBT)
+const addresses = require("./addresses.json")
+.exit
+npx hardhat console --network localhost
+cd chain
+npx hardhat console --network localhost
+cd chain
+await seat.ownerOf(seatId);
+await seat.mintSeat(me, seatId);
+const seatId = 1;
+// выбираем seatId (можно 1, можно 123)
+const me = "0xYOUR_ADDRESS";
+const seat = await ethers.getContractAt("SeatSBT", addrs.seatSBT);
+const addrs = require("./addresses.json");
