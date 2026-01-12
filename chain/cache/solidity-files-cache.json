@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/inomadinc/inomad-client/chain/contracts/ElectionRegistry.sol": {
-      "lastModificationDate": 1768189869219,
-      "contentHash": "9a0a76475faa696d4d37c856424f587b",
+      "lastModificationDate": 1768205067567,
+      "contentHash": "1bf87ebeda7fe12008b66a74949caa6a",
       "sourceName": "contracts/ElectionRegistry.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -39,8 +39,8 @@
       ]
     },
     "/Users/inomadinc/inomad-client/chain/contracts/SeatSBT.sol": {
-      "lastModificationDate": 1768196561044,
-      "contentHash": "60af70bf6fc1e0875b69fe7ec900b04a",
+      "lastModificationDate": 1768204942453,
+      "contentHash": "6b68a315f029f4c060c74f10cc60077e",
       "sourceName": "contracts/SeatSBT.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -456,8 +456,8 @@
       ]
     },
     "/Users/inomadinc/inomad-client/chain/contracts/CentralBank.sol": {
-      "lastModificationDate": 1768196072273,
-      "contentHash": "66d51aa5e9fe580a971522e9e86e90b6",
+      "lastModificationDate": 1768205400902,
+      "contentHash": "e9b7963f0894f44d2148186256ca9f64",
       "sourceName": "contracts/CentralBank.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -495,8 +495,8 @@
       ]
     },
     "/Users/inomadinc/inomad-client/chain/contracts/TenRegistry.sol": {
-      "lastModificationDate": 1768196072274,
-      "contentHash": "d295a8d47b1821c0ee21ebed972d7623",
+      "lastModificationDate": 1768204998600,
+      "contentHash": "aa9b8926ff2768a3c885cd01affdd642",
       "sourceName": "contracts/TenRegistry.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -526,7 +526,7 @@
         "@openzeppelin/contracts/access/AccessControl.sol",
         "@openzeppelin/contracts/interfaces/IERC721.sol",
         "./SeatSBT.sol",
-        "./SeatAccount.sol",
+        "./SeatTamga.sol",
         "./CentralBank.sol"
       ],
       "versionPragmas": [
@@ -534,46 +534,6 @@
       ],
       "artifacts": [
         "TenRegistry"
-      ]
-    },
-    "/Users/inomadinc/inomad-client/chain/contracts/SeatAccount.sol": {
-      "lastModificationDate": 1768196072269,
-      "contentHash": "7d63a7e1897b23788491c1f0c852ba4a",
-      "sourceName": "contracts/SeatAccount.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/utils/Address.sol",
-        "@openzeppelin/contracts/interfaces/IERC721.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.24"
-      ],
-      "artifacts": [
-        "SeatAccount",
-        "SeatAccountFactory"
       ]
     },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/interfaces/IERC721.sol": {
@@ -1068,6 +1028,46 @@
       ],
       "artifacts": [
         "IERC721Receiver"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/SeatTamga.sol": {
+      "lastModificationDate": 1768204739932,
+      "contentHash": "df9c8cb33061b9191c31d01656bbed41",
+      "sourceName": "contracts/SeatTamga.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/utils/Address.sol",
+        "@openzeppelin/contracts/interfaces/IERC721.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SeatTamga",
+        "SeatTamgaFactory"
       ]
     }
   }

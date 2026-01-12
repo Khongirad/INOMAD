@@ -9,15 +9,16 @@
           "internalType": "address",
           "name": "to",
           "type": "address"
-        },
+        }
+      ],
+      "name": "mintSeat",
+      "outputs": [
         {
           "internalType": "uint256",
           "name": "seatId",
           "type": "uint256"
         }
       ],
-      "name": "mintSeat",
-      "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
     }
