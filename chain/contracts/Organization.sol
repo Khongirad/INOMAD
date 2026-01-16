@@ -5,46 +5,24 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * Organization = "корабль" (паспорт организации)
- * Один Organization соответствует одной организации (максимум до 1 Tumen внутри).
- * Дальше к нему будут подключены: StructureRegistry (Arban/Zun/Myangan/Tumen),
- * DocumentRegistry (нотариус/архив), банковые модули и т.д.
  */
 contract Organization is AccessControl {
     bytes32 public constant ORG_ADMIN_ROLE = keccak256("ORG_ADMIN_ROLE");
 
-    enum OrgType {
-        PRIVATE, // частная
-        STATE,   // государственная
-        PPP      // государственно-частная
-    }
-
-    enum Branch {
-        NONE,
-        LEGISLATIVE, // законодательная
-        EXECUTIVE,   // исполнительная
-        JUDICIAL,    // судебная
-        BANKING      // банковская
-    }
+    enum OrgType { PRIVATE, STATE, PPP }
+    enum Branch { NONE, LEGISLATIVE, EXECUTIVE, JUDICIAL, BANKING }
 
     OrgType public immutable orgType;
     Branch public immutable branch;
     address public immutable founder;
 
-    // Центр организации (можно менять админом)
-    address public notary;     // нотариальный модуль/офис
-    address public archivist;  // архивный модуль/офис
+    address public notary;
+    address public archivist;
 
-    // (позже) адреса подключаемых модулей
     address public structureRegistry;
     address public documentRegistry;
 
-    event OrganizationCreated(
-        address indexed org,
-        address indexed founder,
-        OrgType orgType,
-        Branch branch
-    );
-
+    event OrganizationCreated(address indexed org, address indexed founder, OrgType orgType, Branch branch);
     event CenterUpdated(address indexed notary, address indexed archivist);
     event ModulesUpdated(address indexed structureRegistry, address indexed documentRegistry);
 
@@ -55,7 +33,9 @@ contract Organization is AccessControl {
         OrgType _orgType,
         Branch _branch,
         address _notary,
-        address _archivist
+        address _archivist,
+        address _structureRegistry,
+        address _documentRegistry
     ) {
         if (_founder == address(0)) revert ZERO_ADDRESS();
 
@@ -69,8 +49,12 @@ contract Organization is AccessControl {
         notary = _notary;
         archivist = _archivist;
 
+        structureRegistry = _structureRegistry;
+        documentRegistry = _documentRegistry;
+
         emit OrganizationCreated(address(this), _founder, _orgType, _branch);
         emit CenterUpdated(_notary, _archivist);
+        emit ModulesUpdated(_structureRegistry, _documentRegistry);
     }
 
     function setCenter(address _notary, address _archivist) external onlyRole(ORG_ADMIN_ROLE) {

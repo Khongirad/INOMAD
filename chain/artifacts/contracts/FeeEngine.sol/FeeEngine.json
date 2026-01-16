@@ -1,0 +1,328 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "FeeEngine",
+  "sourceName": "contracts/FeeEngine.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "ledgerAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "sinkAccountId",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "collector",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "ok",
+          "type": "bool"
+        }
+      ],
+      "name": "CollectorSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "payerAccountId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "sinkAccountId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "asset",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "memo",
+          "type": "bytes32"
+        }
+      ],
+      "name": "FeeCollected",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
+        }
+      ],
+      "name": "FeeQuoted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "feeSinkAccountId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "FeeSinkSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "ledger",
+          "type": "address"
+        }
+      ],
+      "name": "LedgerSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "oldOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnerChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "FEE_BPS",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "payerAccountId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "asset",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "memo",
+          "type": "bytes32"
+        }
+      ],
+      "name": "collectFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "feeSinkAccountId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "isCollector",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "ledger",
+      "outputs": [
+        {
+          "internalType": "contract IAltanBankLedgerFeeOps",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "quoteFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "collector",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "ok",
+          "type": "bool"
+        }
+      ],
+      "name": "setCollector",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "sinkAccountId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "setFeeSink",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "ledgerAddr",
+          "type": "address"
+        }
+      ],
+      "name": "setLedger",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080346100cd57601f61070238819003918201601f19168301916001600160401b038311848410176100d25780849260409485528339810103126100cd5780516001600160a01b03811691908290036100cd57602001517fcc4cdb0a041745498b0d19f6700f523c5bd8797e8ac6808d5030dd39af56a09e60018060a01b0319836000913381845416178355600154161760015582600255604051937fbc62e69a31739e36d57d56991ac20e4e507a7edfff9070e6a11df5a37b8b4e6f8280a280a261061990816100e98239f35b600080fd5b634e487b7160e01b600052604160045260246000fdfe604060808152600436101561001357600080fd5b600090813560e01c9081632205f568146103c95781633246887d1461035157816356397c3514610328578163581b3a051461030957816362129804146102cb5781638da5cb5b146102a35781639d709b9a14610218578163a0f7a330146101c4578163bf333f2c146101a8578163df2cc13f14610111575063f2fde38b1461009a57600080fd5b3461010e57602036600319011261010e576100b36103ea565b81546001600160a01b03808216926100cc338514610436565b1680926100da82151561046e565b7fb532073b38c83145e3e5135377a08bf9aab55bc0fd7c1179cd4fb995d2a5159c8580a36001600160a01b03191617815580f35b80fd5b9050346101a457806003193601126101a45761012b6103ea565b602435908115158092036101a0577fdd0c37342e4622f900a3159af866c907f3197be55727e1cabbfc4e213e23b3049160209160018060a01b0390610174828854163314610436565b169361018185151561046e565b8486526003835280862060ff1981541660ff841617905551908152a280f35b8380fd5b5080fd5b9050346101a457816003193601126101a4576020905160038152f35b823461010e57602036600319011261010e576004356101ed60018060a01b038354163314610436565b806002557fcc4cdb0a041745498b0d19f6700f523c5bd8797e8ac6808d5030dd39af56a09e8280a280f35b9050346101a45760803660031901126101a457602435916001600160a01b038316830361010e578160ff913381526003602052205416156102705761026960209260643590604435906004356104a6565b9051908152f35b5162461bcd60e51b815260206004820152600d60248201526c2727aa2fa1a7a62622a1aa27a960991b6044820152606490fd5b9050346101a457816003193601126101a457905490516001600160a01b039091168152602090f35b9050346101a45760203660031901126101a45760209160ff9082906001600160a01b036102f66103ea565b1681526003855220541690519015158152f35b9050346101a457816003193601126101a4576020906002549051908152f35b9050346101a457816003193601126101a45760015490516001600160a01b039091168152602090f35b823461010e57602036600319011261010e5761036b6103ea565b81546001600160a01b0391906103849083163314610436565b1661039081151561046e565b600180546001600160a01b031916821790557fbc62e69a31739e36d57d56991ac20e4e507a7edfff9070e6a11df5a37b8b4e6f8280a280f35b9050346101a45760203660031901126101a457602090610269600435610405565b600435906001600160a01b038216820361040057565b600080fd5b60038102908082046003149015171561042057612710900490565b634e487b7160e01b600052601160045260246000fd5b1561043d57565b60405162461bcd60e51b81526020600482015260096024820152682727aa2fa7aba722a960b91b6044820152606490fd5b1561047557565b60405162461bcd60e51b81526020600482015260096024820152682d22a927afa0a2222960b91b6044820152606490fd5b93929091936104b485610405565b947f9dc575e8f65a8105f6e4384c04f904189d58d6c2c38e63b74dca83b52f11c150604080928151908152886020820152a185156105d9576001546002546001600160a01b0391821695919291863b156104005760a46000928385519687948593632240a9ad60e01b85528a6004860152602485015216998a60448401528c60648401528960848401525af180156105ce57610580575b7f0adb7bfbf5bba1b66e4a7820bf833df76ec4c9c4ece17df4a8080e814e84d1ef9150600254938151908882526020820152a4565b67ffffffffffffffff82116105b8577f0adb7bfbf5bba1b66e4a7820bf833df76ec4c9c4ece17df4a8080e814e84d1ef91815261054b565b634e487b7160e01b600052604160045260246000fd5b50513d6000823e3d90fd5b506000945050505056fea2646970667358221220da82c474aa68d70e657b55f12cae22e127dd61ff66e5da1a43da665b3e5b287e64736f6c63430008180033",
+  "deployedBytecode": "0x604060808152600436101561001357600080fd5b600090813560e01c9081632205f568146103c95781633246887d1461035157816356397c3514610328578163581b3a051461030957816362129804146102cb5781638da5cb5b146102a35781639d709b9a14610218578163a0f7a330146101c4578163bf333f2c146101a8578163df2cc13f14610111575063f2fde38b1461009a57600080fd5b3461010e57602036600319011261010e576100b36103ea565b81546001600160a01b03808216926100cc338514610436565b1680926100da82151561046e565b7fb532073b38c83145e3e5135377a08bf9aab55bc0fd7c1179cd4fb995d2a5159c8580a36001600160a01b03191617815580f35b80fd5b9050346101a457806003193601126101a45761012b6103ea565b602435908115158092036101a0577fdd0c37342e4622f900a3159af866c907f3197be55727e1cabbfc4e213e23b3049160209160018060a01b0390610174828854163314610436565b169361018185151561046e565b8486526003835280862060ff1981541660ff841617905551908152a280f35b8380fd5b5080fd5b9050346101a457816003193601126101a4576020905160038152f35b823461010e57602036600319011261010e576004356101ed60018060a01b038354163314610436565b806002557fcc4cdb0a041745498b0d19f6700f523c5bd8797e8ac6808d5030dd39af56a09e8280a280f35b9050346101a45760803660031901126101a457602435916001600160a01b038316830361010e578160ff913381526003602052205416156102705761026960209260643590604435906004356104a6565b9051908152f35b5162461bcd60e51b815260206004820152600d60248201526c2727aa2fa1a7a62622a1aa27a960991b6044820152606490fd5b9050346101a457816003193601126101a457905490516001600160a01b039091168152602090f35b9050346101a45760203660031901126101a45760209160ff9082906001600160a01b036102f66103ea565b1681526003855220541690519015158152f35b9050346101a457816003193601126101a4576020906002549051908152f35b9050346101a457816003193601126101a45760015490516001600160a01b039091168152602090f35b823461010e57602036600319011261010e5761036b6103ea565b81546001600160a01b0391906103849083163314610436565b1661039081151561046e565b600180546001600160a01b031916821790557fbc62e69a31739e36d57d56991ac20e4e507a7edfff9070e6a11df5a37b8b4e6f8280a280f35b9050346101a45760203660031901126101a457602090610269600435610405565b600435906001600160a01b038216820361040057565b600080fd5b60038102908082046003149015171561042057612710900490565b634e487b7160e01b600052601160045260246000fd5b1561043d57565b60405162461bcd60e51b81526020600482015260096024820152682727aa2fa7aba722a960b91b6044820152606490fd5b1561047557565b60405162461bcd60e51b81526020600482015260096024820152682d22a927afa0a2222960b91b6044820152606490fd5b93929091936104b485610405565b947f9dc575e8f65a8105f6e4384c04f904189d58d6c2c38e63b74dca83b52f11c150604080928151908152886020820152a185156105d9576001546002546001600160a01b0391821695919291863b156104005760a46000928385519687948593632240a9ad60e01b85528a6004860152602485015216998a60448401528c60648401528960848401525af180156105ce57610580575b7f0adb7bfbf5bba1b66e4a7820bf833df76ec4c9c4ece17df4a8080e814e84d1ef9150600254938151908882526020820152a4565b67ffffffffffffffff82116105b8577f0adb7bfbf5bba1b66e4a7820bf833df76ec4c9c4ece17df4a8080e814e84d1ef91815261054b565b634e487b7160e01b600052604160045260246000fd5b50513d6000823e3d90fd5b506000945050505056fea2646970667358221220da82c474aa68d70e657b55f12cae22e127dd61ff66e5da1a43da665b3e5b287e64736f6c63430008180033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

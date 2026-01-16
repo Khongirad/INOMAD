@@ -12,6 +12,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -51,6 +52,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -91,6 +93,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -132,6 +135,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -157,6 +161,43 @@
         "Context"
       ]
     },
+    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/access/IAccessControl.sol": {
+      "lastModificationDate": 1768200337093,
+      "contentHash": "def1e8f7b6cac577cf2600655bf3bdf8",
+      "sourceName": "@openzeppelin/contracts/access/IAccessControl.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.8.4"
+      ],
+      "artifacts": [
+        "IAccessControl"
+      ]
+    },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol": {
       "lastModificationDate": 1768200337067,
       "contentHash": "0906d06dca25210d4696dcef6dad2909",
@@ -168,6 +209,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -195,42 +237,6 @@
         "ERC165"
       ]
     },
-    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/access/IAccessControl.sol": {
-      "lastModificationDate": 1768200337093,
-      "contentHash": "def1e8f7b6cac577cf2600655bf3bdf8",
-      "sourceName": "@openzeppelin/contracts/access/IAccessControl.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.8.4"
-      ],
-      "artifacts": [
-        "IAccessControl"
-      ]
-    },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol": {
       "lastModificationDate": 1768200337099,
       "contentHash": "7074c93b1ea0a122063f26ddd1db1032",
@@ -242,6 +248,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -278,6 +285,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -316,6 +324,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -352,6 +361,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -390,6 +400,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -418,131 +429,10 @@
         "CentralBank"
       ]
     },
-    "/Users/inomadinc/inomad-client/chain/contracts/TenRegistry.sol": {
-      "lastModificationDate": 1768252950864,
-      "contentHash": "b1e9a9ace9b50920b77b7823e843205e",
-      "sourceName": "contracts/TenRegistry.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/access/AccessControl.sol",
-        "@openzeppelin/contracts/interfaces/IERC721.sol",
-        "./SeatSBT.sol",
-        "./SeatAccount.sol",
-        "./CentralBank.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.24"
-      ],
-      "artifacts": [
-        "TenRegistry"
-      ]
-    },
-    "/Users/inomadinc/inomad-client/chain/contracts/SeatSBT.sol": {
-      "lastModificationDate": 1768253441813,
-      "contentHash": "c1356950ccea1599059f467298eee833",
-      "sourceName": "contracts/SeatSBT.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC721/ERC721.sol",
-        "@openzeppelin/contracts/access/AccessControl.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.24"
-      ],
-      "artifacts": [
-        "SeatSBT"
-      ]
-    },
-    "/Users/inomadinc/inomad-client/chain/contracts/SeatAccount.sol": {
-      "lastModificationDate": 1768252660953,
-      "contentHash": "203233ea11ad9b61d891f154cffe655e",
-      "sourceName": "contracts/SeatAccount.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/utils/Address.sol",
-        "@openzeppelin/contracts/interfaces/IERC721.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.24"
-      ],
-      "artifacts": [
-        "SeatAccount",
-        "SeatAccountFactory"
-      ]
-    },
-    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/interfaces/IERC721.sol": {
+    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
       "lastModificationDate": 1768200337110,
-      "contentHash": "6b9716905fb42874ed1769ae7f7458b1",
-      "sourceName": "@openzeppelin/contracts/interfaces/IERC721.sol",
+      "contentHash": "f62e11dbd302e17a5621a1438f4e054c",
+      "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721.sol",
       "solcConfig": {
         "version": "0.8.24",
         "settings": {
@@ -550,6 +440,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -568,12 +459,53 @@
         }
       },
       "imports": [
-        "../token/ERC721/IERC721.sol"
+        "../../utils/introspection/IERC165.sol"
       ],
       "versionPragmas": [
         ">=0.6.2"
       ],
-      "artifacts": []
+      "artifacts": [
+        "IERC721"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol": {
+      "lastModificationDate": 1768200337112,
+      "contentHash": "136c64eca25bcb8a68f43ac6605559f9",
+      "sourceName": "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../IERC721.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IERC721Metadata"
+      ]
     },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol": {
       "lastModificationDate": 1768200337081,
@@ -586,6 +518,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -630,6 +563,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -659,44 +593,6 @@
         "Strings"
       ]
     },
-    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
-      "lastModificationDate": 1768200337110,
-      "contentHash": "f62e11dbd302e17a5621a1438f4e054c",
-      "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../../utils/introspection/IERC165.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IERC721"
-      ]
-    },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/token/ERC721/utils/ERC721Utils.sol": {
       "lastModificationDate": 1768200337085,
       "contentHash": "4cefad279a37c895b709bce2b901816e",
@@ -708,6 +604,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -736,44 +633,6 @@
         "ERC721Utils"
       ]
     },
-    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol": {
-      "lastModificationDate": 1768200337112,
-      "contentHash": "136c64eca25bcb8a68f43ac6605559f9",
-      "sourceName": "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../IERC721.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IERC721Metadata"
-      ]
-    },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/utils/math/SignedMath.sol": {
       "lastModificationDate": 1768200337125,
       "contentHash": "ae3528afb8bdb0a7dcfba5b115ee8074",
@@ -785,6 +644,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -812,6 +672,43 @@
         "SignedMath"
       ]
     },
+    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/utils/math/SafeCast.sol": {
+      "lastModificationDate": 1768200337125,
+      "contentHash": "2adca1150f58fc6f3d1f0a0f22ee7cca",
+      "sourceName": "@openzeppelin/contracts/utils/math/SafeCast.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "SafeCast"
+      ]
+    },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/utils/math/Math.sol": {
       "lastModificationDate": 1768200337118,
       "contentHash": "5ec781e33d3a9ac91ffdc83d94420412",
@@ -823,6 +720,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -851,42 +749,6 @@
         "Math"
       ]
     },
-    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/utils/math/SafeCast.sol": {
-      "lastModificationDate": 1768200337125,
-      "contentHash": "2adca1150f58fc6f3d1f0a0f22ee7cca",
-      "sourceName": "@openzeppelin/contracts/utils/math/SafeCast.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "SafeCast"
-      ]
-    },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/utils/Panic.sol": {
       "lastModificationDate": 1768200337123,
       "contentHash": "2133dc13536b4a6a98131e431fac59e1",
@@ -898,6 +760,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -934,6 +797,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -959,6 +823,243 @@
         "IERC721Receiver"
       ]
     },
+    "/Users/inomadinc/inomad-client/chain/contracts/SeatSBT.sol": {
+      "lastModificationDate": 1768540520753,
+      "contentHash": "c7469455e5b09108532060c22ca6a79b",
+      "sourceName": "contracts/SeatSBT.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SeatSBT"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/Arban.sol": {
+      "lastModificationDate": 1768254354287,
+      "contentHash": "0dda253f3a65845fad28852f1c0318a5",
+      "sourceName": "contracts/Arban.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/AccessControl.sol",
+        "./Organization.sol",
+        "./SeatSBT.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "Arban"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/Organization.sol": {
+      "lastModificationDate": 1768341208909,
+      "contentHash": "547279f29e1d0562a35ae3342587322c",
+      "sourceName": "contracts/Organization.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/AccessControl.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "Organization"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ArbanRegistry.sol": {
+      "lastModificationDate": 1768375734127,
+      "contentHash": "6b08afe25da8184c3eb3f63a0deb7c68",
+      "sourceName": "contracts/ArbanRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/AccessControl.sol",
+        "./Arban.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ArbanRegistry",
+        "ISeatSBTLike",
+        "IStructureRegistryArbanLeaders"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/interfaces/IERC721.sol": {
+      "lastModificationDate": 1768200337110,
+      "contentHash": "6b9716905fb42874ed1769ae7f7458b1",
+      "sourceName": "@openzeppelin/contracts/interfaces/IERC721.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../token/ERC721/IERC721.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": []
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/SeatAccount.sol": {
+      "lastModificationDate": 1768252660953,
+      "contentHash": "203233ea11ad9b61d891f154cffe655e",
+      "sourceName": "contracts/SeatAccount.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/utils/Address.sol",
+        "@openzeppelin/contracts/interfaces/IERC721.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SeatAccount",
+        "SeatAccountFactory"
+      ]
+    },
     "/Users/inomadinc/inomad-client/chain/node_modules/@openzeppelin/contracts/utils/Address.sol": {
       "lastModificationDate": 1768200337029,
       "contentHash": "2a06d82f31f75087bf90231599da4f1c",
@@ -970,6 +1071,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -1008,6 +1110,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -1033,6 +1136,554 @@
         "Errors"
       ]
     },
+    "/Users/inomadinc/inomad-client/chain/contracts/CitizenRegistry.sol": {
+      "lastModificationDate": 1768540021094,
+      "contentHash": "9d437ba69ac4c94e0f64dc45aac8408b",
+      "sourceName": "contracts/CitizenRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "CitizenRegistry",
+        "IActivationRegistryOptional",
+        "IConstitutionAcceptanceRegistry",
+        "ISeatSBT"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ArbanJoinDoc.sol": {
+      "lastModificationDate": 1768365544687,
+      "contentHash": "a60e23d39ab3c00ac1a271fe9d13ec9a",
+      "sourceName": "contracts/ArbanJoinDoc.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ArbanJoinDoc",
+        "IArbanRegistryFinalize",
+        "ICitizenRegistry"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/NotaryHub.sol": {
+      "lastModificationDate": 1768372907428,
+      "contentHash": "04dc1f5d60c3411791eb8380b9c25f54",
+      "sourceName": "contracts/NotaryHub.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./DocumentRegistry.sol",
+        "./ZunResolution.sol",
+        "./MyanganResolution.sol",
+        "./TumenResolution.sol",
+        "./ChairmanResolution.sol",
+        "./ZunLeaderAppointment.sol",
+        "./MyanganLeaderAppointment.sol",
+        "./TumenLeaderAppointment.sol",
+        "./ArbanLeaderAppointment.sol",
+        "./ArbanJoinDoc.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IArbanRegistryJoinDocs",
+        "IArbanRegistryUpdaters",
+        "IStructureRegistryUpdaters",
+        "NotaryHub"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/DocumentRegistry.sol": {
+      "lastModificationDate": 1768350577508,
+      "contentHash": "bfd8d37e689274c20a81e18f78d12a82",
+      "sourceName": "contracts/DocumentRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "DocumentRegistry"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/MyanganResolution.sol": {
+      "lastModificationDate": 1768352594035,
+      "contentHash": "d0eed34f2802b21e3dd85e2240d565e8",
+      "sourceName": "contracts/MyanganResolution.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IStructureRegistryMy",
+        "MyanganResolution"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ZunResolution.sol": {
+      "lastModificationDate": 1768350450153,
+      "contentHash": "9ec191347b0678989475fc9ed13acfb4",
+      "sourceName": "contracts/ZunResolution.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IStructureRegistry",
+        "ZunResolution"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/TumenResolution.sol": {
+      "lastModificationDate": 1768352631919,
+      "contentHash": "78a941792945c0dfac26f9d7c17be513",
+      "sourceName": "contracts/TumenResolution.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IStructureRegistryTu",
+        "TumenResolution"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ChairmanResolution.sol": {
+      "lastModificationDate": 1768354594832,
+      "contentHash": "534650edd71b3b106309f4a4ecc07f8a",
+      "sourceName": "contracts/ChairmanResolution.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ChairmanResolution",
+        "IChairmanRegistryView"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ZunLeaderAppointment.sol": {
+      "lastModificationDate": 1768355460764,
+      "contentHash": "c183082d9938067ae5cade6a2dd5a14d",
+      "sourceName": "contracts/ZunLeaderAppointment.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IStructureRegistryZLA",
+        "ZunLeaderAppointment"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/MyanganLeaderAppointment.sol": {
+      "lastModificationDate": 1768360448895,
+      "contentHash": "28c0ba1e46f2bbcd0cada886bf45f6b9",
+      "sourceName": "contracts/MyanganLeaderAppointment.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IStructureRegistryMLA",
+        "MyanganLeaderAppointment"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/TumenLeaderAppointment.sol": {
+      "lastModificationDate": 1768361581871,
+      "contentHash": "ef74f40cdbf989f68c761fee31f7cf62",
+      "sourceName": "contracts/TumenLeaderAppointment.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IStructureRegistryTLA",
+        "TumenLeaderAppointment"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ArbanLeaderAppointment.sol": {
+      "lastModificationDate": 1768366238883,
+      "contentHash": "f63e55666aef1afc20866a802177b468",
+      "sourceName": "contracts/ArbanLeaderAppointment.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ArbanLeaderAppointment",
+        "IArbanRegistryMembers",
+        "ICitizenRegistry2"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ChairmanElection.sol": {
+      "lastModificationDate": 1768354536110,
+      "contentHash": "9232a120b522b66055f21b513e236529",
+      "sourceName": "contracts/ChairmanElection.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ChairmanElection",
+        "IChairmanRegistry",
+        "IStructureRegistryCE"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ChairmanRegistry.sol": {
+      "lastModificationDate": 1768353256349,
+      "contentHash": "c177a5020f981c103e37f5f19d8e0cac",
+      "sourceName": "contracts/ChairmanRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ChairmanRegistry"
+      ]
+    },
     "/Users/inomadinc/inomad-client/chain/contracts/ElectionRegistry.sol": {
       "lastModificationDate": 1768205067567,
       "contentHash": "1bf87ebeda7fe12008b66a74949caa6a",
@@ -1044,6 +1695,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -1070,10 +1722,10 @@
         "ISeatSBT"
       ]
     },
-    "/Users/inomadinc/inomad-client/chain/contracts/Organization.sol": {
-      "lastModificationDate": 1768253910776,
-      "contentHash": "cc1cf4056edb2171675b5ff03c53be8f",
-      "sourceName": "contracts/Organization.sol",
+    "/Users/inomadinc/inomad-client/chain/contracts/Myangan.sol": {
+      "lastModificationDate": 1768348982379,
+      "contentHash": "610adeb16dd2f04c842db94a63cb2c41",
+      "sourceName": "contracts/Myangan.sol",
       "solcConfig": {
         "version": "0.8.24",
         "settings": {
@@ -1081,6 +1733,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -1098,20 +1751,18 @@
           }
         }
       },
-      "imports": [
-        "@openzeppelin/contracts/access/AccessControl.sol"
-      ],
+      "imports": [],
       "versionPragmas": [
         "^0.8.24"
       ],
       "artifacts": [
-        "Organization"
+        "Myangan"
       ]
     },
-    "/Users/inomadinc/inomad-client/chain/contracts/OrganizationFactory.sol": {
-      "lastModificationDate": 1768254470905,
-      "contentHash": "33fe0ea124b8d1ee617d30ba55cb7ea7",
-      "sourceName": "contracts/OrganizationFactory.sol",
+    "/Users/inomadinc/inomad-client/chain/contracts/StructureRegistry.sol": {
+      "lastModificationDate": 1768355381924,
+      "contentHash": "d6ac125d4076d62d7b59936e9541231e",
+      "sourceName": "contracts/StructureRegistry.sol",
       "solcConfig": {
         "version": "0.8.24",
         "settings": {
@@ -1119,6 +1770,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -1137,22 +1789,21 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/access/AccessControl.sol",
-        "./Organization.sol",
-        "./Arban.sol",
-        "./SeatSBT.sol"
+        "./Zun.sol",
+        "./Myangan.sol",
+        "./Tumen.sol"
       ],
       "versionPragmas": [
         "^0.8.24"
       ],
       "artifacts": [
-        "OrganizationFactory"
+        "StructureRegistry"
       ]
     },
-    "/Users/inomadinc/inomad-client/chain/contracts/Arban.sol": {
-      "lastModificationDate": 1768254354287,
-      "contentHash": "0dda253f3a65845fad28852f1c0318a5",
-      "sourceName": "contracts/Arban.sol",
+    "/Users/inomadinc/inomad-client/chain/contracts/Zun.sol": {
+      "lastModificationDate": 1768347836473,
+      "contentHash": "06f13b0e12108ef7a50e94f368283126",
+      "sourceName": "contracts/Zun.sol",
       "solcConfig": {
         "version": "0.8.24",
         "settings": {
@@ -1160,6 +1811,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -1177,16 +1829,771 @@
           }
         }
       },
-      "imports": [
-        "@openzeppelin/contracts/access/AccessControl.sol",
-        "./Organization.sol",
-        "./SeatSBT.sol"
-      ],
+      "imports": [],
       "versionPragmas": [
         "^0.8.24"
       ],
       "artifacts": [
-        "Arban"
+        "Zun"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/Tumen.sol": {
+      "lastModificationDate": 1768349408870,
+      "contentHash": "a219c46e290cea5f65e1794a82eb2023",
+      "sourceName": "contracts/Tumen.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "Tumen"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ActivationRegistry.sol": {
+      "lastModificationDate": 1768517330922,
+      "contentHash": "9859ee25feb181cc332b0e1e38c85687",
+      "sourceName": "contracts/ActivationRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.17"
+      ],
+      "artifacts": [
+        "ActivationRegistry",
+        "IConstitutionAcceptanceRegistry",
+        "ISeatSBT",
+        "ISupremeCourt"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ConstitutionAcceptanceRegistry.sol": {
+      "lastModificationDate": 1768517166685,
+      "contentHash": "6da91c9fa21a822d21f0e37b5b70205a",
+      "sourceName": "contracts/ConstitutionAcceptanceRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.17"
+      ],
+      "artifacts": [
+        "ConstitutionAcceptanceRegistry"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/AltanBankLedger.sol": {
+      "lastModificationDate": 1768527860265,
+      "contentHash": "2fa078476cee755af01ee74050244f2c",
+      "sourceName": "contracts/AltanBankLedger.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "AltanBankLedger",
+        "IBankLicenseRegistryView"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/BankLicenseRegistry.sol": {
+      "lastModificationDate": 1768527843253,
+      "contentHash": "5fa35c1433e8eb6a45a3d64940e7ad49",
+      "sourceName": "contracts/BankLicenseRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "BankLicenseRegistry"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/BankOfSiberia.sol": {
+      "lastModificationDate": 1768527881013,
+      "contentHash": "bdc1cdf2f17272a3f92943690b423dd0",
+      "sourceName": "contracts/BankOfSiberia.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "BankOfSiberia",
+        "IAltanBankLedgerBankOps"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/CentralBankOfSiberia.sol": {
+      "lastModificationDate": 1768527823172,
+      "contentHash": "4be142d55e07d6a962a88557ae6f9f32",
+      "sourceName": "contracts/CentralBankOfSiberia.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "CentralBankOfSiberia",
+        "IAltanBankLedger",
+        "IBankLicenseRegistry"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/FeeEngine.sol": {
+      "lastModificationDate": 1768528266126,
+      "contentHash": "edc75014fdec02edbd24ace228ff4696",
+      "sourceName": "contracts/FeeEngine.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "FeeEngine",
+        "IAltanBankLedgerFeeOps"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/StateTreasury.sol": {
+      "lastModificationDate": 1768528307116,
+      "contentHash": "a7c7aa0ef4dbe6521f87bc794e40f39a",
+      "sourceName": "contracts/StateTreasury.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "StateTreasury"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/TaxEngine.sol": {
+      "lastModificationDate": 1768528283993,
+      "contentHash": "acf45fafda0526cc90644675653fa159",
+      "sourceName": "contracts/TaxEngine.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IAltanBankLedgerTaxOps",
+        "TaxEngine"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/PaymentRouter.sol": {
+      "lastModificationDate": 1768528767869,
+      "contentHash": "26b88ef582bf65851baca9bd8d0dd2b0",
+      "sourceName": "contracts/PaymentRouter.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IFeeEngine",
+        "ILedger",
+        "ITaxEngine",
+        "PaymentRouter"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/TaxAuthority.sol": {
+      "lastModificationDate": 1768530690419,
+      "contentHash": "0a5aed91d15efa8145e2f3d10c5b76a2",
+      "sourceName": "contracts/TaxAuthority.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IBankLicenseRegistryView",
+        "ILedgerMove",
+        "TaxAuthority"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/BankTaxPayer.sol": {
+      "lastModificationDate": 1768530939481,
+      "contentHash": "2f3fffd86392e07cb42128dcd2de4d7a",
+      "sourceName": "contracts/BankTaxPayer.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "BankTaxPayer",
+        "ITaxAuthorityBankOnly"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/TaxAuthorityV2.sol": {
+      "lastModificationDate": 1768533767765,
+      "contentHash": "d757a234e97dc13a275859fe71eeeb67",
+      "sourceName": "contracts/TaxAuthorityV2.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "IBankLicenseRegistryView",
+        "ILedgerMove",
+        "TaxAuthorityV2"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/SupremeCourt.sol": {
+      "lastModificationDate": 1768541729167,
+      "contentHash": "fd4feff092d39e8aa5e98e03b2d24595",
+      "sourceName": "contracts/SupremeCourt.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SupremeCourt"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ConstitutionRegistry.sol": {
+      "lastModificationDate": 1768550920288,
+      "contentHash": "7e01780406cd7ec17f72b36e7faf4908",
+      "sourceName": "contracts/ConstitutionRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ConstitutionRegistry"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/KhuralLawProcess.sol": {
+      "lastModificationDate": 1768554066885,
+      "contentHash": "27e01827ef2f51ce7fb13970fea1d2d2",
+      "sourceName": "contracts/KhuralLawProcess.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ILawRegistry",
+        "ITumenAuthority",
+        "KhuralLawProcess"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/LawRegistry.sol": {
+      "lastModificationDate": 1768554066156,
+      "contentHash": "526e29fc34b63ce34faec050b9db3a72",
+      "sourceName": "contracts/LawRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "LawRegistry"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/TumenAuthorityMock.sol": {
+      "lastModificationDate": 1768554066969,
+      "contentHash": "c39fd2bfd7603a54623189eb17d61ba1",
+      "sourceName": "contracts/TumenAuthorityMock.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "TumenAuthorityMock"
+      ]
+    },
+    "/Users/inomadinc/inomad-client/chain/contracts/ConstitutionModuleRegistry.sol": {
+      "lastModificationDate": 1768558190552,
+      "contentHash": "9673cb35e14bbe1877823938335c143f",
+      "sourceName": "contracts/ConstitutionModuleRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ConstitutionModuleRegistry"
       ]
     }
   }

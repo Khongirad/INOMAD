@@ -1,0 +1,79 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ITaxEngine",
+  "sourceName": "contracts/PaymentRouter.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "payerAccountId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "republicKey",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "asset",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "memo",
+          "type": "bytes32"
+        }
+      ],
+      "name": "collectTax",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "republicTax",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "confedTax",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "quoteTax",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "republicTax",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "confedTax",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

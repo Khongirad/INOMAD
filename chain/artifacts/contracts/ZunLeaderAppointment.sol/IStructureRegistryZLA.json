@@ -1,0 +1,67 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IStructureRegistryZLA",
+  "sourceName": "contracts/ZunLeaderAppointment.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "zunId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "leader",
+          "type": "address"
+        }
+      ],
+      "name": "applyZunLeader",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "arbanId",
+          "type": "uint256"
+        }
+      ],
+      "name": "arbanLeader",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "zunId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getZunChildren",
+      "outputs": [
+        {
+          "internalType": "uint256[10]",
+          "name": "",
+          "type": "uint256[10]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

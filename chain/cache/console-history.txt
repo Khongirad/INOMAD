@@ -1,9 +1,0 @@
-.exit
-console.log("Granted ISSUER_ROLE to TenRegistry");
-await (await bank.grantRole(ISSUER_ROLE, tenAddr)).wait();
-const ISSUER_ROLE = ethers.keccak256(ethers.toUtf8Bytes("ISSUER_ROLE"));
-const tenAddr = addrs.TenRegistry;
-const bank = await ethers.getContractAt("CentralBank", addrs.CentralBank);
-const addrs = require("./addresses.json");
-const { ethers } = hre;
-const hre = require("hardhat");

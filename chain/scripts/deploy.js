@@ -38,22 +38,7 @@ async function main() {
   const MINTER_ROLE = ethers.keccak256(ethers.toUtf8Bytes("MINTER_ROLE"));
   await (await altan.grantRole(MINTER_ROLE, await bank.getAddress())).wait();
 
-  // --- TenRegistry ---
-  const TenRegistry = await ethers.getContractFactory("TenRegistry");
-  const ten = await TenRegistry.deploy(
-    await seat.getAddress(),
-    await factory.getAddress(),
-    await bank.getAddress()
-  );
-  await ten.waitForDeployment();
-
-  // REGISTRAR_ROLE -> TenRegistry (for SeatSBT)
-  const REGISTRAR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("REGISTRAR_ROLE"));
-  await (await seat.grantRole(REGISTRAR_ROLE, await ten.getAddress())).wait();
-
-  // ISSUER_ROLE -> TenRegistry (for CentralBank)
-  const ISSUER_ROLE = ethers.keccak256(ethers.toUtf8Bytes("ISSUER_ROLE"));
-  await (await bank.grantRole(ISSUER_ROLE, await ten.getAddress())).wait();
+// [MVP-disabled] --- TenRegistry block removed ---
 
   // --- OrganizationFactory ---
   const OrganizationFactory = await ethers.getContractFactory(
@@ -77,7 +62,7 @@ async function main() {
     SeatAccountFactory: await factory.getAddress(),
     Altan: await altan.getAddress(),
     CentralBank: await bank.getAddress(),
-    TenRegistry: await ten.getAddress(),
+// [MVP-disabled]     TenRegistry: await ten.getAddress(),
     OrganizationFactory: await orgFactory.getAddress(),
     smoke_create_org_tx: receipt.hash,
   };

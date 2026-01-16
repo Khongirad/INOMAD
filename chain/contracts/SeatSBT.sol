@@ -1,73 +1,104 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-
 /**
- * SeatSBT = "цифровой гражданин" (Soulbound)
- * - не передается
- * - хранит статус
- * - хранит привязанный SeatAccount (смарт-кошелек)
+ * SeatSBT — конституционная "сидушка" гражданина.
+ * Закон: once minted -> NEVER transferable, NEVER burnable, NEVER revocable.
+ *
+ * Важно:
+ * - Санкции/ограничения делаются через ActivationRegistry (BANNED/LOCKED),
+ *   а НЕ через уничтожение seat.
+ * - SeatSBT не принимает ETH и не является кошельком.
  */
-contract SeatSBT is ERC721, AccessControl {
-    bytes32 public constant REGISTRAR_ROLE = keccak256("REGISTRAR_ROLE");
+contract SeatSBT {
+    /* ===================== Errors ===================== */
+    error NotIssuer();
+    error ZeroAddress();
+    error SeatExists();
+    error NonexistentSeat();
+    error Soulbound();
+    error ApprovalsDisabled();
+    error Unsupported();
 
-    enum Status {
-        Draft,
-        Verified10,
-        VerifiedMarriage,
-        Citizen
+    /* ===================== EIP-165 Interface IDs ===================== */
+    bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
+    bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
+    bytes4 private constant _INTERFACE_ID_ERC721_METADATA = 0x5b5e139f;
+
+    /* ===================== Metadata ===================== */
+    string public constant name = "SeatSBT";
+    string public constant symbol = "SEAT";
+
+    /* ===================== Core storage ===================== */
+    address public immutable issuer;
+
+    mapping(uint256 => address) private _ownerOf;
+    mapping(address => uint256) private _balanceOf;
+
+    uint256 public totalSupply;
+
+    /* ===================== Events ===================== */
+    event Transfer(address indexed from, address indexed to, uint256 indexed seatId);
+    event SeatMinted(address indexed to, uint256 indexed seatId);
+
+    constructor(address issuer_) {
+        if (issuer_ == address(0)) revert ZeroAddress();
+        issuer = issuer_;
     }
 
-    uint256 public nextId = 1;
-
-    mapping(uint256 => Status) public statusOf;
-    mapping(uint256 => address) public accountOf; // seatId -> SeatAccount
-
-    constructor() ERC721("INOMAD Seat", "SEAT") {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(REGISTRAR_ROLE, msg.sender);
+    /* ===================== Views ===================== */
+    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+        return
+            interfaceId == _INTERFACE_ID_ERC165 ||
+            interfaceId == _INTERFACE_ID_ERC721 ||
+            interfaceId == _INTERFACE_ID_ERC721_METADATA;
     }
 
-    function mintSeat(address to) external onlyRole(REGISTRAR_ROLE) returns (uint256 seatId) {
-        seatId = nextId++;
-        _safeMint(to, seatId);
-        statusOf[seatId] = Status.Draft;
+    function balanceOf(address account) public view returns (uint256) {
+        if (account == address(0)) revert ZeroAddress();
+        return _balanceOf[account];
     }
 
-    function setStatus(uint256 seatId, Status s) external onlyRole(REGISTRAR_ROLE) {
-        require(_ownerOf(seatId) != address(0), "Seat: nonexistent");
-        statusOf[seatId] = s;
+    function ownerOf(uint256 seatId) public view returns (address) {
+        address seatOwner = _ownerOf[seatId];
+        if (seatOwner == address(0)) revert NonexistentSeat();
+        return seatOwner;
     }
 
-    function setAccount(uint256 seatId, address seatAccount) external onlyRole(REGISTRAR_ROLE) {
-        require(_ownerOf(seatId) != address(0), "Seat: nonexistent");
-        accountOf[seatId] = seatAccount;
+    function exists(uint256 seatId) public view returns (bool) {
+        return _ownerOf[seatId] != address(0);
     }
 
-    function isCitizen(uint256 seatId) external view returns (bool) {
-        return statusOf[seatId] == Status.Citizen;
+    // Metadata intentionally unsupported at Seat level (lives in CitizenRegistry/DocumentRegistry)
+    function tokenURI(uint256) external pure returns (string memory) {
+        revert Unsupported();
     }
 
-    // Soulbound: запрещаем трансферы
-    function _update(address to, uint256 tokenId, address auth)
-        internal
-        override
-        returns (address from)
-    {
-        from = _ownerOf(tokenId);
-        // разрешаем mint (from == 0) и burn (to == 0), но запрещаем обычный transfer
-        if (from != address(0) && to != address(0)) revert("SeatSBT: non-transferable");
-        return super._update(to, tokenId, auth);
+    /* ===================== Soulbound: hard-disable transfers/approvals ===================== */
+    function transferFrom(address, address, uint256) public pure { revert Soulbound(); }
+    function safeTransferFrom(address, address, uint256) public pure { revert Soulbound(); }
+    function safeTransferFrom(address, address, uint256, bytes calldata) public pure { revert Soulbound(); }
+
+    function approve(address, uint256) public pure { revert ApprovalsDisabled(); }
+    function setApprovalForAll(address, bool) public pure { revert ApprovalsDisabled(); }
+    function getApproved(uint256) public pure returns (address) { return address(0); }
+    function isApprovedForAll(address, address) public pure returns (bool) { return false; }
+
+    /* ===================== Issuance ===================== */
+    function mintSeat(address to, uint256 seatId) external {
+        if (msg.sender != issuer) revert NotIssuer();
+        if (to == address(0)) revert ZeroAddress();
+        if (_ownerOf[seatId] != address(0)) revert SeatExists();
+
+        _ownerOf[seatId] = to;
+        unchecked {
+            _balanceOf[to] += 1;
+            totalSupply += 1;
+        }
+
+        emit Transfer(address(0), to, seatId);
+        emit SeatMinted(to, seatId);
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, AccessControl)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
-    }
+    // No burn/revoke/owner-change functions by constitutional law.
 }

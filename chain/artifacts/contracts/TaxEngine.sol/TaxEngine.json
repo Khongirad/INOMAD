@@ -1,0 +1,430 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TaxEngine",
+  "sourceName": "contracts/TaxEngine.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "ledgerAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "confedAccountId",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "collector",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "ok",
+          "type": "bool"
+        }
+      ],
+      "name": "CollectorSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "confederationAccountId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ConfederationSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "ledger",
+          "type": "address"
+        }
+      ],
+      "name": "LedgerSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "oldOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnerChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "republicKey",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "republicAccountId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "RepublicSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "payerAccountId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "republicKey",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "republicAccountId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "confederationAccountId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "asset",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "republicTax",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "confedTax",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "memo",
+          "type": "bytes32"
+        }
+      ],
+      "name": "TaxCollected",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "CONFED_BPS",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "REPUBLIC_BPS",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "TAX_BPS",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "payerAccountId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "republicKey",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "asset",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "memo",
+          "type": "bytes32"
+        }
+      ],
+      "name": "collectTax",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "republicTax",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "confedTax",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "confederationAccountId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "isCollector",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "ledger",
+      "outputs": [
+        {
+          "internalType": "contract IAltanBankLedgerTaxOps",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "quoteTax",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "republicTax",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "confedTax",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "republicAccountIdOf",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "collector",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "ok",
+          "type": "bool"
+        }
+      ],
+      "name": "setCollector",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "confedAccountId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "setConfederationAccount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "ledgerAddr",
+          "type": "address"
+        }
+      ],
+      "name": "setLedger",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "republicKey",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "republicAccountId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "setRepublic",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080346100cd57601f61090338819003918201601f19168301916001600160401b038311848410176100d25780849260409485528339810103126100cd5780516001600160a01b03811691908290036100cd57602001517ff57c54b22f212bf820775c15cc72bf43e7e958cd3f8fb62b47fb00e3e90f176c60018060a01b0319836000913381845416178355600154161760015582600255604051937fbc62e69a31739e36d57d56991ac20e4e507a7edfff9070e6a11df5a37b8b4e6f8280a280a261081a90816100e98239f35b600080fd5b634e487b7160e01b600052604160045260246000fdfe60806040908082526004918236101561001757600080fd5b600092833560e01c928362b796471461045b575082631d3b0fd9146104325782633246887d146103ba5782634fa1e29914610367578263531763f21461034a57826356397c351461032157826362129804146102e357826368f4a786146102c65782638da5cb5b1461029e5782639c89d4eb1461027f578263b3ca3ed81461025e578263df2cc13f146101ce578263e17b21901461016b578263f034e3c31461014257505063f2fde38b146100cb57600080fd5b3461013f57602036600319011261013f576100e46106e7565b81546001600160a01b03808216926100fd33851461072c565b16809261010b821515610764565b7fb532073b38c83145e3e5135377a08bf9aab55bc0fd7c1179cd4fb995d2a5159c8580a36001600160a01b03191617815580f35b80fd5b833461013f57602036600319011261013f575061015f903561079c565b82519182526020820152f35b909150346101ca57816003193601126101ca5735602435809261019860018060a01b03865416331461072c565b82855260036020528420557fa6fd76701d496f2a088f8b04c4d154b93f9473a3ec731129f57973852f92e5e48380a380f35b8280fd5b9150346101ca57806003193601126101ca576101e86106e7565b60243580151580910361025a577fdd0c37342e4622f900a3159af866c907f3197be55727e1cabbfc4e213e23b3049260209260018060a01b039061023082895416331461072c565b169461023d861515610764565b858752835280862060ff1981541660ff841617905551908152a280f35b8480fd5b83823461027b578160031936011261027b57602090516102bc8152f35b5080fd5b83823461027b578160031936011261027b576020906002549051908152f35b83823461027b578160031936011261027b57905490516001600160a01b039091168152602090f35b83823461027b578160031936011261027b57602090516103e88152f35b909150346101ca5760203660031901126101ca5760209260ff918391906001600160a01b036103106106e7565b168252855220541690519015158152f35b83823461027b578160031936011261027b5760015490516001600160a01b039091168152602090f35b83823461027b578160031936011261027b576020905161012c8152f35b83903461027b57602036600319011261027b573561038f60018060a01b03835416331461072c565b806002557ff57c54b22f212bf820775c15cc72bf43e7e958cd3f8fb62b47fb00e3e90f176c8280a280f35b833461013f57602036600319011261013f576103d46106e7565b81546001600160a01b0391906103ed908316331461072c565b166103f9811515610764565b600180546001600160a01b031916821790557fbc62e69a31739e36d57d56991ac20e4e507a7edfff9070e6a11df5a37b8b4e6f8280a280f35b909150346101ca5760203660031901126101ca5760209282913581526003845220549051908152f35b908491346101ca5760a03660031901126101ca576001600160a01b039260443590602435908435908684169081850361013f576064356084359133815260209789895260ff8c83205416156106b65750858152600388528a812054968715610680576002541561064c576104ce8361079c565b9a909b8c6105bd575b8b610534575b505050509160c0917f2b95c5fdf7d72b5a089a744a0760efbc9bc7eb8dd617e96cddfbcfe09544d97393600254928c51938452898401528b83015289606083015288608083015260a0820152a48351928352820152f35b6001541660025491813b1561025a578e51632240a9ad60e01b815290810189815260208101939093526001600160a01b039093166040830152606082018c905260808201869052839183919082908490829060a00103925af180156105b35761059f575b80806104dd565b6105a98291610702565b61013f5780610598565b8c513d84823e3d90fd5b8060015416803b1561025a57848f8f928b838f936106198d8b988b9351998a9889978896632240a9ad60e01b885287019192608093969594919660a08401978452602084015260018060a01b0316604083015260608201520152565b03925af180156106415761062e575b506104d7565b61063a90949194610702565b928e610628565b508e513d86823e3d90fd5b8b5162461bcd60e51b8152808b018a9052600e60248201526d10d3d391915117d393d517d4d15560921b6044820152606490fd5b8b5162461bcd60e51b8152808b018a9052601060248201526f1491541550931250d7d393d517d4d15560821b6044820152606490fd5b62461bcd60e51b8152898101899052600d60248201526c2727aa2fa1a7a62622a1aa27a960991b6044820152606490fd5b600435906001600160a01b03821682036106fd57565b600080fd5b67ffffffffffffffff811161071657604052565b634e487b7160e01b600052604160045260246000fd5b1561073357565b60405162461bcd60e51b81526020600482015260096024820152682727aa2fa7aba722a960b91b6044820152606490fd5b1561076b57565b60405162461bcd60e51b81526020600482015260096024820152682d22a927afa0a2222960b91b6044820152606490fd5b906102bc9182810290801593818304148417156107ce576127108092049361012c8083029283041417156107ce570490565b634e487b7160e01b600052601160045260246000fdfea2646970667358221220ffe010945a01e7f8c9e839e9dcb6761faba2a4f9989ece81aa9ee007d734a44764736f6c63430008180033",
+  "deployedBytecode": "0x60806040908082526004918236101561001757600080fd5b600092833560e01c928362b796471461045b575082631d3b0fd9146104325782633246887d146103ba5782634fa1e29914610367578263531763f21461034a57826356397c351461032157826362129804146102e357826368f4a786146102c65782638da5cb5b1461029e5782639c89d4eb1461027f578263b3ca3ed81461025e578263df2cc13f146101ce578263e17b21901461016b578263f034e3c31461014257505063f2fde38b146100cb57600080fd5b3461013f57602036600319011261013f576100e46106e7565b81546001600160a01b03808216926100fd33851461072c565b16809261010b821515610764565b7fb532073b38c83145e3e5135377a08bf9aab55bc0fd7c1179cd4fb995d2a5159c8580a36001600160a01b03191617815580f35b80fd5b833461013f57602036600319011261013f575061015f903561079c565b82519182526020820152f35b909150346101ca57816003193601126101ca5735602435809261019860018060a01b03865416331461072c565b82855260036020528420557fa6fd76701d496f2a088f8b04c4d154b93f9473a3ec731129f57973852f92e5e48380a380f35b8280fd5b9150346101ca57806003193601126101ca576101e86106e7565b60243580151580910361025a577fdd0c37342e4622f900a3159af866c907f3197be55727e1cabbfc4e213e23b3049260209260018060a01b039061023082895416331461072c565b169461023d861515610764565b858752835280862060ff1981541660ff841617905551908152a280f35b8480fd5b83823461027b578160031936011261027b57602090516102bc8152f35b5080fd5b83823461027b578160031936011261027b576020906002549051908152f35b83823461027b578160031936011261027b57905490516001600160a01b039091168152602090f35b83823461027b578160031936011261027b57602090516103e88152f35b909150346101ca5760203660031901126101ca5760209260ff918391906001600160a01b036103106106e7565b168252855220541690519015158152f35b83823461027b578160031936011261027b5760015490516001600160a01b039091168152602090f35b83823461027b578160031936011261027b576020905161012c8152f35b83903461027b57602036600319011261027b573561038f60018060a01b03835416331461072c565b806002557ff57c54b22f212bf820775c15cc72bf43e7e958cd3f8fb62b47fb00e3e90f176c8280a280f35b833461013f57602036600319011261013f576103d46106e7565b81546001600160a01b0391906103ed908316331461072c565b166103f9811515610764565b600180546001600160a01b031916821790557fbc62e69a31739e36d57d56991ac20e4e507a7edfff9070e6a11df5a37b8b4e6f8280a280f35b909150346101ca5760203660031901126101ca5760209282913581526003845220549051908152f35b908491346101ca5760a03660031901126101ca576001600160a01b039260443590602435908435908684169081850361013f576064356084359133815260209789895260ff8c83205416156106b65750858152600388528a812054968715610680576002541561064c576104ce8361079c565b9a909b8c6105bd575b8b610534575b505050509160c0917f2b95c5fdf7d72b5a089a744a0760efbc9bc7eb8dd617e96cddfbcfe09544d97393600254928c51938452898401528b83015289606083015288608083015260a0820152a48351928352820152f35b6001541660025491813b1561025a578e51632240a9ad60e01b815290810189815260208101939093526001600160a01b039093166040830152606082018c905260808201869052839183919082908490829060a00103925af180156105b35761059f575b80806104dd565b6105a98291610702565b61013f5780610598565b8c513d84823e3d90fd5b8060015416803b1561025a57848f8f928b838f936106198d8b988b9351998a9889978896632240a9ad60e01b885287019192608093969594919660a08401978452602084015260018060a01b0316604083015260608201520152565b03925af180156106415761062e575b506104d7565b61063a90949194610702565b928e610628565b508e513d86823e3d90fd5b8b5162461bcd60e51b8152808b018a9052600e60248201526d10d3d391915117d393d517d4d15560921b6044820152606490fd5b8b5162461bcd60e51b8152808b018a9052601060248201526f1491541550931250d7d393d517d4d15560821b6044820152606490fd5b62461bcd60e51b8152898101899052600d60248201526c2727aa2fa1a7a62622a1aa27a960991b6044820152606490fd5b600435906001600160a01b03821682036106fd57565b600080fd5b67ffffffffffffffff811161071657604052565b634e487b7160e01b600052604160045260246000fd5b1561073357565b60405162461bcd60e51b81526020600482015260096024820152682727aa2fa7aba722a960b91b6044820152606490fd5b1561076b57565b60405162461bcd60e51b81526020600482015260096024820152682d22a927afa0a2222960b91b6044820152606490fd5b906102bc9182810290801593818304148417156107ce576127108092049361012c8083029283041417156107ce570490565b634e487b7160e01b600052601160045260246000fdfea2646970667358221220ffe010945a01e7f8c9e839e9dcb6761faba2a4f9989ece81aa9ee007d734a44764736f6c63430008180033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

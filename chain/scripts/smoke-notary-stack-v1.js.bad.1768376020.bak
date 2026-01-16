@@ -1,0 +1,220 @@
+const fs = require("fs");
+const path = require("path");
+const { ethers } = require("hardhat");
+
+async function main() {
+  const signers = await ethers.getSigners();
+  const [deployer, notaryZun, notaryMy, notaryTu, ...rest] = signers;
+
+  // Deploy StructureRegistry
+  const StructureRegistry = await ethers.getContractFactory(
+    "StructureRegistry"
+  );
+  const registry = await StructureRegistry.deploy(ethers.ZeroAddress);
+  await registry.waitForDeployment();
+  const SeatSBT = await ethers.getContractFactory("SeatSBT");
+  await seat.waitForDeployment();
+
+await factory.waitForDeployment();
+
+  const CitizenRegistry = await ethers.getContractFactory("CitizenRegistry");
+await citizen.waitForDeployment();
+
+
+  0, // OrgType.PRIVATE
+  0, // Branch.NONE
+  ethers.ZeroAddress, // notary
+  ethers.ZeroAddress  // archivist
+);
+const rcOrg = await txOrg.wait();
+
+for (const log of rcOrg.logs) {{
+  try {{
+    if (parsed && (parsed.name === "OrganizationCreated" || parsed.name === "OrganizationRegistered")) {{
+    }}
+  }} catch (e) {{}}
+}}
+
+  try {{
+  }} catch (e) {{}}
+}}
+
+
+await arban.waitForDeployment();
+
+  const registryAddr = await registry.getAddress();
+
+  // Create 10 Zun -> 1 Myangan -> (need 10 Myangan for Tumen, but for smoke we’ll create 10 Myangan)
+  const leader = deployer.address;
+
+  const myanganIds = [];
+
+  for (let m = 0; m < 10; m++) {
+    const zunIds = [];
+
+    for (let z = 0; z < 10; z++) {
+      const base = m * 100 + z * 10 + 1;
+        base,
+        base + 1,
+        base + 2,
+        base + 3,
+        base + 4,
+        base + 5,
+        base + 6,
+        base + 7,
+        base + 8,
+        base + 9,
+      ];
+
+      const txZ = await registry.registerZun(arbanIds, leader);
+      const rcZ = await txZ.wait();
+      const evtZ = rcZ.logs
+        .map((l) => {
+          try {
+            return registry.interface.parseLog(l);
+          } catch {
+            return null;
+          }
+        })
+        .find((e) => e && e.name === "ZunRegistered");
+      const zunId = Number(evtZ.args.zunId);
+      zunIds.push(zunId);
+
+      // лидеры Arbans для Zun-доков (10 лидеров)
+      for (let i = 0; i < 10; i++) {
+        await (
+          await registry.setArbanLeader(
+            arbanIds[i],
+            rest[(m * 100 + z * 10 + i) % rest.length].address
+          )
+        ).wait();
+      }
+
+      // лидер самого Zun (для Myangan-доков)
+      await (
+        await registry.setZunLeaderCitizen(
+          zunId,
+          rest[(m * 10 + z) % rest.length].address
+        )
+      ).wait();
+    }
+
+    const txM = await registry.registerMyangan(zunIds, leader);
+    const rcM = await txM.wait();
+    const evtM = rcM.logs
+      .map((l) => {
+        try {
+          return registry.interface.parseLog(l);
+        } catch {
+          return null;
+        }
+      })
+      .find((e) => e && e.name === "MyanganRegistered");
+
+    const myanganId = Number(evtM.args.myanganId);
+    myanganIds.push(myanganId);
+
+    // лидер Myangan (для Tumen-доков)
+    await (
+      await registry.setMyanganLeaderCitizen(
+        myanganId,
+        rest[m % rest.length].address
+      )
+    ).wait();
+  }
+
+  // Create Tumen from 10 Myangan
+  const txT = await registry.registerTumen(myanganIds, leader);
+  const rcT = await txT.wait();
+  const evtT = rcT.logs
+    .map((l) => {
+      try {
+        return registry.interface.parseLog(l);
+      } catch {
+        return null;
+      }
+    })
+    .find((e) => e && e.name === "TumenRegistered");
+
+  const tumenId = Number(evtT.args.tumenId);
+  await (await registry.setTumenLeaderCitizen(tumenId, rest[0].address)).wait();
+
+  // Deploy DocumentRegistry + NotaryHub
+  const DocumentRegistry = await ethers.getContractFactory("DocumentRegistry");
+  const docReg = await DocumentRegistry.deploy();
+  await docReg.waitForDeployment();
+
+
+  const ChairmanRegistry = await ethers.getContractFactory("ChairmanRegistry");
+  const chairReg = await ChairmanRegistry.deploy();
+  await chairReg.waitForDeployment();
+
+  const NotaryHub = await ethers.getContractFactory("NotaryHub");
+  const hub = await NotaryHub.deploy(registryAddr, await docReg.getAddress(), await chairReg.getAddress());
+  await hub.waitForDeployment();
+
+  
+
+
+  // --- Deploy SeatSBT + CitizenRegistry stack in THIS scope (for addresses-stack.json) ---
+  const SeatSBT2 = await ethers.getContractFactory("SeatSBT");
+
+  await factory2.waitForDeployment();
+
+  const CitizenRegistry2 = await ethers.getContractFactory("CitizenRegistry");
+
+
+    0, // OrgType.PRIVATE
+    0, // Branch.NONE
+    ethers.ZeroAddress, // notary
+    ethers.ZeroAddress  // archivist
+  );
+
+    try {
+      if (parsed && (parsed.name === "OrganizationCreated" || parsed.name === "OrganizationRegistered")) {
+      }
+    } catch (e) {}
+  }
+  }
+
+
+    // --- PRINT STACK ADDRESSES ---
+    const stackOut = {
+      StructureRegistry: registryAddr,
+      DocumentRegistry: await docReg.getAddress(),
+      ChairmanRegistry: await chairReg.getAddress(),
+      NotaryHub: await hub.getAddress(),
+    };
+    const outPath = path.join(process.cwd(), "addresses-stack.json");
+    fs.writeFileSync(outPath, JSON.stringify(stackOut, null, 2));
+    console.log("STACK_ADDRESSES_JSON:", outPath);
+    for (const [k,v] of Object.entries(stackOut)) console.log(`${k}: ${v}`);
+// make hub owner of docReg
+  await (await docReg.setOwner(await hub.getAddress())).wait();
+
+  // set notaries
+  await (await hub.setNotary(notaryZun.address, 2, true)).wait(); // ZUN
+  await (await hub.setNotary(notaryMy.address, 3, true)).wait(); // MYANGAN
+  await (await hub.setNotary(notaryTu.address, 4, true)).wait(); // TUMEN
+
+  // Issue Myangan doc
+  const hashMy = ethers.keccak256(ethers.toUtf8Bytes("MYANGAN:doc:v1"));
+  const issuedMy = await (
+    await hub.connect(notaryMy).issueMyanganResolution(1, hashMy)
+  ).wait();
+  console.log("Issued Myangan doc (id=1) OK");
+
+  // Issue Tumen doc
+  const hashTu = ethers.keccak256(ethers.toUtf8Bytes("TUMEN:doc:v1"));
+  const issuedTu = await (
+    await hub.connect(notaryTu).issueTumenResolution(tumenId, hashTu)
+  ).wait();
+  console.log("Issued Tumen doc OK");
+
+  console.log("Done.");
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

@@ -1,0 +1,160 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ChairmanRegistry",
+  "sourceName": "contracts/ChairmanRegistry.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "NotAuthorizedElection",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotOwner",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "chairman",
+          "type": "address"
+        }
+      ],
+      "name": "ChairmanSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "election",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "ElectionAuthorized",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnerSet",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "authorizedElection",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "chairman",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newChairman",
+          "type": "address"
+        }
+      ],
+      "name": "setChairman",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "election",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "setElection",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "setOwner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080806040523461004f57600080546001600160a01b031916339081178255907f50146d0e3c60aa1d17a70635b05494f864e86144a2201275021014fbf08bafe29080a26102e090816100558239f35b600080fdfe60806040818152600436101561001457600080fd5b600091823560e01c90816313af403514610210575080636401192d1461017957806387f7b975146101515780638da5cb5b1461012a578063a7b49529146100a45763d86c31481461006457600080fd5b346100a05760203660031901126100a05760209160ff9082906001600160a01b0361008d61028f565b1681526002855220541690519015158152f35b5080fd5b50346100a05760203660031901126100a0576100be61028f565b90338352600260205260ff81842054161561011a5750600180546001600160a01b0319166001600160a01b039290921691821790557fce0ba87b7f280382262f6e65d96833733be65905a548b91140666df9989f47088280a280f35b516399d3800160e01b8152600490fd5b50346100a057816003193601126100a057905490516001600160a01b039091168152602090f35b50346100a057816003193601126100a05760015490516001600160a01b039091168152602090f35b50346100a057806003193601126100a05761019261028f565b6024359081151580920361020c5783546001600160a01b039190821633036101fb57916020917f26f344e0c4c9da69524ad8c4ffad77196f2630e097eff0c7a7e52904d5b33fcd9316938486526002835280862060ff1981541660ff841617905551908152a280f35b83516330cd747160e01b8152600490fd5b8380fd5b8390346100a05760203660031901126100a05761022b61028f565b8254916001600160a01b039190828416330361028057501680916bffffffffffffffffffffffff60a01b161782557f50146d0e3c60aa1d17a70635b05494f864e86144a2201275021014fbf08bafe28280a280f35b6330cd747160e01b8152600490fd5b600435906001600160a01b03821682036102a557565b600080fdfea2646970667358221220fd88ac3bade3df13a906581292b4018c1869c4d6f4aed92a28e5e02a2fd2f69964736f6c63430008180033",
+  "deployedBytecode": "0x60806040818152600436101561001457600080fd5b600091823560e01c90816313af403514610210575080636401192d1461017957806387f7b975146101515780638da5cb5b1461012a578063a7b49529146100a45763d86c31481461006457600080fd5b346100a05760203660031901126100a05760209160ff9082906001600160a01b0361008d61028f565b1681526002855220541690519015158152f35b5080fd5b50346100a05760203660031901126100a0576100be61028f565b90338352600260205260ff81842054161561011a5750600180546001600160a01b0319166001600160a01b039290921691821790557fce0ba87b7f280382262f6e65d96833733be65905a548b91140666df9989f47088280a280f35b516399d3800160e01b8152600490fd5b50346100a057816003193601126100a057905490516001600160a01b039091168152602090f35b50346100a057816003193601126100a05760015490516001600160a01b039091168152602090f35b50346100a057806003193601126100a05761019261028f565b6024359081151580920361020c5783546001600160a01b039190821633036101fb57916020917f26f344e0c4c9da69524ad8c4ffad77196f2630e097eff0c7a7e52904d5b33fcd9316938486526002835280862060ff1981541660ff841617905551908152a280f35b83516330cd747160e01b8152600490fd5b8380fd5b8390346100a05760203660031901126100a05761022b61028f565b8254916001600160a01b039190828416330361028057501680916bffffffffffffffffffffffff60a01b161782557f50146d0e3c60aa1d17a70635b05494f864e86144a2201275021014fbf08bafe28280a280f35b6330cd747160e01b8152600490fd5b600435906001600160a01b03821682036102a557565b600080fdfea2646970667358221220fd88ac3bade3df13a906581292b4018c1869c4d6f4aed92a28e5e02a2fd2f69964736f6c63430008180033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

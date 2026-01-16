@@ -1,0 +1,188 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "BankLicenseRegistry",
+  "sourceName": "contracts/BankLicenseRegistry.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "cb",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "cb",
+          "type": "address"
+        }
+      ],
+      "name": "CentralBankSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "bank",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "nameHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "metaHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "LicenseIssued",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "bank",
+          "type": "address"
+        }
+      ],
+      "name": "LicenseRevoked",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "centralBank",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "bank",
+          "type": "address"
+        }
+      ],
+      "name": "isLicensed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "bank",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "nameHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "metaHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "issueLicense",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "licenseOf",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "active",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "nameHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "metaHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "issuedAt",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "bank",
+          "type": "address"
+        }
+      ],
+      "name": "revokeLicense",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "cb",
+          "type": "address"
+        }
+      ],
+      "name": "setCentralBank",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080346100cf57601f6104df38819003918201601f19168301916001600160401b038311848410176100d4578084926020946040528339810103126100cf57516001600160a01b038116908190036100cf57801561009e57600080546001600160a01b0319168217815560405191907fbcf54ac55c42b0bfb8e38409501a5c8ea0e9927b7038dd044fb1956e14f3a26c9080a26103f490816100eb8239f35b60405162461bcd60e51b81526020600482015260096024820152682d22a927afa0a2222960b91b6044820152606490fd5b600080fd5b634e487b7160e01b600052604160045260246000fdfe6080604090808252600436101561001557600080fd5b600090813560e01c908163469c4e98146102c357508063485ddab8146102495780639a4a0fb214610221578063a542c2a4146101df578063b5ce02ae1461016a5763b74f1d6a1461006557600080fd5b346101675760603660031901126101675761007e61032c565b91602435906044359360018060a01b039061009d828654163314610347565b16916100aa831515610386565b67ffffffffffffffff948251608081019681881081891117610153577ff94c5c76f4f87b93fa8f33b256ab588df28d71deb8f8f5cf151e76b23c5a239395969785526001825260036020830192858452868101858152606082019484421686528a8c526001602052888c209251151560ff801985541691161783555160018301555160028201550191511667ffffffffffffffff1982541617905582519182526020820152a280f35b634e487b7160e01b87526041600452602487fd5b80fd5b50346101675760203660031901126101675761018461032c565b8154906001600160a01b039061019d3383851614610347565b1680916101ab821515610386565b6001600160a01b0319161782557fbcf54ac55c42b0bfb8e38409501a5c8ea0e9927b7038dd044fb1956e14f3a26c8280a280f35b50903461021d57602036600319011261021d5760209160ff9082906001600160a01b0361020a61032c565b1681526001855220541690519015158152f35b5080fd5b50903461021d578160031936011261021d57905490516001600160a01b039091168152602090f35b50903461021d57602036600319011261021d5761026461032c565b82546001600160a01b03919061027d9083163314610347565b169061028a821515610386565b81835260016020528220805460ff191690557f5d663bb027a27c27341f8b0d6d24d81d85d4572e74d95dfab66e94fc497aaadd8280a280f35b905082346103285760203660031901126103285760809281906001600160a01b036102ec61032c565b16815260016020522060ff81541691600182015467ffffffffffffffff6003600285015494015416931515855260208501528301526060820152f35b8280fd5b600435906001600160a01b038216820361034257565b600080fd5b1561034e57565b60405162461bcd60e51b815260206004820152601060248201526f4e4f545f43454e5452414c5f42414e4b60801b6044820152606490fd5b1561038d57565b60405162461bcd60e51b81526020600482015260096024820152682d22a927afa0a2222960b91b6044820152606490fdfea264697066735822122083a715131227ffe2cda488a39acd621c011fb11d01636b64b881a7f33051fc8564736f6c63430008180033",
+  "deployedBytecode": "0x6080604090808252600436101561001557600080fd5b600090813560e01c908163469c4e98146102c357508063485ddab8146102495780639a4a0fb214610221578063a542c2a4146101df578063b5ce02ae1461016a5763b74f1d6a1461006557600080fd5b346101675760603660031901126101675761007e61032c565b91602435906044359360018060a01b039061009d828654163314610347565b16916100aa831515610386565b67ffffffffffffffff948251608081019681881081891117610153577ff94c5c76f4f87b93fa8f33b256ab588df28d71deb8f8f5cf151e76b23c5a239395969785526001825260036020830192858452868101858152606082019484421686528a8c526001602052888c209251151560ff801985541691161783555160018301555160028201550191511667ffffffffffffffff1982541617905582519182526020820152a280f35b634e487b7160e01b87526041600452602487fd5b80fd5b50346101675760203660031901126101675761018461032c565b8154906001600160a01b039061019d3383851614610347565b1680916101ab821515610386565b6001600160a01b0319161782557fbcf54ac55c42b0bfb8e38409501a5c8ea0e9927b7038dd044fb1956e14f3a26c8280a280f35b50903461021d57602036600319011261021d5760209160ff9082906001600160a01b0361020a61032c565b1681526001855220541690519015158152f35b5080fd5b50903461021d578160031936011261021d57905490516001600160a01b039091168152602090f35b50903461021d57602036600319011261021d5761026461032c565b82546001600160a01b03919061027d9083163314610347565b169061028a821515610386565b81835260016020528220805460ff191690557f5d663bb027a27c27341f8b0d6d24d81d85d4572e74d95dfab66e94fc497aaadd8280a280f35b905082346103285760203660031901126103285760809281906001600160a01b036102ec61032c565b16815260016020522060ff81541691600182015467ffffffffffffffff6003600285015494015416931515855260208501528301526060820152f35b8280fd5b600435906001600160a01b038216820361034257565b600080fd5b1561034e57565b60405162461bcd60e51b815260206004820152601060248201526f4e4f545f43454e5452414c5f42414e4b60801b6044820152606490fd5b1561038d57565b60405162461bcd60e51b81526020600482015260096024820152682d22a927afa0a2222960b91b6044820152606490fdfea264697066735822122083a715131227ffe2cda488a39acd621c011fb11d01636b64b881a7f33051fc8564736f6c63430008180033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
