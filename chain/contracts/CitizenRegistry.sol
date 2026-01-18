@@ -2,9 +2,14 @@
 pragma solidity ^0.8.24;
 
 interface ISeatSBT {
-    function mintSeat(address to, uint256 seatId) external;
+    function mintSeat(address to, uint256 seatId, uint32 cohortArbanId, uint16 competencyFlags) external;
     function exists(uint256 seatId) external view returns (bool);
 }
+
+interface IAltanWalletRegistry {
+    function createWallet(uint256 seatId) external returns (address);
+}
+
 
 /**
  * ВАЖНО:
@@ -34,12 +39,15 @@ interface IActivationRegistryOptional {
  * - Политические атрибуты фиксируются на уровне реестра (не в SeatSBT)
  */
 contract CitizenRegistry {
+
     /* ===================== Errors ===================== */
     error NotOwner();
     error ZeroAddress();
     error NotAcceptedConstitution();
     error AlreadyHasSeat();
     error SeatAlreadyExists();
+    error WalletRegistryAlreadySet();
+    error WalletRegistryNotSet();
 
     /* ===================== Owner (MVP) ===================== */
     address public owner;
@@ -50,6 +58,7 @@ contract CitizenRegistry {
 
     /* ===================== Dependencies ===================== */
     ISeatSBT public seatSbt; // set once after deployment (или передайте в ctor если порядок позволяет)
+    IAltanWalletRegistry public walletRegistry; // set once after deployment
     IConstitutionAcceptanceRegistry public immutable acceptance;
     address public activationRegistry; // optional hook target
 
@@ -72,6 +81,7 @@ contract CitizenRegistry {
     /* ===================== Events ===================== */
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
     event SeatSBTSet(address indexed seatSbt);
+    event WalletRegistrySet(address indexed walletRegistry);
     event ActivationRegistrySet(address indexed activationRegistry);
     event CitizenMinted(address indexed citizen, uint256 indexed seatId, uint32 cohortArbanId, bytes32 ethicsHash);
     event InitialLockHookCalled(uint256 indexed seatId, bool ok);
@@ -92,6 +102,14 @@ contract CitizenRegistry {
         seatSbt = ISeatSBT(seatSbt_);
         emit SeatSBTSet(seatSbt_);
     }
+
+    function setWalletRegistry(address walletRegistry_) external onlyOwner {
+        if (walletRegistry_ == address(0)) revert ZeroAddress();
+        if (address(walletRegistry) != address(0)) revert WalletRegistryAlreadySet();
+        walletRegistry = IAltanWalletRegistry(walletRegistry_);
+        emit WalletRegistrySet(walletRegistry_);
+    }
+
 
     function setActivationRegistry(address activationRegistry_) external onlyOwner {
         // optional, can be zero
@@ -133,7 +151,9 @@ contract CitizenRegistry {
         // extra safety
         if (seatSbt.exists(seatId)) revert SeatAlreadyExists();
 
-        seatSbt.mintSeat(msg.sender, seatId);
+        seatSbt.mintSeat(msg.sender, seatId, cohortArbanId, 3);
+        if (address(walletRegistry) == address(0)) revert WalletRegistryNotSet();
+        walletRegistry.createWallet(seatId);
 
         seatOf[msg.sender] = seatId;
         ownerOfSeat[seatId] = msg.sender;
@@ -173,7 +193,9 @@ contract CitizenRegistry {
         seatId = nextSeatId++;
         if (seatSbt.exists(seatId)) revert SeatAlreadyExists();
 
-        seatSbt.mintSeat(citizen, seatId);
+        seatSbt.mintSeat(citizen, seatId, cohortArbanId, 3);
+        if (address(walletRegistry) == address(0)) revert WalletRegistryNotSet();
+        walletRegistry.createWallet(seatId);
 
         seatOf[citizen] = seatId;
         ownerOfSeat[seatId] = citizen;

@@ -8,18 +8,13 @@ async function main() {
   const addressesPath = path.join(__dirname, "..", "addresses.json");
   const addrs = loadJSON(addressesPath);
 
-  const ch = addrs.CONSTITUTION_HASH;
-  const vh = addrs.VERSION_HASH;
-  if (!ch || !vh) throw new Error("CONSTITUTION_HASH / VERSION_HASH missing in addresses.json");
-
-  const Factory = await ethers.getContractFactory("ConstitutionAcceptanceRegistry");
-  const c = await Factory.deploy(ch, vh);
-
+  const Factory = await ethers.getContractFactory("SeatSBT");
+  const c = await Factory.deploy();
   await c.waitForDeployment();
   const addr = await c.getAddress();
 
-  console.log("ConstitutionAcceptanceRegistry:", addr);
-  addrs.ConstitutionAcceptanceRegistry = addr;
+  console.log("SeatSBT:", addr);
+  addrs.SeatSBT = addr;
   saveJSON(addressesPath, addrs);
   console.log("addresses.json updated");
 }

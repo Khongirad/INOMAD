@@ -8,18 +8,16 @@ async function main() {
   const addressesPath = path.join(__dirname, "..", "addresses.json");
   const addrs = loadJSON(addressesPath);
 
-  const ch = addrs.CONSTITUTION_HASH;
-  const vh = addrs.VERSION_HASH;
-  if (!ch || !vh) throw new Error("CONSTITUTION_HASH / VERSION_HASH missing in addresses.json");
+  const seatSbt = addrs.SeatSBT;
+  if (!seatSbt) throw new Error("SeatSBT missing");
 
-  const Factory = await ethers.getContractFactory("ConstitutionAcceptanceRegistry");
-  const c = await Factory.deploy(ch, vh);
+  const Factory = await ethers.getContractFactory("AltanWalletRegistry");
+  const reg = await Factory.deploy(seatSbt);
+  await reg.waitForDeployment();
+  const addr = await reg.getAddress();
 
-  await c.waitForDeployment();
-  const addr = await c.getAddress();
-
-  console.log("ConstitutionAcceptanceRegistry:", addr);
-  addrs.ConstitutionAcceptanceRegistry = addr;
+  console.log("AltanWalletRegistry:", addr);
+  addrs.AltanWalletRegistry = addr;
   saveJSON(addressesPath, addrs);
   console.log("addresses.json updated");
 }
