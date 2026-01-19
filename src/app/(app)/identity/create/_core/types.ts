@@ -3,6 +3,7 @@
 export type IdentityStatus = "citizen" | "foreigner";
 export type Gender = "male" | "female" | "other";
 export type ParentStatus = "known" | "unknown" | "not_declared";
+export type VerificationStatus = "pending" | "partial" | "verified";
 
 export type MacroRegion =
   | "siberia"
@@ -20,6 +21,13 @@ export type EthnicityRecord = {
   isIndigenous?: boolean;
 };
 
+export type Verifier = {
+  name: string;
+  contact?: string;
+  verified: boolean;
+  verifiedAt?: number;
+};
+
 export interface IdentityDraft {
   status: IdentityStatus;
 
@@ -34,6 +42,22 @@ export interface IdentityDraft {
     };
   };
 
+  // Contact information
+  contact: {
+    phoneNumber: string;
+    email: string;
+    residenceAddress: string;
+  };
+
+  // Passport details
+  passport: {
+    series: string;
+    number: string;
+    issuedBy: string;
+    issuedDate: string;
+    expirationDate: string;
+  };
+
   territory: {
     macroRegion: MacroRegion;
   };
@@ -44,6 +68,12 @@ export interface IdentityDraft {
       label: string;
     };
     selfDeclaredText: string;
+  };
+
+  // Verification system
+  verification: {
+    status: VerificationStatus;
+    verifiers: Verifier[];
   };
 
   // единый технический timestamp (для reducer/storage)
@@ -63,11 +93,30 @@ export const createEmptyDraft = (): IdentityDraft => {
       placeOfBirth: { label: "" },
     },
 
+    contact: {
+      phoneNumber: "",
+      email: "",
+      residenceAddress: "",
+    },
+
+    passport: {
+      series: "",
+      number: "",
+      issuedBy: "",
+      issuedDate: "",
+      expirationDate: "",
+    },
+
     territory: { macroRegion: "unknown" },
 
     ethnicity: {
       primary: undefined,
       selfDeclaredText: "",
+    },
+
+    verification: {
+      status: "pending",
+      verifiers: [],
     },
 
     updatedAt: Date.now(),

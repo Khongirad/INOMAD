@@ -113,6 +113,27 @@ function migrateDraft(input: unknown): IdentityDraft {
   }
   if (!updatedAt) updatedAt = Date.now();
 
+  // contact (new fields)
+  const contactRaw = input["contact"];
+  const contact = isRecord(contactRaw) ? contactRaw : {};
+  const phoneNumber = asString(contact["phoneNumber"], base.contact.phoneNumber);
+  const email = asString(contact["email"], base.contact.email);
+  const residenceAddress = asString(contact["residenceAddress"], base.contact.residenceAddress);
+
+  // passport (new fields)
+  const passportRaw = input["passport"];
+  const passport = isRecord(passportRaw) ? passportRaw : {};
+  const passportSeries = asString(passport["series"], base.passport.series);
+  const passportNumber = asString(passport["number"], base.passport.number);
+  const issuedBy = asString(passport["issuedBy"], base.passport.issuedBy);
+  const issuedDate = asString(passport["issuedDate"], base.passport.issuedDate);
+  const expirationDate = asString(passport["expirationDate"], base.passport.expirationDate);
+
+  // verification (new fields)
+  const verificationRaw = input["verification"];
+  const verification = isRecord(verificationRaw) ? verificationRaw : {};
+  const verifiers = Array.isArray(verification["verifiers"]) ? verification["verifiers"] : [];
+
   return {
     status,
     basic: {
@@ -123,8 +144,29 @@ function migrateDraft(input: unknown): IdentityDraft {
       dateOfBirth,
       placeOfBirth: { label: placeOfBirthLabel },
     },
+    contact: {
+      phoneNumber,
+      email,
+      residenceAddress,
+    },
+    passport: {
+      series: passportSeries,
+      number: passportNumber,
+      issuedBy,
+      issuedDate,
+      expirationDate,
+    },
     territory: { macroRegion },
     ethnicity: { primary, selfDeclaredText },
+    verification: {
+      status: base.verification.status,
+      verifiers: verifiers.map((v: any) => ({
+        name: asString(v?.name, ""),
+        contact: asString(v?.contact, undefined),
+        verified: Boolean(v?.verified),
+        verifiedAt: v?.verifiedAt ? asNumber(v.verifiedAt, 0) : undefined,
+      })),
+    },
     updatedAt,
   };
 }

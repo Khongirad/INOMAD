@@ -5,6 +5,7 @@ import type {
   IdentityStatus,
   Gender,
   MacroRegion,
+  Verifier,
 } from "./types";
 
 export type IdentityAction =
@@ -18,9 +19,19 @@ export type IdentityAction =
   | { type: "SET_BASIC_GENDER"; value: Gender | "" }
   | { type: "SET_BASIC_DOB"; value: string }
   | { type: "SET_BIRTHPLACE_LABEL"; value: string }
+  | { type: "SET_CONTACT_PHONE"; value: string }
+  | { type: "SET_CONTACT_EMAIL"; value: string }
+  | { type: "SET_CONTACT_ADDRESS"; value: string }
+  | { type: "SET_PASSPORT_SERIES"; value: string }
+  | { type: "SET_PASSPORT_NUMBER"; value: string }
+  | { type: "SET_PASSPORT_ISSUED_BY"; value: string }
+  | { type: "SET_PASSPORT_ISSUED_DATE"; value: string }
+  | { type: "SET_PASSPORT_EXPIRATION_DATE"; value: string }
   | { type: "SET_TERRITORY_MACROREGION"; value: MacroRegion }
   | { type: "SET_ETHNICITY_PRIMARY"; value?: { code: string; label: string } }
-  | { type: "SET_ETHNICITY_SELF_TEXT"; value: string };
+  | { type: "SET_ETHNICITY_SELF_TEXT"; value: string }
+  | { type: "ADD_VERIFIER"; verifier: Verifier }
+  | { type: "REMOVE_VERIFIER"; index: number };
 
 function touch(draft: IdentityDraft): IdentityDraft {
   return { ...draft, updatedAt: Date.now() };
@@ -103,6 +114,74 @@ export function identityReducer(
         },
       });
     }
+
+    case "SET_CONTACT_PHONE":
+      return touch({
+        ...state,
+        contact: { ...state.contact, phoneNumber: action.value },
+      });
+
+    case "SET_CONTACT_EMAIL":
+      return touch({
+        ...state,
+        contact: { ...state.contact, email: action.value },
+      });
+
+    case "SET_CONTACT_ADDRESS":
+      return touch({
+        ...state,
+        contact: { ...state.contact, residenceAddress: action.value },
+      });
+
+    case "SET_PASSPORT_SERIES":
+      return touch({
+        ...state,
+        passport: { ...state.passport, series: action.value },
+      });
+
+    case "SET_PASSPORT_NUMBER":
+      return touch({
+        ...state,
+        passport: { ...state.passport, number: action.value },
+      });
+
+    case "SET_PASSPORT_ISSUED_BY":
+      return touch({
+        ...state,
+        passport: { ...state.passport, issuedBy: action.value },
+      });
+
+    case "SET_PASSPORT_ISSUED_DATE":
+      return touch({
+        ...state,
+        passport: { ...state.passport, issuedDate: action.value },
+      });
+
+    case "SET_PASSPORT_EXPIRATION_DATE":
+      return touch({
+        ...state,
+        passport: { ...state.passport, expirationDate: action.value },
+      });
+
+    case "ADD_VERIFIER":
+      return touch({
+        ...state,
+        verification: {
+          ...state.verification,
+          verifiers: [...state.verification.verifiers, action.verifier],
+        },
+      });
+
+    case "REMOVE_VERIFIER":
+      return touch({
+        ...state,
+        verification: {
+          ...state.verification,
+          verifiers: state.verification.verifiers.filter(
+            (_, i) => i !== action.index
+          ),
+        },
+      });
 
     default:
       return state;
