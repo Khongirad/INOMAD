@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "./Zun.sol";
 import "./Myangan.sol";
 import "./Tumen.sol";
+import "./IBranchRegistry.sol";
 
 /**
  * StructureRegistry — тонкий реестр связей + лидерство + апдейтеры (для документов).
@@ -187,7 +188,16 @@ contract StructureRegistry {
         }
 
         myanganId = nextMyanganId++;
-        Myangan myangan = new Myangan(address(this), organization, myanganId, zunIds, leader);
+        // Note: branchRegistry=address(0), branch=NONE for legacy compatibility
+        Myangan myangan = new Myangan(
+            address(this),
+            organization,
+            myanganId,
+            zunIds,
+            leader,
+            address(0),
+            IBranchRegistry.Branch.NONE
+        );
 
         myanganAddress[myanganId] = address(myangan);
         _myanganChildren[myanganId] = zunIds;
@@ -220,7 +230,16 @@ contract StructureRegistry {
         }
 
         tumenId = nextTumenId++;
-        Tumen tumen = new Tumen(address(this), organization, tumenId, myanganIds, leader);
+        // Note: branchRegistry=address(0), branch=NONE for legacy compatibility
+        Tumen tumen = new Tumen(
+            address(this),
+            organization,
+            tumenId,
+            myanganIds,
+            leader,
+            address(0),
+            IBranchRegistry.Branch.NONE
+        );
 
         tumenAddress[tumenId] = address(tumen);
         _tumenChildren[tumenId] = myanganIds;

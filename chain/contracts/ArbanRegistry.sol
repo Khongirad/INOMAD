@@ -1,298 +1,103 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./Arban.sol";
-
-/* ========= Interfaces ========= */
-
-interface IStructureRegistryArbanLeaders {
-    function setArbanLeader(uint256 arbanId, address leader) external;
+interface ICitizenActivation {
+    function isActive(uint256 seatId) external view returns (bool);
 }
 
-interface ISeatSBTLike {
-    function ownerOf(uint256 tokenId) external view returns (address);
+interface ISeatSBT {
+    function ownerOf(uint256 seatId) external view returns (address);
 }
-
-/* ========= ArbanRegistry ========= */
 
 /**
- * ArbanRegistry (MVP + JoinDoc + LeaderAppointment Updater)
- *
- * Роль:
- * - единственный источник истины по Arbans
- * - эксклюзивность seatId -> arbanId
- * - factory Arbans
- * - синхронизация лидера с StructureRegistry
- *
- * Потоки:
- * 1) createArban (жёсткий MVP, bootstrap)
- * 2) ArbanJoinDoc -> finalizeArbanJoin (правильный путь вступления)
- * 3) ArbanLeaderAppointment -> applyArbanLeader (смена лидера только документом)
+ * ArbanRegistry (MVP)
+ * - Create arbans (exactly 10 seats for v1)
+ * - All seats must be ACTIVE in CitizenActivation
+ * - Set leader (must be a member)
+ * - Membership is one-arban-only
  */
-contract ArbanRegistry is AccessControl {
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
+contract ArbanRegistry {
+    ISeatSBT public immutable seatSbt;
+    ICitizenActivation public immutable activation;
     address public owner;
-    address public immutable organization;
-    address public immutable seatSbt;
-    address public structureRegistry;
 
-    uint256 public nextArbanId = 1;
+    uint32 public nextArbanId = 1;
 
-    // arbanId -> Arban contract
-    mapping(uint256 => address) public arbanAddress;
+    struct Arban {
+        uint256 leaderSeatId;
+        uint256[10] seats;
+        bool exists;
+    }
 
-    // seatId -> arbanId (эксклюзивность)
-    mapping(uint256 => uint256) public arbanOfSeat;
-
-    // arbanId -> leader (CitizenAccount/SeatAccount в идеале; на MVP допускается EOA)
-    mapping(uint256 => address) public leaderOfArban;
-
-    // arbanId -> seatIds
-    mapping(uint256 => uint256[]) private _members;
-
-    // authorized ArbanJoinDoc
-    mapping(address => bool) public authorizedJoinDocs;
-
-    // authorized updaters (LeaderAppointment docs etc.)
-    mapping(address => bool) public authorizedUpdaters;
-
-    /* ========= Events ========= */
+    mapping(uint32 => Arban) public arbans;        // arbanId -> Arban
+    mapping(uint256 => uint32) public seatToArban; // seatId -> arbanId
 
     event OwnerSet(address indexed newOwner);
-    event StructureRegistrySet(address indexed structureRegistry);
-
-    event JoinDocAuthorized(address indexed doc, bool allowed);
-    event UpdaterAuthorized(address indexed upd, bool allowed);
-
-    event ArbanCreated(
-        uint256 indexed arbanId,
-        address indexed arban,
-        address indexed leader,
-        uint256[] seatIds
-    );
-
-    event ArbanLeaderSet(
-        uint256 indexed arbanId,
-        address indexed oldLeader,
-        address indexed newLeader
-    );
-
-    /* ========= Errors ========= */
+    event ArbanCreated(uint32 indexed arbanId, uint256[10] seats);
+    event LeaderSet(uint32 indexed arbanId, uint256 indexed leaderSeatId);
 
     error NotOwner();
-    error ZeroAddress();
-    error InvalidCount();
-    error InvalidSeatId();
-    error DuplicateSeatId();
-    error SeatAlreadyInArban(uint256 seatId, uint256 arbanId);
-    error NotSeatOwner(uint256 seatId);
-    error ArbanNotFound(uint256 arbanId);
-    error NotAuthorizedJoinDoc();
-    error NotAuthorizedUpdater();
-
-    /* ========= Modifiers ========= */
+    error BadParam();
+    error SeatNotActive(uint256 seatId);
+    error SeatAlreadyInArban(uint256 seatId);
+    error ArbanNotFound();
+    error NotMember();
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert NotOwner();
         _;
     }
 
-    modifier onlyUpdater() {
-        if (!authorizedUpdaters[msg.sender]) revert NotAuthorizedUpdater();
-        _;
+    constructor(address seatSbt_, address activation_, address owner_) {
+        if (seatSbt_ == address(0) || activation_ == address(0) || owner_ == address(0)) revert BadParam();
+        seatSbt = ISeatSBT(seatSbt_);
+        activation = ICitizenActivation(activation_);
+        owner = owner_;
     }
-
-    /* ========= Constructor ========= */
-
-    constructor(address organization_, address seatSbt_, address structureRegistry_) {
-        if (seatSbt_ == address(0)) revert ZeroAddress();
-owner = msg.sender;
-        organization = organization_;
-        seatSbt = seatSbt_;
-        structureRegistry = structureRegistry_;
-
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(ADMIN_ROLE, msg.sender);
-
-        emit OwnerSet(msg.sender);
-        emit StructureRegistrySet(structureRegistry_);
-    }
-
-    /* ========= Admin ========= */
 
     function setOwner(address newOwner) external onlyOwner {
-        if (newOwner == address(0)) revert ZeroAddress();
+        if (newOwner == address(0)) revert BadParam();
         owner = newOwner;
         emit OwnerSet(newOwner);
     }
 
-    function setStructureRegistry(address sr) external onlyOwner {
-        structureRegistry = sr;
-        emit StructureRegistrySet(sr);
-    }
-
-    // authorizes ArbanJoinDoc so it can call finalizeArbanJoin()
-    function setJoinDoc(address doc, bool ok) external onlyOwner {
-        if (doc == address(0)) revert ZeroAddress();
-        authorizedJoinDocs[doc] = ok;
-        emit JoinDocAuthorized(doc, ok);
-    }
-
-    // authorizes leader-appointment docs so they can call applyArbanLeader()
-    function setUpdater(address upd, bool ok) external onlyOwner {
-        if (upd == address(0)) revert ZeroAddress();
-        authorizedUpdaters[upd] = ok;
-        emit UpdaterAuthorized(upd, ok);
-    }
-
-    /* ========= Views ========= */
-
-    function getMembers(uint256 arbanId) external view returns (uint256[] memory) {
-        if (arbanAddress[arbanId] == address(0)) revert ArbanNotFound(arbanId);
-        return _members[arbanId];
-    }
-
-    function memberCount(uint256 arbanId) external view returns (uint256) {
-        if (arbanAddress[arbanId] == address(0)) revert ArbanNotFound(arbanId);
-        return _members[arbanId].length;
-    }
-
-    /* ========= Legacy MVP create ========= */
-    /**
-     * Жёсткий MVP (bootstrap / smoke)
-     * Рекомендуется использовать ArbanJoinDoc.
-     *
-     * MVP-жестко: caller должен владеть КАЖДЫМ seatId.
-     */
-    function createArban(uint256[] calldata seatIds, address leader)
-        external
-        returns (uint256 arbanId, address arban)
-    {
-        if (leader == address(0)) revert ZeroAddress();
-        uint256 n = seatIds.length;
-        if (n < 2 || n > 10) revert InvalidCount();
-
-        for (uint256 i = 0; i < n; i++) {
-            uint256 s = seatIds[i];
-            if (s == 0) revert InvalidSeatId();
-
-            for (uint256 j = i + 1; j < n; j++) {
-                if (s == seatIds[j]) revert DuplicateSeatId();
-            }
-
-            uint256 existing = arbanOfSeat[s];
-            if (existing != 0) revert SeatAlreadyInArban(s, existing);
-
-            if (ISeatSBTLike(seatSbt).ownerOf(s) != msg.sender) revert NotSeatOwner(s);
+    function createArban(uint256[10] calldata seats) external onlyOwner returns (uint32 arbanId) {
+        // validate seats
+        for (uint256 i = 0; i < 10; i++) {
+            uint256 seatId = seats[i];
+            if (!activation.isActive(seatId)) revert SeatNotActive(seatId);
+            if (seatToArban[seatId] != 0) revert SeatAlreadyInArban(seatId);
         }
 
         arbanId = nextArbanId++;
-        Arban a = new Arban(organization, seatSbt, arbanId, leader);
-        arban = address(a);
-        arbanAddress[arbanId] = arban;
+        Arban storage a = arbans[arbanId];
+        a.exists = true;
+        a.seats = seats;
 
-        for (uint256 i = 0; i < n; i++) {
-            uint256 s = seatIds[i];
-            arbanOfSeat[s] = arbanId;
-            _members[arbanId].push(s);
-            a.addMember(s);
+        for (uint256 i = 0; i < 10; i++) {
+            seatToArban[seats[i]] = arbanId;
         }
 
-        address oldLeader = leaderOfArban[arbanId];
-        leaderOfArban[arbanId] = leader;
-
-        if (structureRegistry != address(0)) {
-            IStructureRegistryArbanLeaders(structureRegistry).setArbanLeader(arbanId, leader);
-        }
-
-        emit ArbanCreated(arbanId, arban, leader, seatIds);
-        emit ArbanLeaderSet(arbanId, oldLeader, leader);
+        emit ArbanCreated(arbanId, seats);
     }
 
-    /* ========= JoinDoc Finalization ========= */
+    function setLeader(uint32 arbanId, uint256 leaderSeatId) external onlyOwner {
+        Arban storage a = arbans[arbanId];
+        if (!a.exists) revert ArbanNotFound();
 
-    /**
-     * finalizeArbanJoin
-     * Вызывается ТОЛЬКО авторизованным документом (ArbanJoinDoc)
-     *
-     * Важная “железобетонная” грань:
-     * - документ фиксирует состав + лидера
-     * - реестр применяет, синхронизирует в Arban и StructureRegistry
-     */
-    function finalizeArbanJoin(
-        uint256 arbanId,
-        address leader,
-        uint256[] calldata seatIds
-    ) external {
-        if (!authorizedJoinDocs[msg.sender]) revert NotAuthorizedJoinDoc();
-        if (leader == address(0)) revert ZeroAddress();
-
-        uint256 n = seatIds.length;
-        if (n < 2 || n > 10) revert InvalidCount();
-
-        // если Arban ещё не существует — создаём строго по nextArbanId
-        if (arbanAddress[arbanId] == address(0)) {
-            if (arbanId != nextArbanId) revert ArbanNotFound(arbanId);
-
-            Arban a = new Arban(organization, seatSbt, arbanId, leader);
-            arbanAddress[arbanId] = address(a);
-            nextArbanId++;
+        bool ok = false;
+        for (uint256 i = 0; i < 10; i++) {
+            if (a.seats[i] == leaderSeatId) { ok = true; break; }
         }
+        if (!ok) revert NotMember();
 
-        Arban arban = Arban(arbanAddress[arbanId]);
-
-        // добавляем участников (эксклюзивность seatId -> arbanId)
-        for (uint256 i = 0; i < n; i++) {
-            uint256 s = seatIds[i];
-            if (s == 0) revert InvalidSeatId();
-
-            uint256 existing = arbanOfSeat[s];
-            if (existing != 0 && existing != arbanId) revert SeatAlreadyInArban(s, existing);
-
-            if (existing == 0) {
-                arbanOfSeat[s] = arbanId;
-                _members[arbanId].push(s);
-                arban.addMember(s);
-            }
-        }
-
-        // set leader (from doc)
-        address oldLeader = leaderOfArban[arbanId];
-        leaderOfArban[arbanId] = leader;
-
-        // ensures Arban contract leader matches registry leader
-        arban.changeLeader(leader);
-
-        if (structureRegistry != address(0)) {
-            IStructureRegistryArbanLeaders(structureRegistry).setArbanLeader(arbanId, leader);
-        }
-
-        emit ArbanLeaderSet(arbanId, oldLeader, leader);
+        a.leaderSeatId = leaderSeatId;
+        emit LeaderSet(arbanId, leaderSeatId);
     }
 
-    /* ========= Leader Appointment (Document Updater) ========= */
-
-    /**
-     * applyArbanLeader
-     * - вызывается только авторизованным updater-документом (ArbanLeaderAppointment)
-     * - обновляет лидера в реестре, в контракте Arban, и в StructureRegistry
-     */
-    function applyArbanLeader(uint256 arbanId, address newLeader) external onlyUpdater {
-        address arbanAddr = arbanAddress[arbanId];
-        if (arbanAddr == address(0)) revert ArbanNotFound(arbanId);
-        if (newLeader == address(0)) revert ZeroAddress();
-
-        address oldLeader = leaderOfArban[arbanId];
-        leaderOfArban[arbanId] = newLeader;
-
-        Arban(arbanAddr).changeLeader(newLeader);
-
-        if (structureRegistry != address(0)) {
-            IStructureRegistryArbanLeaders(structureRegistry).setArbanLeader(arbanId, newLeader);
-        }
-
-        emit ArbanLeaderSet(arbanId, oldLeader, newLeader);
+    function getSeats(uint32 arbanId) external view returns (uint256[10] memory) {
+        Arban storage a = arbans[arbanId];
+        if (!a.exists) revert ArbanNotFound();
+        return a.seats;
     }
 }

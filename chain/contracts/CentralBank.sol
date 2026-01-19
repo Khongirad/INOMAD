@@ -35,9 +35,9 @@ contract CentralBank is AccessControl {
     }
 
     /// @notice Общая эмиссия (в идеале только на BankAccount).
-    function issue(address to, uint256 amount) external onlyRole(ISSUER_ROLE) {
+    function issue(address to, uint256 amount, string calldata reason) external onlyRole(ISSUER_ROLE) {
         if (to == address(0)) revert ZERO_ADDRESS();
-        altan.mint(to, amount);
+        altan.mint(to, amount, reason);
         emit Issued(to, amount, msg.sender);
     }
 
@@ -45,7 +45,7 @@ contract CentralBank is AccessControl {
     function issueTenReward(address bankAccount) external onlyRole(ISSUER_ROLE) {
         if (bankAccount == address(0)) revert ZERO_ADDRESS();
         uint256 amount = tenRewardPerSeat;
-        altan.mint(bankAccount, amount);
+        altan.mint(bankAccount, amount, "ten_reward");
         emit Issued(bankAccount, amount, msg.sender);
     }
 }

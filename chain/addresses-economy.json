@@ -1,0 +1,28 @@
+{
+  "chainId": 31337,
+  "rpcUrl": "http://127.0.0.1:8545",
+  "contracts": {
+    "Altan": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+    "AUSD": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+    "AltanFeeCollector": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+    "AltanSettlement": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+    "OperatorRegistry": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+    "TreasuryVault": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
+  },
+  "roles": {
+    "bankOfSiberia": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "inomadOperator": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+    "treasuryChairman": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+    "treasuryMinister": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+    "treasuryAuditor": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc"
+  },
+  "config": {
+    "networkFeeBps": 3,
+    "minFeeAltan": "1000000000000000000",
+    "ausdRedemptionFeeBps": 50,
+    "ausdMinRedemption": "100000000000000000000",
+    "officialRateBps": 10000
+  },
+  "deployedAt": "2026-01-19T00:15:00Z",
+  "initialTreasuryBalance": "1000000000000000000000000"
+}

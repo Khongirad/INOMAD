@@ -1,76 +1,143 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "./SeatSBT.sol";
-
 /**
- * ElectionRegistry v1
- * - assign seat -> revokes old, mints new
- * - marks served level on replacement (cooldown base)
+ * ElectionRegistry (MVP, address-voters)
+ * - Creates elections with a fixed list of voter addresses + candidates (uint256)
+ * - Vote: one address => one vote (per election)
+ * - Finalize: returns winner by plurality
  *
- * ВАЖНО: Этот контракт должен быть setIssuer=true в SeatSBT.
+ * This MVP is intentionally simple.
+ * Later, electorate can be SeatSBT-based (seat owners) + scoped by Arban/Zun/Myangan/Tumen.
  */
 contract ElectionRegistry {
     address public owner;
-    SeatSBT public seatToken;
 
-    // levelId for this registry context (например: 1=ARBAN_LEADER, 2=ZUUN, 3=MYANGAN, 4=TUMEN, ...)
-    uint8 public immutable levelId;
+    uint256 public nextElectionId = 1;
 
-    struct SeatInfo {
-        address occupant;
-        uint64 lastElection;
+    struct Election {
+        uint64 endTs;
+        bool finalized;
+        uint256 winner; // candidate id
+        uint256[] candidates;
+        address[] voters;
     }
 
-    mapping(uint256 => SeatInfo) public seats;
+    mapping(uint256 => Election) public elections;
 
-    event SeatAssigned(uint256 indexed seatId, address indexed occupant, uint64 ts);
+    // electionId => voter => voted?
+    mapping(uint256 => mapping(address => bool)) public hasVoted;
 
-    error NotAuthorized();
-    error InvalidCohort();
+    // electionId => candidate => votes
+    mapping(uint256 => mapping(uint256 => uint256)) public votes;
+
+    event OwnerSet(address indexed newOwner);
+    event ElectionCreated(uint256 indexed electionId, uint64 endTs, uint256[] candidates, address[] voters);
+    event Voted(uint256 indexed electionId, address indexed voter, uint256 indexed candidate);
+    event Finalized(uint256 indexed electionId, uint256 indexed winner, uint256 winnerVotes);
+
+    error NotOwner();
+    error BadParam();
+    error NotVoter();
+    error AlreadyVoted();
+    error ElectionEnded();
+    error ElectionNotEnded();
+    error AlreadyFinalized();
+    error InvalidCandidate();
 
     modifier onlyOwner() {
-        if (msg.sender != owner) revert NotAuthorized();
+        if (msg.sender != owner) revert NotOwner();
         _;
     }
 
-    constructor(address seatTokenAddress, uint8 _levelId) {
-        owner = msg.sender;
-        seatToken = SeatSBT(seatTokenAddress);
-        levelId = _levelId;
+    constructor(address owner_) {
+        if (owner_ == address(0)) revert BadParam();
+        owner = owner_;
     }
 
-    function transferOwnership(address newOwner) external onlyOwner {
+    function setOwner(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) revert BadParam();
         owner = newOwner;
+        emit OwnerSet(newOwner);
     }
 
-    /**
-     * @param seatId            уникальный seatId
-     * @param occupant          новый владелец места
-     * @param cohortArbanId_    обязательный cohort (арбан-десятка)
-     * @param competencyFlags_  CIV/DOM флаги
-     */
-    function assignSeat(
-        uint256 seatId,
-        address occupant,
-        uint32 cohortArbanId_,
-        uint16 competencyFlags_
-    ) external onlyOwner {
-        if (cohortArbanId_ == 0) revert InvalidCohort();
+    function createElection(
+        uint64 endTs,
+        uint256[] calldata candidates,
+        address[] calldata voters_
+    ) external onlyOwner returns (uint256 electionId) {
+        if (endTs <= block.timestamp) revert BadParam();
+        if (candidates.length == 0 || voters_.length == 0) revert BadParam();
 
-        // revoke old occupant token (if any) + mark served cooldown anchor
-        SeatInfo memory oldSeat = seats[seatId];
-        if (oldSeat.occupant != address(0)) {
-            // mark served BEFORE revoke (order не критичен)
-            seatToken.markServed(seatId, levelId, uint64(block.timestamp));
-            seatToken.revokeSeat(seatId);
+        electionId = nextElectionId++;
+        Election storage e = elections[electionId];
+        e.endTs = endTs;
+
+        // copy arrays
+        for (uint256 i = 0; i < candidates.length; i++) e.candidates.push(candidates[i]);
+        for (uint256 i = 0; i < voters_.length; i++) e.voters.push(voters_[i]);
+
+        emit ElectionCreated(electionId, endTs, e.candidates, e.voters);
+    }
+
+    function isVoter(uint256 electionId, address who) public view returns (bool) {
+        Election storage e = elections[electionId];
+        for (uint256 i = 0; i < e.voters.length; i++) {
+            if (e.voters[i] == who) return true;
+        }
+        return false;
+    }
+
+    function isCandidate(uint256 electionId, uint256 candidate) public view returns (bool) {
+        Election storage e = elections[electionId];
+        for (uint256 i = 0; i < e.candidates.length; i++) {
+            if (e.candidates[i] == candidate) return true;
+        }
+        return false;
+    }
+
+    function voteFor(uint256 electionId, uint256 candidate) external {
+        Election storage e = elections[electionId];
+        if (e.finalized) revert AlreadyFinalized();
+        if (block.timestamp >= e.endTs) revert ElectionEnded();
+        if (!isVoter(electionId, msg.sender)) revert NotVoter();
+        if (hasVoted[electionId][msg.sender]) revert AlreadyVoted();
+        if (!isCandidate(electionId, candidate)) revert InvalidCandidate();
+
+        hasVoted[electionId][msg.sender] = true;
+        votes[electionId][candidate] += 1;
+
+        emit Voted(electionId, msg.sender, candidate);
+    }
+
+    function finalize(uint256 electionId) external onlyOwner returns (uint256 winner, uint256 winnerVotes) {
+        Election storage e = elections[electionId];
+        if (e.finalized) revert AlreadyFinalized();
+        if (block.timestamp < e.endTs) revert ElectionNotEnded();
+
+        winner = 0;
+        winnerVotes = 0;
+
+        for (uint256 i = 0; i < e.candidates.length; i++) {
+            uint256 c = e.candidates[i];
+            uint256 v = votes[electionId][c];
+            if (v > winnerVotes) {
+                winnerVotes = v;
+                winner = c;
+            }
         }
 
-        seats[seatId] = SeatInfo({ occupant: occupant, lastElection: uint64(block.timestamp) });
+        e.finalized = true;
+        e.winner = winner;
 
-        // mint new SBT with mandatory cohort + competency
-        seatToken.mintSeat(occupant, seatId, cohortArbanId_, competencyFlags_);
+        emit Finalized(electionId, winner, winnerVotes);
+    }
 
-        emit SeatAssigned(seatId, occupant, uint64(block.timestamp));
+    function getCandidates(uint256 electionId) external view returns (uint256[] memory) {
+        return elections[electionId].candidates;
+    }
+
+    function getVoters(uint256 electionId) external view returns (address[] memory) {
+        return elections[electionId].voters;
     }
 }
