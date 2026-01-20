@@ -125,10 +125,65 @@ export class AltanService {
     const user = await this.prisma.user.findFirst({
         where: { seatId: identifier },
     });
-    
+
     if (user) return user.id;
 
     // TODO: Verify if it's a valid wallet address and check blockchain binding
     throw new NotFoundException(`Recipient with Seat ID ${identifier} not found`);
+  }
+
+  /**
+   * Transfer ALTAN as a task reward (system-initiated)
+   * Used by TasksService when completing tasks
+   */
+  async transferReward(fromUserId: string, toUserId: string, amount: number) {
+    if (amount <= 0) {
+      throw new BadRequestException('Reward amount must be positive');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // Check sender balance
+      const senderLedger = await tx.altanLedger.findUnique({
+        where: { userId: fromUserId },
+      });
+
+      if (!senderLedger || Number(senderLedger.balance) < amount) {
+        throw new BadRequestException('Task creator has insufficient balance for reward');
+      }
+
+      // Decrement sender
+      await tx.altanLedger.update({
+        where: { userId: fromUserId },
+        data: { balance: { decrement: amount } },
+      });
+
+      // Increment recipient (create ledger if not exists)
+      const recipientLedger = await tx.altanLedger.findUnique({ where: { userId: toUserId } });
+
+      if (recipientLedger) {
+        await tx.altanLedger.update({
+          where: { userId: toUserId },
+          data: { balance: { increment: amount } },
+        });
+      } else {
+        await tx.altanLedger.create({
+          data: {
+            userId: toUserId,
+            balance: amount,
+          },
+        });
+      }
+
+      // Record as REWARD transaction
+      return tx.altanTransaction.create({
+        data: {
+          fromUserId,
+          toUserId,
+          amount,
+          type: 'REWARD',
+          status: 'COMPLETED',
+        },
+      });
+    });
   }
 }

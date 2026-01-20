@@ -1,6 +1,9 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 const STORAGE_KEY_SEAT_ID = "inomad.seatId";
 
+// Ensure endpoint has leading slash
+const normalizePath = (endpoint: string) => endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
 export const api = {
   getSeatId: () => {
     if (typeof window === "undefined") return null;
@@ -21,7 +24,7 @@ export const api = {
   },
 
   get: async <T>(endpoint: string): Promise<T> => {
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const res = await fetch(`${API_BASE_URL}${normalizePath(endpoint)}`, {
       method: "GET",
       headers: api.getHeaders(),
     });
@@ -35,7 +38,7 @@ export const api = {
   },
 
   post: async <T>(endpoint: string, body?: any): Promise<T> => {
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const res = await fetch(`${API_BASE_URL}${normalizePath(endpoint)}`, {
       method: "POST",
       headers: api.getHeaders(),
       body: JSON.stringify(body),

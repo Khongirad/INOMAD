@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# INOMAD KHURAL
 
-## Getting Started
+Decentralized governance platform with ALTAN economic system.
 
-First, run the development server:
+## Quick Start
+
+### Prerequisites
+- Node.js 20+
+- PostgreSQL (via Docker or local)
+- npm
+
+### 1. Start Database (Docker)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd backend
+docker-compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Or configure `DATABASE_URL` in `backend/.env` for your PostgreSQL instance.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Backend Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd backend
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npm run build
+npm run start:dev
+```
 
-## Learn More
+Backend runs at: http://localhost:3001/api
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Frontend Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# From project root
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Frontend runs at: http://localhost:3000
 
-## Deploy on Vercel
+### 4. Verify Setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Test backend endpoints
+cd backend
+./scripts/smoke-test.sh
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Or manually
+curl http://localhost:3001/api/health
+```
+
+## Key Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| GET /api/health | Health check |
+| GET /api/khural | List governance groups |
+| GET /api/guilds | List guilds/organizations |
+| GET /api/tasks | List contracts/tasks |
+| GET /api/audit/history | Public event history |
+
+## Key Pages
+
+| Route | Description |
+|-------|-------------|
+| /khural | Fractal governance map |
+| /board | Task/contract marketplace |
+| /registries/history | State archives & council review |
+
+## Architecture
+
+```
+inomad-client/
+├── src/                    # Next.js frontend
+│   ├── app/(app)/         # Main app routes
+│   ├── components/        # UI components
+│   └── lib/               # Utilities & API client
+├── backend/               # NestJS backend
+│   ├── src/               # API modules
+│   └── prisma/            # Database schema
+└── chain/                 # Solidity contracts
+```
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+```
+DATABASE_URL="postgresql://..."
+PORT=3001
+CORS_ORIGIN="http://localhost:3000"
+```
+
+### Frontend (`.env.local`)
+```
+NEXT_PUBLIC_API_URL="http://localhost:3001/api"
+```

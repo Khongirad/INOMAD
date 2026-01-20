@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 // Let's use simple clsx for now to be fast and lightweight unless requested otherwise.
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "destructive";
+  variant?: "primary" | "secondary" | "ghost" | "destructive" | "outline";
   size?: "sm" | "md" | "lg" | "icon";
 }
 
@@ -27,8 +27,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             "border border-gold-border bg-gold-surface text-gold hover:bg-gold-surface/20 hover:border-gold-primary/50",
           variant === "ghost" && 
             "text-zinc-400 hover:text-zinc-100 hover:bg-white/5",
-          variant === "destructive" && 
+          variant === "destructive" &&
              "bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20",
+          variant === "outline" &&
+             "border border-zinc-700 bg-transparent text-zinc-100 hover:bg-zinc-800 hover:border-zinc-600",
           // Sizes
           size === "sm" && "h-8 px-3 text-xs",
           size === "md" && "h-10 px-4 py-2 text-sm",

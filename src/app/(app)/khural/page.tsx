@@ -7,8 +7,21 @@ import { CircleLayout } from '@/components/visual/circle-layout';
 import { ChevronUp, Users, Map as MapIcon, ZoomIn } from 'lucide-react';
 
 // Mock Data for Visualization
-const MOCK_ARBAN = Array(10).fill(null).map((_, i) => ({ id: `s-${i}`, member: { name: `Citizen ${i+1}` }, role: i === 0 ? 'leader' : 'member' }));
-const MOCK_ZUUN_LEADERS = Array(10).fill(null).map((_, i) => ({ id: `z-${i}`, member: { name: `Arban Leader ${i+1}` }, role: 'leader' }));
+type SeatRole = 'member' | 'leader' | 'elder';
+type SeatStatus = 'empty' | 'occupied' | 'locked';
+
+const MOCK_ARBAN: Array<{ id: string; status: SeatStatus; member: { name: string }; role: SeatRole }> = Array(10).fill(null).map((_, i) => ({
+  id: `s-${i}`,
+  status: 'occupied',
+  member: { name: `Citizen ${i+1}` },
+  role: i === 0 ? 'leader' : 'member'
+}));
+const MOCK_ZUUN_LEADERS: Array<{ id: string; status: SeatStatus; member: { name: string }; role: SeatRole }> = Array(10).fill(null).map((_, i) => ({
+  id: `z-${i}`,
+  status: 'occupied',
+  member: { name: `Arban Leader ${i+1}` },
+  role: 'leader'
+}));
 
 export default function KhuralMapPage() {
   const [level, setLevel] = useState<'TUMEN' | 'MYANGAN' | 'ZUUN' | 'ARBAN'>('TUMEN');

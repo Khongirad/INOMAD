@@ -11,6 +11,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { AltanModule } from './altan/altan.module';
 import { SeatBindingModule } from './seat-binding/seat-binding.module';
 import { AuditModule } from './audit/audit.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AuditModule } from './audit/audit.module';
     AltanModule,
     SeatBindingModule,
     AuditModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
