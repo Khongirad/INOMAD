@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { EmbeddedWallet } from "@/lib/wallet/embedded";
+import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
   {

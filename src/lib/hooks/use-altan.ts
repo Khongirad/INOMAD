@@ -7,6 +7,7 @@ export function useAltan() {
   const [history, setHistory] = useState<any[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Initialize Wallet State
   useEffect(() => {
@@ -28,6 +29,7 @@ export function useAltan() {
     if (!userId) return;
 
     const fetchAltan = async () => {
+      setLoading(true);
       try {
         const bal = await api.get<number>(`altan/balance/${userId}`);
         setBalance(bal);
@@ -36,6 +38,8 @@ export function useAltan() {
         setHistory(hist);
       } catch (error) {
         console.warn('Altan fetch failed or backend offline:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -63,6 +67,7 @@ export function useAltan() {
   return {
     balance,
     history,
+    loading,
     walletAddress,
     transfer,
     resolveRecipient

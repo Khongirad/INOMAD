@@ -11,7 +11,7 @@ import { Loader2, Send, Wallet, ShieldCheck, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function TransactionDialog({ children }: { children: React.ReactNode }) {
-  const { transfer, resolveUser, loading } = useAltan();
+  const { transfer, resolveRecipient, loading } = useAltan();
   const [isOpen, setIsOpen] = React.useState(false);
   
   const [step, setStep] = React.useState<"input" | "confirm" | "success">("input");
@@ -31,7 +31,7 @@ export function TransactionDialog({ children }: { children: React.ReactNode }) {
         setRecipientData(null);
         try {
           // In real app, we suppress 404 logs
-          const data = await resolveUser(recipientId);
+          const data = await resolveRecipient(recipientId);
           setRecipientData(data);
         } catch (e) {
           // Ignore 404 during typing, but reset data
@@ -41,7 +41,7 @@ export function TransactionDialog({ children }: { children: React.ReactNode }) {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [recipientId, resolveUser]);
+  }, [recipientId, resolveRecipient]);
 
   const handleTransfer = async () => {
     try {

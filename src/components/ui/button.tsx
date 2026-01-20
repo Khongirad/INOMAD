@@ -10,13 +10,15 @@ import { cn } from "@/lib/utils"
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "destructive" | "outline";
   size?: "sm" | "md" | "lg" | "icon";
+  loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", ...props }, ref) => {
+  ({ className, variant = "primary", size = "md", loading = false, disabled, children, ...props }, ref) => {
     return (
       <button
         ref={ref}
+        disabled={disabled || loading}
         className={cn(
           // Base
           "inline-flex items-center justify-center rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-primary/50 disabled:pointer-events-none disabled:opacity-50",
@@ -39,7 +41,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         {...props}
-      />
+      >
+        {loading ? (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          children
+        )}
+      </button>
     )
   }
 )

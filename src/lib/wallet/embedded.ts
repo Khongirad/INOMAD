@@ -55,7 +55,7 @@ export const EmbeddedWallet = {
   /**
    * Unlock the wallet temporarily (in memory) for a session
    */
-  unlock: async (password: string): Promise<ethers.Wallet> => {
+  unlock: async (password: string): Promise<ethers.Wallet | ethers.HDNodeWallet> => {
     const encryptedJson = window.localStorage.getItem(STORAGE_KEY_WALLET);
     if (!encryptedJson) throw new Error("No wallet found");
 
