@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserRole, VerificationStatus, WalletStatus } from '@prisma/client';
 
 @Injectable()
 export class CouncilService {

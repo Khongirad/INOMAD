@@ -8,6 +8,7 @@ export class AuthModule {
       .apply(AuthMiddleware)
       .exclude(
         { path: 'health', method: RequestMethod.GET },
+        { path: 'identity/register', method: RequestMethod.POST },
       )
       .forRoutes('*');
   }

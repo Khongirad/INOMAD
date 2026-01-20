@@ -34,7 +34,7 @@ export default function LandingPage() {
             title="Citizen"
             subtitle="Personal Identity"
             icon={User}
-            href="/dashboard" /* Flow usually goes to login first, but dashboard handles auth check or mock for now */
+            href="/register"
             delay="0s"
           />
           <EntryCard

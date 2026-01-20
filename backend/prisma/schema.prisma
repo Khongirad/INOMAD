@@ -15,38 +15,6 @@ datasource db {
 // CORE USER & IDENTITY
 // ====================================
 
-model User {
-  id        String   @id @default(uuid())
-  seatId    String   @unique // On-chain SeatSBT reference
-  role      UserRole @default(CITIZEN)
-  
-  // Organization membership
-  organizationId String?
-  organization   Guild?  @relation("OrganizationMembers", fields: [organizationId], references: [id])
-  
-  // Relations
-  khuralSeats    KhuralSeat[]
-  guildMemberships GuildMember[]
-  tasksCreated   Task[]        @relation("TaskCreator")
-  tasksAssigned  Task[]        @relation("TaskAssignee")
-  altanLedger    AltanLedger?
-  
-  // Transaction History
-  sentTransactions     AltanTransaction[] @relation("SentTransactions")
-  receivedTransactions AltanTransaction[] @relation("ReceivedTransactions")
-  auditLogs            AuditLog[]
-  
-  // History & Council
-  proposedHistoryVersions KhuralEventVersion[] @relation("HistoryProposer")
-  councilVotes            CouncilVote[]        @relation("CouncilVoter")
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([seatId])
-  @@index([organizationId])
-}
-
 enum UserRole {
   CITIZEN
   LEADER
@@ -65,21 +33,36 @@ model User {
   role      UserRole @default(CITIZEN)
   walletStatus WalletStatus @default(LOCKED)
   
+  // Registration Data
+  birthPlace     Json?   // { country, region, district, city }
+  currentAddress Json?
+  ethnicity      String[]
+  clan           String?
+  
+  // Verification State
+  verificationStatus VerificationStatus @default(DRAFT)
+  isSuperVerified    Boolean @default(false)
+  superVerifiedBy   String? // Seat ID of the Founder Mandate holder
+  
   // Organization membership
   organizationId String?
   organization   Guild?  @relation("OrganizationMembers", fields: [organizationId], references: [id])
   
   // Relations
-  khuralSeats    KhuralSeat[]
+  khuralSeats      KhuralSeat[]
   guildMemberships GuildMember[]
-  tasksCreated   Task[]        @relation("TaskCreator")
-  tasksAssigned  Task[]        @relation("TaskAssignee")
-  altanLedger    AltanLedger?
+  tasksCreated     Task[]        @relation("TaskCreator")
+  tasksAssigned    Task[]        @relation("TaskAssignee")
+  altanLedger      AltanLedger?
   
   // Unlock Ceremony
-  unlockRequest  UnlockRequest?
-  approvalsGiven UnlockApproval[]
+  unlockRequest    UnlockRequest?
+  approvalsGiven   UnlockApproval[]
   
+  // Verifications received (Standard 3-local rule)
+  verificationsReceived Verification[] @relation("TargetUser")
+  verificationsIssued   Verification[] @relation("VerifierUser")
+
   // Transaction History
   sentTransactions     AltanTransaction[] @relation("SentTransactions")
   receivedTransactions AltanTransaction[] @relation("ReceivedTransactions")
@@ -94,6 +77,28 @@ model User {
   
   @@index([seatId])
   @@index([organizationId])
+  @@index([verificationStatus])
+}
+
+enum VerificationStatus {
+  DRAFT
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Verification {
+  id             String   @id @default(uuid())
+  
+  targetUserId   String
+  targetUser     User     @relation("TargetUser", fields: [targetUserId], references: [id])
+  
+  verifierUserId String
+  verifierUser   User     @relation("VerifierUser", fields: [verifierUserId], references: [id])
+  
+  createdAt      DateTime @default(now())
+  
+  @@unique([targetUserId, verifierUserId])
 }
 
 // ====================================
