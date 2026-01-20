@@ -34,6 +34,11 @@ model User {
   // Transaction History
   sentTransactions     AltanTransaction[] @relation("SentTransactions")
   receivedTransactions AltanTransaction[] @relation("ReceivedTransactions")
+  auditLogs            AuditLog[]
+  
+  // History & Council
+  proposedHistoryVersions KhuralEventVersion[] @relation("HistoryProposer")
+  councilVotes            CouncilVote[]        @relation("CouncilVoter")
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -149,7 +154,12 @@ model GuildMember {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   role           MemberRole @default(MEMBER)
-  professionRank Int?       // For profession guilds
+  
+  // Competence / Meritocracy
+  professionRank Int?       // Visual Rank (1=Wood, 2=Iron, etc.)
+  level          Int @default(1) // 1-100
+  xp             Int @default(0) // Experience Points
+
   
   joinedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -291,4 +301,84 @@ enum TransactionStatus {
   PENDING
   COMPLETED
   FAILED
+}
+
+// Module C: Audit & History
+model AuditLog {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  userId       String?
+  action       String   // e.g. "auth.login", "altan.transfer"
+  resourceType String?  // e.g. "User", "AltanTransaction"
+  resourceId   String?
+  metadata     Json?    // Context details
+  ipAddress    String?
+  userAgent    String?
+  hash         String?  // Integrity hash 
+
+  user         User?    @relation(fields: [userId], references: [id])
+}
+
+model KhuralEvent {
+  id          String   @id @default(uuid())
+  date        DateTime @default(now())
+  title       String
+  description String
+  type        KhuralEventType
+  
+  // High-level public status
+  isVerified  Boolean  @default(false)
+  
+  // Versioning (The Timeline)
+  versions    KhuralEventVersion[]
+  
+  // Optional relations
+  relatedProposalId String?
+}
+
+model KhuralEventVersion {
+  id          String   @id @default(uuid())
+  eventId     String
+  event       KhuralEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String
+  
+  // Who wrote this history?
+  proposedByUserId String
+  proposedByUser   User   @relation("HistoryProposer", fields: [proposedByUserId], references: [id])
+  
+  // Council Validation
+  isApproved       Boolean @default(false)
+  approvedAt       DateTime?
+  
+  votes            CouncilVote[]
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([eventId])
+}
+
+model CouncilVote {
+  id          String   @id @default(uuid())
+  
+  versionId   String
+  version     KhuralEventVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  
+  voterUserId String
+  voterUser   User   @relation("CouncilVoter", fields: [voterUserId], references: [id])
+  
+  vote        Boolean // true = APPROVE, false = REJECT
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([versionId, voterUserId])
+}
+
+enum KhuralEventType {
+  SESSION_START
+  DECREE_SIGNED
+  APPOINTMENT
+  AMENDMENT
+  EMERGENCY
 }

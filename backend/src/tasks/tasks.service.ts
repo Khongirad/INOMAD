@@ -112,7 +112,21 @@ export class TasksService {
       throw new BadRequestException('Task is already assigned');
     }
 
-    // TODO: Check if user has required profession
+    // Verify user has the required profession
+    if (task.professionId) {
+      const guildMember = await this.prisma.guildMember.findFirst({
+        where: {
+          userId,
+          guild: {
+            professionId: task.professionId
+          }
+        }
+      });
+
+      if (!guildMember) {
+        throw new BadRequestException('You do not belong to the required Guild/Profession for this task.');
+      }
+    }
 
     return this.prisma.task.update({
       where: { id: taskId },
@@ -150,12 +164,17 @@ export class TasksService {
       throw new BadRequestException('Task is not in progress');
     }
 
-    // Transfer ALTAN reward
+    // 1. Transfer ALTAN reward
     await this.altanService.transferReward(
       task.createdByUserId,
       userId,
       task.rewardAltan.toNumber(),
     );
+    
+    // 2. Grant Guild XP (Meritocracy)
+    if (task.professionId) {
+      await this.grantExperience(userId, task.professionId, 50); // Fixed 50 XP for MVP
+    }
 
     return this.prisma.task.update({
       where: { id: taskId },
@@ -174,5 +193,31 @@ export class TasksService {
         },
       },
     });
+  }
+  
+  private async grantExperience(userId: string, professionId: string, amount: number) {
+    const membership = await this.prisma.guildMember.findFirst({
+      where: { userId, guild: { professionId } }
+    });
+    
+    if (membership) {
+      const newXp = membership.xp + amount;
+      // Simple level up logic: Level N requires N * 100 XP
+      // This is a naive MVP formula, can be refined later.
+      const currentLevelCap = membership.level * 100;
+      let newLevel = membership.level;
+      
+      if (newXp >= currentLevelCap) {
+        newLevel += 1;
+      }
+      
+      await this.prisma.guildMember.update({
+        where: { id: membership.id },
+        data: {
+          xp: newXp,
+          level: newLevel
+        }
+      });
+    }
   }
 }

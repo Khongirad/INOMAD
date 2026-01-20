@@ -10,6 +10,7 @@ import { ProfessionsModule } from './professions/professions.module';
 import { TasksModule } from './tasks/tasks.module';
 import { AltanModule } from './altan/altan.module';
 import { SeatBindingModule } from './seat-binding/seat-binding.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SeatBindingModule } from './seat-binding/seat-binding.module';
     TasksModule,
     AltanModule,
     SeatBindingModule,
+    AuditModule,
   ],
 })
 export class AppModule {}
