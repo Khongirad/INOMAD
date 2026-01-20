@@ -1,57 +1,70 @@
-"use client";
-
-import { useState, useEffect, useCallback } from "react";
-import { api } from "@/lib/api";
-
-export type AltanTransaction = {
-  id: string;
-  fromUser?: { seatId: string; role: string };
-  toUser?: { seatId: string; role: string };
-  amount: number;
-  type: string;
-  createdAt: string;
-};
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
+import { EmbeddedWallet } from '@/lib/wallet/embedded';
 
 export function useAltan() {
   const [balance, setBalance] = useState<number>(0);
-  const [history, setHistory] = useState<AltanTransaction[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const bal = await api.get<number>("/altan/balance");
-      setBalance(bal);
-      const hist = await api.get<AltanTransaction[]>("/altan/history");
-      setHistory(hist);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  // Initialize Wallet State
+  useEffect(() => {
+    // 1. Check for Embedded Wallet first (Doctrine: Native Wallet)
+    const nativeAddress = EmbeddedWallet.getAddress();
+    if (nativeAddress) {
+       setWalletAddress(nativeAddress);
+    }
+    
+    // 2. Get User/Seat ID
+    const storedSeat = api.getSeatId();
+    if (storedSeat) {
+      setUserId(storedSeat); 
     }
   }, []);
 
+  // Fetch Altan Data
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (!userId) return;
 
-  const transfer = async (recipientId: string, amount: number) => {
-    await api.post("/altan/transfer", { recipientId, amount });
-    await refresh();
+    const fetchAltan = async () => {
+      try {
+        const bal = await api.get<number>(`altan/balance/${userId}`);
+        setBalance(bal);
+
+        const hist = await api.get<any[]>(`altan/history/${userId}`);
+        setHistory(hist);
+      } catch (error) {
+        console.warn('Altan fetch failed or backend offline:', error);
+      }
+    };
+
+    fetchAltan();
+  }, [userId]);
+
+  const transfer = async (recipientIdentifier: string, amount: number) => {
+    if (!userId) throw new Error("Not authenticated");
+    
+    // In strict doctrine, we would require EmbeddedWallet.unlock(password) here to sign
+    // For MVP, we allow the "Soft API" transfer if the session is authenticated
+    // But we SHOULD eventually prompt for the PIN
+    
+    return api.post('altan/transfer', {
+      fromUserId: userId,
+      recipientIdentifier, // Can be Seat ID or Wallet Address
+      amount
+    });
   };
 
-  const resolveUser = async (identifier: string) => {
-    return api.get<{ userId: string; seatId: string; role: string; organization?: string }>(
-      `/altan/resolve/${identifier}`
-    );
+  const resolveRecipient = async (identifier: string) => {
+     return api.post('altan/resolve-user', { identifier });
   };
 
   return {
     balance,
     history,
-    loading,
-    refresh,
+    walletAddress,
     transfer,
-    resolveUser,
+    resolveRecipient
   };
 }

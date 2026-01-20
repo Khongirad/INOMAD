@@ -53,6 +53,49 @@ enum UserRole {
   ADMIN
 }
 
+enum WalletStatus {
+  LOCKED
+  PENDING
+  UNLOCKED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  seatId    String   @unique // On-chain SeatSBT reference
+  role      UserRole @default(CITIZEN)
+  walletStatus WalletStatus @default(LOCKED)
+  
+  // Organization membership
+  organizationId String?
+  organization   Guild?  @relation("OrganizationMembers", fields: [organizationId], references: [id])
+  
+  // Relations
+  khuralSeats    KhuralSeat[]
+  guildMemberships GuildMember[]
+  tasksCreated   Task[]        @relation("TaskCreator")
+  tasksAssigned  Task[]        @relation("TaskAssignee")
+  altanLedger    AltanLedger?
+  
+  // Unlock Ceremony
+  unlockRequest  UnlockRequest?
+  approvalsGiven UnlockApproval[]
+  
+  // Transaction History
+  sentTransactions     AltanTransaction[] @relation("SentTransactions")
+  receivedTransactions AltanTransaction[] @relation("ReceivedTransactions")
+  auditLogs            AuditLog[]
+  
+  // History & Council
+  proposedHistoryVersions KhuralEventVersion[] @relation("HistoryProposer")
+  councilVotes            CouncilVote[]        @relation("CouncilVoter")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([seatId])
+  @@index([organizationId])
+}
+
 // ====================================
 // KHURAL GOVERNANCE SYSTEM
 // ====================================
@@ -381,4 +424,38 @@ enum KhuralEventType {
   APPOINTMENT
   AMENDMENT
   EMERGENCY
+}
+
+// ====================================
+// MODULE: UNLOCK CEREMONY (SOVEREIGNTY)
+// ====================================
+
+model UnlockRequest {
+  id        String   @id @default(uuid())
+  
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status    WalletStatus @default(PENDING)
+  
+  approvals UnlockApproval[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model UnlockApproval {
+  id             String   @id @default(uuid())
+  
+  requestId      String
+  request        UnlockRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  
+  approverUserId String
+  approver       User          @relation(fields: [approverUserId], references: [id])
+  
+  createdAt      DateTime @default(now())
+  
+  @@unique([requestId, approverUserId]) // One approval per user per request
 }
