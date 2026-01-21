@@ -112,8 +112,9 @@ contract RegionRegistry is AccessControl {
         _grantRole(KHURAL_ROLE, _khural);
         _grantRole(REGISTRAR_ROLE, _khural);
 
-        // Инициализация базовых союзов
+        // Инициализация базовых союзов и республик
         _initializeUnions();
+        _initializeRepublics();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -171,6 +172,178 @@ contract RegionRegistry is AccessControl {
 
         unionIds.push(id);
         emit UnionCreated(id, name, nameLocal);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ИНИЦИАЛИЗАЦИЯ РЕСПУБЛИК
+    //////////////////////////////////////////////////////////////*/
+
+    function _initializeRepublics() internal {
+        // Получаем ID союзов
+        bytes32 siberiaId = keccak256(abi.encodePacked("UNION:", unicode"Сибирь"));
+        bytes32 caucasusId = keccak256(abi.encodePacked("UNION:", unicode"Северный Кавказ"));
+        bytes32 goldenRingId = keccak256(abi.encodePacked("UNION:", unicode"Золотое Кольцо"));
+        bytes32 northId = keccak256(abi.encodePacked("UNION:", unicode"Север"));
+        bytes32 volgaId = keccak256(abi.encodePacked("UNION:", unicode"Поволжье"));
+        bytes32 uralId = keccak256(abi.encodePacked("UNION:", unicode"Урал"));
+
+        // ═══════════════════════════════════════════════════════════════
+        // СИБИРЬ
+        // ═══════════════════════════════════════════════════════════════
+
+        string[] memory buryatPeoples = new string[](2);
+        buryatPeoples[0] = unicode"Буряад-Монголы";
+        buryatPeoples[1] = unicode"Эвенки";
+        _createRepublicInternal(siberiaId, unicode"Буряад-Монголия", unicode"Буряад Монгол Улс", buryatPeoples);
+
+        string[] memory sakhaPeoples = new string[](2);
+        sakhaPeoples[0] = unicode"Якуты (Саха)";
+        sakhaPeoples[1] = unicode"Эвены";
+        _createRepublicInternal(siberiaId, unicode"Республика Саха", unicode"Саха Өрөспүүбүлүкэтэ", sakhaPeoples);
+
+        string[] memory chukotPeoples = new string[](2);
+        chukotPeoples[0] = unicode"Чукчи";
+        chukotPeoples[1] = unicode"Эскимосы";
+        _createRepublicInternal(siberiaId, unicode"Чукотка", unicode"Чукотка", chukotPeoples);
+
+        string[] memory altaiPeoples = new string[](1);
+        altaiPeoples[0] = unicode"Алтайцы";
+        _createRepublicInternal(siberiaId, unicode"Республика Алтай", unicode"Алтай Республика", altaiPeoples);
+
+        string[] memory tyvaPeoples = new string[](1);
+        tyvaPeoples[0] = unicode"Тувинцы";
+        _createRepublicInternal(siberiaId, unicode"Республика Тыва", unicode"Тыва Республика", tyvaPeoples);
+
+        string[] memory khakasPeoples = new string[](1);
+        khakasPeoples[0] = unicode"Хакасы";
+        _createRepublicInternal(siberiaId, unicode"Республика Хакасия", unicode"Хакас Республиказы", khakasPeoples);
+
+        // ═══════════════════════════════════════════════════════════════
+        // СЕВЕРНЫЙ КАВКАЗ
+        // ═══════════════════════════════════════════════════════════════
+
+        string[] memory dagestanPeoples = new string[](5);
+        dagestanPeoples[0] = unicode"Аварцы";
+        dagestanPeoples[1] = unicode"Даргинцы";
+        dagestanPeoples[2] = unicode"Лезгины";
+        dagestanPeoples[3] = unicode"Лакцы";
+        dagestanPeoples[4] = unicode"Кумыки";
+        _createRepublicInternal(caucasusId, unicode"Республика Дагестан", unicode"Дагъистан", dagestanPeoples);
+
+        string[] memory chechenPeoples = new string[](1);
+        chechenPeoples[0] = unicode"Чеченцы";
+        _createRepublicInternal(caucasusId, unicode"Чеченская Республика", unicode"Нохчийн Республика", chechenPeoples);
+
+        string[] memory ingushPeoples = new string[](1);
+        ingushPeoples[0] = unicode"Ингуши";
+        _createRepublicInternal(caucasusId, unicode"Республика Ингушетия", unicode"ГIалгIайче", ingushPeoples);
+
+        string[] memory kbrPeoples = new string[](2);
+        kbrPeoples[0] = unicode"Кабардинцы";
+        kbrPeoples[1] = unicode"Балкарцы";
+        _createRepublicInternal(caucasusId, unicode"Кабардино-Балкария", unicode"Къэбэрдей-Балъкъэр", kbrPeoples);
+
+        string[] memory kcrPeoples = new string[](2);
+        kcrPeoples[0] = unicode"Карачаевцы";
+        kcrPeoples[1] = unicode"Черкесы";
+        _createRepublicInternal(caucasusId, unicode"Карачаево-Черкесия", unicode"Къарачай-Черкес", kcrPeoples);
+
+        string[] memory osetiaPeoples = new string[](1);
+        osetiaPeoples[0] = unicode"Осетины";
+        _createRepublicInternal(caucasusId, unicode"Северная Осетия", unicode"Цӕгат Ирыстон", osetiaPeoples);
+
+        string[] memory adygeaPeoples = new string[](1);
+        adygeaPeoples[0] = unicode"Адыги";
+        _createRepublicInternal(caucasusId, unicode"Республика Адыгея", unicode"Адыгэ Республик", adygeaPeoples);
+
+        // ═══════════════════════════════════════════════════════════════
+        // ПОВОЛЖЬЕ
+        // ═══════════════════════════════════════════════════════════════
+
+        string[] memory tatarPeoples = new string[](1);
+        tatarPeoples[0] = unicode"Татары";
+        _createRepublicInternal(volgaId, unicode"Республика Татарстан", unicode"Татарстан Республикасы", tatarPeoples);
+
+        string[] memory bashkirPeoples = new string[](1);
+        bashkirPeoples[0] = unicode"Башкиры";
+        _createRepublicInternal(volgaId, unicode"Республика Башкортостан", unicode"Башҡортостан Республикаһы", bashkirPeoples);
+
+        string[] memory chuvashPeoples = new string[](1);
+        chuvashPeoples[0] = unicode"Чуваши";
+        _createRepublicInternal(volgaId, unicode"Чувашская Республика", unicode"Чăваш Республики", chuvashPeoples);
+
+        string[] memory mariPeoples = new string[](1);
+        mariPeoples[0] = unicode"Марийцы";
+        _createRepublicInternal(volgaId, unicode"Республика Марий Эл", unicode"Марий Эл Республик", mariPeoples);
+
+        string[] memory mordovPeoples = new string[](2);
+        mordovPeoples[0] = unicode"Мордва-мокша";
+        mordovPeoples[1] = unicode"Мордва-эрзя";
+        _createRepublicInternal(volgaId, unicode"Республика Мордовия", unicode"Мордовия Республикась", mordovPeoples);
+
+        string[] memory udmurtPeoples = new string[](1);
+        udmurtPeoples[0] = unicode"Удмурты";
+        _createRepublicInternal(volgaId, unicode"Удмуртская Республика", unicode"Удмурт Элькун", udmurtPeoples);
+
+        // ═══════════════════════════════════════════════════════════════
+        // СЕВЕР
+        // ═══════════════════════════════════════════════════════════════
+
+        string[] memory komiPeoples = new string[](1);
+        komiPeoples[0] = unicode"Коми";
+        _createRepublicInternal(northId, unicode"Республика Коми", unicode"Коми Республика", komiPeoples);
+
+        string[] memory karelPeoples = new string[](2);
+        karelPeoples[0] = unicode"Карелы";
+        karelPeoples[1] = unicode"Вепсы";
+        _createRepublicInternal(northId, unicode"Республика Карелия", unicode"Karjalan Tazavalla", karelPeoples);
+
+        // ═══════════════════════════════════════════════════════════════
+        // ЗОЛОТОЕ КОЛЬЦО (Российская Республика)
+        // ═══════════════════════════════════════════════════════════════
+
+        string[] memory russianPeoples = new string[](1);
+        russianPeoples[0] = unicode"Русские";
+        _createRepublicInternal(goldenRingId, unicode"Московская Республика", unicode"Московская Республика", russianPeoples);
+
+        // ═══════════════════════════════════════════════════════════════
+        // УРАЛ
+        // ═══════════════════════════════════════════════════════════════
+
+        string[] memory khantyPeoples = new string[](2);
+        khantyPeoples[0] = unicode"Ханты";
+        khantyPeoples[1] = unicode"Манси";
+        _createRepublicInternal(uralId, unicode"Ханты-Мансийск", unicode"Хӑнты-Мансийск", khantyPeoples);
+
+        string[] memory yamalPeoples = new string[](2);
+        yamalPeoples[0] = unicode"Ненцы";
+        yamalPeoples[1] = unicode"Селькупы";
+        _createRepublicInternal(uralId, unicode"Ямал", unicode"Ямал", yamalPeoples);
+    }
+
+    function _createRepublicInternal(
+        bytes32 unionId,
+        string memory name,
+        string memory nameLocal,
+        string[] memory indigenousPeoples
+    ) internal {
+        bytes32 id = keccak256(abi.encodePacked("REPUBLIC:", unionId, name));
+
+        republics[id] = Republic({
+            id: id,
+            unionId: unionId,
+            name: name,
+            nameLocal: nameLocal,
+            indigenousPeoples: indigenousPeoples,
+            active: true,
+            exists: true,
+            createdAt: uint64(block.timestamp)
+        });
+
+        republicIds.push(id);
+        republicsByUnion[unionId].push(id);
+
+        emit RepublicCreated(id, unionId, name, nameLocal);
     }
 
     /*//////////////////////////////////////////////////////////////
