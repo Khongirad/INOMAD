@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
 /**
  * @title NationRegistry
  * @notice Реестр Народов Сибирской Конфедерации
  *
  * "Сибирь — колыбель кочевой цивилизации"
  *
- * Данный контракт содержит неизменяемый список коренных народов,
+ * Данный контракт содержит расширяемый список коренных народов,
  * их историю, культуру и связь с землёй предков.
  *
  * При регистрации гражданин выбирает:
@@ -21,8 +23,23 @@ pragma solidity ^0.8.24;
  * ДОБРО ПОЖАЛОВАТЬ В СИБИРСКУЮ КОНФЕДЕРАЦИЮ
  * Союз свободных народов от Урала до Тихого океана
  * ═══════════════════════════════════════════════════════════════
+ *
+ * РАСШИРЯЕМОСТЬ:
+ * - Хурал может добавлять новые народы (новые континенты, миграции)
+ * - Куратор может обновлять информацию о существующих народах
+ * - Народы могут быть связаны с территориями (homelands)
  */
-contract NationRegistry {
+contract NationRegistry is AccessControl {
+    /*//////////////////////////////////////////////////////////////
+                                ROLES
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Роль Хурала - высший орган управления
+    bytes32 public constant KHURAL_ROLE = keccak256("KHURAL_ROLE");
+
+    /// @notice Роль куратора народов - может обновлять информацию
+    bytes32 public constant CURATOR_ROLE = keccak256("CURATOR_ROLE");
+
     /*//////////////////////////////////////////////////////////////
                             DATA STRUCTURES
     //////////////////////////////////////////////////////////////*/
@@ -37,7 +54,29 @@ contract NationRegistry {
         SLAVIC,         // Славянские
         CAUCASIAN,      // Кавказские
         SAMOYEDIC,      // Самодийские
+        AMERINDIAN,     // Индейские народы (Америка)
+        AFRICAN,        // Африканские народы
+        AUSTRONESIAN,   // Австронезийские (Океания, ЮВА)
+        DRAVIDIAN,      // Дравидийские (Индия)
+        SINOTIBETAN,    // Сино-тибетские (Китай, Тибет)
+        SEMITIC,        // Семитские (Ближний Восток)
         OTHER           // Другие
+    }
+
+    /// @notice Континент/регион происхождения
+    enum Continent {
+        SIBERIA,        // Сибирь (по умолчанию)
+        CAUCASUS,       // Кавказ
+        VOLGA_URAL,     // Поволжье и Урал
+        EUROPE,         // Европа
+        CENTRAL_ASIA,   // Центральная Азия
+        EAST_ASIA,      // Восточная Азия
+        SOUTH_ASIA,     // Южная Азия
+        MIDDLE_EAST,    // Ближний Восток
+        AFRICA,         // Африка
+        NORTH_AMERICA,  // Северная Америка
+        SOUTH_AMERICA,  // Южная Америка
+        OCEANIA         // Океания
     }
 
     /// @notice Информация о народе
@@ -48,9 +87,13 @@ contract NationRegistry {
         string description;         // Краткое описание (история, культура)
         string greeting;            // Приветствие на родном языке
         LanguageFamily family;
+        Continent continent;        // Континент происхождения
         bytes32[] homelands;        // Исконные территории (republicIds)
         uint256 population;         // Примерная численность
+        bool active;                // Активен ли народ в системе
         bool exists;
+        uint64 createdAt;           // Дата добавления
+        uint64 updatedAt;           // Дата последнего обновления
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -60,15 +103,65 @@ contract NationRegistry {
     mapping(bytes32 => Nation) public nations;
     bytes32[] public nationIds;
 
+    /// @notice Народы по континентам
+    mapping(Continent => bytes32[]) public nationsByContinent;
+
+    /// @notice Народы по языковым семьям
+    mapping(LanguageFamily => bytes32[]) public nationsByFamily;
+
     /// @notice Дата создания реестра
     uint256 public immutable createdAt;
+
+    /*//////////////////////////////////////////////////////////////
+                                EVENTS
+    //////////////////////////////////////////////////////////////*/
+
+    event NationCreated(
+        bytes32 indexed nationId,
+        string name,
+        string nameNative,
+        LanguageFamily family,
+        Continent continent
+    );
+
+    event NationUpdated(
+        bytes32 indexed nationId,
+        string name,
+        address indexed updatedBy
+    );
+
+    event NationStatusChanged(
+        bytes32 indexed nationId,
+        bool active
+    );
+
+    event HomelandAdded(
+        bytes32 indexed nationId,
+        bytes32 indexed territoryId
+    );
+
+    /*//////////////////////////////////////////////////////////////
+                                ERRORS
+    //////////////////////////////////////////////////////////////*/
+
+    error ZeroAddress();
+    error NationNotFound(bytes32 nationId);
+    error NationAlreadyExists(bytes32 nationId);
+    error EmptyName();
 
     /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor() {
+    constructor(address _khural) {
+        if (_khural == address(0)) revert ZeroAddress();
+
         createdAt = block.timestamp;
+
+        _grantRole(DEFAULT_ADMIN_ROLE, _khural);
+        _grantRole(KHURAL_ROLE, _khural);
+        _grantRole(CURATOR_ROLE, _khural);
+
         _initializeNations();
     }
 
@@ -617,6 +710,18 @@ contract NationRegistry {
         LanguageFamily family,
         uint256 population
     ) internal {
+        _createNationFull(name, nameNative, description, greeting, family, Continent.SIBERIA, population);
+    }
+
+    function _createNationFull(
+        string memory name,
+        string memory nameNative,
+        string memory description,
+        string memory greeting,
+        LanguageFamily family,
+        Continent continent,
+        uint256 population
+    ) internal {
         bytes32 id = keccak256(abi.encodePacked("NATION:", name));
 
         // Пустой массив для homelands (будет заполнен позже)
@@ -629,12 +734,153 @@ contract NationRegistry {
             description: description,
             greeting: greeting,
             family: family,
+            continent: continent,
             homelands: emptyHomelands,
             population: population,
-            exists: true
+            active: true,
+            exists: true,
+            createdAt: uint64(block.timestamp),
+            updatedAt: uint64(block.timestamp)
         });
 
         nationIds.push(id);
+        nationsByContinent[continent].push(id);
+        nationsByFamily[family].push(id);
+
+        emit NationCreated(id, name, nameNative, family, continent);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    УПРАВЛЕНИЕ НАРОДАМИ (ХУРАЛ)
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Добавить новый народ (только Хурал)
+    /// @dev Используется для расширения на новые континенты
+    function addNation(
+        string calldata name,
+        string calldata nameNative,
+        string calldata description,
+        string calldata greeting,
+        LanguageFamily family,
+        Continent continent,
+        uint256 population
+    ) external onlyRole(KHURAL_ROLE) returns (bytes32 id) {
+        if (bytes(name).length == 0) revert EmptyName();
+
+        id = keccak256(abi.encodePacked("NATION:", name));
+        if (nations[id].exists) revert NationAlreadyExists(id);
+
+        bytes32[] memory emptyHomelands = new bytes32[](0);
+
+        nations[id] = Nation({
+            id: id,
+            name: name,
+            nameNative: nameNative,
+            description: description,
+            greeting: greeting,
+            family: family,
+            continent: continent,
+            homelands: emptyHomelands,
+            population: population,
+            active: true,
+            exists: true,
+            createdAt: uint64(block.timestamp),
+            updatedAt: uint64(block.timestamp)
+        });
+
+        nationIds.push(id);
+        nationsByContinent[continent].push(id);
+        nationsByFamily[family].push(id);
+
+        emit NationCreated(id, name, nameNative, family, continent);
+    }
+
+    /// @notice Обновить информацию о народе (Куратор)
+    function updateNationInfo(
+        bytes32 nationId,
+        string calldata description,
+        string calldata greeting,
+        uint256 population
+    ) external onlyRole(CURATOR_ROLE) {
+        if (!nations[nationId].exists) revert NationNotFound(nationId);
+
+        Nation storage nation = nations[nationId];
+        nation.description = description;
+        nation.greeting = greeting;
+        nation.population = population;
+        nation.updatedAt = uint64(block.timestamp);
+
+        emit NationUpdated(nationId, nation.name, msg.sender);
+    }
+
+    /// @notice Активировать/деактивировать народ
+    function setNationActive(bytes32 nationId, bool active) external onlyRole(KHURAL_ROLE) {
+        if (!nations[nationId].exists) revert NationNotFound(nationId);
+
+        nations[nationId].active = active;
+        nations[nationId].updatedAt = uint64(block.timestamp);
+
+        emit NationStatusChanged(nationId, active);
+    }
+
+    /// @notice Добавить исконную территорию народу
+    function addHomeland(bytes32 nationId, bytes32 territoryId) external onlyRole(CURATOR_ROLE) {
+        if (!nations[nationId].exists) revert NationNotFound(nationId);
+
+        nations[nationId].homelands.push(territoryId);
+        nations[nationId].updatedAt = uint64(block.timestamp);
+
+        emit HomelandAdded(nationId, territoryId);
+    }
+
+    /// @notice Массовое добавление народов (для миграции данных)
+    function addNationsBatch(
+        string[] calldata names,
+        string[] calldata namesNative,
+        string[] calldata descriptions,
+        string[] calldata greetings,
+        LanguageFamily[] calldata families,
+        Continent[] calldata continents,
+        uint256[] calldata populations
+    ) external onlyRole(KHURAL_ROLE) {
+        require(
+            names.length == namesNative.length &&
+            names.length == descriptions.length &&
+            names.length == greetings.length &&
+            names.length == families.length &&
+            names.length == continents.length &&
+            names.length == populations.length,
+            "Arrays length mismatch"
+        );
+
+        for (uint256 i = 0; i < names.length; i++) {
+            bytes32 id = keccak256(abi.encodePacked("NATION:", names[i]));
+            if (nations[id].exists) continue; // Пропускаем существующие
+
+            bytes32[] memory emptyHomelands = new bytes32[](0);
+
+            nations[id] = Nation({
+                id: id,
+                name: names[i],
+                nameNative: namesNative[i],
+                description: descriptions[i],
+                greeting: greetings[i],
+                family: families[i],
+                continent: continents[i],
+                homelands: emptyHomelands,
+                population: populations[i],
+                active: true,
+                exists: true,
+                createdAt: uint64(block.timestamp),
+                updatedAt: uint64(block.timestamp)
+            });
+
+            nationIds.push(id);
+            nationsByContinent[continents[i]].push(id);
+            nationsByFamily[families[i]].push(id);
+
+            emit NationCreated(id, names[i], namesNative[i], families[i], continents[i]);
+        }
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -643,14 +889,14 @@ contract NationRegistry {
 
     /// @notice Получить информацию о народе
     function getNation(bytes32 nationId) external view returns (Nation memory) {
-        require(nations[nationId].exists, "Nation not found");
+        if (!nations[nationId].exists) revert NationNotFound(nationId);
         return nations[nationId];
     }
 
     /// @notice Получить народ по имени
     function getNationByName(string calldata name) external view returns (Nation memory) {
         bytes32 id = keccak256(abi.encodePacked("NATION:", name));
-        require(nations[id].exists, "Nation not found");
+        if (!nations[id].exists) revert NationNotFound(id);
         return nations[id];
     }
 
@@ -664,32 +910,35 @@ contract NationRegistry {
         return nationIds.length;
     }
 
+    /// @notice Получить количество активных народов
+    function getActiveNationCount() external view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < nationIds.length; i++) {
+            if (nations[nationIds[i]].active) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     /// @notice Получить все ID народов
     function getAllNationIds() external view returns (bytes32[] memory) {
         return nationIds;
     }
 
-    /// @notice Получить все народы определённой языковой семьи
-    function getNationsByFamily(LanguageFamily family) external view returns (bytes32[] memory) {
-        // Считаем количество
-        uint256 count = 0;
-        for (uint256 i = 0; i < nationIds.length; i++) {
-            if (nations[nationIds[i]].family == family) {
-                count++;
-            }
-        }
+    /// @notice Получить народы по континенту
+    function getNationsByContinent(Continent continent) external view returns (bytes32[] memory) {
+        return nationsByContinent[continent];
+    }
 
-        // Заполняем массив
-        bytes32[] memory result = new bytes32[](count);
-        uint256 index = 0;
-        for (uint256 i = 0; i < nationIds.length; i++) {
-            if (nations[nationIds[i]].family == family) {
-                result[index] = nationIds[i];
-                index++;
-            }
-        }
+    /// @notice Получить все народы определённой языковой семьи (из индекса)
+    function getNationsByLanguageFamily(LanguageFamily family) external view returns (bytes32[] memory) {
+        return nationsByFamily[family];
+    }
 
-        return result;
+    /// @notice Проверить, активен ли народ
+    function isNationActive(bytes32 nationId) external view returns (bool) {
+        return nations[nationId].exists && nations[nationId].active;
     }
 
     /// @notice Получить название языковой семьи
@@ -702,7 +951,36 @@ contract NationRegistry {
         if (family == LanguageFamily.SLAVIC) return unicode"Славянские народы";
         if (family == LanguageFamily.CAUCASIAN) return unicode"Кавказские народы";
         if (family == LanguageFamily.SAMOYEDIC) return unicode"Самодийские народы";
+        if (family == LanguageFamily.AMERINDIAN) return unicode"Индейские народы";
+        if (family == LanguageFamily.AFRICAN) return unicode"Африканские народы";
+        if (family == LanguageFamily.AUSTRONESIAN) return unicode"Австронезийские народы";
+        if (family == LanguageFamily.DRAVIDIAN) return unicode"Дравидийские народы";
+        if (family == LanguageFamily.SINOTIBETAN) return unicode"Сино-тибетские народы";
+        if (family == LanguageFamily.SEMITIC) return unicode"Семитские народы";
         return unicode"Другие народы";
+    }
+
+    /// @notice Получить название континента
+    function getContinentName(Continent continent) external pure returns (string memory) {
+        if (continent == Continent.SIBERIA) return unicode"Сибирь";
+        if (continent == Continent.CAUCASUS) return unicode"Кавказ";
+        if (continent == Continent.VOLGA_URAL) return unicode"Поволжье и Урал";
+        if (continent == Continent.EUROPE) return unicode"Европа";
+        if (continent == Continent.CENTRAL_ASIA) return unicode"Центральная Азия";
+        if (continent == Continent.EAST_ASIA) return unicode"Восточная Азия";
+        if (continent == Continent.SOUTH_ASIA) return unicode"Южная Азия";
+        if (continent == Continent.MIDDLE_EAST) return unicode"Ближний Восток";
+        if (continent == Continent.AFRICA) return unicode"Африка";
+        if (continent == Continent.NORTH_AMERICA) return unicode"Северная Америка";
+        if (continent == Continent.SOUTH_AMERICA) return unicode"Южная Америка";
+        if (continent == Continent.OCEANIA) return unicode"Океания";
+        return unicode"Неизвестный регион";
+    }
+
+    /// @notice Получить исконные территории народа
+    function getNationHomelands(bytes32 nationId) external view returns (bytes32[] memory) {
+        if (!nations[nationId].exists) revert NationNotFound(nationId);
+        return nations[nationId].homelands;
     }
 
     /// @notice Приветствие для onboarding
@@ -717,5 +995,37 @@ contract NationRegistry {
                unicode"чтобы получить Документ Гражданина Конфедерации.\n\n"
                unicode"Каждый народ — хозяин своей земли.\n"
                unicode"Каждый гражданин — под защитой Конфедерации.";
+    }
+
+    /// @notice Статистика реестра
+    function getStats() external view returns (
+        uint256 totalNations,
+        uint256 activeNations,
+        uint256 totalLanguageFamilies,
+        uint256 totalContinents
+    ) {
+        totalNations = nationIds.length;
+
+        for (uint256 i = 0; i < nationIds.length; i++) {
+            if (nations[nationIds[i]].active) {
+                activeNations++;
+            }
+        }
+
+        // Подсчёт уникальных языковых семей и континентов
+        bool[15] memory familiesUsed;
+        bool[12] memory continentsUsed;
+
+        for (uint256 i = 0; i < nationIds.length; i++) {
+            familiesUsed[uint256(nations[nationIds[i]].family)] = true;
+            continentsUsed[uint256(nations[nationIds[i]].continent)] = true;
+        }
+
+        for (uint256 i = 0; i < 15; i++) {
+            if (familiesUsed[i]) totalLanguageFamilies++;
+        }
+        for (uint256 i = 0; i < 12; i++) {
+            if (continentsUsed[i]) totalContinents++;
+        }
     }
 }

@@ -38,18 +38,31 @@ contract RegionRegistry is AccessControl {
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
 
+    event ContinentCreated(bytes32 indexed continentId, string name);
     event UnionCreated(bytes32 indexed unionId, string name, string nameLocal);
+    event UnionContinentChanged(bytes32 indexed unionId, bytes32 indexed continentId);
     event RepublicCreated(bytes32 indexed republicId, bytes32 indexed unionId, string name, string nameLocal);
     event RegionCreated(bytes32 indexed regionId, bytes32 indexed republicId, string name);
     event RepublicStatusChanged(bytes32 indexed republicId, bool active);
+    event IndigenousPeopleAdded(bytes32 indexed republicId, string peopleName);
 
     /*//////////////////////////////////////////////////////////////
                             DATA STRUCTURES
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Континент (глобальное расширение)
+    struct Continent {
+        bytes32 id;
+        string name;           // "Евразия", "Америка", "Африка"
+        string description;    // Описание
+        bool exists;
+        uint64 createdAt;
+    }
+
     /// @notice Союз (группа республик)
     struct Union {
         bytes32 id;
+        bytes32 continentId;   // К какому континенту принадлежит (0 = не привязан)
         string name;           // "Сибирь", "Северный Кавказ"
         string nameLocal;      // Название на местном языке
         bool exists;
@@ -80,6 +93,11 @@ contract RegionRegistry is AccessControl {
     /*//////////////////////////////////////////////////////////////
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
+
+    // Континенты
+    mapping(bytes32 => Continent) public continents;
+    bytes32[] public continentIds;
+    mapping(bytes32 => bytes32[]) public unionsByContinent;  // continentId => unionIds[]
 
     // Союзы
     mapping(bytes32 => Union) public unions;
@@ -112,9 +130,40 @@ contract RegionRegistry is AccessControl {
         _grantRole(KHURAL_ROLE, _khural);
         _grantRole(REGISTRAR_ROLE, _khural);
 
-        // Инициализация базовых союзов и республик
+        // Инициализация базового континента, союзов и республик
+        _initializeContinents();
         _initializeUnions();
         _initializeRepublics();
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ИНИЦИАЛИЗАЦИЯ КОНТИНЕНТОВ
+    //////////////////////////////////////////////////////////////*/
+
+    function _initializeContinents() internal {
+        // Евразия — основной континент Сибирской Конфедерации
+        _createContinentInternal(
+            unicode"Евразия",
+            unicode"Крупнейший континент Земли. Родина Сибирской Конфедерации."
+        );
+    }
+
+    function _createContinentInternal(
+        string memory name,
+        string memory description
+    ) internal returns (bytes32 id) {
+        id = keccak256(abi.encodePacked("CONTINENT:", name));
+
+        continents[id] = Continent({
+            id: id,
+            name: name,
+            description: description,
+            exists: true,
+            createdAt: uint64(block.timestamp)
+        });
+
+        continentIds.push(id);
+        emit ContinentCreated(id, name);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -122,48 +171,61 @@ contract RegionRegistry is AccessControl {
     //////////////////////////////////////////////////////////////*/
 
     function _initializeUnions() internal {
+        bytes32 eurasiaId = keccak256(abi.encodePacked("CONTINENT:", unicode"Евразия"));
+
         // 1. СИБИРЬ
         _createUnionInternal(
+            eurasiaId,
             unicode"Сибирь",
             unicode"Сибирь"
         );
 
         // 2. СЕВЕРНЫЙ КАВКАЗ
         _createUnionInternal(
+            eurasiaId,
             unicode"Северный Кавказ",
             unicode"Кавказ"
         );
 
         // 3. ЗОЛОТОЕ КОЛЬЦО
         _createUnionInternal(
+            eurasiaId,
             unicode"Золотое Кольцо",
             unicode"Российская Республика"
         );
 
         // 4. СЕВЕР
         _createUnionInternal(
+            eurasiaId,
             unicode"Север",
             unicode"Север"
         );
 
         // 5. ПОВОЛЖЬЕ
         _createUnionInternal(
+            eurasiaId,
             unicode"Поволжье",
             unicode"Идел-Урал"
         );
 
         // 6. УРАЛ
         _createUnionInternal(
+            eurasiaId,
             unicode"Урал",
             unicode"Урал"
         );
     }
 
-    function _createUnionInternal(string memory name, string memory nameLocal) internal {
+    function _createUnionInternal(
+        bytes32 continentId,
+        string memory name,
+        string memory nameLocal
+    ) internal {
         bytes32 id = keccak256(abi.encodePacked("UNION:", name));
 
         unions[id] = Union({
             id: id,
+            continentId: continentId,
             name: name,
             nameLocal: nameLocal,
             exists: true,
@@ -171,6 +233,9 @@ contract RegionRegistry is AccessControl {
         });
 
         unionIds.push(id);
+        if (continentId != bytes32(0)) {
+            unionsByContinent[continentId].push(id);
+        }
         emit UnionCreated(id, name, nameLocal);
     }
 
@@ -347,6 +412,52 @@ contract RegionRegistry is AccessControl {
     }
 
     /*//////////////////////////////////////////////////////////////
+                        УПРАВЛЕНИЕ КОНТИНЕНТАМИ
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Создать новый континент (только Хурал)
+    /// @dev Для глобального расширения - Америка, Африка и т.д.
+    function createContinent(
+        string calldata name,
+        string calldata description
+    ) external onlyRole(KHURAL_ROLE) returns (bytes32 id) {
+        if (bytes(name).length == 0) revert InvalidInput();
+
+        id = keccak256(abi.encodePacked("CONTINENT:", name));
+        if (continents[id].exists) revert AlreadyExists();
+
+        continents[id] = Continent({
+            id: id,
+            name: name,
+            description: description,
+            exists: true,
+            createdAt: uint64(block.timestamp)
+        });
+
+        continentIds.push(id);
+        emit ContinentCreated(id, name);
+    }
+
+    /// @notice Получить все континенты
+    function getAllContinents() external view returns (Continent[] memory) {
+        Continent[] memory result = new Continent[](continentIds.length);
+        for (uint256 i = 0; i < continentIds.length; i++) {
+            result[i] = continents[continentIds[i]];
+        }
+        return result;
+    }
+
+    /// @notice Получить союзы континента
+    function getUnionsByContinent(bytes32 continentId) external view returns (Union[] memory) {
+        bytes32[] storage uIds = unionsByContinent[continentId];
+        Union[] memory result = new Union[](uIds.length);
+        for (uint256 i = 0; i < uIds.length; i++) {
+            result[i] = unions[uIds[i]];
+        }
+        return result;
+    }
+
+    /*//////////////////////////////////////////////////////////////
                         УПРАВЛЕНИЕ СОЮЗАМИ
     //////////////////////////////////////////////////////////////*/
 
@@ -355,13 +466,24 @@ contract RegionRegistry is AccessControl {
         string calldata name,
         string calldata nameLocal
     ) external onlyRole(KHURAL_ROLE) returns (bytes32 id) {
+        return createUnionInContinent(bytes32(0), name, nameLocal);
+    }
+
+    /// @notice Создать союз в континенте
+    function createUnionInContinent(
+        bytes32 continentId,
+        string calldata name,
+        string calldata nameLocal
+    ) public onlyRole(KHURAL_ROLE) returns (bytes32 id) {
         if (bytes(name).length == 0) revert InvalidInput();
+        if (continentId != bytes32(0) && !continents[continentId].exists) revert InvalidParent();
 
         id = keccak256(abi.encodePacked("UNION:", name));
         if (unions[id].exists) revert AlreadyExists();
 
         unions[id] = Union({
             id: id,
+            continentId: continentId,
             name: name,
             nameLocal: nameLocal,
             exists: true,
@@ -369,7 +491,38 @@ contract RegionRegistry is AccessControl {
         });
 
         unionIds.push(id);
+        if (continentId != bytes32(0)) {
+            unionsByContinent[continentId].push(id);
+        }
         emit UnionCreated(id, name, nameLocal);
+    }
+
+    /// @notice Привязать союз к континенту
+    function setUnionContinent(bytes32 unionId, bytes32 continentId) external onlyRole(KHURAL_ROLE) {
+        if (!unions[unionId].exists) revert NotFound();
+        if (continentId != bytes32(0) && !continents[continentId].exists) revert InvalidParent();
+
+        bytes32 oldContinentId = unions[unionId].continentId;
+
+        // Удаляем из старого континента (если был)
+        if (oldContinentId != bytes32(0)) {
+            bytes32[] storage oldUnions = unionsByContinent[oldContinentId];
+            for (uint256 i = 0; i < oldUnions.length; i++) {
+                if (oldUnions[i] == unionId) {
+                    oldUnions[i] = oldUnions[oldUnions.length - 1];
+                    oldUnions.pop();
+                    break;
+                }
+            }
+        }
+
+        // Добавляем в новый континент
+        unions[unionId].continentId = continentId;
+        if (continentId != bytes32(0)) {
+            unionsByContinent[continentId].push(unionId);
+        }
+
+        emit UnionContinentChanged(unionId, continentId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -411,6 +564,21 @@ contract RegionRegistry is AccessControl {
         if (!republics[republicId].exists) revert NotFound();
         republics[republicId].active = active;
         emit RepublicStatusChanged(republicId, active);
+    }
+
+    /// @notice Добавить коренной народ к республике
+    function addIndigenousPeople(bytes32 republicId, string calldata peopleName) external onlyRole(REGISTRAR_ROLE) {
+        if (!republics[republicId].exists) revert NotFound();
+        if (bytes(peopleName).length == 0) revert InvalidInput();
+
+        republics[republicId].indigenousPeoples.push(peopleName);
+        emit IndigenousPeopleAdded(republicId, peopleName);
+    }
+
+    /// @notice Получить коренные народы республики
+    function getIndigenousPeoples(bytes32 republicId) external view returns (string[] memory) {
+        if (!republics[republicId].exists) revert NotFound();
+        return republics[republicId].indigenousPeoples;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -510,8 +678,54 @@ contract RegionRegistry is AccessControl {
         return regionIds.length;
     }
 
+    /// @notice Количество континентов
+    function getContinentCount() external view returns (uint256) {
+        return continentIds.length;
+    }
+
     /// @notice Проверить, активна ли республика
     function isRepublicActive(bytes32 republicId) external view returns (bool) {
         return republics[republicId].exists && republics[republicId].active;
+    }
+
+    /// @notice Получить ID континента по названию
+    function getContinentId(string calldata name) external pure returns (bytes32) {
+        return keccak256(abi.encodePacked("CONTINENT:", name));
+    }
+
+    /// @notice Получить полную статистику
+    function getStats() external view returns (
+        uint256 totalContinents,
+        uint256 totalUnions,
+        uint256 totalRepublics,
+        uint256 activeRepublics,
+        uint256 totalRegions
+    ) {
+        totalContinents = continentIds.length;
+        totalUnions = unionIds.length;
+        totalRepublics = republicIds.length;
+        totalRegions = regionIds.length;
+
+        for (uint256 i = 0; i < republicIds.length; i++) {
+            if (republics[republicIds[i]].active) {
+                activeRepublics++;
+            }
+        }
+    }
+
+    /// @notice Получить континент союза
+    function getUnionContinent(bytes32 unionId) external view returns (Continent memory) {
+        if (!unions[unionId].exists) revert NotFound();
+        bytes32 continentId = unions[unionId].continentId;
+        if (continentId == bytes32(0) || !continents[continentId].exists) {
+            return Continent({
+                id: bytes32(0),
+                name: "",
+                description: "",
+                exists: false,
+                createdAt: 0
+            });
+        }
+        return continents[continentId];
     }
 }
