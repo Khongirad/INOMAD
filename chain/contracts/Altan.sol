@@ -2,94 +2,312 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * @title Altan
- * @notice Sovereign settlement unit of the INOMAD KHURAL network.
+ * @notice Единая валюта Сибирской Конфедерации
  *
- * ALTAN is NOT a cryptocurrency:
- * - Not traded on exchanges
- * - Not permissionless
- * - All holders are KYC'd citizens/entities
- * - Official exchange rate set by AltanCentralBank
+ * Согласно Аксиоме 9: "Алтан — единая валюта Сибирской Конфедерации.
+ * Право эмиссии принадлежит исключительно Центральному Банку Сибири.
+ * Алтан обеспечен словом народов Сибири и богатствами нашего народа."
  *
- * Emission controlled by AltanCentralBank (MINTER_ROLE).
- * Burning controlled by AltanCentralBank (BURNER_ROLE).
- * Distribution to citizens via licensed banks (AltanBankOfSiberia).
+ * Согласно Аксиоме 10: "Любая транзакция в системе стоит 0.03% Алтан от суммы транзакции.
+ * Не должно быть иных комиссий или связей с внешними операторами.
+ * Комиссия идёт на поддержание инфраструктуры."
+ *
+ * Символ: ₳ (Алтан)
+ * Комиссия: 0.03% (3 базисных пункта) — автоматически на каждую транзакцию
+ * Комиссия направляется в казну инфраструктуры
+ *
+ * ALTAN свободен для использования каждым гражданином в системе.
  */
-contract Altan is ERC20, AccessControl {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+contract Altan is ERC20, ERC20Permit, AccessControl {
+    /*//////////////////////////////////////////////////////////////
+                                CONSTANTS
+    //////////////////////////////////////////////////////////////*/
 
-    // Central Bank address (Bank of Siberia)
-    address public centralBank;
+    /// @notice Комиссия 0.03% = 3 базисных пункта = 3/10000
+    uint256 public constant FEE_BASIS_POINTS = 3;
+    uint256 public constant BASIS_POINTS_DENOMINATOR = 10000;
 
-    event CentralBankSet(address indexed oldBank, address indexed newBank);
-    event Minted(address indexed to, uint256 amount, string reason);
-    event Burned(address indexed from, uint256 amount, string reason);
+    /// @notice Минимальная сумма для взимания комиссии (защита от пыли)
+    uint256 public constant MIN_TRANSFER_FOR_FEE = 1000; // 0.001 ALTAN (с 6 decimals)
+
+    /*//////////////////////////////////////////////////////////////
+                                ROLES
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Центральный Банк Сибири — право эмиссии
+    bytes32 public constant CENTRAL_BANK_ROLE = keccak256("CENTRAL_BANK_ROLE");
+
+    /// @notice Казначейство — получатель комиссий
+    bytes32 public constant TREASURY_ROLE = keccak256("TREASURY_ROLE");
+
+    /// @notice Хурал — высший орган управления
+    bytes32 public constant KHURAL_ROLE = keccak256("KHURAL_ROLE");
+
+    /*//////////////////////////////////////////////////////////////
+                                ERRORS
+    //////////////////////////////////////////////////////////////*/
 
     error ZeroAddress();
     error ZeroAmount();
+    error InsufficientBalance();
+    error TransferFailed();
+    error ExceedsMaxSupply();
+    error AddressExemptionNotAllowed();
 
-    constructor(address centralBank_) ERC20("Altan", "ALTAN") {
-        if (centralBank_ == address(0)) revert ZeroAddress();
+    /*//////////////////////////////////////////////////////////////
+                                EVENTS
+    //////////////////////////////////////////////////////////////*/
 
-        centralBank = centralBank_;
+    event FeeCollected(address indexed from, address indexed to, uint256 amount, uint256 fee);
+    event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+    event Mint(address indexed to, uint256 amount, string reason);
+    event Burn(address indexed from, uint256 amount, string reason);
+    event FeeExemptionSet(address indexed account, bool exempt);
 
-        _grantRole(DEFAULT_ADMIN_ROLE, centralBank_);
-        _grantRole(MINTER_ROLE, centralBank_);
-        _grantRole(BURNER_ROLE, centralBank_);
+    /*//////////////////////////////////////////////////////////////
+                                STORAGE
+    //////////////////////////////////////////////////////////////*/
 
-        emit CentralBankSet(address(0), centralBank_);
+    /// @notice Адрес казны инфраструктуры (получает комиссии)
+    address public infrastructureTreasury;
+
+    /// @notice Максимальное предложение (может быть изменено Хуралом)
+    uint256 public maxSupply;
+
+    /// @notice Общая сумма собранных комиссий
+    uint256 public totalFeesCollected;
+
+    /// @notice Адреса, освобождённые от комиссии (системные контракты)
+    mapping(address => bool) public feeExempt;
+
+    /*//////////////////////////////////////////////////////////////
+                            CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
+
+    constructor(
+        address _khural,
+        address _centralBank,
+        address _infrastructureTreasury,
+        uint256 _initialMaxSupply
+    ) ERC20(unicode"Алтан", "ALTAN") ERC20Permit(unicode"Алтан") {
+        if (_khural == address(0)) revert ZeroAddress();
+        if (_centralBank == address(0)) revert ZeroAddress();
+        if (_infrastructureTreasury == address(0)) revert ZeroAddress();
+
+        infrastructureTreasury = _infrastructureTreasury;
+        maxSupply = _initialMaxSupply;
+
+        _grantRole(DEFAULT_ADMIN_ROLE, _khural);
+        _grantRole(KHURAL_ROLE, _khural);
+        _grantRole(CENTRAL_BANK_ROLE, _centralBank);
+        _grantRole(TREASURY_ROLE, _infrastructureTreasury);
+
+        // Системные адреса освобождены от комиссии
+        feeExempt[_infrastructureTreasury] = true;
+        feeExempt[address(this)] = true;
     }
 
-    /// @notice Mint ALTAN (only Central Bank)
-    /// @param to Recipient address
-    /// @param amount Amount to mint
-    /// @param reason Audit trail reason (e.g., "budget allocation", "swap USD->ALTAN")
-    function mint(address to, uint256 amount, string calldata reason) external onlyRole(MINTER_ROLE) {
+    /*//////////////////////////////////////////////////////////////
+                            DECIMALS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice 6 знаков после запятой (как USDC, удобно для расчётов)
+    function decimals() public pure override returns (uint8) {
+        return 6;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            ЭМИССИЯ И СЖИГАНИЕ
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Эмиссия новых Алтанов (только Центральный Банк)
+    function mint(
+        address to,
+        uint256 amount,
+        string calldata reason
+    ) external onlyRole(CENTRAL_BANK_ROLE) {
+        if (to == address(0)) revert ZeroAddress();
+        if (amount == 0) revert ZeroAmount();
+        if (totalSupply() + amount > maxSupply) revert ExceedsMaxSupply();
+
+        _mint(to, amount);
+
+        emit Mint(to, amount, reason);
+    }
+
+    /// @notice Сжигание Алтанов (только Центральный Банк)
+    function burn(
+        address from,
+        uint256 amount,
+        string calldata reason
+    ) external onlyRole(CENTRAL_BANK_ROLE) {
+        if (from == address(0)) revert ZeroAddress();
+        if (amount == 0) revert ZeroAmount();
+        if (balanceOf(from) < amount) revert InsufficientBalance();
+
+        _burn(from, amount);
+
+        emit Burn(from, amount, reason);
+    }
+
+    /// @notice Владелец может сжечь свои токены добровольно
+    function burnOwn(uint256 amount) external {
+        if (amount == 0) revert ZeroAmount();
+        if (balanceOf(msg.sender) < amount) revert InsufficientBalance();
+
+        _burn(msg.sender, amount);
+
+        emit Burn(msg.sender, amount, "voluntary");
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        РАСЧЁТ КОМИССИИ
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Рассчитать комиссию 0.03% для суммы
+    function calculateFee(uint256 amount) public pure returns (uint256) {
+        if (amount < MIN_TRANSFER_FOR_FEE) return 0;
+        return (amount * FEE_BASIS_POINTS) / BASIS_POINTS_DENOMINATOR;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    ПЕРЕОПРЕДЕЛЕНИЕ TRANSFER С КОМИССИЕЙ
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Transfer с автоматической комиссией 0.03%
+    function transfer(address to, uint256 amount) public override returns (bool) {
+        return _transferWithFee(msg.sender, to, amount);
+    }
+
+    /// @notice TransferFrom с автоматической комиссией 0.03%
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
+        _spendAllowance(from, msg.sender, amount);
+        return _transferWithFee(from, to, amount);
+    }
+
+    /// @notice Внутренняя функция трансфера с комиссией
+    function _transferWithFee(address from, address to, uint256 amount) internal returns (bool) {
+        if (from == address(0)) revert ZeroAddress();
         if (to == address(0)) revert ZeroAddress();
         if (amount == 0) revert ZeroAmount();
 
-        _mint(to, amount);
-        emit Minted(to, amount, reason);
+        uint256 fee = 0;
+
+        // Комиссия не взимается с освобождённых адресов
+        if (!feeExempt[from] && !feeExempt[to]) {
+            fee = calculateFee(amount);
+        }
+
+        uint256 totalRequired = amount + fee;
+        if (balanceOf(from) < totalRequired) revert InsufficientBalance();
+
+        // Переводим основную сумму получателю
+        _transfer(from, to, amount);
+
+        // Переводим комиссию в казну инфраструктуры
+        if (fee > 0) {
+            _transfer(from, infrastructureTreasury, fee);
+            totalFeesCollected += fee;
+
+            emit FeeCollected(from, to, amount, fee);
+        }
+
+        return true;
     }
 
-    /// @notice Burn ALTAN (only Central Bank)
-    /// @param from Address to burn from (must have approved)
-    /// @param amount Amount to burn
-    /// @param reason Audit trail reason (e.g., "swap ALTAN->USD")
-    function burn(address from, uint256 amount, string calldata reason) external onlyRole(BURNER_ROLE) {
-        if (from == address(0)) revert ZeroAddress();
-        if (amount == 0) revert ZeroAmount();
+    /*//////////////////////////////////////////////////////////////
+                    СИСТЕМНЫЙ ТРАНСФЕР БЕЗ КОМИССИИ
+    //////////////////////////////////////////////////////////////*/
 
-        _burn(from, amount);
-        emit Burned(from, amount, reason);
+    /// @notice Системный трансфер без комиссии (для банковских операций)
+    /// @dev Только освобождённые адреса могут вызывать
+    function transferNoFee(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool) {
+        if (!feeExempt[msg.sender]) revert AddressExemptionNotAllowed();
+
+        _transfer(from, to, amount);
+        return true;
     }
 
-    /// @notice Transfer Central Bank role (governance action)
-    function setCentralBank(address newBank) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (newBank == address(0)) revert ZeroAddress();
+    /*//////////////////////////////////////////////////////////////
+                            УПРАВЛЕНИЕ
+    //////////////////////////////////////////////////////////////*/
 
-        address oldBank = centralBank;
+    /// @notice Установить освобождение от комиссии (только Хурал)
+    function setFeeExempt(address account, bool exempt) external onlyRole(KHURAL_ROLE) {
+        if (account == address(0)) revert ZeroAddress();
+        feeExempt[account] = exempt;
 
-        // Revoke roles from old bank
-        _revokeRole(DEFAULT_ADMIN_ROLE, oldBank);
-        _revokeRole(MINTER_ROLE, oldBank);
-        _revokeRole(BURNER_ROLE, oldBank);
-
-        // Grant roles to new bank
-        _grantRole(DEFAULT_ADMIN_ROLE, newBank);
-        _grantRole(MINTER_ROLE, newBank);
-        _grantRole(BURNER_ROLE, newBank);
-
-        centralBank = newBank;
-        emit CentralBankSet(oldBank, newBank);
+        emit FeeExemptionSet(account, exempt);
     }
 
-    /// @notice Decimals = 18 (standard)
-    function decimals() public pure override returns (uint8) {
-        return 18;
+    /// @notice Обновить адрес казны инфраструктуры (только Хурал)
+    function setInfrastructureTreasury(address newTreasury) external onlyRole(KHURAL_ROLE) {
+        if (newTreasury == address(0)) revert ZeroAddress();
+
+        address oldTreasury = infrastructureTreasury;
+
+        // Убираем освобождение со старого адреса
+        feeExempt[oldTreasury] = false;
+
+        infrastructureTreasury = newTreasury;
+
+        // Добавляем освобождение новому адресу
+        feeExempt[newTreasury] = true;
+
+        emit TreasuryUpdated(oldTreasury, newTreasury);
+    }
+
+    /// @notice Изменить максимальное предложение (только Хурал)
+    function setMaxSupply(uint256 newMaxSupply) external onlyRole(KHURAL_ROLE) {
+        require(newMaxSupply >= totalSupply(), "Cannot set below current supply");
+        maxSupply = newMaxSupply;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Получить детали транзакции (сумма, комиссия, итого)
+    function getTransferDetails(uint256 amount) external pure returns (
+        uint256 fee,
+        uint256 recipientReceives,
+        uint256 totalFromSender
+    ) {
+        fee = calculateFee(amount);
+        recipientReceives = amount;
+        totalFromSender = amount + fee;
+    }
+
+    /// @notice Проверить, достаточно ли средств для перевода с комиссией
+    function canTransfer(address from, uint256 amount) external view returns (bool) {
+        uint256 fee = 0;
+        if (!feeExempt[from]) {
+            fee = calculateFee(amount);
+        }
+        return balanceOf(from) >= amount + fee;
+    }
+
+    /// @notice Получить статистику валюты
+    function getStats() external view returns (
+        uint256 _totalSupply,
+        uint256 _maxSupply,
+        uint256 _totalFeesCollected,
+        uint256 _treasuryBalance
+    ) {
+        return (
+            totalSupply(),
+            maxSupply,
+            totalFeesCollected,
+            balanceOf(infrastructureTreasury)
+        );
     }
 }
