@@ -9,6 +9,10 @@ import "./Altan.sol";
  * @title Auction
  * @notice Аукционная система Сибирской Конфедерации
  *
+ * БЕЗ КОМИССИЙ АУКЦИОНА!
+ * Комиссия 0.03% уже встроена в каждую транзакцию ALTAN (Аксиома 10).
+ * Продавцы платят 10% налог раз в год (Аксиома 11).
+ *
  * Типы аукционов:
  * - English (Английский): повышающиеся ставки, побеждает максимальная
  * - Dutch (Голландский): понижающаяся цена, первый купивший побеждает
@@ -20,7 +24,6 @@ import "./Altan.sol";
  * - Резервная цена (минимум для продажи)
  * - Buyout цена (моментальная покупка)
  * - История ставок
- * - Эскроу средств участников
  */
 contract Auction is AccessControl, ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
@@ -181,25 +184,18 @@ contract Auction is AccessControl, ReentrancyGuard {
     uint256 public totalVolume;
     uint256 public activeAuctions;
 
-    // Комиссия (базисные пункты)
-    uint256 public auctionFee = 250;  // 2.5%
-    address public feeRecipient;
-
     /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
     constructor(
         address _altan,
-        address _khural,
-        address _feeRecipient
+        address _khural
     ) {
         if (_altan == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
-        if (_feeRecipient == address(0)) revert ZeroAddress();
 
         altan = Altan(_altan);
-        feeRecipient = _feeRecipient;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _khural);
         _grantRole(KHURAL_ROLE, _khural);
@@ -328,6 +324,7 @@ contract Auction is AccessControl, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Сделать ставку (English аукцион)
+    /// @dev Комиссия 0.03% автоматически взимается в ALTAN при transfer
     function placeBid(uint256 auctionId, uint256 amount) external nonReentrant {
         AuctionData storage a = auctions[auctionId];
         if (!a.exists) revert AuctionNotFound();
@@ -343,7 +340,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         if (amount < minBid) revert BidTooLow();
         if (msg.sender == a.highestBidder) revert AlreadyHighestBidder();
 
-        // Переводим средства
+        // Переводим средства (комиссия 0.03% встроена в ALTAN)
         bool success = altan.transferFrom(msg.sender, address(this), amount);
         if (!success) revert TransferFailed();
 
@@ -390,7 +387,7 @@ contract Auction is AccessControl, ReentrancyGuard {
 
         uint256 currentPrice = getCurrentDutchPrice(auctionId);
 
-        // Переводим средства
+        // Переводим средства (комиссия 0.03% встроена в ALTAN)
         bool success = altan.transferFrom(msg.sender, address(this), currentPrice);
         if (!success) revert TransferFailed();
 
@@ -437,7 +434,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         if (msg.sender == a.seller) revert InvalidInput();
         if (deposit < a.startingPrice) revert BidTooLow();
 
-        // Переводим залог
+        // Переводим залог (комиссия 0.03% встроена в ALTAN)
         bool success = altan.transferFrom(msg.sender, address(this), deposit);
         if (!success) revert TransferFailed();
 
@@ -498,7 +495,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         if (a.buyoutPrice == 0) revert InvalidInput();
         if (msg.sender == a.seller) revert InvalidInput();
 
-        // Переводим buyout цену
+        // Переводим buyout цену (комиссия 0.03% встроена в ALTAN)
         bool success = altan.transferFrom(msg.sender, address(this), a.buyoutPrice);
         if (!success) revert TransferFailed();
 
@@ -538,6 +535,7 @@ contract Auction is AccessControl, ReentrancyGuard {
     }
 
     /// @notice Финализировать аукцион и распределить средства
+    /// @dev Продавец получает ВСЮ сумму без дополнительной комиссии
     function finalizeAuction(uint256 auctionId) external nonReentrant {
         AuctionData storage a = auctions[auctionId];
         if (!a.exists) revert AuctionNotFound();
@@ -552,17 +550,9 @@ contract Auction is AccessControl, ReentrancyGuard {
             return;
         }
 
-        // Рассчитываем комиссию
-        uint256 fee = (a.highestBid * auctionFee) / 10000;
-        uint256 sellerAmount = a.highestBid - fee;
-
-        // Выплачиваем продавцу
-        altan.transfer(a.seller, sellerAmount);
-
-        // Комиссия
-        if (fee > 0) {
-            altan.transfer(feeRecipient, fee);
-        }
+        // Выплачиваем продавцу ВСЮ сумму (без комиссии аукциона)
+        // Комиссия 0.03% уже была взята при каждом transfer в ALTAN
+        altan.transfer(a.seller, a.highestBid);
 
         a.status = AuctionStatus.FINALIZED;
         totalVolume += a.highestBid;
@@ -621,21 +611,5 @@ contract Auction is AccessControl, ReentrancyGuard {
         uint256 _totalVolume
     ) {
         return (totalAuctions, activeAuctions, totalVolume);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            УПРАВЛЕНИЕ
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Установить комиссию
-    function setAuctionFee(uint256 newFee) external onlyRole(KHURAL_ROLE) {
-        require(newFee <= 1000, "Max 10%");
-        auctionFee = newFee;
-    }
-
-    /// @notice Установить получателя комиссии
-    function setFeeRecipient(address newRecipient) external onlyRole(KHURAL_ROLE) {
-        if (newRecipient == address(0)) revert ZeroAddress();
-        feeRecipient = newRecipient;
     }
 }

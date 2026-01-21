@@ -16,13 +16,16 @@ import "./CitizenDocument.sol";
  * - Услуг (профессиональные, бытовые)
  * - Работ (фриланс, подряд)
  *
+ * БЕЗ КОМИССИЙ МАРКЕТПЛЕЙСА!
+ * Комиссия 0.03% уже встроена в каждую транзакцию ALTAN (Аксиома 10).
+ * Продавцы платят 10% налог раз в год (Аксиома 11).
+ *
  * Особенности:
  * - Верификация продавцов через CitizenDocument
  * - Рейтинговая система
  * - Категории и подкатегории
  * - Эскроу через EscrowBank
  * - Отзывы покупателей
- * - Поиск и фильтрация
  */
 contract Marketplace is AccessControl, ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
@@ -227,10 +230,6 @@ contract Marketplace is AccessControl, ReentrancyGuard {
     uint256 public totalOrders;
     uint256 public totalVolume;
 
-    // Комиссия маркетплейса (в базисных пунктах, 100 = 1%)
-    uint256 public marketplaceFee = 200;  // 2%
-    address public feeRecipient;
-
     /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -239,19 +238,16 @@ contract Marketplace is AccessControl, ReentrancyGuard {
         address _altan,
         address _bank,
         address _citizenDoc,
-        address _khural,
-        address _feeRecipient
+        address _khural
     ) {
         if (_altan == address(0)) revert ZeroAddress();
         if (_bank == address(0)) revert ZeroAddress();
         if (_citizenDoc == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
-        if (_feeRecipient == address(0)) revert ZeroAddress();
 
         altan = Altan(_altan);
         bank = EscrowBank(_bank);
         citizenDoc = CitizenDocument(_citizenDoc);
-        feeRecipient = _feeRecipient;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _khural);
         _grantRole(KHURAL_ROLE, _khural);
@@ -488,6 +484,7 @@ contract Marketplace is AccessControl, ReentrancyGuard {
     }
 
     /// @notice Оплатить заказ (эскроу)
+    /// @dev Комиссия 0.03% автоматически взимается в ALTAN при transferFrom
     function payOrder(uint256 orderId) external nonReentrant {
         Order storage o = orders[orderId];
         if (!o.exists) revert OrderNotFound();
@@ -496,12 +493,8 @@ contract Marketplace is AccessControl, ReentrancyGuard {
 
         Listing storage l = listings[o.listingId];
 
-        // Рассчитываем комиссию
-        uint256 fee = (o.totalPrice * marketplaceFee) / 10000;
-        uint256 sellerAmount = o.totalPrice - fee;
-
-        // Переводим средства на эскроу банка
-        // Сначала покупатель должен approve
+        // Переводим ВСЮ сумму на эскроу банка (без дополнительной комиссии)
+        // Комиссия 0.03% уже встроена в ALTAN transfer
         bool success = altan.transferFrom(msg.sender, address(bank), o.totalPrice);
         if (!success) revert InsufficientFunds();
 
@@ -515,10 +508,11 @@ contract Marketplace is AccessControl, ReentrancyGuard {
         string[] memory descriptions = new string[](1);
         descriptions[0] = l.title;
 
+        // Продавец получает ВСЮ сумму (без комиссии маркетплейса)
         uint256 escrowId = bank.createEscrow(
             msg.sender,
             o.seller,
-            sellerAmount,
+            o.totalPrice,
             l.title,
             percentages,
             descriptions
@@ -536,11 +530,6 @@ contract Marketplace is AccessControl, ReentrancyGuard {
             }
         }
         l.sold += o.quantity;
-
-        // Комиссия маркетплейса
-        if (fee > 0) {
-            altan.transfer(feeRecipient, fee);
-        }
 
         emit OrderStatusChanged(orderId, OrderStatus.PAID);
     }
@@ -755,21 +744,5 @@ contract Marketplace is AccessControl, ReentrancyGuard {
         uint256 _verifiedSellers
     ) {
         return (totalListings, totalOrders, totalVolume, verifiedSellers.length);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            УПРАВЛЕНИЕ
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Установить комиссию маркетплейса
-    function setMarketplaceFee(uint256 newFee) external onlyRole(KHURAL_ROLE) {
-        require(newFee <= 1000, "Max 10%");  // Максимум 10%
-        marketplaceFee = newFee;
-    }
-
-    /// @notice Установить получателя комиссии
-    function setFeeRecipient(address newRecipient) external onlyRole(KHURAL_ROLE) {
-        if (newRecipient == address(0)) revert ZeroAddress();
-        feeRecipient = newRecipient;
     }
 }

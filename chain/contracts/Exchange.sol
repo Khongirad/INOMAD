@@ -25,6 +25,11 @@ import "./Altan.sol";
  * Два режима торговли:
  * 1. Order Book — классическая биржа с ордерами
  * 2. AMM Pool — автоматический маркет-мейкер
+ *
+ * БЕЗ КОМИССИЙ БИРЖИ:
+ * Комиссия 0.03% уже встроена в каждую транзакцию ALTAN (Аксиома 10)
+ * + 10% налог на прибыль раз в год (Аксиома 11)
+ * Этого достаточно для развития инфраструктуры.
  */
 contract Exchange is AccessControl, ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
@@ -172,10 +177,6 @@ contract Exchange is AccessControl, ReentrancyGuard {
                                 CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Комиссия биржи (0.3% = 30 базисных пунктов)
-    uint256 public constant TRADING_FEE = 30;
-    uint256 public constant FEE_DENOMINATOR = 10000;
-
     /// @notice Минимальная ликвидность для создания пула
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
 
@@ -202,10 +203,6 @@ contract Exchange is AccessControl, ReentrancyGuard {
     mapping(uint256 => mapping(address => LPPosition)) public lpPositions;
     mapping(uint256 => address[]) public liquidityProviders;
 
-    // Комиссии
-    address public feeRecipient;
-    uint256 public totalFeesCollected;
-
     // Статистика
     uint256 public totalTrades;
     uint256 public totalVolume;
@@ -216,15 +213,12 @@ contract Exchange is AccessControl, ReentrancyGuard {
 
     constructor(
         address _altan,
-        address _khural,
-        address _feeRecipient
+        address _khural
     ) {
         if (_altan == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
-        if (_feeRecipient == address(0)) revert ZeroAddress();
 
         altan = Altan(_altan);
-        feeRecipient = _feeRecipient;
 
         _grantRole(DEFAULT_ADMIN_ROLE, _khural);
         _grantRole(KHURAL_ROLE, _khural);
@@ -396,6 +390,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
     }
 
     /// @notice Исполнить сделку
+    /// @dev Без комиссии биржи — комиссия 0.03% уже встроена в ALTAN (Аксиома 10)
     function _executeTrade(
         uint256 pairId,
         Order storage buyOrder,
@@ -407,21 +402,11 @@ contract Exchange is AccessControl, ReentrancyGuard {
 
         uint256 quoteAmount = (amount * price) / 1e6;
 
-        // Комиссия
-        uint256 fee = (quoteAmount * TRADING_FEE) / FEE_DENOMINATOR;
-        uint256 sellerReceives = quoteAmount - fee;
-
         // Переводим ALTAN покупателю
         altan.transfer(buyOrder.trader, amount);
 
-        // Переводим quote токен продавцу
-        IERC20(pair.quoteToken).transfer(sellOrder.trader, sellerReceives);
-
-        // Комиссия
-        if (fee > 0) {
-            IERC20(pair.quoteToken).transfer(feeRecipient, fee);
-            totalFeesCollected += fee;
-        }
+        // Переводим quote токен продавцу (полная сумма, без комиссии биржи)
+        IERC20(pair.quoteToken).transfer(sellOrder.trader, quoteAmount);
 
         // Обновляем ордера
         buyOrder.filled += amount;
@@ -542,6 +527,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
     }
 
     /// @notice Swap через AMM
+    /// @dev Без комиссии биржи — комиссия 0.03% уже встроена в ALTAN (Аксиома 10)
     function swap(
         uint256 pairId,
         uint256 amountIn,
@@ -569,10 +555,8 @@ contract Exchange is AccessControl, ReentrancyGuard {
             altan.transferFrom(msg.sender, address(this), amountIn);
         }
 
-        // x * y = k (constant product formula)
-        // С комиссией: amountIn * (1 - fee)
-        uint256 amountInWithFee = amountIn * (FEE_DENOMINATOR - TRADING_FEE);
-        amountOut = (amountInWithFee * reserveOut) / (reserveIn * FEE_DENOMINATOR + amountInWithFee);
+        // x * y = k (constant product formula) — без дополнительной комиссии
+        amountOut = (amountIn * reserveOut) / (reserveIn + amountIn);
 
         if (amountOut < minAmountOut) revert SlippageExceeded();
         if (amountOut >= reserveOut) revert InsufficientLiquidity();
@@ -624,6 +608,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
     }
 
     /// @notice Рассчитать выход swap
+    /// @dev Без комиссии биржи — комиссия 0.03% уже встроена в ALTAN (Аксиома 10)
     function getAmountOut(
         uint256 pairId,
         uint256 amountIn,
@@ -635,8 +620,8 @@ contract Exchange is AccessControl, ReentrancyGuard {
         uint256 reserveIn = buyAltan ? pair.quoteReserve : pair.baseReserve;
         uint256 reserveOut = buyAltan ? pair.baseReserve : pair.quoteReserve;
 
-        uint256 amountInWithFee = amountIn * (FEE_DENOMINATOR - TRADING_FEE);
-        amountOut = (amountInWithFee * reserveOut) / (reserveIn * FEE_DENOMINATOR + amountInWithFee);
+        // x * y = k — без дополнительной комиссии
+        amountOut = (amountIn * reserveOut) / (reserveIn + amountIn);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -674,19 +659,9 @@ contract Exchange is AccessControl, ReentrancyGuard {
     function getStats() external view returns (
         uint256 _totalPairs,
         uint256 _totalTrades,
-        uint256 _totalVolume,
-        uint256 _totalFees
+        uint256 _totalVolume
     ) {
-        return (nextPairId, totalTrades, totalVolume, totalFeesCollected);
+        return (nextPairId, totalTrades, totalVolume);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            УПРАВЛЕНИЕ
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Установить получателя комиссии
-    function setFeeRecipient(address newRecipient) external onlyRole(KHURAL_ROLE) {
-        if (newRecipient == address(0)) revert ZeroAddress();
-        feeRecipient = newRecipient;
-    }
 }
