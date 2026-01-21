@@ -45,6 +45,7 @@ contract RegionRegistry is AccessControl {
     event RegionCreated(bytes32 indexed regionId, bytes32 indexed republicId, string name);
     event RepublicStatusChanged(bytes32 indexed republicId, bool active);
     event IndigenousPeopleAdded(bytes32 indexed republicId, string peopleName);
+    event GeoDataUpdated(bytes32 indexed entityId, int32 lat, int32 lng);
 
     /*//////////////////////////////////////////////////////////////
                             DATA STRUCTURES
@@ -67,6 +68,17 @@ contract RegionRegistry is AccessControl {
         string nameLocal;      // Название на местном языке
         bool exists;
         uint64 createdAt;
+    }
+
+    /// @notice Геоданные для карты (координаты центра + границы)
+    struct GeoData {
+        int32 centerLat;       // Широта центра × 1_000_000 (например, 51.827° = 51827000)
+        int32 centerLng;       // Долгота центра × 1_000_000
+        string geoJsonCID;     // IPFS CID для GeoJSON границ (для карты)
+        string flagCID;        // IPFS CID для флага
+        string coatOfArmsCID;  // IPFS CID для герба
+        uint32 areaKm2;        // Площадь в км²
+        uint32 population;     // Население
     }
 
     /// @notice Республика
@@ -112,6 +124,9 @@ contract RegionRegistry is AccessControl {
     mapping(bytes32 => Region) public regions;
     bytes32[] public regionIds;
     mapping(bytes32 => bytes32[]) public regionsByRepublic;  // republicId => regionIds[]
+
+    // Геоданные для карты
+    mapping(bytes32 => GeoData) public geoData;  // republicId/unionId => GeoData
 
     // Ссылка на ImmutableAxioms
     address public immutable axiomsContract;
@@ -608,6 +623,101 @@ contract RegionRegistry is AccessControl {
         regionsByRepublic[republicId].push(id);
 
         emit RegionCreated(id, republicId, name);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ГЕОДАННЫЕ ДЛЯ КАРТЫ
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Установить геоданные для республики/союза
+    /// @param entityId ID республики или союза
+    /// @param centerLat Широта центра × 1_000_000 (51.827° → 51827000)
+    /// @param centerLng Долгота центра × 1_000_000
+    /// @param geoJsonCID IPFS CID для GeoJSON границ
+    /// @param flagCID IPFS CID для флага
+    /// @param coatOfArmsCID IPFS CID для герба
+    /// @param areaKm2 Площадь в км²
+    /// @param population Население
+    function setGeoData(
+        bytes32 entityId,
+        int32 centerLat,
+        int32 centerLng,
+        string calldata geoJsonCID,
+        string calldata flagCID,
+        string calldata coatOfArmsCID,
+        uint32 areaKm2,
+        uint32 population
+    ) external onlyRole(REGISTRAR_ROLE) {
+        // Проверяем, что entityId существует (республика или союз)
+        if (!republics[entityId].exists && !unions[entityId].exists) revert NotFound();
+
+        geoData[entityId] = GeoData({
+            centerLat: centerLat,
+            centerLng: centerLng,
+            geoJsonCID: geoJsonCID,
+            flagCID: flagCID,
+            coatOfArmsCID: coatOfArmsCID,
+            areaKm2: areaKm2,
+            population: population
+        });
+
+        emit GeoDataUpdated(entityId, centerLat, centerLng);
+    }
+
+    /// @notice Обновить только координаты центра
+    function setGeoCoordinates(
+        bytes32 entityId,
+        int32 centerLat,
+        int32 centerLng
+    ) external onlyRole(REGISTRAR_ROLE) {
+        if (!republics[entityId].exists && !unions[entityId].exists) revert NotFound();
+
+        geoData[entityId].centerLat = centerLat;
+        geoData[entityId].centerLng = centerLng;
+
+        emit GeoDataUpdated(entityId, centerLat, centerLng);
+    }
+
+    /// @notice Обновить IPFS CID для GeoJSON границ
+    function setGeoJsonCID(bytes32 entityId, string calldata cid) external onlyRole(REGISTRAR_ROLE) {
+        if (!republics[entityId].exists && !unions[entityId].exists) revert NotFound();
+        geoData[entityId].geoJsonCID = cid;
+    }
+
+    /// @notice Обновить население
+    function setPopulation(bytes32 entityId, uint32 population) external onlyRole(REGISTRAR_ROLE) {
+        if (!republics[entityId].exists && !unions[entityId].exists) revert NotFound();
+        geoData[entityId].population = population;
+    }
+
+    /// @notice Получить геоданные
+    function getGeoData(bytes32 entityId) external view returns (GeoData memory) {
+        return geoData[entityId];
+    }
+
+    /// @notice Получить все республики с геоданными для карты
+    function getAllRepublicsWithGeo() external view returns (
+        bytes32[] memory ids,
+        string[] memory names,
+        int32[] memory lats,
+        int32[] memory lngs,
+        uint32[] memory populations
+    ) {
+        uint256 len = republicIds.length;
+        ids = new bytes32[](len);
+        names = new string[](len);
+        lats = new int32[](len);
+        lngs = new int32[](len);
+        populations = new uint32[](len);
+
+        for (uint256 i = 0; i < len; i++) {
+            bytes32 id = republicIds[i];
+            ids[i] = id;
+            names[i] = republics[id].name;
+            lats[i] = geoData[id].centerLat;
+            lngs[i] = geoData[id].centerLng;
+            populations[i] = geoData[id].population;
+        }
     }
 
     /*//////////////////////////////////////////////////////////////

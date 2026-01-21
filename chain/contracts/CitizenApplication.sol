@@ -3,6 +3,9 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./CitizenDocument.sol";
+import "./NationRegistry.sol";
+import "./RegionRegistry.sol";
 
 /**
  * @title CitizenApplication
@@ -241,6 +244,11 @@ contract CitizenApplication is AccessControl, ReentrancyGuard {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Связанные контракты
+    CitizenDocument public citizenDocument;
+    NationRegistry public nationRegistry;
+    RegionRegistry public regionRegistry;
+
     uint256 public nextApplicationId;
 
     mapping(uint256 => Application) public applications;
@@ -255,8 +263,20 @@ contract CitizenApplication is AccessControl, ReentrancyGuard {
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _khural) {
+    constructor(
+        address _citizenDocument,
+        address _nationRegistry,
+        address _regionRegistry,
+        address _khural
+    ) {
         if (_khural == address(0)) revert ZeroAddress();
+        if (_citizenDocument == address(0)) revert ZeroAddress();
+        if (_nationRegistry == address(0)) revert ZeroAddress();
+        if (_regionRegistry == address(0)) revert ZeroAddress();
+
+        citizenDocument = CitizenDocument(_citizenDocument);
+        nationRegistry = NationRegistry(_nationRegistry);
+        regionRegistry = RegionRegistry(_regionRegistry);
 
         _grantRole(DEFAULT_ADMIN_ROLE, _khural);
         _grantRole(KHURAL_ROLE, _khural);
@@ -596,9 +616,9 @@ contract CitizenApplication is AccessControl, ReentrancyGuard {
                         КЛЯТВА ГРАЖДАНИНА
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Принять клятву гражданина
+    /// @notice Принять клятву гражданина и получить документ
     /// @dev Клятва — священный акт связи с землёй и народом
-    function takeOath(uint256 applicationId) external {
+    function takeOath(uint256 applicationId) external nonReentrant {
         Application storage app = applications[applicationId];
         _validateApplication(app);
         _requireApplicant(app);
@@ -620,6 +640,38 @@ contract CitizenApplication is AccessControl, ReentrancyGuard {
             oathWitness: ""
         });
 
+        // Получаем название национальности для документа
+        string memory ethnicity = "";
+        if (app.ethnic.primaryNationId != bytes32(0)) {
+            try nationRegistry.getNation(app.ethnic.primaryNationId) returns (NationRegistry.Nation memory nation) {
+                ethnicity = nation.name;
+            } catch {
+                ethnicity = "";
+            }
+        }
+
+        // Формируем полное имя
+        string memory fullName = string(abi.encodePacked(app.personal.surname, " ", app.personal.givenNames));
+        string memory fullNameNative = bytes(app.personal.surnameNative).length > 0
+            ? string(abi.encodePacked(app.personal.surnameNative, " ", app.personal.givenNamesNative))
+            : "";
+
+        // Конвертируем основание
+        CitizenDocument.BasisType docBasis = _convertBasis(app.basis);
+
+        // Выдаём документ гражданина (SBT)
+        uint256 documentId = citizenDocument.issueDocument(
+            msg.sender,
+            app.residence.currentRepublicId,
+            app.birth.birthRepublicId,
+            fullName,
+            fullNameNative,
+            ethnicity,
+            app.personal.birthDate,
+            docBasis
+        );
+
+        app.documentId = documentId;
         app.completedAt = uint64(block.timestamp);
         approvedApplications++;
         pendingApplications--;
@@ -627,6 +679,17 @@ contract CitizenApplication is AccessControl, ReentrancyGuard {
         _changeStatus(applicationId, ApplicationStatus.COMPLETED);
 
         emit OathTaken(applicationId, msg.sender, uint64(block.timestamp));
+    }
+
+    /// @notice Конвертация основания из CitizenApplication в CitizenDocument
+    function _convertBasis(CitizenshipBasis basis) internal pure returns (CitizenDocument.BasisType) {
+        if (basis == CitizenshipBasis.INDIGENOUS) return CitizenDocument.BasisType.INDIGENOUS;
+        if (basis == CitizenshipBasis.BIRTHRIGHT) return CitizenDocument.BasisType.BIRTHRIGHT;
+        if (basis == CitizenshipBasis.DESCENT) return CitizenDocument.BasisType.BIRTHRIGHT;
+        if (basis == CitizenshipBasis.NATURALIZATION) return CitizenDocument.BasisType.NATURALIZATION;
+        if (basis == CitizenshipBasis.MARRIAGE) return CitizenDocument.BasisType.NATURALIZATION;
+        if (basis == CitizenshipBasis.SPECIAL_MERIT) return CitizenDocument.BasisType.NATURALIZATION;
+        return CitizenDocument.BasisType.BIRTHRIGHT;
     }
 
     /// @notice Получить текст клятвы
