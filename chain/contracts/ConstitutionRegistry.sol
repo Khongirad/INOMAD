@@ -1,11 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "./ImmutableAxioms.sol";
+
 /**
- * ConstitutionRegistry
+ * @title ConstitutionRegistry
+ * @notice Реестр Конституции Сибирской Конфедерации
  *
- * Canonical on-chain registry of the Constitution of Altan / Khural.
- * Stores articles, versions, and amendment history.
+ * Хранит статьи, версии и историю поправок.
+ *
+ * ВАЖНО: Все статьи Конституции ДОЛЖНЫ соответствовать ImmutableAxioms.
+ * ImmutableAxioms — это фундамент, который НЕ МОЖЕТ быть изменён.
+ * ConstitutionRegistry — это изменяемая надстройка.
+ *
+ * Иерархия:
+ * 1. ImmutableAxioms (неизменяемые аксиомы) — высший закон
+ * 2. ConstitutionRegistry (конституция) — изменяется только Хуралом
+ * 3. Законы и подзаконные акты
  *
  * ⚠️ Does NOT enforce rules — only records supreme law.
  * Enforcement happens in other registries (Election, Bank, Judiciary).
@@ -55,6 +66,7 @@ contract ConstitutionRegistry {
                             STORAGE
     //////////////////////////////////////////////////////////////*/
     address public immutable khural; // Supreme legislative authority
+    ImmutableAxioms public immutable axioms; // Reference to immutable axioms
 
     uint256 public articleCount;
 
@@ -77,9 +89,35 @@ contract ConstitutionRegistry {
     /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address _khural) {
+    constructor(address _khural, address _axioms) {
         if (_khural == address(0)) revert InvalidInput();
+        if (_axioms == address(0)) revert InvalidInput();
         khural = _khural;
+        axioms = ImmutableAxioms(_axioms);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        AXIOM VERIFICATION
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Получить ссылку на неизменяемые аксиомы
+    function getAxiomsContract() external view returns (address) {
+        return address(axioms);
+    }
+
+    /// @notice Проверить целостность аксиом
+    function verifyAxiomsIntegrity() external view returns (bool) {
+        return axioms.verifyIntegrity();
+    }
+
+    /// @notice Получить аксиому по номеру
+    function getAxiom(uint8 number) external view returns (string memory) {
+        return axioms.getAxiom(number);
+    }
+
+    /// @notice Получить все аксиомы
+    function getAllAxioms() external view returns (string[15] memory) {
+        return axioms.getAllAxioms();
     }
 
     /*//////////////////////////////////////////////////////////////
