@@ -33,12 +33,18 @@ import "./CitizenDocument.sol";
  *        - Дата рождения
  *        - Основание (коренной / право рождения / натурализация)
  *
- * ШАГ 4: ПОЛУЧЕНИЕ ДОКУМЕНТА
+ * ШАГ 4: КЛЯТВА ГРАЖДАНИНА
+ *        - Без клятвы нет государства
+ *        - Священный акт связи с землёй и народом
+ *        - Клятва защищать землю и людей
+ *
+ * ШАГ 5: ПОЛУЧЕНИЕ ДОКУМЕНТА
  *        - Выдача Soul Bound Token (SBT)
  *        - Формат: [Союз]-[Республика]
  *        - Например: Сибирь-Буряад-Монголия
  *
- * "Каждый народ — хозяин своей земли.
+ * "Без клятвы нет государства.
+ *  Каждый народ — хозяин своей земли.
  *  Каждый гражданин — под защитой Конфедерации."
  */
 contract CitizenOnboarding is AccessControl, ReentrancyGuard {
@@ -59,7 +65,8 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
         NATION_SELECTED,    // 1 - Народ выбран
         TERRITORY_SELECTED, // 2 - Территория выбрана
         DATA_SUBMITTED,     // 3 - Данные заполнены
-        COMPLETED           // 4 - Документ выдан
+        OATH_PENDING,       // 4 - Ожидание клятвы
+        COMPLETED           // 5 - Документ выдан
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -74,6 +81,7 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
     error InvalidInput();
     error RegistrationNotStarted();
     error RegistrationAlreadyComplete();
+    error OathNotTaken();
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
@@ -83,6 +91,7 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
     event NationSelected(address indexed applicant, bytes32 indexed nationId, string nationName);
     event TerritorySelected(address indexed applicant, bytes32 indexed republicId, string republicName);
     event DataSubmitted(address indexed applicant, string fullName);
+    event OathTaken(address indexed applicant, bytes32 oathHash, uint64 timestamp);
     event CitizenRegistered(
         address indexed citizen,
         uint256 indexed documentId,
@@ -111,6 +120,11 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
         string fullNameNative;
         uint64 birthDate;
         CitizenDocument.BasisType basis;
+
+        // Шаг 4: Клятва
+        bool oathTaken;
+        bytes32 oathHash;
+        uint64 oathTimestamp;
 
         // Метаданные
         uint64 startedAt;
@@ -181,6 +195,9 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
             fullNameNative: "",
             birthDate: 0,
             basis: CitizenDocument.BasisType.INDIGENOUS,
+            oathTaken: false,
+            oathHash: bytes32(0),
+            oathTimestamp: 0,
             startedAt: uint64(block.timestamp),
             completedAt: 0,
             documentId: 0,
@@ -288,11 +305,64 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
     }
 
     /*//////////////////////////////////////////////////////////////
-                    ШАГ 4: ВЫДАЧА ДОКУМЕНТА
+                    ШАГ 4: КЛЯТВА ГРАЖДАНИНА
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Принять клятву гражданина
+    /// @dev Без клятвы нет государства — священный акт связи с землёй и народом
+    function takeOath() external {
+        Application storage app = applications[msg.sender];
+        if (!app.exists) revert RegistrationNotStarted();
+        if (app.step == OnboardingStep.COMPLETED) revert RegistrationAlreadyComplete();
+        if (app.step < OnboardingStep.DATA_SUBMITTED) revert InvalidStep();
+
+        // Генерируем хеш клятвы
+        bytes32 oathHash = keccak256(abi.encodePacked(
+            msg.sender,
+            app.nationId,
+            app.republicId,
+            block.timestamp,
+            "OATH_OF_CITIZEN"
+        ));
+
+        app.oathTaken = true;
+        app.oathHash = oathHash;
+        app.oathTimestamp = uint64(block.timestamp);
+        app.step = OnboardingStep.OATH_PENDING;
+
+        emit OathTaken(msg.sender, oathHash, uint64(block.timestamp));
+    }
+
+    /// @notice Получить текст клятвы гражданина
+    function getOathText() public pure returns (string memory) {
+        return unicode"═══════════════════════════════════════════════════════════════\n"
+               unicode"           КЛЯТВА ГРАЖДАНИНА СИБИРСКОЙ КОНФЕДЕРАЦИИ\n"
+               unicode"═══════════════════════════════════════════════════════════════\n\n"
+               unicode"Я, вступая в ряды граждан Сибирской Конфедерации,\n"
+               unicode"торжественно клянусь:\n\n"
+               unicode"• ЗАЩИЩАТЬ землю своих предков и землю, которая меня приняла,\n"
+               unicode"  от внешних и внутренних врагов;\n\n"
+               unicode"• УВАЖАТЬ права и свободы всех народов Конфедерации,\n"
+               unicode"  признавая каждый народ хозяином своей земли;\n\n"
+               unicode"• ХРАНИТЬ культуру, язык и традиции своего народа\n"
+               unicode"  и уважать культуру других народов;\n\n"
+               unicode"• СЛУЖИТЬ общему благу Конфедерации честно и справедливо,\n"
+               unicode"  не ставя личные интересы выше интересов народа;\n\n"
+               unicode"• ПЕРЕДАТЬ эту землю и эти ценности следующим поколениям\n"
+               unicode"  лучше, чем получил от предков.\n\n"
+               unicode"Если я нарушу эту клятву, пусть меня осудят мой народ\n"
+               unicode"и духи предков моей земли.\n\n"
+               unicode"═══════════════════════════════════════════════════════════════\n"
+               unicode"        БЕЗ КЛЯТВЫ НЕТ ГОСУДАРСТВА\n"
+               unicode"═══════════════════════════════════════════════════════════════";
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    ШАГ 5: ВЫДАЧА ДОКУМЕНТА
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Завершить регистрацию и получить документ
-    /// @dev Может вызвать сам заявитель или регистратор
+    /// @dev Может вызвать сам заявитель или регистратор. ТРЕБУЕТ КЛЯТВУ!
     function completeRegistration() external nonReentrant {
         _completeRegistration(msg.sender);
     }
@@ -306,7 +376,10 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
         Application storage app = applications[applicant];
         if (!app.exists) revert RegistrationNotStarted();
         if (app.step == OnboardingStep.COMPLETED) revert RegistrationAlreadyComplete();
-        if (app.step < OnboardingStep.DATA_SUBMITTED) revert InvalidStep();
+
+        // БЕЗ КЛЯТВЫ НЕТ ДОКУМЕНТА!
+        if (!app.oathTaken) revert OathNotTaken();
+        if (app.step < OnboardingStep.OATH_PENDING) revert InvalidStep();
 
         // Получаем этничность из NationRegistry
         NationRegistry.Nation memory nation = nationRegistry.getNation(app.nationId);
@@ -361,6 +434,7 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
         if (step == OnboardingStep.NATION_SELECTED) return unicode"Народ выбран";
         if (step == OnboardingStep.TERRITORY_SELECTED) return unicode"Территория выбрана";
         if (step == OnboardingStep.DATA_SUBMITTED) return unicode"Данные заполнены";
+        if (step == OnboardingStep.OATH_PENDING) return unicode"Клятва принята";
         if (step == OnboardingStep.COMPLETED) return unicode"Регистрация завершена";
         return unicode"Неизвестно";
     }
@@ -376,7 +450,10 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
             return unicode"Шаг 3: Заполните личные данные с помощью submitPersonalData()";
         }
         if (step == OnboardingStep.DATA_SUBMITTED) {
-            return unicode"Шаг 4: Завершите регистрацию с помощью completeRegistration()";
+            return unicode"Шаг 4: Прочтите и примите клятву с помощью takeOath() — без клятвы нет гражданства!";
+        }
+        if (step == OnboardingStep.OATH_PENDING) {
+            return unicode"Шаг 5: Завершите регистрацию с помощью completeRegistration()";
         }
         if (step == OnboardingStep.COMPLETED) {
             return unicode"Поздравляем! Вы — гражданин Сибирской Конфедерации!";
@@ -410,7 +487,7 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
 
     /// @notice Получить народы по языковой семье
     function getNationsByFamily(NationRegistry.LanguageFamily family) external view returns (bytes32[] memory) {
-        return nationRegistry.getNationsByFamily(family);
+        return nationRegistry.getNationsByLanguageFamily(family);
     }
 
     /// @notice Получить название языковой семьи
@@ -473,12 +550,16 @@ contract CitizenOnboarding is AccessControl, ReentrancyGuard {
                unicode"2. selectNationByName('...')   - Выбрать народ\n"
                unicode"3. selectTerritory(repId, birthRepId) - Выбрать территорию\n"
                unicode"4. submitPersonalData(...)     - Заполнить данные\n"
-               unicode"5. completeRegistration()      - Получить документ\n\n"
+               unicode"5. takeOath()                  - ПРИНЯТЬ КЛЯТВУ ⚔️\n"
+               unicode"6. completeRegistration()      - Получить документ\n\n"
+               unicode"⚠️  БЕЗ КЛЯТВЫ НЕТ ГРАЖДАНСТВА!\n"
+               unicode"    Клятва — священный акт связи с землёй и народом.\n\n"
                unicode"После регистрации вы получите Soul Bound Token (SBT)\n"
                unicode"с вашим документом гражданина Конфедерации.\n\n"
                unicode"Формат документа: [Союз]-[Республика]\n"
                unicode"Например: Сибирь-Буряад-Монголия\n\n"
                unicode"═══════════════════════════════════════════════════════════════\n"
+               unicode"  Без клятвы нет государства.\n"
                unicode"  Каждый народ — хозяин своей земли.\n"
                unicode"  Каждый гражданин — под защитой Конфедерации.\n"
                unicode"═══════════════════════════════════════════════════════════════";

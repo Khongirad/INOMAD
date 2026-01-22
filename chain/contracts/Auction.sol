@@ -89,7 +89,7 @@ contract Auction is AccessControl, ReentrancyGuard {
     event BidPlaced(uint256 indexed auctionId, address indexed bidder, uint256 amount);
     event BidWithdrawn(uint256 indexed auctionId, address indexed bidder, uint256 amount);
     event AuctionExtended(uint256 indexed auctionId, uint64 newEndTime);
-    event AuctionEnded(uint256 indexed auctionId, address indexed winner, uint256 winningBid);
+    event AuctionFinalized(uint256 indexed auctionId, address indexed winner, uint256 winningBid);
     event AuctionCancelled(uint256 indexed auctionId);
     event BuyoutExecuted(uint256 indexed auctionId, address indexed buyer, uint256 price);
     event SealedBidRevealed(uint256 indexed auctionId, address indexed bidder, uint256 amount);
@@ -398,7 +398,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         activeAuctions--;
 
         emit BidPlaced(auctionId, msg.sender, currentPrice);
-        emit AuctionEnded(auctionId, msg.sender, currentPrice);
+        emit AuctionFinalized(auctionId, msg.sender, currentPrice);
     }
 
     /// @notice Получить текущую цену Dutch аукциона
@@ -511,7 +511,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         activeAuctions--;
 
         emit BuyoutExecuted(auctionId, msg.sender, a.buyoutPrice);
-        emit AuctionEnded(auctionId, msg.sender, a.buyoutPrice);
+        emit AuctionFinalized(auctionId, msg.sender, a.buyoutPrice);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -557,7 +557,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         a.status = AuctionStatus.FINALIZED;
         totalVolume += a.highestBid;
 
-        emit AuctionEnded(auctionId, a.highestBidder, a.highestBid);
+        emit AuctionFinalized(auctionId, a.highestBidder, a.highestBid);
     }
 
     /*//////////////////////////////////////////////////////////////
