@@ -194,29 +194,35 @@ POST /api/tasks/:id/complete
 ### ALTAN
 
 ```bash
-# Get balance
-GET /api/altan/balance
+# Bank Auth (requires separate wallet signature)
+POST /api/bank/auth/nonce
+POST /api/bank/auth/ticket
 
-# Get user balance
-GET /api/altan/balance/:userId
-
-# Mint ALTAN (test only)
-POST /api/altan/mint
-{
-  "amount": 1000
-}
-
-# Sync from blockchain (placeholder)
-POST /api/altan/sync
+# Bank Operations (requires bank ticket)
+GET /api/bank/me/balance
+GET /api/bank/me/history
+POST /api/bank/me/transfer
+GET /api/bank/me/resolve?bankRef=<uuid>
 ```
 
 ## 🔐 Authentication
 
-All requests (except health checks) require the `x-seat-id` header:
-
+### Identity Auth (JWT + Wallet Signature)
 ```bash
-curl -H "x-seat-id: SEAT_001" http://localhost:3001/api/khural
+# 1. Request nonce
+POST /api/auth/nonce { "address": "0x..." }
+
+# 2. Sign message and verify → returns JWT
+POST /api/auth/verify { "address": "0x...", "signature": "0x...", "nonce": "..." }
+
+# 3. Use JWT for identity endpoints
+curl -H "Authorization: Bearer <jwt>" http://localhost:3001/api/auth/me
 ```
+
+### Bank Auth (Separate Wallet Signature)
+Bank endpoints require a **separate** bank ticket (different JWT secret, different signed message).
+
+Legacy `x-seat-id` header is still supported for backward compat but deprecated.
 
 Test seat IDs from seed data:
 - `SEAT_001` (Leader)
@@ -280,7 +286,7 @@ Groups are **always 10 seats** (indices 0-9). The first seat (index 0) is design
 
 ### ALTAN Ledger
 
-Currently operates as an off-chain mirror. The `AltanService.syncFromChain()` method is a placeholder for future blockchain integration. All transfers are atomic database transactions.
+Banking is a separate module with its own authentication (bank tickets, separate JWT secret). Transfers are between opaque bankRefs — the identity layer has no access to financial data. All transfers are atomic database transactions with 0.03% fee to INOMAD INC.
 
 ### Permission Model
 

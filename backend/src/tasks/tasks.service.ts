@@ -1,13 +1,14 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/tasks.dto';
-import { AltanService } from '../altan/altan.service';
+import { BankRewardService } from '../bank/bank-reward.service';
+import { TransactionType } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
   constructor(
     private prisma: PrismaService,
-    private altanService: AltanService,
+    private bankRewardService: BankRewardService,
   ) {}
 
   async createTask(dto: CreateTaskDto, createdByUserId: string) {
@@ -164,11 +165,13 @@ export class TasksService {
       throw new BadRequestException('Task is not in progress');
     }
 
-    // 1. Transfer ALTAN reward
-    await this.altanService.transferReward(
+    // 1. Transfer ALTAN reward via BankRewardService
+    await this.bankRewardService.transferReward(
       task.createdByUserId,
       userId,
       task.rewardAltan.toNumber(),
+      TransactionType.REWARD,
+      `Task reward: ${task.title}`,
     );
     
     // 2. Grant Guild XP (Meritocracy)

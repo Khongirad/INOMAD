@@ -131,21 +131,21 @@ async function main() {
   console.log('✅ Created profession guilds');
 
   // Create ALTAN ledgers
-  await prisma.altanLedger.create({
+  const ledger1 = await prisma.altanLedger.create({
     data: {
       userId: user1.id,
       balance: 1000,
     },
   });
 
-  await prisma.altanLedger.create({
+  const ledger2 = await prisma.altanLedger.create({
     data: {
       userId: user2.id,
       balance: 500,
     },
   });
 
-  await prisma.altanLedger.create({
+  const ledger3 = await prisma.altanLedger.create({
     data: {
       userId: user3.id,
       balance: 100,
@@ -153,6 +153,40 @@ async function main() {
   });
 
   console.log('✅ Created ALTAN ledgers');
+
+  // Create BankLinks (opaque pointers from identity to banking domain)
+  // bankRef = ledger.id — only the banking module can resolve this
+  await prisma.bankLink.upsert({
+    where: { userId: user1.id },
+    update: {},
+    create: {
+      userId: user1.id,
+      bankCode: 'BANK_OF_SIBERIA',
+      bankRef: ledger1.id,
+    },
+  });
+
+  await prisma.bankLink.upsert({
+    where: { userId: user2.id },
+    update: {},
+    create: {
+      userId: user2.id,
+      bankCode: 'BANK_OF_SIBERIA',
+      bankRef: ledger2.id,
+    },
+  });
+
+  await prisma.bankLink.upsert({
+    where: { userId: user3.id },
+    update: {},
+    create: {
+      userId: user3.id,
+      bankCode: 'BANK_OF_SIBERIA',
+      bankRef: ledger3.id,
+    },
+  });
+
+  console.log('✅ Created BankLinks (opaque pointers)');
 
   // Create sample tasks
   await prisma.task.create({

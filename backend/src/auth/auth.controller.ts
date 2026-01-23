@@ -1,0 +1,110 @@
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { AuthGuard, AuthenticatedRequest } from './auth.guard';
+import { RequestNonceDto, VerifySignatureDto, RefreshTokenDto } from './dto/auth.dto';
+import { Request } from 'express';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private authService: AuthService) {}
+
+  /**
+   * POST /auth/nonce
+   * Generate a nonce challenge for wallet signature.
+   * Public endpoint — no auth required.
+   */
+  @Post('nonce')
+  @HttpCode(HttpStatus.OK)
+  async requestNonce(@Body() dto: RequestNonceDto) {
+    const result = await this.authService.generateNonce(dto.address);
+    return result;
+  }
+
+  /**
+   * POST /auth/verify
+   * Verify wallet signature, check SeatSBT ownership, issue JWT.
+   * Public endpoint — no auth required.
+   */
+  @Post('verify')
+  @HttpCode(HttpStatus.OK)
+  async verify(@Body() dto: VerifySignatureDto, @Req() req: Request) {
+    const result = await this.authService.verifySignature(
+      dto.address,
+      dto.signature,
+      dto.nonce,
+      req.ip,
+      req.headers['user-agent'],
+    );
+    return { ok: true, ...result };
+  }
+
+  /**
+   * GET /auth/me
+   * Return current user identity — NO financial data.
+   * Requires valid JWT.
+   */
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async getMe(@Req() req: AuthenticatedRequest) {
+    const me = await this.authService.getMe(req.user.userId);
+    return { ok: true, me };
+  }
+
+  /**
+   * POST /auth/refresh
+   * Rotate access + refresh tokens.
+   * Public endpoint (uses refresh token in body).
+   */
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
+    const result = await this.authService.refreshTokens(
+      dto.refreshToken,
+      req.ip,
+      req.headers['user-agent'],
+    );
+    return { ok: true, ...result };
+  }
+
+  /**
+   * POST /auth/logout
+   * Revoke current session.
+   * Requires valid JWT.
+   */
+  @Post('logout')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async logout(@Req() req: AuthenticatedRequest) {
+    // Extract jti from the token
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+      const decoded = JSON.parse(
+        Buffer.from(token.split('.')[1], 'base64').toString(),
+      );
+      await this.authService.logout(decoded.jti);
+    }
+    return { ok: true };
+  }
+
+  /**
+   * POST /auth/logout-all
+   * Revoke all sessions for current user.
+   * Requires valid JWT.
+   */
+  @Post('logout-all')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async logoutAll(@Req() req: AuthenticatedRequest) {
+    await this.authService.logoutAll(req.user.userId);
+    return { ok: true };
+  }
+}

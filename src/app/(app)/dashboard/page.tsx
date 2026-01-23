@@ -18,13 +18,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sheet } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { TransactionDialog } from "@/components/finance/transaction-dialog";
-import { useAltan } from "@/lib/hooks/use-altan";
-import { useSeatBinding } from "@/lib/hooks/use-seat-binding";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useBank } from "@/lib/hooks/use-bank";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
-  const { balance, history, loading: balanceLoading } = useAltan();
-  const { status: seatStatus } = useSeatBinding();
+  const { user } = useAuth();
+  const { balance: bankBalance, history: bankHistory, loading: balanceLoading, hasTicket } = useBank();
+  const balance = Number(bankBalance) || 0;
+  const history = bankHistory;
   // const [sendOpen, setSendOpen] = React.useState(false); // Replaced by Dialog
   const [receiveOpen, setReceiveOpen] = React.useState(false);
   const [taxOpen, setTaxOpen] = React.useState(false);
@@ -54,7 +56,7 @@ export default function DashboardPage() {
             Cockpit Overview
           </h2>
           <p className="text-zinc-400">
-            Welcome back, <span className="text-zinc-200 font-medium">Alex Nomad</span>
+            Welcome back, <span className="text-zinc-200 font-medium">{user?.seatId || 'Citizen'}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -166,13 +168,13 @@ export default function DashboardPage() {
             {history.length === 0 ? (
                <div className="p-8 text-center text-zinc-500 bg-zinc-900/40 rounded-xl border border-white/5">
                   <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No transactions yet</p>
+                  <p>{hasTicket ? 'No transactions yet' : 'Connect bank to view transactions'}</p>
                </div>
             ) : (
                 history.map((tx) => {
-                  const isIncoming = tx.toUser?.seatId === seatStatus?.seatId;
-                  const otherParty = isIncoming ? tx.fromUser : tx.toUser;
-                  
+                  const isIncoming = tx.direction === 'IN';
+                  const counterparty = tx.counterpartyBankRef === 'SYSTEM' ? 'System' : tx.counterpartyBankRef.substring(0, 8);
+
                   return (
                   <div key={tx.id} className="group flex items-center justify-between rounded-xl border border-white/5 bg-zinc-900/40 p-4 transition hover:bg-zinc-900/60 hover:border-white/10">
                     <div className="flex items-center gap-4">
@@ -181,7 +183,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <div className="font-medium text-zinc-200">
-                          {isIncoming ? `Received from Seat #${otherParty?.seatId || 'System'}` : `Sent to Seat #${otherParty?.seatId || 'External'}`}
+                          {isIncoming ? `Received from ${counterparty}` : `Sent to ${counterparty}`}
                         </div>
                         <div className="text-xs text-zinc-500">{new Date(tx.createdAt).toLocaleString()}</div>
                       </div>

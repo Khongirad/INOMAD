@@ -32,33 +32,40 @@ model User {
   seatId    String   @unique // On-chain SeatSBT reference
   role      UserRole @default(CITIZEN)
   walletStatus WalletStatus @default(LOCKED)
-  
+  walletAddress String? @unique // On-chain wallet address (bound via SeatSBT ownership)
+
   // Registration Data
   birthPlace     Json?   // { country, region, district, city }
   currentAddress Json?
   ethnicity      String[]
   clan           String?
-  
+
   // Verification State
   verificationStatus VerificationStatus @default(DRAFT)
   isSuperVerified    Boolean @default(false)
   superVerifiedBy   String? // Seat ID of the Founder Mandate holder
-  
+
   // Organization membership
   organizationId String?
   organization   Guild?  @relation("OrganizationMembers", fields: [organizationId], references: [id])
-  
+
   // Relations
   khuralSeats      KhuralSeat[]
   guildMemberships GuildMember[]
   tasksCreated     Task[]        @relation("TaskCreator")
   tasksAssigned    Task[]        @relation("TaskAssignee")
   altanLedger      AltanLedger?
-  
+
+  // Auth Sessions
+  sessions         AuthSession[]
+
+  // Bank Link (opaque pointer to banking domain)
+  bankLink         BankLink?
+
   // Unlock Ceremony
   unlockRequest    UnlockRequest?
   approvalsGiven   UnlockApproval[]
-  
+
   // Verifications received (Standard 3-local rule)
   verificationsReceived Verification[] @relation("TargetUser")
   verificationsIssued   Verification[] @relation("VerifierUser")
@@ -67,14 +74,14 @@ model User {
   sentTransactions     AltanTransaction[] @relation("SentTransactions")
   receivedTransactions AltanTransaction[] @relation("ReceivedTransactions")
   auditLogs            AuditLog[]
-  
+
   // History & Council
   proposedHistoryVersions KhuralEventVersion[] @relation("HistoryProposer")
   councilVotes            CouncilVote[]        @relation("CouncilVoter")
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -85,6 +92,57 @@ enum VerificationStatus {
   PENDING
   VERIFIED
   REJECTED
+}
+
+// ====================================
+// AUTH: NONCE & SESSION MANAGEMENT
+// ====================================
+
+model AuthNonce {
+  id        String   @id @default(uuid())
+  address   String
+  nonce     String   @unique
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([address])
+  @@index([expiresAt])
+}
+
+model AuthSession {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jti          String   @unique   // JWT ID for revocation
+  refreshToken String?  @unique
+  expiresAt    DateTime
+  lastUsedAt   DateTime @default(now())
+  ipAddress    String?
+  userAgent    String?
+  isRevoked    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([jti])
+}
+
+// ====================================
+// BANK LINK: OPAQUE POINTER (BANKING SECRECY)
+// Identity side stores ONLY the fact of bank relationship.
+// No financial data (balance, account number, wallet address) here.
+// ====================================
+
+model BankLink {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankCode   String   // "BANK_OF_SIBERIA", "BANK_OF_ALTAI", etc.
+  bankRef    String   // Opaque reference — resolvable ONLY by banking module
+  status     String   @default("ACTIVE") // ACTIVE, SUSPENDED, CLOSED
+
+  @@index([bankCode])
 }
 
 model Verification {
@@ -315,25 +373,33 @@ model AltanLedger {
 
 model AltanTransaction {
   id        String   @id @default(uuid())
-  
-  fromUserId String? // Nullable for system mints
+
+  // Legacy userId references (kept for backward compat during transition)
+  fromUserId String?
   fromUser   User?   @relation("SentTransactions", fields: [fromUserId], references: [id])
-  
-  toUserId   String? // Nullable for system burns
+
+  toUserId   String?
   toUser     User?   @relation("ReceivedTransactions", fields: [toUserId], references: [id])
-  
+
+  // BankRef-based references (banking secrecy — no identity correlation)
+  fromBankRef String?
+  toBankRef   String?
+
   amount     Decimal @db.Decimal(18, 6)
   type       TransactionType
   status     TransactionStatus @default(COMPLETED)
-  
+  memo       String?
+
   // On-chain link
   txHash     String?
   blockNumber BigInt?
-  
+
   createdAt  DateTime @default(now())
-  
+
   @@index([fromUserId])
   @@index([toUserId])
+  @@index([fromBankRef])
+  @@index([toBankRef])
   @@index([type])
 }
 
