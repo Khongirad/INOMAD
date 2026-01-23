@@ -6,14 +6,38 @@ import {
   useReducer,
   useRef,
   useState,
+  useCallback,
   type ReactNode,
 } from "react";
+import dynamic from "next/dynamic";
 
 import { createEmptyDraft } from "./_core/types";
 import type { MacroRegion } from "./_core/types";
 import { identityReducer } from "./_core/reducer";
 import { loadDraft, saveDraft } from "./_core/storage";
 import { getEthnicitiesByRegion } from "./_core/ethnicities";
+import {
+  DOCTRINAL_REGIONS,
+  NATIONS,
+  type DoctrinalRegion,
+  type SubRegion,
+  type GeoCoordinates,
+  determineResidenceStatus,
+} from "./_core/geography";
+
+import { RegionCard } from "@/components/geo/RegionCard";
+import { NationCard } from "@/components/geo/NationCard";
+import { ResidenceStatusCard } from "@/components/geo/ResidenceStatusCard";
+
+// Динамический импорт карты (без SSR)
+const GeoMap = dynamic(() => import("@/components/geo/GeoMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[350px] bg-zinc-900/50 rounded-xl flex items-center justify-center">
+      <div className="text-zinc-500">Загрузка карты...</div>
+    </div>
+  ),
+});
 
 type ParentRef =
   | { mode: "known"; name: string }
@@ -84,19 +108,72 @@ export default function IdentityCreatePage() {
     );
   }, [draft.passport]);
 
-  const REGIONS: { code: MacroRegion; label: string }[] = [
-    { code: "siberia", label: "Siberia" },
-    { code: "caucasus", label: "Caucasus" },
-    { code: "volga", label: "Volga" },
-    { code: "north", label: "North" },
-    { code: "kaliningrad", label: "Kaliningrad" },
-    { code: "crimea_special", label: "Crimea (special)" },
-    { code: "unknown", label: "Unknown" },
-  ];
-
   const ethnicityOptions = useMemo(() => {
     return getEthnicitiesByRegion(draft.territory.macroRegion);
   }, [draft.territory.macroRegion]);
+
+  // Geo-state для интерактивной карты
+  const [geoSelectedRegion, setGeoSelectedRegion] = useState<DoctrinalRegion | null>(null);
+  const [geoSelectedSubRegion, setGeoSelectedSubRegion] = useState<SubRegion | null>(null);
+  const [geoSelectedCoords, setGeoSelectedCoords] = useState<GeoCoordinates | null>(null);
+  const [geoSelectedNation, setGeoSelectedNation] = useState<typeof NATIONS[number] | null>(null);
+  const [geoShowRegionCard, setGeoShowRegionCard] = useState(false);
+  const [geoShowNationDetail, setGeoShowNationDetail] = useState(false);
+  const [geoNationSearch, setGeoNationSearch] = useState("");
+  const [geoMapMode, setGeoMapMode] = useState<"region" | "point">("region");
+
+  const geoFilteredNations = useMemo(() => {
+    if (!geoNationSearch.trim()) return NATIONS;
+    const s = geoNationSearch.toLowerCase();
+    return NATIONS.filter(
+      (n) =>
+        n.name.toLowerCase().includes(s) ||
+        n.nameRu.toLowerCase().includes(s) ||
+        n.nativeName?.toLowerCase().includes(s)
+    );
+  }, [geoNationSearch]);
+
+  const geoResidenceStatus = useMemo(() => {
+    if (!geoSelectedNation || !geoSelectedRegion) return null;
+    return determineResidenceStatus(geoSelectedNation.code, geoSelectedRegion.id);
+  }, [geoSelectedNation, geoSelectedRegion]);
+
+  const handleGeoRegionClick = useCallback((region: DoctrinalRegion) => {
+    setGeoSelectedRegion(region);
+    setGeoShowRegionCard(true);
+    dispatch({ type: "SET_TERRITORY_MACROREGION", value: region.code as MacroRegion });
+  }, []);
+
+  const handleGeoSubRegionClick = useCallback((subRegion: SubRegion, parent: DoctrinalRegion) => {
+    setGeoSelectedRegion(parent);
+    setGeoSelectedSubRegion(subRegion);
+    setGeoShowRegionCard(true);
+  }, []);
+
+  const handleGeoLocationSelect = useCallback((coords: GeoCoordinates, name?: string) => {
+    setGeoSelectedCoords(coords);
+    if (name) {
+      dispatch({ type: "SET_BIRTHPLACE_GEO", value: {
+        label: name,
+        regionId: geoSelectedRegion?.id,
+        subRegionId: geoSelectedSubRegion?.id,
+        coordinates: coords,
+      }});
+    }
+  }, [geoSelectedRegion, geoSelectedSubRegion]);
+
+  const handleGeoNationConfirm = useCallback(() => {
+    if (!geoSelectedNation || !geoSelectedRegion) return;
+    const status = determineResidenceStatus(geoSelectedNation.code, geoSelectedRegion.id);
+    dispatch({ type: "SET_NATIONALITY", value: {
+      code: geoSelectedNation.code,
+      label: geoSelectedNation.nameRu,
+      nativeName: geoSelectedNation.nativeName,
+      isIndigenous: geoSelectedNation.isIndigenous,
+      residenceStatus: status,
+    }});
+    setGeoShowNationDetail(false);
+  }, [geoSelectedNation, geoSelectedRegion]);
 
   const parentsSummary = useMemo(() => {
     const fmt = (p: ParentRef) => {
@@ -440,71 +517,173 @@ export default function IdentityCreatePage() {
         <StepIndicator done={step3Done} message="Passport series, number, and issuer required" />
       </Section>
 
-      {/* TERRITORY & ETHNICITY */}
+      {/* TERRITORY & ETHNICITY — Interactive Map */}
       <Section
-        title="4. Territory & Ethnicity"
-        subtitle="Territory defines legal base. Ethnicity defines cultural-legal anchoring."
+        title="4. Territory & Nation"
+        subtitle="Select your birth region on the map and your national identity."
         locked={!step1Done}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="MacroRegion">
-            <div className="flex gap-2 flex-wrap">
-              {REGIONS.map((r) => (
-                <Chip
-                  key={r.code}
-                  active={draft.territory.macroRegion === r.code}
-                  onClick={() =>
-                    dispatch({
-                      type: "SET_TERRITORY_MACROREGION",
-                      value: r.code,
-                    })
-                  }
-                  label={r.label}
+        {/* Map for region selection */}
+        <div className="space-y-4">
+          {/* Region selection with map */}
+          <div className="relative">
+            <GeoMap
+              height="350px"
+              showRegionLayers
+              showSubRegions={geoSelectedRegion?.id === "siberia"}
+              selectionMode={geoMapMode}
+              selectedRegionId={geoSelectedRegion?.id}
+              selectedSubRegionId={geoSelectedSubRegion?.id}
+              onRegionClick={handleGeoRegionClick}
+              onSubRegionClick={handleGeoSubRegionClick}
+              onLocationSelect={handleGeoLocationSelect}
+              initialZoom={3}
+              className="rounded-xl overflow-hidden"
+            />
+
+            {/* Region card overlay */}
+            {geoShowRegionCard && geoSelectedRegion && (
+              <div className="absolute top-3 right-3 z-10 max-w-[320px]">
+                <RegionCard
+                  region={geoSelectedRegion}
+                  subRegion={geoSelectedSubRegion || undefined}
+                  lang="ru"
+                  onClose={() => setGeoShowRegionCard(false)}
                 />
-              ))}
-            </div>
-          </Field>
-
-          <Field label="Primary Ethnicity">
-            <select
-              className="input-field"
-              value={draft.ethnicity.primary?.code ?? ""}
-              onChange={(e) => {
-                const code = e.target.value;
-                const found = ethnicityOptions.find((x) => x.code === code);
-                dispatch({
-                  type: "SET_ETHNICITY_PRIMARY",
-                  value: found
-                    ? { code: found.code, label: found.label }
-                    : undefined,
-                });
-              }}
-            >
-              <option value="">— select —</option>
-              {ethnicityOptions.map((e) => (
-                <option key={e.code} value={e.code}>
-                  {e.label}
-                </option>
-              ))}
-            </select>
-
-            <div className="mt-3">
-              <div className="text-xs text-zinc-500 mb-2">
-                Self-declared (if not in list)
+                <button
+                  onClick={() => {
+                    setGeoShowRegionCard(false);
+                    setGeoMapMode("point");
+                  }}
+                  className="mt-2 w-full rounded-lg bg-gold-border py-2 text-sm font-medium text-black hover:bg-gold-text transition"
+                >
+                  Выбрать точку на карте
+                </button>
               </div>
+            )}
+          </div>
+
+          {/* Quick region chips */}
+          <div className="flex gap-2 flex-wrap">
+            {DOCTRINAL_REGIONS.map((r) => (
+              <Chip
+                key={r.id}
+                active={geoSelectedRegion?.id === r.id}
+                onClick={() => handleGeoRegionClick(r)}
+                label={r.nameRu}
+              />
+            ))}
+          </div>
+
+          {/* Place of birth (auto-filled from map or manual) */}
+          <div className="glass-card rounded-lg p-4">
+            <Field label="Место рождения (как в паспорте)" required>
               <input
-                value={draft.ethnicity.selfDeclaredText}
+                value={draft.basic.placeOfBirth.label}
                 onChange={(e) =>
                   dispatch({
-                    type: "SET_ETHNICITY_SELF_TEXT",
+                    type: "SET_BIRTHPLACE_LABEL",
                     value: e.target.value,
                   })
                 }
-                placeholder="Enter if not in list"
+                placeholder="г. Иркутск, Иркутская область"
                 className="input-field"
               />
+            </Field>
+            {geoSelectedCoords && (
+              <div className="mt-2 text-xs text-zinc-500">
+                Координаты: {geoSelectedCoords.lat.toFixed(4)}, {geoSelectedCoords.lng.toFixed(4)}
+              </div>
+            )}
+          </div>
+
+          {/* Nation selection */}
+          <div className="glass-card rounded-lg p-4 space-y-3">
+            <Field label="Национальная принадлежность">
+              <input
+                value={geoNationSearch}
+                onChange={(e) => setGeoNationSearch(e.target.value)}
+                placeholder="Поиск народа..."
+                className="input-field"
+              />
+            </Field>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+              {geoFilteredNations.slice(0, 12).map((nation) => (
+                <button
+                  key={nation.code}
+                  onClick={() => {
+                    setGeoSelectedNation(nation);
+                    setGeoShowNationDetail(true);
+                  }}
+                  className={[
+                    "rounded-lg p-2 text-left text-sm border transition",
+                    geoSelectedNation?.code === nation.code
+                      ? "bg-gold-dim text-gold-text border-gold-border"
+                      : "bg-black/40 border-zinc-800 text-zinc-300 hover:bg-zinc-900/60",
+                  ].join(" ")}
+                >
+                  <div className="font-medium truncate">{nation.nameRu}</div>
+                  {nation.isIndigenous && (
+                    <div className="text-xs text-emerald-400 mt-0.5">Коренной</div>
+                  )}
+                </button>
+              ))}
             </div>
-          </Field>
+
+            {/* Selected nation detail */}
+            {geoShowNationDetail && geoSelectedNation && (
+              <div className="mt-3">
+                <NationCard
+                  nation={geoSelectedNation}
+                  lang="ru"
+                  compact={false}
+                  isSelected
+                  onClose={() => setGeoShowNationDetail(false)}
+                  onSelect={handleGeoNationConfirm}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Residence status */}
+          {geoResidenceStatus && geoSelectedRegion && geoSelectedNation && draft.nationality && (
+            <ResidenceStatusCard
+              status={geoResidenceStatus}
+              regionName={geoSelectedRegion.nameRu}
+              nationName={geoSelectedNation.nameRu}
+              lang="ru"
+            />
+          )}
+
+          {/* Legacy fallback: ethnicity select */}
+          {!geoSelectedNation && (
+            <div className="glass-card rounded-lg p-4">
+              <Field label="Или выберите из списка (legacy)">
+                <select
+                  className="input-field"
+                  value={draft.ethnicity.primary?.code ?? ""}
+                  onChange={(e) => {
+                    const code = e.target.value;
+                    const found = ethnicityOptions.find((x) => x.code === code);
+                    dispatch({
+                      type: "SET_ETHNICITY_PRIMARY",
+                      value: found
+                        ? { code: found.code, label: found.label }
+                        : undefined,
+                    });
+                  }}
+                >
+                  <option value="">— select —</option>
+                  {ethnicityOptions.map((e) => (
+                    <option key={e.code} value={e.code}>
+                      {e.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+          )}
         </div>
       </Section>
 
