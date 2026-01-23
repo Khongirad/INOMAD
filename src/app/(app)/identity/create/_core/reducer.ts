@@ -6,6 +6,8 @@ import type {
   Gender,
   MacroRegion,
   Verifier,
+  BirthplaceGeo,
+  NationalIdentity,
 } from "./types";
 
 export type IdentityAction =
@@ -19,6 +21,7 @@ export type IdentityAction =
   | { type: "SET_BASIC_GENDER"; value: Gender | "" }
   | { type: "SET_BASIC_DOB"; value: string }
   | { type: "SET_BIRTHPLACE_LABEL"; value: string }
+  | { type: "SET_BIRTHPLACE_GEO"; value: BirthplaceGeo }
   | { type: "SET_CONTACT_PHONE"; value: string }
   | { type: "SET_CONTACT_EMAIL"; value: string }
   | { type: "SET_CONTACT_ADDRESS"; value: string }
@@ -28,6 +31,7 @@ export type IdentityAction =
   | { type: "SET_PASSPORT_ISSUED_DATE"; value: string }
   | { type: "SET_PASSPORT_EXPIRATION_DATE"; value: string }
   | { type: "SET_TERRITORY_MACROREGION"; value: MacroRegion }
+  | { type: "SET_NATIONALITY"; value: NationalIdentity | null }
   | { type: "SET_ETHNICITY_PRIMARY"; value?: { code: string; label: string } }
   | { type: "SET_ETHNICITY_SELF_TEXT"; value: string }
   | { type: "ADD_VERIFIER"; verifier: Verifier }
@@ -83,10 +87,36 @@ export function identityReducer(
         },
       });
 
+    case "SET_BIRTHPLACE_GEO":
+      return touch({
+        ...state,
+        basic: {
+          ...state.basic,
+          placeOfBirth: action.value,
+        },
+        // Автоматически обновляем макрорегион на основе regionId
+        territory: action.value.regionId
+          ? { macroRegion: action.value.regionId as MacroRegion }
+          : state.territory,
+      });
+
     case "SET_TERRITORY_MACROREGION":
       return touch({
         ...state,
         territory: { ...state.territory, macroRegion: action.value },
+      });
+
+    case "SET_NATIONALITY":
+      return touch({
+        ...state,
+        nationality: action.value,
+        // Синхронизируем с legacy ethnicity полем
+        ethnicity: action.value
+          ? {
+              primary: { code: action.value.code, label: action.value.label },
+              selfDeclaredText: "",
+            }
+          : state.ethnicity,
       });
 
     case "SET_ETHNICITY_PRIMARY":

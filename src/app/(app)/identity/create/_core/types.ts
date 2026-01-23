@@ -4,6 +4,7 @@ export type IdentityStatus = "citizen" | "foreigner";
 export type Gender = "male" | "female" | "other";
 export type ParentStatus = "known" | "unknown" | "not_declared";
 export type VerificationStatus = "pending" | "partial" | "verified";
+export type ResidenceStatus = "home" | "guest" | "resident";
 
 export type MacroRegion =
   | "siberia"
@@ -12,7 +13,30 @@ export type MacroRegion =
   | "north"
   | "kaliningrad"
   | "crimea_special"
+  | "moscow"
+  | "spb"
+  | "golden_ring"
   | "unknown";
+
+export interface GeoCoordinates {
+  lat: number;
+  lng: number;
+}
+
+export interface BirthplaceGeo {
+  label: string; // текст как в паспорте
+  regionId?: string; // id доктринального региона
+  subRegionId?: string; // id подрегиона (для Сибири)
+  coordinates?: GeoCoordinates; // точные координаты
+}
+
+export interface NationalIdentity {
+  code: string; // код народа
+  label: string; // название
+  nativeName?: string; // название на родном языке
+  isIndigenous?: boolean; // коренной для выбранного региона
+  residenceStatus?: ResidenceStatus; // статус проживания
+}
 
 export type EthnicityRecord = {
   code: string;
@@ -37,9 +61,7 @@ export interface IdentityDraft {
     patronymic?: string;
     gender: Gender | "";
     dateOfBirth: string;
-    placeOfBirth: {
-      label: string; // MVP: текст как в паспорте
-    };
+    placeOfBirth: BirthplaceGeo;
   };
 
   // Contact information
@@ -62,6 +84,10 @@ export interface IdentityDraft {
     macroRegion: MacroRegion;
   };
 
+  // Национальная идентичность (расширенная)
+  nationality: NationalIdentity | null;
+
+  // Совместимость с legacy
   ethnicity: {
     primary?: {
       code: string;
@@ -90,7 +116,12 @@ export const createEmptyDraft = (): IdentityDraft => {
       patronymic: "",
       gender: "",
       dateOfBirth: "",
-      placeOfBirth: { label: "" },
+      placeOfBirth: {
+        label: "",
+        regionId: undefined,
+        subRegionId: undefined,
+        coordinates: undefined,
+      },
     },
 
     contact: {
@@ -108,6 +139,8 @@ export const createEmptyDraft = (): IdentityDraft => {
     },
 
     territory: { macroRegion: "unknown" },
+
+    nationality: null,
 
     ethnicity: {
       primary: undefined,

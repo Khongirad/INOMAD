@@ -29,6 +29,9 @@ function isMacroRegion(v: unknown): v is MacroRegion {
     v === "north" ||
     v === "kaliningrad" ||
     v === "crimea_special" ||
+    v === "moscow" ||
+    v === "spb" ||
+    v === "golden_ring" ||
     v === "unknown"
   );
 }
@@ -70,6 +73,15 @@ function migrateDraft(input: unknown): IdentityDraft {
     pob["label"],
     base.basic.placeOfBirth.label
   );
+  const placeOfBirthRegionId = asString(pob["regionId"], "");
+  const placeOfBirthSubRegionId = asString(pob["subRegionId"], "");
+  const coordsRaw = pob["coordinates"];
+  const placeOfBirthCoordinates = isRecord(coordsRaw)
+    ? {
+        lat: asNumber(coordsRaw["lat"], 0),
+        lng: asNumber(coordsRaw["lng"], 0),
+      }
+    : undefined;
 
   // territory
   const territoryRaw = input["territory"];
@@ -134,6 +146,23 @@ function migrateDraft(input: unknown): IdentityDraft {
   const verification = isRecord(verificationRaw) ? verificationRaw : {};
   const verifiers = Array.isArray(verification["verifiers"]) ? verification["verifiers"] : [];
 
+  // nationality (new field)
+  const nationalityRaw = input["nationality"];
+  let nationality: IdentityDraft["nationality"] = null;
+  if (isRecord(nationalityRaw)) {
+    const code = asString(nationalityRaw["code"], "");
+    const label = asString(nationalityRaw["label"], "");
+    if (code && label) {
+      nationality = {
+        code,
+        label,
+        nativeName: asString(nationalityRaw["nativeName"], undefined),
+        isIndigenous: Boolean(nationalityRaw["isIndigenous"]),
+        residenceStatus: nationalityRaw["residenceStatus"] as IdentityDraft["nationality"] extends null ? never : NonNullable<IdentityDraft["nationality"]>["residenceStatus"],
+      };
+    }
+  }
+
   return {
     status,
     basic: {
@@ -142,7 +171,12 @@ function migrateDraft(input: unknown): IdentityDraft {
       patronymic,
       gender,
       dateOfBirth,
-      placeOfBirth: { label: placeOfBirthLabel },
+      placeOfBirth: {
+        label: placeOfBirthLabel,
+        regionId: placeOfBirthRegionId || undefined,
+        subRegionId: placeOfBirthSubRegionId || undefined,
+        coordinates: placeOfBirthCoordinates,
+      },
     },
     contact: {
       phoneNumber,
@@ -157,15 +191,19 @@ function migrateDraft(input: unknown): IdentityDraft {
       expirationDate,
     },
     territory: { macroRegion },
+    nationality,
     ethnicity: { primary, selfDeclaredText },
     verification: {
       status: base.verification.status,
-      verifiers: verifiers.map((v: any) => ({
-        name: asString(v?.name, ""),
-        contact: asString(v?.contact, undefined),
-        verified: Boolean(v?.verified),
-        verifiedAt: v?.verifiedAt ? asNumber(v.verifiedAt, 0) : undefined,
-      })),
+      verifiers: verifiers.map((v: unknown) => {
+        const vRec = isRecord(v) ? v : {};
+        return {
+          name: asString(vRec["name"], ""),
+          contact: asString(vRec["contact"], undefined),
+          verified: Boolean(vRec["verified"]),
+          verifiedAt: vRec["verifiedAt"] ? asNumber(vRec["verifiedAt"], 0) : undefined,
+        };
+      }),
     },
     updatedAt,
   };

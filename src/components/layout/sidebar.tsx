@@ -16,7 +16,8 @@ import {
   LogOut,
   Building2,
   Lock,
-  Unlock
+  Unlock,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
     category: "Legislative (Khural)",
     items: [
       { name: "State Map", href: "/khural", icon: Building2 }, // Tumen/Myangan/Zuun/Arban
+      { name: "Territory", href: "/territory", icon: Globe },
       { name: "Archives", href: "/registries/history", icon: ScrollText },
     ],
   },
