@@ -215,6 +215,135 @@ async function main() {
 
   console.log('✅ Created sample tasks');
 
+  // ============================
+  // CENTRAL BANK SEED DATA
+  // ============================
+
+  // Create Central Bank Governor (first wallet)
+  // Use a test wallet address — in production, this would be the actual governor's wallet
+  const governorAddress = '0x1234567890abcdef1234567890abcdef12345678';
+  const boardMemberAddress = '0xabcdef1234567890abcdef1234567890abcdef12';
+
+  const governor = await prisma.centralBankOfficer.upsert({
+    where: { walletAddress: governorAddress },
+    update: {},
+    create: {
+      walletAddress: governorAddress,
+      role: 'GOVERNOR',
+      name: 'Governor of Central Bank',
+      isActive: true,
+    },
+  });
+
+  const boardMember = await prisma.centralBankOfficer.upsert({
+    where: { walletAddress: boardMemberAddress },
+    update: {},
+    create: {
+      walletAddress: boardMemberAddress,
+      role: 'BOARD_MEMBER',
+      name: 'Board Member #1',
+      isActive: true,
+    },
+  });
+
+  console.log('✅ Created Central Bank officers');
+
+  // Create Bank of Siberia license
+  // Bank address should match the existing Bank of Siberia setup
+  const bankOfSiberiaAddress = '0x9876543210fedcba9876543210fedcba98765432';
+
+  const bankLicense = await prisma.centralBankLicense.upsert({
+    where: { bankCode: 'SIB001' },
+    update: {},
+    create: {
+      bankAddress: bankOfSiberiaAddress,
+      bankCode: 'SIB001',
+      bankName: 'Bank of Siberia',
+      status: 'ACTIVE',
+      issuedById: governor.id,
+    },
+  });
+
+  console.log('✅ Created Bank of Siberia license');
+
+  // Create correspondent account for Bank of Siberia
+  const corrAccount = await prisma.corrAccount.upsert({
+    where: { licenseId: bankLicense.id },
+    update: {},
+    create: {
+      licenseId: bankLicense.id,
+      accountRef: `CORR:SIB001:${bankLicense.id.substring(0, 8)}`,
+      balance: 0, // Start with zero, Governor will mint initial supply
+    },
+  });
+
+  console.log('✅ Created correspondent account for Bank of Siberia');
+
+  // Create initial monetary policy
+  const existingPolicy = await prisma.monetaryPolicy.findFirst({
+    where: { isActive: true },
+  });
+
+  if (!existingPolicy) {
+    await prisma.monetaryPolicy.create({
+      data: {
+        officialRate: 1.0, // 1 ALT = 1 USD peg initially
+        reserveRequirement: 0.10, // 10% reserve requirement
+        dailyEmissionLimit: 10000000, // 10 million ALTAN daily limit
+        isActive: true,
+        effectiveFrom: new Date(),
+      },
+    });
+    console.log('✅ Created initial monetary policy');
+  } else {
+    console.log('✅ Monetary policy already exists');
+  }
+
+  // Seed initial emission to Bank of Siberia (initial liquidity)
+  const existingEmission = await prisma.emissionRecord.findFirst({
+    where: { corrAccountId: corrAccount.id },
+  });
+
+  if (!existingEmission) {
+    const initialEmission = 1000000; // 1 million ALTAN initial supply
+
+    await prisma.$transaction(async (tx) => {
+      // Update corr account balance
+      await tx.corrAccount.update({
+        where: { id: corrAccount.id },
+        data: { balance: { increment: initialEmission } },
+      });
+
+      // Create emission record
+      await tx.emissionRecord.create({
+        data: {
+          type: 'MINT',
+          amount: initialEmission,
+          reason: 'Initial liquidity provision for Bank of Siberia',
+          memo: 'Genesis emission — Central Bank seed data',
+          corrAccountId: corrAccount.id,
+          authorizedById: governor.id,
+          status: 'COMPLETED',
+        },
+      });
+
+      // Create ALTAN transaction record
+      await tx.altanTransaction.create({
+        data: {
+          amount: initialEmission,
+          type: 'MINT',
+          status: 'COMPLETED',
+          memo: 'Initial liquidity provision for Bank of Siberia',
+          toBankRef: corrAccount.accountRef,
+        },
+      });
+    });
+
+    console.log(`✅ Minted initial ${initialEmission.toLocaleString()} ALTAN to Bank of Siberia`);
+  } else {
+    console.log('✅ Initial emission already exists');
+  }
+
   console.log('🎉 Seeding complete!');
 }
 

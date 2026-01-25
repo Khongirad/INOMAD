@@ -232,6 +232,9 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
         uint256 amount
     ) external returns (bool) {
         if (!feeExempt[msg.sender]) revert AddressExemptionNotAllowed();
+        if (from == address(0)) revert ZeroAddress();
+        if (to == address(0)) revert ZeroAddress();
+        if (amount == 0) revert ZeroAmount();
 
         _transfer(from, to, amount);
         return true;

@@ -49,7 +49,28 @@ export class BankAuthService {
     private configService: ConfigService,
   ) {
     this.nonceTtlSeconds = 300; // 5 minutes
+    this.validateSecretSeparation();
     this.initializeChainClient();
+  }
+
+  /**
+   * Validate that BANK_JWT_SECRET is configured and different from AUTH_JWT_SECRET.
+   * This ensures institutional firewall between identity and banking layers.
+   */
+  private validateSecretSeparation() {
+    const bankSecret = this.configService.get<string>('BANK_JWT_SECRET');
+    const authSecret = this.configService.get<string>('AUTH_JWT_SECRET');
+
+    if (!bankSecret) {
+      this.logger.error('BANK_JWT_SECRET is not configured! Banking auth will fail.');
+    }
+
+    if (bankSecret && authSecret && bankSecret === authSecret) {
+      this.logger.error(
+        'BANK_JWT_SECRET must differ from AUTH_JWT_SECRET! ' +
+        'Identity and banking layers share the same secret — this violates institutional firewall.',
+      );
+    }
   }
 
   /**
@@ -181,7 +202,13 @@ export class BankAuthService {
       jti,
     };
 
+    const bankSecret = this.configService.get<string>('BANK_JWT_SECRET');
+    if (!bankSecret) {
+      throw new UnauthorizedException('Bank JWT secret not configured');
+    }
+
     const bankTicket = this.jwtService.sign(payload, {
+      secret: bankSecret,
       expiresIn: `${expiresIn}s`,
     });
 

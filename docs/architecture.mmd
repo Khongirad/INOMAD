@@ -1,0 +1,105 @@
+flowchart TB
+    subgraph User["👤 Citizen"]
+        BROWSER["Browser / Mobile"]
+        WALLET_EXT["Wallet (MetaMask / Embedded)"]
+    end
+
+    subgraph Frontend["Frontend Layer"]
+        NEXTJS["Next.js 16 (App Router)"]
+        REACT["React 19 Components"]
+        ETHERS_FE["ethers.js (Frontend)"]
+        MAPBOX["Mapbox GL (Geo)"]
+    end
+
+    subgraph API["API Layer (NestJS)"]
+        direction TB
+        AUTH["Auth Module\n(JWT + Wallet Signature)"]
+
+        subgraph Public["Public Domain"]
+            IDENTITY_API["Identity Module"]
+            KHURAL_API["Khural Module"]
+            GUILDS_API["Guilds Module"]
+            TASKS_API["Tasks Module"]
+            SEAT_API["Seat Binding"]
+        end
+
+        subgraph Private["Banking Domain ⚡\n(Separate Auth)"]
+            BANK_API["Bank Module"]
+            BANK_AUTH["Bank Auth\n(Separate JWT)"]
+            BANK_FEE["Fee Service\n(0.03%)"]
+            BANK_REWARD["Reward Service"]
+        end
+
+        AUDIT_API["Audit Module\n(Event Log)"]
+    end
+
+    subgraph Database["Data Layer"]
+        PG[("PostgreSQL")]
+        subgraph Models["Key Models"]
+            USER_M["User"]
+            KHURAL_M["KhuralGroup\n+ KhuralSeat"]
+            GUILD_M["Guild\n+ GuildMember"]
+            TASK_M["Task"]
+            LEDGER_M["AltanLedger\n+ AltanTransaction"]
+            BANK_LINK["BankLink\n(opaque ref)"]
+        end
+    end
+
+    subgraph Blockchain["Blockchain Layer (EVM)"]
+        direction TB
+        subgraph Identity_Chain["Identity"]
+            SBT["SeatSBT\n(Soulbound NFT)"]
+            CIT_REG["CitizenRegistry"]
+            ACTIVATION["CitizenActivation"]
+        end
+
+        subgraph Gov_Chain["Governance"]
+            ARBAN_C["Arban (10)"]
+            ZUN_C["Zuun (100)"]
+            REGION_C["Region"]
+            NATION_C["Nation"]
+            OATH["OfficialOath"]
+        end
+
+        subgraph Econ_Chain["Economy"]
+            ALTAN_C["ALTAN Token\n(ERC20 + 0.03% fee)"]
+            CB["Central Bank\n(mint/burn)"]
+            BANK_C["BankOfSiberia"]
+            TREASURY_C["TreasuryVault"]
+            SETTLE["AltanSettlement"]
+        end
+
+        subgraph Law_Chain["Constitution"]
+            CORE["CoreLock\n(Frozen Rules)"]
+            AXIOM["ImmutableAxioms"]
+            CONST["ConstitutionRegistry"]
+        end
+    end
+
+    %% User -> Frontend
+    BROWSER --> NEXTJS
+    WALLET_EXT --> ETHERS_FE
+
+    %% Frontend -> API
+    NEXTJS -->|"REST (JWT)"| AUTH
+    AUTH --> Public
+    AUTH -->|"Separate Auth"| Private
+
+    %% Frontend -> Blockchain (direct)
+    ETHERS_FE -->|"Sign tx"| Blockchain
+
+    %% API -> Database
+    Public --> PG
+    Private --> PG
+    AUDIT_API --> PG
+
+    %% API -> Blockchain
+    SEAT_API -->|"Read SBT"| SBT
+    BANK_API -->|"Transfer ALTAN"| ALTAN_C
+
+    %% Database models
+    PG --- Models
+
+    %% Key architectural rules
+    BANK_LINK -.->|"Opaque pointer\n(Banking Secrecy)"| BANK_API
+    USER_M -.->|"1:1 binding"| SBT

@@ -12,7 +12,9 @@ contract CoreLock {
     event OwnershipTransferred(address indexed from, address indexed to);
 
     error NotOwner();
+    error ZeroAddress();
     error AlreadyFrozen();
+    error HashAlreadySet();
     error HashNotSet();
 
     constructor(address _owner) {
@@ -27,7 +29,7 @@ contract CoreLock {
 
     function setDocHash(bytes32 _hash) external onlyOwner {
         if (frozen) revert AlreadyFrozen();
-        if (docHash != bytes32(0)) revert AlreadyFrozen();
+        if (docHash != bytes32(0)) revert HashAlreadySet();
         docHash = _hash;
         emit CoreHashSet(_hash);
     }
@@ -41,7 +43,8 @@ contract CoreLock {
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) revert ZeroAddress();
+        emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
-        emit OwnershipTransferred(msg.sender, newOwner);
     }
 }

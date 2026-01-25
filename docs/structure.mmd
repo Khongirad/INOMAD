@@ -1,0 +1,107 @@
+graph TD
+    subgraph Frontend["Frontend (Next.js 16 + React 19)"]
+        APP["src/app/"]
+        COMP["src/components/"]
+        LIB["src/lib/"]
+
+        subgraph Routes["App Routes"]
+            DASH["dashboard/"]
+            KHURAL_UI["khural/"]
+            BOARD["board/"]
+            IDENTITY["identity/"]
+            TERRITORY["territory/"]
+            EXCHANGE["exchange/"]
+            COURTS["courts/"]
+            FUND["fund/"]
+            FAMILY["family/"]
+            COOP["cooperatives/"]
+            REGISTRIES["registries/"]
+        end
+
+        subgraph Components["Components"]
+            UI["ui/ (button, card, dialog...)"]
+            GEO["geo/ (GeoMap, NationCard...)"]
+            FINANCE_UI["finance/ (TransactionDialog)"]
+            IDENTITY_UI["identity/ (SeatStatus, Badge)"]
+            LAYOUT["layout/ (Header, Sidebar)"]
+        end
+
+        subgraph Lib["Library"]
+            API_CLIENT["api.ts"]
+            AUTH_LIB["auth/ (sign-in, session)"]
+            HOOKS["hooks/ (useAuth, useBank, useSeat)"]
+            WALLET["wallet/ (embedded.ts)"]
+            ABI["abi/ (contract ABIs)"]
+            CHAIN_LIB["chain/ (seat.ts)"]
+        end
+    end
+
+    subgraph Backend["Backend (NestJS 10 + Prisma)"]
+        subgraph Modules["API Modules"]
+            AUTH_MOD["auth/"]
+            USERS_MOD["users/"]
+            KHURAL_MOD["khural/"]
+            GUILDS_MOD["guilds/"]
+            TASKS_MOD["tasks/"]
+            BANK_MOD["bank/ ⚡"]
+            IDENTITY_MOD["identity/"]
+            SEAT_MOD["seat-binding/"]
+            BLOCKCHAIN_MOD["blockchain/"]
+            AUDIT_MOD["audit/"]
+        end
+
+        DB[("PostgreSQL\n25+ models")]
+        PRISMA["Prisma ORM"]
+    end
+
+    subgraph Chain["Smart Contracts (Solidity / Foundry)"]
+        subgraph Core["Core Identity"]
+            SEAT_SBT["SeatSBT.sol"]
+            CITIZEN_REG["CitizenRegistry.sol"]
+            CORE_LOCK["CoreLock.sol"]
+        end
+
+        subgraph Governance["Governance"]
+            ARBAN["ArbanRegistry.sol"]
+            ZUN["ZunRegistry.sol"]
+            REGION["RegionRegistry.sol"]
+            NATION["NationRegistry.sol"]
+            ELECTION["ElectionRegistry.sol"]
+        end
+
+        subgraph Economy["Economy (ALTAN)"]
+            AUSD["AUSD.sol"]
+            ALTAN["Altan.sol"]
+            CENTRAL_BANK["AltanCentralBank.sol"]
+            BANK_SIB["AltanBankOfSiberia.sol"]
+            TREASURY["TreasuryVault.sol"]
+            FEE["AltanFeeCollector.sol"]
+        end
+
+        subgraph Trade["Trade & Finance"]
+            MARKETPLACE["Marketplace.sol"]
+            AUCTION["Auction.sol"]
+            ESCROW["EscrowBank.sol"]
+            EXCHANGE_SOL["Exchange.sol"]
+        end
+
+        subgraph Law["Constitution & Law"]
+            CONSTITUTION["ConstitutionRegistry.sol"]
+            AXIOMS["ImmutableAxioms.sol"]
+            LAW_REG["LawRegistry.sol"]
+            MODULE_REG["ConstitutionModuleRegistry.sol"]
+        end
+
+        SCRIPTS["scripts/ (68 deploy/test)"]
+        ARTIFACTS["artifacts/ (ABI output)"]
+    end
+
+    %% Connections
+    APP --> COMP
+    APP --> LIB
+    API_CLIENT -->|REST API| Backend
+    WALLET -->|ethers.js| Chain
+    ABI -->|ABI| Chain
+    PRISMA --> DB
+    BLOCKCHAIN_MOD -->|ethers.js| Chain
+    Modules --> PRISMA

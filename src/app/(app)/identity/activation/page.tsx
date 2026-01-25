@@ -13,7 +13,6 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { EmbeddedWallet } from '@/lib/wallet/embedded';
 import { useRouter } from 'next/navigation';
 
 export default function UnlockCeremonyPage() {
@@ -65,9 +64,6 @@ export default function UnlockCeremonyPage() {
     try {
       await api.post('identity/unlock/finalize', { userId });
       setStatus('UNLOCKED');
-      // Update local wallet config
-      EmbeddedWallet.unlock("DUMMY_PIN"); // In real app, re-decrypt to verify
-      router.push('/dashboard');
     } catch (e) {
       alert("Quorum not reached or error finalizing.");
     } finally {

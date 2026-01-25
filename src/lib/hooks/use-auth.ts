@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AuthSession } from '@/lib/auth/session';
 import { getMe, signIn, signOut } from '@/lib/auth/sign-in';
+import { api } from '@/lib/api';
 
 interface AuthUser {
   userId: string;
@@ -37,6 +38,7 @@ export function useAuth() {
       const me = await getMe();
       setUser(me);
       setError(null);
+      if (me.seatId) api.setSeatId(me.seatId);
     } catch (e: any) {
       setUser(null);
       setError(e.message);
@@ -55,6 +57,7 @@ export function useAuth() {
     try {
       const me = await signIn(password);
       setUser(me);
+      if (me.seatId) api.setSeatId(me.seatId);
     } catch (e: any) {
       setError(e.message);
       throw e;
@@ -66,6 +69,9 @@ export function useAuth() {
   const logout = async () => {
     await signOut();
     setUser(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('inomad.seatId');
+    }
   };
 
   return {

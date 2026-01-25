@@ -1,0 +1,136 @@
+graph LR
+    subgraph Identity["🪪 Identity Layer"]
+        SBT["SeatSBT\n(Soulbound NFT)"]
+        CIT_REG["CitizenRegistry"]
+        CIT_ACT["CitizenActivation"]
+        CIT_ON["CitizenOnboarding"]
+        CIT_APP["CitizenApplication"]
+        CIT_DOC["CitizenDocument"]
+        VERIFY["Verification\n(3-local rule)"]
+    end
+
+    subgraph Governance["🏛️ Governance (Khural)"]
+        ARBAN["ArbanRegistry\n(10 seats)"]
+        ZUN["ZunRegistry\n(100 seats)"]
+        REGION["RegionRegistry"]
+        NATION["NationRegistry"]
+        ELECTION["ElectionRegistry"]
+        CHAIRMAN["ChairmanElection"]
+        OATH["OfficialOath"]
+        STRUCT["StructureRegistry"]
+    end
+
+    subgraph Economy["💰 Economy (ALTAN)"]
+        ALTAN["Altan\n(ERC20 + 0.03%)"]
+        AUSD["AUSD"]
+        CB["AltanCentralBank\n(mint/burn)"]
+        BANK["AltanBankOfSiberia"]
+        WALLET_C["AltanWallet"]
+        SETTLE["AltanSettlement"]
+        FEE_C["AltanFeeCollector"]
+        FEE_ENG["FeeEngine"]
+        PAY_ROUTE["PaymentRouter"]
+    end
+
+    subgraph Treasury["🏦 Treasury"]
+        VAULT["TreasuryVault"]
+        ORG_TREAS["OrgTreasury"]
+        TAX["TaxAuthority"]
+    end
+
+    subgraph Trade["🛒 Trade"]
+        MARKET["Marketplace"]
+        AUCTION_C["Auction"]
+        EXCHANGE_C["Exchange"]
+        ESCROW["EscrowBank"]
+        BIZ["BusinessAgreement"]
+    end
+
+    subgraph Constitution["📜 Constitution"]
+        CORE_LOCK["CoreLock\n(Freeze mechanism)"]
+        AXIOMS["ImmutableAxioms"]
+        CONST_REG["ConstitutionRegistry"]
+        MOD_REG["ConstitutionModuleRegistry"]
+        LAW["LawRegistry"]
+        LAW_PROC["KhuralLawProcess"]
+        ACCEPT["ConstitutionAcceptanceRegistry"]
+    end
+
+    subgraph Orgs["🏢 Organizations"]
+        ORG["Organization"]
+        ORG_REG["OrgRegistry"]
+        ORG_POS["OrgPositionsRegistry"]
+        BRANCH["BranchRegistry"]
+        NOTARY["NotaryRegistry"]
+        NOTARY_HUB["NotaryHub"]
+    end
+
+    subgraph Access["🔐 Access Control"]
+        OPERATOR["OperatorRegistry"]
+        ACT_REG["ActivationRegistry"]
+        GATEWAY["GatewayRouter"]
+        CAPSULE["CapsuleFactory"]
+    end
+
+    subgraph Foreign["🌍 Foreign Relations"]
+        FOREIGN["ForeignAffairsRegistry"]
+        FOREIGN_SBT["ForeignSeatSBT"]
+    end
+
+    %% Identity relationships
+    CIT_APP -->|"apply"| CIT_REG
+    CIT_REG -->|"mint"| SBT
+    CIT_ACT -->|"activate"| SBT
+    CIT_ON -->|"onboard"| CIT_ACT
+    VERIFY -->|"verify citizen"| CIT_REG
+
+    %% Governance relationships
+    SBT -->|"holds seat"| ARBAN
+    ARBAN -->|"10 arbans ="| ZUN
+    ZUN -->|"regions"| REGION
+    REGION -->|"nations"| NATION
+    ELECTION -->|"elect"| CHAIRMAN
+    CHAIRMAN -->|"takes"| OATH
+    STRUCT -->|"defines"| ARBAN
+
+    %% Economy relationships
+    CB -->|"mint/burn"| ALTAN
+    BANK -->|"operates"| ALTAN
+    WALLET_C -->|"holds"| ALTAN
+    ALTAN -->|"fee on tx"| FEE_C
+    FEE_C -->|"calculates"| FEE_ENG
+    FEE_C -->|"deposits"| VAULT
+    PAY_ROUTE -->|"routes"| SETTLE
+    SETTLE -->|"settles"| ALTAN
+
+    %% Treasury relationships
+    TAX -->|"collects"| VAULT
+    ORG_TREAS -->|"org funds"| VAULT
+
+    %% Trade relationships
+    MARKET -->|"escrow"| ESCROW
+    AUCTION_C -->|"payment"| ALTAN
+    EXCHANGE_C -->|"swap"| ALTAN
+    BIZ -->|"enforce"| ESCROW
+
+    %% Constitution relationships
+    CORE_LOCK -->|"freezes"| AXIOMS
+    CONST_REG -->|"amends"| MOD_REG
+    LAW_PROC -->|"creates"| LAW
+    ACCEPT -->|"citizen accepts"| CONST_REG
+
+    %% Org relationships
+    ORG -->|"registers"| ORG_REG
+    ORG_REG -->|"positions"| ORG_POS
+    ORG -->|"branches"| BRANCH
+    NOTARY -->|"manages"| NOTARY_HUB
+
+    %% Access relationships
+    OPERATOR -->|"controls"| CIT_ACT
+    ACT_REG -->|"tracks"| CIT_ACT
+    GATEWAY -->|"routes"| CAPSULE
+
+    %% Cross-domain relationships
+    SBT -.->|"1:1 binding"| WALLET_C
+    OATH -.->|"required by"| CONST_REG
+    NATION -.->|"foreign"| FOREIGN

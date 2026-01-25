@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard,
   Landmark,
   Scale,
   ScrollText,
@@ -13,16 +12,13 @@ import {
   Coins,
   ShieldCheck,
   Settings,
-  LogOut,
   Building2,
-  Lock,
-  Unlock,
   Globe,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
-import { EmbeddedWallet } from "@/lib/wallet/embedded";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 const NAV_ITEMS = [
   {
@@ -65,16 +61,14 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [walletStatus, setWalletStatus] = useState<'LOCKED' | 'UNLOCKED' | 'MISSING'>('MISSING');
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const walletStatus = user?.walletStatus === 'UNLOCKED' ? 'UNLOCKED' : user ? 'LOCKED' : 'MISSING';
 
-  useEffect(() => {
-    // Check wallet status on mount
-    if (EmbeddedWallet.exists()) {
-        const addr = EmbeddedWallet.getAddress();
-        // In a real app we'd check if currently unlocked in memory
-        setWalletStatus('LOCKED'); 
-    }
-  }, []);
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-amber-900/20 bg-black/90 backdrop-blur-xl transition-transform flex flex-col">
@@ -151,6 +145,13 @@ export function Sidebar() {
           <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 transition-colors">
             <Settings className="h-4 w-4" />
             Settings
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-red-950/30 hover:text-red-400 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
           </button>
         </div>
     </aside>

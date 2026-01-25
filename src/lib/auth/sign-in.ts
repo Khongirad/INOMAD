@@ -82,7 +82,7 @@ export async function signIn(password: string): Promise<AuthMeResponse['me']> {
  * Get current user identity from /auth/me.
  * Returns ONLY identity data — NO financial information.
  */
-export async function getMe(): Promise<AuthMeResponse['me']> {
+export async function getMe(isRetry = false): Promise<AuthMeResponse['me']> {
   const token = AuthSession.getAccessToken();
   if (!token) throw new Error('Not authenticated');
 
@@ -91,16 +91,16 @@ export async function getMe(): Promise<AuthMeResponse['me']> {
   });
 
   if (!res.ok) {
-    if (res.status === 401) {
-      // Try refresh
+    if (res.status === 401 && !isRetry) {
       const refreshed = await refreshSession();
       if (!refreshed) {
         AuthSession.clear();
         throw new Error('Session expired');
       }
-      return getMe(); // Retry with new token
+      return getMe(true);
     }
-    throw new Error('Failed to fetch identity');
+    AuthSession.clear();
+    throw new Error('Session expired');
   }
 
   const data: AuthMeResponse = await res.json();
