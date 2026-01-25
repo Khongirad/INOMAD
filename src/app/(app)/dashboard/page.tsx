@@ -24,31 +24,32 @@ import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { balance: bankBalance, history: bankHistory, loading: balanceLoading, hasTicket } = useBank();
+  const { balance: bankBalance, history: bankHistory, loading: balanceLoading, hasTicket, authenticate } = useBank();
   const balance = Number(bankBalance) || 0;
   const history = bankHistory;
-  // const [sendOpen, setSendOpen] = React.useState(false); // Replaced by Dialog
   const [receiveOpen, setReceiveOpen] = React.useState(false);
   const [taxOpen, setTaxOpen] = React.useState(false);
+  const [bankPin, setBankPin] = React.useState('');
+  const [bankAuthLoading, setBankAuthLoading] = React.useState(false);
+  const [bankAuthError, setBankAuthError] = React.useState<string | null>(null);
+
+  const handleBankConnect = async () => {
+    if (!bankPin) return;
+    setBankAuthLoading(true);
+    setBankAuthError(null);
+    try {
+      await authenticate(bankPin);
+      setBankPin('');
+    } catch (e: any) {
+      setBankAuthError(e.message || 'Bank authentication failed');
+    } finally {
+      setBankAuthLoading(false);
+    }
+  };
 
   return (
     <>
     <div className="p-6 lg:p-8 space-y-8 animate-in">
-     {/* ... rest of the dashboard ... */}
-     {/* I need to make sure I don't accidentally remove the dashboard content.
-         The Search/Replace tool needs precise targeting. 
-         Wait, I see I'm replacing lines 1-16 which imports and start of component.
-         But I need to inject the SHEET components at the end of the return, and updated handlers.
-         
-         Better approach: Use replace_file_content to:
-         1. Add imports.
-         2. Add state hooks inside component.
-         3. Add onClick handlers to buttons.
-         4. Add Sheet JSX at the end of the div.
-         
-         Actually, creating a fully new file content might be safer/cleaner since I'm changing a lot (state wrapping).
-         But let's try surgical replacements.
-     */}
       {/* Top Config / Welcome */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -165,10 +166,28 @@ export default function DashboardPage() {
           
 
           <div className="space-y-3">
-            {history.length === 0 ? (
+            {!hasTicket ? (
+               <div className="p-8 text-center bg-zinc-900/40 rounded-xl border border-white/5 space-y-4">
+                  <Landmark className="h-8 w-8 mx-auto text-zinc-600" />
+                  <p className="text-zinc-400 text-sm">Enter your PIN to connect to the Bank of Siberia</p>
+                  <div className="flex gap-2 max-w-xs mx-auto">
+                    <Input
+                      type="password"
+                      placeholder="Wallet PIN"
+                      value={bankPin}
+                      onChange={(e) => setBankPin(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleBankConnect()}
+                    />
+                    <Button onClick={handleBankConnect} disabled={bankAuthLoading || !bankPin} size="sm">
+                      {bankAuthLoading ? '...' : 'Connect'}
+                    </Button>
+                  </div>
+                  {bankAuthError && <p className="text-red-400 text-xs">{bankAuthError}</p>}
+               </div>
+            ) : history.length === 0 ? (
                <div className="p-8 text-center text-zinc-500 bg-zinc-900/40 rounded-xl border border-white/5">
                   <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>{hasTicket ? 'No transactions yet' : 'Connect bank to view transactions'}</p>
+                  <p>No transactions yet</p>
                </div>
             ) : (
                 history.map((tx) => {

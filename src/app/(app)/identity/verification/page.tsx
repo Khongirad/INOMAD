@@ -24,31 +24,43 @@ export default function VerificationHallPage() {
   const router = useRouter();
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [peerSeatId, setPeerSeatId] = useState("");
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyMessage, setVerifyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const fetchStatus = async () => {
+    try {
+      const seatId = api.getSeatId();
+      if (!seatId) {
+        router.push("/register");
+        return;
+      }
+      const res = await api.get(`identity/status/${seatId}`);
+      setStatus(res);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const seatId = api.getSeatId();
-        if (!seatId) {
-            router.push("/register");
-            return;
-        }
-        // Fetch status by seatId or userId. 
-        // Our API supports status/:userId, but we can also add status/me
-        const res = await api.get(`identity/status/${seatId}`); 
-        setStatus(res);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchStatus();
+    const interval = setInterval(fetchStatus, 8000);
+    return () => clearInterval(interval);
   }, []);
 
   const verifications = status?.verificationsReceived || [];
   const required = 3;
   const progress = (verifications.length / required) * 100;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="animate-pulse text-zinc-500 font-mono text-sm">Loading verification status...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-zinc-100 p-8 pt-24">
@@ -225,28 +237,42 @@ export default function VerificationHallPage() {
                         Enter the Seat ID of a resident in your local Zuun to sign their social proof bond.
                     </p>
                     <div className="flex gap-2">
-                        <input 
-                            placeholder="SEAT_ID" 
+                        <input
+                            placeholder="SEAT_ID"
                             className="bg-black/40 border border-zinc-800 rounded px-2 py-1 text-xs font-mono grow text-zinc-200"
-                            id="peerSeatId"
+                            value={peerSeatId}
+                            onChange={(e) => setPeerSeatId(e.target.value)}
                         />
-                        <Button 
+                        <Button
                             className="text-[10px] h-8"
+                            disabled={verifyLoading || !peerSeatId}
                             onClick={async () => {
-                                const seatId = (document.getElementById('peerSeatId') as HTMLInputElement).value;
-                                if (!seatId) return;
+                                if (!peerSeatId) return;
+                                setVerifyLoading(true);
+                                setVerifyMessage(null);
                                 try {
-                                    await api.post('identity/verify', { targetUserId: seatId });
-                                    alert('Social Proof Signed Successfully');
-                                    window.location.reload();
+                                    await api.post('identity/verify', { targetUserId: peerSeatId });
+                                    setVerifyMessage({ type: 'success', text: 'Social Proof Signed Successfully' });
+                                    setPeerSeatId("");
+                                    fetchStatus();
                                 } catch (e: any) {
-                                    alert(e.message);
+                                    setVerifyMessage({ type: 'error', text: e.message || 'Verification failed' });
+                                } finally {
+                                    setVerifyLoading(false);
                                 }
                             }}
                         >
-                            SIGN
+                            {verifyLoading ? '...' : 'SIGN'}
                         </Button>
                     </div>
+                    {verifyMessage && (
+                      <p className={cn(
+                        "text-[10px] mt-2",
+                        verifyMessage.type === 'success' ? 'text-green-400' : 'text-red-400'
+                      )}>
+                        {verifyMessage.text}
+                      </p>
+                    )}
                 </Card>
               )}
 
@@ -257,22 +283,30 @@ export default function VerificationHallPage() {
                         Founder's Arban holders can bypass this protocol using **Super-Verification**.
                     </p>
                     {status?.isFounderMandateHolder && (
-                         <Button 
-                            variant="outline" 
+                         <Button
+                            variant="outline"
                             className="w-full text-[10px] border-amber-900 text-amber-500 hover:bg-amber-950/20"
+                            disabled={verifyLoading}
                             onClick={async () => {
-                                const targetId = prompt("Enter User ID or Seat ID to Super-Verify:");
-                                if (!targetId) return;
+                                if (!peerSeatId) {
+                                  setVerifyMessage({ type: 'error', text: 'Enter a Seat ID above first' });
+                                  return;
+                                }
+                                setVerifyLoading(true);
+                                setVerifyMessage(null);
                                 try {
-                                    await api.post('identity/super-verify', { targetUserId: targetId, justification: 'Direct Founder Authorization' });
-                                    alert('Super-Verification Completed');
-                                    window.location.reload();
+                                    await api.post('identity/super-verify', { targetUserId: peerSeatId, justification: 'Direct Founder Authorization' });
+                                    setVerifyMessage({ type: 'success', text: 'Super-Verification Completed' });
+                                    setPeerSeatId("");
+                                    fetchStatus();
                                 } catch (e: any) {
-                                    alert(e.message);
+                                    setVerifyMessage({ type: 'error', text: e.message || 'Super-verification failed' });
+                                } finally {
+                                    setVerifyLoading(false);
                                 }
                             }}
                          >
-                            ACTIVATE SUPER-VERIFICATION
+                            {verifyLoading ? 'PROCESSING...' : 'ACTIVATE SUPER-VERIFICATION'}
                          </Button>
                     )}
                     <div className="space-y-2 opacity-30 grayscale cursor-not-allowed">

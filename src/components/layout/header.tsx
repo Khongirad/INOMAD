@@ -2,12 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import { Bell, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SeatStatus } from "@/components/identity/seat-status";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 export function Header() {
   const pathname = usePathname();
+  const { user } = useAuth();
   
   // Simple breadcrumb logic
   const getBreadcrumb = () => {
@@ -48,11 +48,11 @@ export function Header() {
         <div className="flex items-center gap-3">
            <SeatStatus />
            <div className="text-right hidden sm:block">
-             <div className="text-sm font-medium text-zinc-200">Alex Nomad</div>
-             <div className="text-xs text-zinc-500">Citizen Verified</div>
+             <div className="text-sm font-medium text-zinc-200">{user?.seatId || 'Citizen'}</div>
+             <div className="text-xs text-zinc-500">{user?.status === 'VERIFIED' ? 'Citizen Verified' : user?.status || 'Pending'}</div>
            </div>
            <div className="h-8 w-8 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-xs font-medium text-zinc-400">
-             AN
+             {user?.seatId ? user.seatId.substring(0, 2).toUpperCase() : '??'}
            </div>
         </div>
       </div>

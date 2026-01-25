@@ -277,14 +277,12 @@ contract TreasuryVault {
             revert InsufficientBalance();
         }
 
-        // Execute
-        req.status = SpendStatus.APPROVED;
-        req.executedAt = uint64(block.timestamp);
-
+        // Execute transfer first, then update state (CEI pattern)
         IERC20(req.token).safeTransfer(req.recipient, req.amount);
 
-        totalSpent[req.token] += req.amount;
         req.status = SpendStatus.EXECUTED;
+        req.executedAt = uint64(block.timestamp);
+        totalSpent[req.token] += req.amount;
 
         emit SpendRequestExecuted(id);
     }

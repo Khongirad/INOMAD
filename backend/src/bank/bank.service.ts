@@ -176,8 +176,25 @@ export class BankService {
       throw new NotFoundException('Recipient bank account not found');
     }
 
-    // Compute fee
-    const fee = this.feeService.computeFee(amount);
+    // Compute fee — validate fee account exists BEFORE transaction
+    let fee = this.feeService.computeFee(amount);
+    let inomadLink: { userId: string } | null = null;
+
+    if (fee > 0 && this.feeService.isEnabled()) {
+      const inomadBankRef = this.feeService.getInomadBankRef();
+      inomadLink = await this.prisma.bankLink.findFirst({
+        where: { bankRef: inomadBankRef },
+        select: { userId: true },
+      });
+
+      if (!inomadLink) {
+        this.logger.error(
+          `Fee account (${inomadBankRef}) not found! Fee will not be charged to prevent fund loss.`,
+        );
+        fee = 0;
+      }
+    }
+
     const totalDebit = amount + fee;
 
     return this.prisma.$transaction(async (tx) => {
@@ -226,43 +243,27 @@ export class BankService {
         },
       });
 
-      // Collect fee (if enabled and non-zero)
-      if (fee > 0 && this.feeService.isEnabled()) {
+      // Collect fee (already validated: inomadLink exists if fee > 0)
+      if (fee > 0 && inomadLink) {
         const inomadBankRef = this.feeService.getInomadBankRef();
-        const inomadLink = await this.prisma.bankLink.findFirst({
-          where: { bankRef: inomadBankRef },
-          select: { userId: true },
+
+        await tx.altanLedger.upsert({
+          where: { userId: inomadLink.userId },
+          update: { balance: { increment: fee } },
+          create: { userId: inomadLink.userId, balance: fee },
         });
 
-        if (inomadLink) {
-          const inomadLedger = await tx.altanLedger.findUnique({
-            where: { userId: inomadLink.userId },
-          });
-
-          if (inomadLedger) {
-            await tx.altanLedger.update({
-              where: { userId: inomadLink.userId },
-              data: { balance: { increment: fee } },
-            });
-          } else {
-            await tx.altanLedger.create({
-              data: { userId: inomadLink.userId, balance: fee },
-            });
-          }
-
-          // Record fee transaction (bankRef-based logging)
-          await tx.altanTransaction.create({
-            data: {
-              fromUserId: senderLink.userId,
-              toUserId: inomadLink.userId,
-              fromBankRef: senderBankRef,
-              toBankRef: inomadBankRef,
-              amount: fee,
-              type: 'FEE',
-              status: 'COMPLETED',
-            },
-          });
-        }
+        await tx.altanTransaction.create({
+          data: {
+            fromUserId: senderLink.userId,
+            toUserId: inomadLink.userId,
+            fromBankRef: senderBankRef,
+            toBankRef: inomadBankRef,
+            amount: fee,
+            type: 'FEE',
+            status: 'COMPLETED',
+          },
+        });
       }
 
       // Log with bankRef only (NEVER userId)

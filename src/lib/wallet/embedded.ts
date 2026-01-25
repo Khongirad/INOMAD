@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { api } from '@/lib/api';
 
 const STORAGE_KEY_WALLET = 'inomad_wallet_enc';
 const STORAGE_KEY_CONFIG = 'inomad_wallet_config';
@@ -79,18 +80,32 @@ export const EmbeddedWallet = {
   },
 
   /**
-   * Mock "3-Peer Verification" Check
-   * In a real app, this would query the SeatSBT contract
+   * Query backend for wallet activation status.
+   * Falls back to localStorage if API is unavailable.
    */
   checkActivation: async (): Promise<'PENDING' | 'ACTIVE'> => {
-     // Mock delay
-     await new Promise(r => setTimeout(r, 1000));
-     // For MVP, if wallet exists, return existing status or mock active
-     const configStr = window.localStorage.getItem(STORAGE_KEY_CONFIG);
-     if (configStr) {
-         const config = JSON.parse(configStr);
-         return config.activationStatus;
-     }
-     return 'PENDING';
+    const seatId = api.getSeatId();
+    if (seatId) {
+      try {
+        const data = await api.get<{ walletStatus: string }>(`identity/status/${seatId}`);
+        const status = data.walletStatus === 'UNLOCKED' ? 'ACTIVE' : 'PENDING';
+        // Sync localStorage config
+        const configStr = window.localStorage.getItem(STORAGE_KEY_CONFIG);
+        if (configStr) {
+          const config = JSON.parse(configStr);
+          config.activationStatus = status;
+          window.localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
+        }
+        return status;
+      } catch {
+        // Fall through to localStorage fallback
+      }
+    }
+    const configStr = window.localStorage.getItem(STORAGE_KEY_CONFIG);
+    if (configStr) {
+      const config = JSON.parse(configStr);
+      return config.activationStatus === 'ACTIVE' ? 'ACTIVE' : 'PENDING';
+    }
+    return 'PENDING';
   }
 };

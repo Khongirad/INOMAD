@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 import { createEmptyDraft } from "./_core/types";
 import type { MacroRegion } from "./_core/types";
@@ -45,11 +47,14 @@ type ParentRef =
   | { mode: "not_declared" };
 
 export default function IdentityCreatePage() {
+  const router = useRouter();
   const [draft, dispatch] = useReducer(
     identityReducer,
     undefined,
     createEmptyDraft
   );
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const hydrated = useRef(false);
 
@@ -743,8 +748,8 @@ export default function IdentityCreatePage() {
                 onChange={(e) => setClanName(e.target.value)}
                 placeholder={
                   clanMode === "join"
-                    ? "Search clan name (mock)"
-                    : "New clan name (mock)"
+                    ? "Enter clan name to search"
+                    : "Enter new clan name"
                 }
                 className="mt-2 input-field"
               />
@@ -886,20 +891,44 @@ export default function IdentityCreatePage() {
 
         <div className="mt-4 flex gap-3">
           <button
-            disabled={!canSubmit}
+            disabled={!canSubmit || submitting}
             className={[
               "rounded-lg px-6 py-3 text-sm font-medium transition",
-              canSubmit
+              canSubmit && !submitting
                 ? "bg-gold-border text-black hover:bg-gold-text shadow-[0_0_20px_-5px_var(--gold-glow)]"
                 : "bg-zinc-900 text-zinc-500 cursor-not-allowed",
             ].join(" ")}
             type="button"
-            onClick={() => {
-              saveDraft(draft);
-              alert("Identity submitted for verification! (MVP mock)");
+            onClick={async () => {
+              setSubmitting(true);
+              setSubmitError(null);
+              try {
+                const payload = {
+                  birthPlace: {
+                    label: draft.basic.placeOfBirth.label,
+                    city: draft.basic.placeOfBirth.label,
+                    district: draft.territory.macroRegion,
+                    coordinates: draft.basic.placeOfBirth.coordinates,
+                  },
+                  ethnicity: draft.ethnicity.primary?.label || draft.ethnicity.selfDeclaredText || '',
+                  clan: clanName || null,
+                  firstName: draft.basic.firstName,
+                  lastName: draft.basic.lastName,
+                  patronymic: draft.basic.patronymic || null,
+                  gender: draft.basic.gender,
+                  dateOfBirth: draft.basic.dateOfBirth,
+                };
+                saveDraft(draft);
+                await api.post('identity/register', payload);
+                router.push('/identity/activation');
+              } catch (e: any) {
+                setSubmitError(e.message || 'Registration failed');
+              } finally {
+                setSubmitting(false);
+              }
             }}
           >
-            Submit for Verification
+            {submitting ? 'Submitting...' : 'Submit for Verification'}
           </button>
 
           <button
@@ -910,6 +939,12 @@ export default function IdentityCreatePage() {
             Save Draft
           </button>
         </div>
+
+        {submitError && (
+          <div className="mt-3 text-sm text-red-400 bg-red-950/30 border border-red-900/30 rounded-md px-3 py-2">
+            {submitError}
+          </div>
+        )}
 
         {!canSubmit && (
           <div className="mt-3 text-xs text-zinc-500">

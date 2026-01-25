@@ -13,6 +13,7 @@ import { AuditModule } from './audit/audit.module';
 import { HealthModule } from './health/health.module';
 import { IdentityModule } from './identity/identity.module';
 import { BankModule } from './bank/bank.module';
+import { CentralBankModule } from './central-bank/central-bank.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { BankModule } from './bank/bank.module';
     HealthModule,
     IdentityModule,
     BankModule,
+    CentralBankModule,
   ],
 })
 export class AppModule {}
