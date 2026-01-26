@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "./ImmutableAxioms.sol";
+import {CoreLaw} from "./CoreLaw.sol";
+import {CoreLock, ICoreFreezable} from "./CoreLock.sol";
 
 /**
  * @title ConstitutionRegistry
- * @notice Реестр Конституции Сибирской Конфедерации
+ * @notice Реестр Конституции государства народа
+ * @dev Каждое государство народа имеет свой ConstitutionRegistry
  *
  * Хранит статьи, версии и историю поправок.
  *
- * ВАЖНО: Все статьи Конституции ДОЛЖНЫ соответствовать ImmutableAxioms.
- * ImmutableAxioms — это фундамент, который НЕ МОЖЕТ быть изменён.
- * ConstitutionRegistry — это изменяемая надстройка.
+ * ВАЖНО: Все статьи Конституции ДОЛЖНЫ соответствовать CoreLaw.
+ * CoreLaw (Основной Закон) — это фундамент, который НЕ МОЖЕТ быть изменён.
+ * ConstitutionRegistry — это изменяемая надстройка для конкретного народа.
  *
  * Иерархия:
- * 1. ImmutableAxioms (неизменяемые аксиомы) — высший закон
- * 2. ConstitutionRegistry (конституция) — изменяется только Хуралом
- * 3. Законы и подзаконные акты
+ * 1. CoreLaw (Основной Закон Сибирской Конфедерации) — высший закон
+ * 2. ConstitutionRegistry (конституция государства народа) — изменяется Хуралом народа
+ * 3. Законы и подзаконные акты государства народа
  *
  * ⚠️ Does NOT enforce rules — only records supreme law.
  * Enforcement happens in other registries (Election, Bank, Judiciary).
@@ -30,6 +32,7 @@ contract ConstitutionRegistry {
     error VersionNotFound();
     error AlreadyExists();
     error InvalidInput();
+    error CoreLawNotFrozen();
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
@@ -65,8 +68,11 @@ contract ConstitutionRegistry {
     /*//////////////////////////////////////////////////////////////
                             STORAGE
     //////////////////////////////////////////////////////////////*/
-    address public immutable khural; // Supreme legislative authority
-    ImmutableAxioms public immutable axioms; // Reference to immutable axioms
+    address public immutable khural;        // Хурал государства народа
+    CoreLock public immutable coreLock;     // Ссылка на CoreLock
+    CoreLaw public immutable coreLaw;       // Ссылка на CoreLaw
+    bytes32 public immutable nationId;      // ID государства народа
+    string public nationName;               // Название государства народа
 
     uint256 public articleCount;
 
@@ -86,48 +92,79 @@ contract ConstitutionRegistry {
         _;
     }
 
+    modifier onlyWhenCoreFrozen() {
+        if (!coreLock.isFrozen()) revert CoreLawNotFrozen();
+        _;
+    }
+
     /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address _khural, address _axioms) {
+    constructor(
+        address _khural,
+        address _coreLock,
+        bytes32 _nationId,
+        string memory _nationName
+    ) {
         if (_khural == address(0)) revert InvalidInput();
-        if (_axioms == address(0)) revert InvalidInput();
+        if (_coreLock == address(0)) revert InvalidInput();
+        if (_nationId == bytes32(0)) revert InvalidInput();
+
         khural = _khural;
-        axioms = ImmutableAxioms(_axioms);
+        coreLock = CoreLock(_coreLock);
+        coreLaw = coreLock.coreLaw();
+        nationId = _nationId;
+        nationName = _nationName;
     }
 
     /*//////////////////////////////////////////////////////////////
-                        AXIOM VERIFICATION
+                        CORELAW VERIFICATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Получить ссылку на неизменяемые аксиомы
-    function getAxiomsContract() external view returns (address) {
-        return address(axioms);
+    /// @notice Получить ссылку на CoreLaw
+    function getCoreLawContract() external view returns (address) {
+        return address(coreLaw);
     }
 
-    /// @notice Проверить целостность аксиом
-    function verifyAxiomsIntegrity() external view returns (bool) {
-        return axioms.verifyIntegrity();
+    /// @notice Получить ссылку на CoreLock
+    function getCoreLockContract() external view returns (address) {
+        return address(coreLock);
     }
 
-    /// @notice Получить аксиому по номеру
-    function getAxiom(uint8 number) external view returns (string memory) {
-        return axioms.getAxiom(number);
+    /// @notice Проверить заморожен ли CoreLaw
+    function isCoreLawFrozen() external view returns (bool) {
+        return coreLock.isFrozen();
     }
 
-    /// @notice Получить все аксиомы
-    function getAllAxioms() external view returns (string[15] memory) {
-        return axioms.getAllAxioms();
+    /// @notice Проверить целостность CoreLaw
+    function verifyCoreLawIntegrity() external view returns (bool) {
+        return coreLock.verifyIntegrity();
+    }
+
+    /// @notice Получить статью CoreLaw по номеру (1-37)
+    function getCoreLawArticle(uint8 number) external view returns (string memory) {
+        return coreLaw.getArticle(number);
+    }
+
+    /// @notice Получить преамбулу CoreLaw
+    function getCoreLawPreamble() external view returns (string memory) {
+        return coreLaw.getPreamble();
+    }
+
+    /// @notice Получить общее количество статей CoreLaw
+    function getCoreLawArticleCount() external view returns (uint8) {
+        return coreLaw.TOTAL_ARTICLES();
     }
 
     /*//////////////////////////////////////////////////////////////
                         ARTICLE MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// Create a new constitutional article
+    /// @notice Создать новую статью конституции (только после заморозки CoreLaw)
     function createArticle(string calldata title)
         external
         onlyKhural
+        onlyWhenCoreFrozen
         returns (uint256 articleId)
     {
         if (bytes(title).length == 0) revert InvalidInput();
@@ -145,7 +182,7 @@ contract ConstitutionRegistry {
         emit ArticleCreated(articleId, title);
     }
 
-    /// Add new version (amendment) to an article
+    /// @notice Добавить новую версию (поправку) к статье
     function addVersion(
         uint256 articleId,
         bytes32 contentHash,
@@ -153,6 +190,7 @@ contract ConstitutionRegistry {
     )
         external
         onlyKhural
+        onlyWhenCoreFrozen
         articleExists(articleId)
     {
         if (contentHash == bytes32(0)) revert InvalidInput();
@@ -172,10 +210,11 @@ contract ConstitutionRegistry {
         emit VersionAdded(articleId, newVersion, contentHash, uri);
     }
 
-    /// Activate a specific version as constitutional law
+    /// @notice Активировать версию как действующий конституционный закон
     function activateVersion(uint256 articleId, uint256 version)
         external
         onlyKhural
+        onlyWhenCoreFrozen
         articleExists(articleId)
     {
         if (!versions[articleId][version].exists) revert VersionNotFound();
@@ -185,10 +224,11 @@ contract ConstitutionRegistry {
         emit VersionActivated(articleId, version);
     }
 
-    /// Repeal article completely (constitutional abolition)
+    /// @notice Отменить статью полностью (конституционная отмена)
     function repealArticle(uint256 articleId)
         external
         onlyKhural
+        onlyWhenCoreFrozen
         articleExists(articleId)
     {
         articles[articleId].repealed = true;
@@ -219,5 +259,23 @@ contract ConstitutionRegistry {
     {
         if (!versions[articleId][version].exists) revert VersionNotFound();
         return versions[articleId][version];
+    }
+
+    /// @notice Получить информацию о государстве народа
+    function getNationInfo() external view returns (bytes32, string memory) {
+        return (nationId, nationName);
+    }
+
+    /// @notice Получить статистику конституции
+    function getStats() external view returns (
+        uint256 _articleCount,
+        bool _coreLawFrozen,
+        bytes32 _coreLawHash
+    ) {
+        return (
+            articleCount,
+            coreLock.isFrozen(),
+            coreLock.getLawHash()
+        );
     }
 }
