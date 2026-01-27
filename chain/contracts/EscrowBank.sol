@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./Altan.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title EscrowBank
@@ -124,7 +124,7 @@ contract EscrowBank is AccessControl, ReentrancyGuard {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
 
-    Altan public immutable altan;
+    IERC20 public immutable token;
 
     uint256 public nextAccountId;
     uint256 public nextEscrowId;
@@ -144,11 +144,11 @@ contract EscrowBank is AccessControl, ReentrancyGuard {
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _altan, address _khural) {
-        if (_altan == address(0)) revert ZeroAddress();
+    constructor(address _token, address _khural) {
+        if (_token == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
 
-        altan = Altan(_altan);
+        token = IERC20(_token);
 
         _grantRole(DEFAULT_ADMIN_ROLE, _khural);
         _grantRole(KHURAL_ROLE, _khural);
@@ -194,7 +194,7 @@ contract EscrowBank is AccessControl, ReentrancyGuard {
         }
 
         // Перевод токенов на контракт банка
-        bool success = altan.transferFrom(msg.sender, address(this), amount);
+        bool success = token.transferFrom(msg.sender, address(this), amount);
         if (!success) revert TransferFailed();
 
         Account storage acc = accounts[accountId];
@@ -220,7 +220,7 @@ contract EscrowBank is AccessControl, ReentrancyGuard {
         acc.balance -= amount;
         acc.totalWithdrawn += amount;
 
-        bool success = altan.transfer(msg.sender, amount);
+        bool success = token.transfer(msg.sender, amount);
         if (!success) revert TransferFailed();
 
         emit Withdrawal(msg.sender, amount);

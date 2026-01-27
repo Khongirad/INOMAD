@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./Altan.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./EscrowBank.sol";
 import "./NotaryRegistry.sol";
 
@@ -170,7 +170,7 @@ contract BusinessAgreement is AccessControl, ReentrancyGuard {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
 
-    Altan public immutable altan;
+    IERC20 public immutable token;
     EscrowBank public immutable bank;
     NotaryRegistry public immutable notaryRegistry;
 
@@ -192,17 +192,17 @@ contract BusinessAgreement is AccessControl, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        address _altan,
+        address _token,
         address _bank,
         address _notaryRegistry,
         address _khural
     ) {
-        if (_altan == address(0)) revert ZeroAddress();
+        if (_token == address(0)) revert ZeroAddress();
         if (_bank == address(0)) revert ZeroAddress();
         if (_notaryRegistry == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
 
-        altan = Altan(_altan);
+        token = IERC20(_token);
         bank = EscrowBank(_bank);
         notaryRegistry = NotaryRegistry(_notaryRegistry);
 

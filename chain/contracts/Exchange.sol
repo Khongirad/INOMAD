@@ -4,7 +4,6 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./Altan.sol";
 
 /**
  * @title Exchange
@@ -184,7 +183,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
 
-    Altan public immutable altan;
+    IERC20 public immutable baseToken;  // ALTAN (through ERC20 adapter)
 
     // Пары
     uint256 public nextPairId;
@@ -212,13 +211,13 @@ contract Exchange is AccessControl, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        address _altan,
+        address _baseToken,
         address _khural
     ) {
-        if (_altan == address(0)) revert ZeroAddress();
+        if (_baseToken == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
 
-        altan = Altan(_altan);
+        baseToken = IERC20(_baseToken);
 
         _grantRole(DEFAULT_ADMIN_ROLE, _khural);
         _grantRole(KHURAL_ROLE, _khural);
@@ -235,14 +234,14 @@ contract Exchange is AccessControl, ReentrancyGuard {
         string calldata symbol
     ) external onlyRole(OPERATOR_ROLE) returns (uint256 pairId) {
         if (quoteToken == address(0)) revert ZeroAddress();
-        if (quoteToken == address(altan)) revert InvalidInput();
-        if (pairByTokens[address(altan)][quoteToken] != 0) revert PairExists();
+        if (quoteToken == address(baseToken)) revert InvalidInput();
+        if (pairByTokens[address(baseToken)][quoteToken] != 0) revert PairExists();
 
         pairId = ++nextPairId;
 
         pairs[pairId] = TradingPair({
             id: pairId,
-            baseToken: address(altan),
+            baseToken: address(baseToken),
             quoteToken: quoteToken,
             symbol: symbol,
             active: true,
@@ -258,10 +257,10 @@ contract Exchange is AccessControl, ReentrancyGuard {
             exists: true
         });
 
-        pairByTokens[address(altan)][quoteToken] = pairId;
+        pairByTokens[address(baseToken)][quoteToken] = pairId;
         activePairs.push(pairId);
 
-        emit PairCreated(pairId, address(altan), quoteToken);
+        emit PairCreated(pairId, address(baseToken), quoteToken);
     }
 
     /// @notice Активировать/деактивировать пару
@@ -296,7 +295,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
             IERC20(pair.quoteToken).transferFrom(msg.sender, address(this), quoteAmount);
         } else {
             // Продажа ALTAN — блокируем ALTAN
-            altan.transferFrom(msg.sender, address(this), amount);
+            baseToken.transferFrom(msg.sender, address(this), amount);
         }
 
         orderId = ++nextOrderId;
@@ -347,7 +346,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
             uint256 quoteAmount = (o.remaining * o.price) / 1e6;
             IERC20(pair.quoteToken).transfer(msg.sender, quoteAmount);
         } else {
-            altan.transfer(msg.sender, o.remaining);
+            baseToken.transfer(msg.sender, o.remaining);
         }
 
         o.status = OrderStatus.CANCELLED;
@@ -403,7 +402,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
         uint256 quoteAmount = (amount * price) / 1e6;
 
         // Переводим ALTAN покупателю
-        altan.transfer(buyOrder.trader, amount);
+        baseToken.transfer(buyOrder.trader, amount);
 
         // Переводим quote токен продавцу (полная сумма, без комиссии биржи)
         IERC20(pair.quoteToken).transfer(sellOrder.trader, quoteAmount);
@@ -458,7 +457,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
         if (baseAmount == 0 || quoteAmount == 0) revert ZeroAmount();
 
         // Переводим токены
-        altan.transferFrom(msg.sender, address(this), baseAmount);
+        baseToken.transferFrom(msg.sender, address(this), baseAmount);
         IERC20(pair.quoteToken).transferFrom(msg.sender, address(this), quoteAmount);
 
         if (pair.lpTotalSupply == 0) {
@@ -520,7 +519,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
         pos.lpTokens -= lpTokens;
 
         // Переводим токены
-        altan.transfer(msg.sender, baseAmount);
+        baseToken.transfer(msg.sender, baseAmount);
         IERC20(pair.quoteToken).transfer(msg.sender, quoteAmount);
 
         emit LiquidityRemoved(pairId, msg.sender, baseAmount, quoteAmount);
@@ -552,7 +551,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
             // Вносим ALTAN, получаем quote
             reserveIn = pair.baseReserve;
             reserveOut = pair.quoteReserve;
-            altan.transferFrom(msg.sender, address(this), amountIn);
+            baseToken.transferFrom(msg.sender, address(this), amountIn);
         }
 
         // x * y = k (constant product formula) — без дополнительной комиссии
@@ -565,7 +564,7 @@ contract Exchange is AccessControl, ReentrancyGuard {
         if (buyAltan) {
             pair.quoteReserve += amountIn;
             pair.baseReserve -= amountOut;
-            altan.transfer(msg.sender, amountOut);
+            baseToken.transfer(msg.sender, amountOut);
         } else {
             pair.baseReserve += amountIn;
             pair.quoteReserve -= amountOut;

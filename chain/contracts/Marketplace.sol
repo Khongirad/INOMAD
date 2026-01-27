@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./Altan.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./EscrowBank.sol";
 import "./CitizenDocument.sol";
 
@@ -198,7 +198,7 @@ contract Marketplace is AccessControl, ReentrancyGuard {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
 
-    Altan public immutable altan;
+    IERC20 public immutable token;
     EscrowBank public immutable bank;
     CitizenDocument public immutable citizenDoc;
 
@@ -235,17 +235,17 @@ contract Marketplace is AccessControl, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        address _altan,
+        address _token,
         address _bank,
         address _citizenDoc,
         address _khural
     ) {
-        if (_altan == address(0)) revert ZeroAddress();
+        if (_token == address(0)) revert ZeroAddress();
         if (_bank == address(0)) revert ZeroAddress();
         if (_citizenDoc == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
 
-        altan = Altan(_altan);
+        token = IERC20(_token);
         bank = EscrowBank(_bank);
         citizenDoc = CitizenDocument(_citizenDoc);
 
@@ -452,7 +452,7 @@ contract Marketplace is AccessControl, ReentrancyGuard {
         uint256 totalPrice = l.price * quantity;
 
         // Проверяем баланс покупателя
-        if (altan.balanceOf(msg.sender) < totalPrice) revert InsufficientFunds();
+        if (token.balanceOf(msg.sender) < totalPrice) revert InsufficientFunds();
 
         orderId = ++nextOrderId;
 
@@ -495,7 +495,7 @@ contract Marketplace is AccessControl, ReentrancyGuard {
 
         // Переводим ВСЮ сумму на эскроу банка (без дополнительной комиссии)
         // Комиссия 0.03% уже встроена в ALTAN transfer
-        bool success = altan.transferFrom(msg.sender, address(bank), o.totalPrice);
+        bool success = token.transferFrom(msg.sender, address(bank), o.totalPrice);
         if (!success) revert InsufficientFunds();
 
         // Открываем счёт в банке если нет

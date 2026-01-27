@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./Altan.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title Auction
@@ -167,7 +167,7 @@ contract Auction is AccessControl, ReentrancyGuard {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
 
-    Altan public immutable altan;
+    IERC20 public immutable token;
 
     uint256 public nextAuctionId;
 
@@ -189,13 +189,13 @@ contract Auction is AccessControl, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        address _altan,
+        address _token,
         address _khural
     ) {
-        if (_altan == address(0)) revert ZeroAddress();
+        if (_token == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
 
-        altan = Altan(_altan);
+        token = IERC20(_token);
 
         _grantRole(DEFAULT_ADMIN_ROLE, _khural);
         _grantRole(KHURAL_ROLE, _khural);
@@ -341,12 +341,12 @@ contract Auction is AccessControl, ReentrancyGuard {
         if (msg.sender == a.highestBidder) revert AlreadyHighestBidder();
 
         // Переводим средства (комиссия 0.03% встроена в ALTAN)
-        bool success = altan.transferFrom(msg.sender, address(this), amount);
+        bool success = token.transferFrom(msg.sender, address(this), amount);
         if (!success) revert TransferFailed();
 
         // Возвращаем предыдущему лидеру
         if (a.highestBidder != address(0)) {
-            altan.transfer(a.highestBidder, a.highestBid);
+            token.transfer(a.highestBidder, a.highestBid);
         }
 
         // Обновляем данные
@@ -388,7 +388,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         uint256 currentPrice = getCurrentDutchPrice(auctionId);
 
         // Переводим средства (комиссия 0.03% встроена в ALTAN)
-        bool success = altan.transferFrom(msg.sender, address(this), currentPrice);
+        bool success = token.transferFrom(msg.sender, address(this), currentPrice);
         if (!success) revert TransferFailed();
 
         a.highestBidder = msg.sender;
@@ -435,7 +435,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         if (deposit < a.startingPrice) revert BidTooLow();
 
         // Переводим залог (комиссия 0.03% встроена в ALTAN)
-        bool success = altan.transferFrom(msg.sender, address(this), deposit);
+        bool success = token.transferFrom(msg.sender, address(this), deposit);
         if (!success) revert TransferFailed();
 
         sealedBids[auctionId][msg.sender] = SealedBid({
@@ -496,12 +496,12 @@ contract Auction is AccessControl, ReentrancyGuard {
         if (msg.sender == a.seller) revert InvalidInput();
 
         // Переводим buyout цену (комиссия 0.03% встроена в ALTAN)
-        bool success = altan.transferFrom(msg.sender, address(this), a.buyoutPrice);
+        bool success = token.transferFrom(msg.sender, address(this), a.buyoutPrice);
         if (!success) revert TransferFailed();
 
         // Возвращаем предыдущему лидеру
         if (a.highestBidder != address(0) && a.highestBid > 0) {
-            altan.transfer(a.highestBidder, a.highestBid);
+            token.transfer(a.highestBidder, a.highestBid);
         }
 
         a.highestBidder = msg.sender;
@@ -544,7 +544,7 @@ contract Auction is AccessControl, ReentrancyGuard {
         // Проверяем резервную цену
         if (a.reservePrice > 0 && a.highestBid < a.reservePrice) {
             // Не достигнута резервная цена — возврат
-            altan.transfer(a.highestBidder, a.highestBid);
+            token.transfer(a.highestBidder, a.highestBid);
             a.status = AuctionStatus.NO_BIDS;
             emit AuctionCancelled(auctionId);
             return;
@@ -552,7 +552,7 @@ contract Auction is AccessControl, ReentrancyGuard {
 
         // Выплачиваем продавцу ВСЮ сумму (без комиссии аукциона)
         // Комиссия 0.03% уже была взята при каждом transfer в ALTAN
-        altan.transfer(a.seller, a.highestBid);
+        token.transfer(a.seller, a.highestBid);
 
         a.status = AuctionStatus.FINALIZED;
         totalVolume += a.highestBid;
