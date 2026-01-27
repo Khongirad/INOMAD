@@ -230,8 +230,9 @@ contract CoreLaw {
 
     string public constant ARTICLE_35_NATIONAL_CORPORATIONS =
         unicode"Статья 35. Национальные корпорации. "
-        unicode"Частное и иностранное владение — не более 49%. "
-        unicode"Контроль (не менее 51%) — у государства народа.";
+        unicode"Граждане могут владеть 100% корпорации. "
+        unicode"Продажа, залог или передача иностранцам — не более 49%. "
+        unicode"Контроль (не менее 51%) всегда остаётся у граждан государства народа.";
 
     string public constant ARTICLE_36_PROFIT_DISTRIBUTION =
         unicode"Статья 36. Прибыль и развитие. "
@@ -271,6 +272,39 @@ contract CoreLaw {
 
     uint8 public constant TOTAL_ARTICLES = 37;
     uint8 public constant TOTAL_SECTIONS = 11;
+
+    /*//////////////////////////////////////////////////////////////
+                    ИСПОЛНЯЕМЫЕ КОНСТАНТЫ ИЗ СТАТЕЙ
+    //////////////////////////////////////////////////////////////*/
+
+    // Статья 26: Валюта
+    string public constant CURRENCY_NAME = unicode"Алтан";
+    string public constant CURRENCY_SYMBOL = "ALTAN";
+    uint8 public constant CURRENCY_DECIMALS = 6;
+
+    // Статья 27: Сетевая комиссия 0.03%
+    uint16 public constant NETWORK_FEE_BPS = 3;
+    uint16 public constant BPS_DENOMINATOR = 10000;
+    uint256 public constant MIN_TRANSFER_FOR_FEE = 1000;
+
+    // Статья 28: Налог 10% (7% народу, 3% конфедерации)
+    uint8 public constant TAX_RATE_PERCENT = 10;
+    uint8 public constant TAX_TO_NATION_PERCENT = 7;
+    uint8 public constant TAX_TO_CONFEDERATION_PERCENT = 3;
+    uint16 public constant TAX_RATE_BPS = 1000;
+    uint16 public constant TAX_TO_NATION_BPS = 700;
+    uint16 public constant TAX_TO_CONFEDERATION_BPS = 300;
+
+    // Статья 10: Социальная структура (Арбан → Зун → Мянган → Тумен)
+    uint16 public constant ARBAN_SIZE = 10;
+    uint16 public constant ZUN_SIZE = 100;
+    uint16 public constant MYANGAN_SIZE = 1000;
+    uint32 public constant TUMEN_SIZE = 10000;
+
+    // Статья 35: Национальные корпорации
+    // Граждане могут владеть 100%, но продажа иностранцам ограничена 49%
+    uint8 public constant MAX_FOREIGN_OWNERSHIP_PERCENT = 49;
+    uint8 public constant MIN_CITIZEN_CONTROL_PERCENT = 51;
 
     /*//////////////////////////////////////////////////////////////
                             КОНСТРУКТОР
@@ -395,5 +429,56 @@ contract CoreLaw {
 
     function getConclusion() external pure returns (string memory) {
         return CONCLUSION;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ФУНКЦИИ РАСЧЁТА
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Рассчитать сетевую комиссию (0.03%) согласно Статье 27
+    function calculateNetworkFee(uint256 amount) external pure returns (uint256 fee) {
+        if (amount < MIN_TRANSFER_FOR_FEE) return 0;
+        return (amount * NETWORK_FEE_BPS) / BPS_DENOMINATOR;
+    }
+
+    /// @notice Рассчитать налог (10%) согласно Статье 28
+    function calculateTax(uint256 amount) external pure returns (uint256 tax) {
+        return (amount * TAX_RATE_BPS) / BPS_DENOMINATOR;
+    }
+
+    /// @notice Рассчитать распределение налога согласно Статье 28
+    function calculateTaxDistribution(uint256 amount) 
+        external 
+        pure 
+        returns (uint256 toNation, uint256 toConfederation) 
+    {
+        toNation = (amount * TAX_TO_NATION_BPS) / BPS_DENOMINATOR;
+        toConfederation = (amount * TAX_TO_CONFEDERATION_BPS) / BPS_DENOMINATOR;
+    }
+
+    /// @notice Проверить валидность размера Арбана согласно Статье 10
+    function isValidArbanSize(uint256 size) external pure returns (bool) {
+        return size == ARBAN_SIZE;
+    }
+
+    /// @notice Проверить валидность размера Зуна согласно Статье 10
+    function isValidZunSize(uint256 size) external pure returns (bool) {
+        return size == ZUN_SIZE;
+    }
+
+    /// @notice Проверить валидность размера Мянгана согласно Статье 10
+    function isValidMyanganSize(uint256 size) external pure returns (bool) {
+        return size == MYANGAN_SIZE;
+    }
+
+    /// @notice Проверить валидность размера Тумена согласно Статье 10
+    function isValidTumenSize(uint256 size) external pure returns (bool) {
+        return size == TUMEN_SIZE;
+    }
+
+    /// @notice Проверить соответствие иностранного владения требованиям Статьи 35
+    /// @dev Граждане могут владеть 100%, но иностранцам можно продать максимум 49%
+    function isValidForeignOwnership(uint8 foreignPercent) external pure returns (bool) {
+        return foreignPercent <= MAX_FOREIGN_OWNERSHIP_PERCENT;
     }
 }
