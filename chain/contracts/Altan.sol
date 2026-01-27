@@ -1,49 +1,38 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {CoreLaw} from "./CoreLaw.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * @title Altan
- * @notice Единая валюта Сибирской Конфедерации
+ * @notice Суверенная валюта Сибирской Конфедерации
+ * @dev Собственная реализация валюты (НЕ ERC20) с интеграцией CoreLaw
  *
- * Согласно Аксиоме 9: "Алтан — единая валюта Сибирской Конфедерации.
- * Право эмиссии принадлежит исключительно Центральному Банку Сибири.
- * Алтан обеспечен словом народов Сибири и богатствами нашего народа."
+ * Основано на CoreLaw:
+ * - Статья 26: "Единой валютой является Алтан. Эмиссия — исключительно Центральным Банком."
+ * - Статья 27: "Единая комиссия — 0,03%. Иные сетевые комиссии запрещены."
  *
- * Согласно Аксиоме 10: "Любая транзакция в системе стоит 0.03% Алтан от суммы транзакции.
- * Не должно быть иных комиссий или связей с внешними операторами.
- * Комиссия идёт на поддержание инфраструктуры."
- *
- * Символ: ₳ (Алтан)
- * Комиссия: 0.03% (3 базисных пункта) — автоматически на каждую транзакцию
- * Комиссия направляется в казну инфраструктуры
- *
- * ALTAN свободен для использования каждым гражданином в системе.
+ * Ключевые отличия от ERC20:
+ * 1. Автоматическая комиссия 0.03% на каждую транзакцию
+ * 2. Все параметры из CoreLaw (единый источник истины)
+ * 3. Эмиссия только Центральным Банком
+ * 4. Суверенная валюта, не токен
  */
-contract Altan is ERC20, ERC20Permit, AccessControl {
+contract Altan is AccessControl {
     /*//////////////////////////////////////////////////////////////
-                                CONSTANTS
+                            CORELAW INTEGRATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Комиссия 0.03% = 3 базисных пункта = 3/10000
-    uint256 public constant FEE_BASIS_POINTS = 3;
-    uint256 public constant BASIS_POINTS_DENOMINATOR = 10000;
-
-    /// @notice Минимальная сумма для взимания комиссии (защита от пыли)
-    uint256 public constant MIN_TRANSFER_FOR_FEE = 1000; // 0.001 ALTAN (с 6 decimals)
+    /// @notice Ссылка на CoreLaw - единый источник истины
+    CoreLaw public immutable coreLaw;
 
     /*//////////////////////////////////////////////////////////////
                                 ROLES
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Центральный Банк Сибири — право эмиссии
+    /// @notice Центральный Банк — право эмиссии
     bytes32 public constant CENTRAL_BANK_ROLE = keccak256("CENTRAL_BANK_ROLE");
-
-    /// @notice Казначейство — получатель комиссий
-    bytes32 public constant TREASURY_ROLE = keccak256("TREASURY_ROLE");
 
     /// @notice Хурал — высший орган управления
     bytes32 public constant KHURAL_ROLE = keccak256("KHURAL_ROLE");
@@ -55,14 +44,16 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
     error ZeroAddress();
     error ZeroAmount();
     error InsufficientBalance();
-    error TransferFailed();
+    error InsufficientAllowance();
     error ExceedsMaxSupply();
-    error AddressExemptionNotAllowed();
+    error InvalidCoreLaw();
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
     //////////////////////////////////////////////////////////////*/
 
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
     event FeeCollected(address indexed from, address indexed to, uint256 amount, uint256 fee);
     event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
     event Mint(address indexed to, uint256 amount, string reason);
@@ -73,16 +64,25 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Общее предложение
+    uint256 private _totalSupply;
+
+    /// @notice Балансы адресов
+    mapping(address => uint256) private _balances;
+
+    /// @notice Разрешения на расходование
+    mapping(address => mapping(address => uint256)) private _allowances;
+
     /// @notice Адрес казны инфраструктуры (получает комиссии)
     address public infrastructureTreasury;
 
-    /// @notice Максимальное предложение (может быть изменено Хуралом)
+    /// @notice Максимальное предложение
     uint256 public maxSupply;
 
     /// @notice Общая сумма собранных комиссий
     uint256 public totalFeesCollected;
 
-    /// @notice Адреса, освобождённые от комиссии (системные контракты)
+    /// @notice Адреса, освобождённые от комиссии
     mapping(address => bool) public feeExempt;
 
     /*//////////////////////////////////////////////////////////////
@@ -90,14 +90,21 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _coreLaw,
         address _khural,
         address _centralBank,
         address _infrastructureTreasury,
         uint256 _initialMaxSupply
-    ) ERC20(unicode"Алтан", "ALTAN") ERC20Permit(unicode"Алтан") {
+    ) {
+        if (_coreLaw == address(0)) revert ZeroAddress();
         if (_khural == address(0)) revert ZeroAddress();
         if (_centralBank == address(0)) revert ZeroAddress();
         if (_infrastructureTreasury == address(0)) revert ZeroAddress();
+
+        coreLaw = CoreLaw(_coreLaw);
+        
+        // Проверить целостность CoreLaw
+        if (!coreLaw.verifyIntegrity()) revert InvalidCoreLaw();
 
         infrastructureTreasury = _infrastructureTreasury;
         maxSupply = _initialMaxSupply;
@@ -105,7 +112,6 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, _khural);
         _grantRole(KHURAL_ROLE, _khural);
         _grantRole(CENTRAL_BANK_ROLE, _centralBank);
-        _grantRole(TREASURY_ROLE, _infrastructureTreasury);
 
         // Системные адреса освобождены от комиссии
         feeExempt[_infrastructureTreasury] = true;
@@ -113,19 +119,120 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            DECIMALS
+                        METADATA (ИЗ CORELAW)
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice 6 знаков после запятой (как USDC, удобно для расчётов)
-    function decimals() public pure override returns (uint8) {
-        return 6;
+    /// @notice Название валюты из CoreLaw Статья 26
+    function name() public view returns (string memory) {
+        return coreLaw.CURRENCY_NAME();
+    }
+
+    /// @notice Символ валюты из CoreLaw Статья 26
+    function symbol() public view returns (string memory) {
+        return coreLaw.CURRENCY_SYMBOL();
+    }
+
+    /// @notice Десятичные знаки из CoreLaw Статья 26
+    function decimals() public view returns (uint8) {
+        return coreLaw.CURRENCY_DECIMALS();
     }
 
     /*//////////////////////////////////////////////////////////////
-                            ЭМИССИЯ И СЖИГАНИЕ
+                        SUPPLY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Эмиссия новых Алтанов (только Центральный Банк)
+    /// @notice Общее предложение
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    /// @notice Баланс адреса
+    function balanceOf(address account) public view returns (uint256) {
+        return _balances[account];
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ALLOWANCE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Разрешение на расходование
+    function allowance(address owner, address spender) public view returns (uint256) {
+        return _allowances[owner][spender];
+    }
+
+    /// @notice Одобрить расходование
+    function approve(address spender, uint256 amount) public returns (bool) {
+        _approve(msg.sender, spender, amount);
+        return true;
+    }
+
+    /// @notice Увеличить разрешение
+    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
+        _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
+        return true;
+    }
+
+    /// @notice Уменьшить разрешение
+    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
+        uint256 currentAllowance = _allowances[msg.sender][spender];
+        require(currentAllowance >= subtractedValue, "Decreased below zero");
+        _approve(msg.sender, spender, currentAllowance - subtractedValue);
+        return true;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    TRANSFER WITH AUTO FEE (0.03%)
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Перевод с автоматической комиссией 0.03% (из CoreLaw Статья 27)
+    function transfer(address to, uint256 amount) public returns (bool) {
+        _transferWithFee(msg.sender, to, amount);
+        return true;
+    }
+
+    /// @notice Перевод от имени с автоматической комиссией
+    function transferFrom(address from, address to, uint256 amount) public returns (bool) {
+        _spendAllowance(from, msg.sender, amount);
+        _transferWithFee(from, to, amount);
+        return true;
+    }
+
+    /// @notice Внутренняя функция перевода с комиссией из CoreLaw
+    function _transferWithFee(address from, address to, uint256 amount) internal {
+        if (from == address(0)) revert ZeroAddress();
+        if (to == address(0)) revert ZeroAddress();
+        if (amount == 0) revert ZeroAmount();
+
+        uint256 fee = 0;
+
+        // Комиссия рассчитывается из CoreLaw (Статья 27: 0.03%)
+        if (!feeExempt[from] && !feeExempt[to]) {
+            fee = coreLaw.calculateNetworkFee(amount);
+        }
+
+        uint256 totalRequired = amount + fee;
+        if (_balances[from] < totalRequired) revert InsufficientBalance();
+
+        // Переводим основную сумму
+        _balances[from] -= amount;
+        _balances[to] += amount;
+        emit Transfer(from, to, amount);
+
+        // Переводим комиссию в казну
+        if (fee > 0) {
+            _balances[from] -= fee;
+            _balances[infrastructureTreasury] += fee;
+            totalFeesCollected += fee;
+            emit FeeCollected(from, to, amount, fee);
+            emit Transfer(from, infrastructureTreasury, fee);
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    MINT & BURN (CENTRAL BANK ONLY)
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Эмиссия (только Центральный Банк) - CoreLaw Статья 26
     function mint(
         address to,
         uint256 amount,
@@ -133,14 +240,16 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
     ) external onlyRole(CENTRAL_BANK_ROLE) {
         if (to == address(0)) revert ZeroAddress();
         if (amount == 0) revert ZeroAmount();
-        if (totalSupply() + amount > maxSupply) revert ExceedsMaxSupply();
+        if (_totalSupply + amount > maxSupply) revert ExceedsMaxSupply();
 
-        _mint(to, amount);
+        _totalSupply += amount;
+        _balances[to] += amount;
 
+        emit Transfer(address(0), to, amount);
         emit Mint(to, amount, reason);
     }
 
-    /// @notice Сжигание Алтанов (только Центральный Банк)
+    /// @notice Сжигание (только Центральный Банк) - CoreLaw Статья 26
     function burn(
         address from,
         uint256 amount,
@@ -148,122 +257,66 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
     ) external onlyRole(CENTRAL_BANK_ROLE) {
         if (from == address(0)) revert ZeroAddress();
         if (amount == 0) revert ZeroAmount();
-        if (balanceOf(from) < amount) revert InsufficientBalance();
+        if (_balances[from] < amount) revert InsufficientBalance();
 
-        _burn(from, amount);
+        _totalSupply -= amount;
+        _balances[from] -= amount;
 
+        emit Transfer(from, address(0), amount);
         emit Burn(from, amount, reason);
     }
 
-    /// @notice Владелец может сжечь свои токены добровольно
+    /// @notice Добровольное сжигание своих токенов
     function burnOwn(uint256 amount) external {
         if (amount == 0) revert ZeroAmount();
-        if (balanceOf(msg.sender) < amount) revert InsufficientBalance();
+        if (_balances[msg.sender] < amount) revert InsufficientBalance();
 
-        _burn(msg.sender, amount);
+        _totalSupply -= amount;
+        _balances[msg.sender] -= amount;
 
+        emit Transfer(msg.sender, address(0), amount);
         emit Burn(msg.sender, amount, "voluntary");
     }
 
     /*//////////////////////////////////////////////////////////////
-                        РАСЧЁТ КОМИССИИ
+                        INTERNAL HELPERS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Рассчитать комиссию 0.03% для суммы
-    function calculateFee(uint256 amount) public pure returns (uint256) {
-        if (amount < MIN_TRANSFER_FOR_FEE) return 0;
-        return (amount * FEE_BASIS_POINTS) / BASIS_POINTS_DENOMINATOR;
+    function _approve(address owner, address spender, uint256 amount) internal {
+        if (owner == address(0)) revert ZeroAddress();
+        if (spender == address(0)) revert ZeroAddress();
+
+        _allowances[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                    ПЕРЕОПРЕДЕЛЕНИЕ TRANSFER С КОМИССИЕЙ
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Transfer с автоматической комиссией 0.03%
-    function transfer(address to, uint256 amount) public override returns (bool) {
-        return _transferWithFee(msg.sender, to, amount);
-    }
-
-    /// @notice TransferFrom с автоматической комиссией 0.03%
-    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
-        _spendAllowance(from, msg.sender, amount);
-        return _transferWithFee(from, to, amount);
-    }
-
-    /// @notice Внутренняя функция трансфера с комиссией
-    function _transferWithFee(address from, address to, uint256 amount) internal returns (bool) {
-        if (from == address(0)) revert ZeroAddress();
-        if (to == address(0)) revert ZeroAddress();
-        if (amount == 0) revert ZeroAmount();
-
-        uint256 fee = 0;
-
-        // Комиссия не взимается с освобождённых адресов
-        if (!feeExempt[from] && !feeExempt[to]) {
-            fee = calculateFee(amount);
+    function _spendAllowance(address owner, address spender, uint256 amount) internal {
+        uint256 currentAllowance = _allowances[owner][spender];
+        if (currentAllowance != type(uint256).max) {
+            if (currentAllowance < amount) revert InsufficientAllowance();
+            _allowances[owner][spender] = currentAllowance - amount;
         }
-
-        uint256 totalRequired = amount + fee;
-        if (balanceOf(from) < totalRequired) revert InsufficientBalance();
-
-        // Переводим основную сумму получателю
-        _transfer(from, to, amount);
-
-        // Переводим комиссию в казну инфраструктуры
-        if (fee > 0) {
-            _transfer(from, infrastructureTreasury, fee);
-            totalFeesCollected += fee;
-
-            emit FeeCollected(from, to, amount, fee);
-        }
-
-        return true;
     }
 
     /*//////////////////////////////////////////////////////////////
-                    СИСТЕМНЫЙ ТРАНСФЕР БЕЗ КОМИССИИ
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Системный трансфер без комиссии (для банковских операций)
-    /// @dev Только освобождённые адреса могут вызывать
-    function transferNoFee(
-        address from,
-        address to,
-        uint256 amount
-    ) external returns (bool) {
-        if (!feeExempt[msg.sender]) revert AddressExemptionNotAllowed();
-        if (from == address(0)) revert ZeroAddress();
-        if (to == address(0)) revert ZeroAddress();
-        if (amount == 0) revert ZeroAmount();
-
-        _transfer(from, to, amount);
-        return true;
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                            УПРАВЛЕНИЕ
+                        ADMIN FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Установить освобождение от комиссии (только Хурал)
     function setFeeExempt(address account, bool exempt) external onlyRole(KHURAL_ROLE) {
         if (account == address(0)) revert ZeroAddress();
         feeExempt[account] = exempt;
-
         emit FeeExemptionSet(account, exempt);
     }
 
-    /// @notice Обновить адрес казны инфраструктуры (только Хурал)
+    /// @notice Обновить казну (только Хурал)
     function setInfrastructureTreasury(address newTreasury) external onlyRole(KHURAL_ROLE) {
         if (newTreasury == address(0)) revert ZeroAddress();
 
         address oldTreasury = infrastructureTreasury;
-
-        // Убираем освобождение со старого адреса
         feeExempt[oldTreasury] = false;
 
         infrastructureTreasury = newTreasury;
-
-        // Добавляем освобождение новому адресу
         feeExempt[newTreasury] = true;
 
         emit TreasuryUpdated(oldTreasury, newTreasury);
@@ -271,46 +324,56 @@ contract Altan is ERC20, ERC20Permit, AccessControl {
 
     /// @notice Изменить максимальное предложение (только Хурал)
     function setMaxSupply(uint256 newMaxSupply) external onlyRole(KHURAL_ROLE) {
-        require(newMaxSupply >= totalSupply(), "Cannot set below current supply");
+        require(newMaxSupply >= _totalSupply, "Cannot set below current supply");
         maxSupply = newMaxSupply;
     }
 
     /*//////////////////////////////////////////////////////////////
-                        ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+                        UTILITY FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Получить детали транзакции (сумма, комиссия, итого)
-    function getTransferDetails(uint256 amount) external pure returns (
+    function getTransferDetails(uint256 amount) external view returns (
         uint256 fee,
         uint256 recipientReceives,
         uint256 totalFromSender
     ) {
-        fee = calculateFee(amount);
+        fee = coreLaw.calculateNetworkFee(amount);
         recipientReceives = amount;
         totalFromSender = amount + fee;
     }
 
-    /// @notice Проверить, достаточно ли средств для перевода с комиссией
+    /// @notice Проверить, достаточно ли средств для перевода
     function canTransfer(address from, uint256 amount) external view returns (bool) {
         uint256 fee = 0;
         if (!feeExempt[from]) {
-            fee = calculateFee(amount);
+            fee = coreLaw.calculateNetworkFee(amount);
         }
-        return balanceOf(from) >= amount + fee;
+        return _balances[from] >= amount + fee;
     }
 
     /// @notice Получить статистику валюты
     function getStats() external view returns (
-        uint256 _totalSupply,
-        uint256 _maxSupply,
-        uint256 _totalFeesCollected,
-        uint256 _treasuryBalance
+        uint256 supply,
+        uint256 maxSupp,
+        uint256 feesCollected,
+        uint256 treasuryBalance
     ) {
         return (
-            totalSupply(),
+            _totalSupply,
             maxSupply,
             totalFeesCollected,
-            balanceOf(infrastructureTreasury)
+            _balances[infrastructureTreasury]
         );
+    }
+
+    /// @notice Проверить целостность CoreLaw
+    function verifyCoreLawIntegrity() external view returns (bool) {
+        return coreLaw.verifyIntegrity();
+    }
+
+    /// @notice Получить статью CoreLaw
+    function getCoreLawArticle(uint8 number) external view returns (string memory) {
+        return coreLaw.getArticle(number);
     }
 }

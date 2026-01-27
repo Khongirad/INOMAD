@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import {AltanCoreLedger} from "./AltanCoreLedger.sol";
+import {Altan} from "./Altan.sol";
 import {CoreLaw} from "./CoreLaw.sol";
 import {CoreLock} from "./CoreLock.sol";
 
@@ -23,26 +23,15 @@ import {CoreLock} from "./CoreLock.sol";
  * - Официальный курс ALTAN/USD
  * - Выпуск и управление государственными облигациями
  *
- * Аналоги: Федеральный Резерв, ЕЦБ, Банк России
- *
- * Начальная эмиссия: 2,500,000,000,000 ALTAN (2.5 триллиона)
- * Целевое население: 145,000,000 граждан
- * На душу населения: ~17,241 ALTAN на гражданина
- *
- * НЕ ОСУЩЕСТВЛЯЕТ:
- * - Ведение счетов граждан (делегировано лицензированным банкам)
- * - Розничные транзакции (делегировано лицензированным банкам)
- *
  * Архитектура:
  * ┌─────────────────────────────────────────┐
  * │ CoreLaw → CoreLock (заморожен)          │
  * ├─────────────────────────────────────────┤
- * │ AltanCoreLedger (суверенный реестр)     │
+ * │ Altan (Суверенная валюта)               │
  * ├─────────────────────────────────────────┤
  * │ AltanCentralBank (этот контракт)        │ ← ВЫ ЗДЕСЬ
- * │ - Эмитирует в CoreLedger                │
+ * │ - Эмитирует в Altan.sol                 │
  * │ - Лицензирует банки                     │
- * │ - Создаёт корр. счета (bytes32)         │
  * └─────────────────────────────────────────┘
  */
 contract AltanCentralBank is AccessControl {
@@ -57,8 +46,8 @@ contract AltanCentralBank is AccessControl {
                         СУВЕРЕННАЯ ИНФРАСТРУКТУРА
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Суверенный реестр ALTAN (источник истины)
-    AltanCoreLedger public immutable coreLedger;
+    /// @notice Суверенная валюта ALTAN (источник истины)
+    Altan public immutable altan;
 
     /// @notice Ссылка на CoreLock для проверки заморозки закона
     CoreLock public immutable coreLock;
@@ -75,8 +64,8 @@ contract AltanCentralBank is AccessControl {
     struct LicensedBank {
         uint256 id;
         address bankAddress;            // Адрес контракта/управления банка
-        bytes32 corrAccountId;          // ID корр. счёта в CoreLedger
-        address corrAccountAddress;     // Ethereum адрес для ERC20 адаптера
+        bytes32 corrAccountId;          // Внутренний ID корр. счёта
+        address corrAccountAddress;     // Адрес кошелька (для эмиссии)
         string name;
         string jurisdiction;            // Юрисдикция (государство народа)
         bytes32 nationId;               // ID государства народа
@@ -155,9 +144,6 @@ contract AltanCentralBank is AccessControl {
     uint256 public totalEmitted;
     uint256 public totalBurned;
 
-    /// @notice Счёт казначейства инфраструктуры
-    bytes32 public infrastructureTreasuryId;
-
     /*//////////////////////////////////////////////////////////////
                             СОБЫТИЯ
     //////////////////////////////////////////////////////////////*/
@@ -178,24 +164,21 @@ contract AltanCentralBank is AccessControl {
     // События эмиссии
     event Emission(
         uint256 indexed bankId,
-        bytes32 indexed corrAccountId,
+        address indexed corrAccountAddress,
         uint256 amount,
         string reason
     );
     event Destruction(
         uint256 indexed bankId,
-        bytes32 indexed corrAccountId,
+        address indexed corrAccountAddress,
         uint256 amount,
         string reason
     );
     event InitialEmissionCompleted(
         uint256 amount,
-        bytes32 indexed corrAccountId,
+        address indexed corrAccountAddress,
         uint256 targetPopulation
     );
-
-    // События казначейства
-    event InfrastructureTreasurySet(bytes32 indexed treasuryId);
 
     /*//////////////////////////////////////////////////////////////
                             ОШИБКИ
@@ -239,13 +222,18 @@ contract AltanCentralBank is AccessControl {
                             КОНСТРУКТОР
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _coreLedger, address _governor) {
-        if (_coreLedger == address(0)) revert ZeroAddress();
+    constructor(
+        address _altan,
+        address _coreLock,
+        address _governor
+    ) {
+        if (_altan == address(0)) revert ZeroAddress();
+        if (_coreLock == address(0)) revert ZeroAddress();
         if (_governor == address(0)) revert ZeroAddress();
 
-        coreLedger = AltanCoreLedger(_coreLedger);
-        coreLock = coreLedger.coreLock();
-        coreLaw = coreLedger.coreLaw();
+        altan = Altan(_altan);
+        coreLock = CoreLock(_coreLock);
+        coreLaw = altan.coreLaw();
 
         _grantRole(DEFAULT_ADMIN_ROLE, _governor);
         _grantRole(GOVERNOR_ROLE, _governor);
@@ -260,26 +248,6 @@ contract AltanCentralBank is AccessControl {
         emit OfficialRateSet(0, 10000);
         emit ReserveRequirementSet(0, 1000);
         emit DailyEmissionLimitSet(0, dailyEmissionLimit);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                    ИНИЦИАЛИЗАЦИЯ КАЗНАЧЕЙСТВА
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Создать и установить счёт казначейства инфраструктуры
-    function createInfrastructureTreasury() external onlyGovernor returns (bytes32 treasuryId) {
-        treasuryId = keccak256(abi.encodePacked("INFRASTRUCTURE_TREASURY", block.timestamp));
-
-        coreLedger.createAccount(
-            treasuryId,
-            AltanCoreLedger.AccountType.TREASURY,
-            bytes32(0) // Конфедерация, не конкретное государство народа
-        );
-
-        infrastructureTreasuryId = treasuryId;
-        coreLedger.setInfrastructureTreasury(treasuryId);
-
-        emit InfrastructureTreasurySet(treasuryId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -319,7 +287,7 @@ contract AltanCentralBank is AccessControl {
         emit BankRegistered(id, bankAddress, name);
     }
 
-    /// @notice Выдать лицензию банку и создать корреспондентский счёт
+    /// @notice Выдать лицензию банку и установить адрес корр. счёта
     function grantLicense(
         uint256 bankId,
         address corrAccountAddress
@@ -331,23 +299,13 @@ contract AltanCentralBank is AccessControl {
         }
         if (corrAccountAddress == address(0)) revert ZeroAddress();
 
-        // Создать уникальный ID корр. счёта
+        // Создать уникальный ID корр. счёта (внутренний)
         corrAccountId = keccak256(abi.encodePacked(
             "BANK_CORR_ACCOUNT",
             bankId,
             bank.bankAddress,
             block.timestamp
         ));
-
-        // Создать счёт в суверенном реестре
-        coreLedger.createAccount(
-            corrAccountId,
-            AltanCoreLedger.AccountType.BANK_CORRESPONDENT,
-            bank.nationId
-        );
-
-        // Связать Ethereum адрес со счётом (для ERC20 адаптера)
-        coreLedger.linkAddress(corrAccountId, corrAccountAddress);
 
         // Обновить запись банка
         bank.corrAccountId = corrAccountId;
@@ -407,7 +365,7 @@ contract AltanCentralBank is AccessControl {
                     ЭМИССИЯ (СОЗДАНИЕ ALTAN)
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Эмитировать ALTAN на корр. счёт лицензированного банка
+    /// @notice Эмитировать ALTAN на адрес банка
     /// @dev Только Центральный Банк может создавать новые ALTAN (Статья 26)
     function emitToBank(
         uint256 bankId,
@@ -419,18 +377,18 @@ contract AltanCentralBank is AccessControl {
         LicensedBank storage bank = banks[bankId];
         if (bank.bankAddress == address(0)) revert BankNotFound();
         if (bank.status != BankStatus.LICENSED) revert BankNotLicensed();
-        if (bank.corrAccountId == bytes32(0)) revert NotCorrAccount();
+        if (bank.corrAccountAddress == address(0)) revert NotCorrAccount();
 
         // Проверить дневной лимит
         _checkDailyLimit(amount);
 
-        // Эмитировать в суверенный реестр
-        coreLedger.emit_(bank.corrAccountId, amount, reason);
+        // Эмитировать в Altan
+        altan.mint(bank.corrAccountAddress, amount, reason);
 
         totalEmitted += amount;
         dailyEmissionUsed += amount;
 
-        emit Emission(bankId, bank.corrAccountId, amount, reason);
+        emit Emission(bankId, bank.corrAccountAddress, amount, reason);
     }
 
     /// @notice Эмитировать в главный банк (удобная функция)
@@ -442,12 +400,12 @@ contract AltanCentralBank is AccessControl {
 
         _checkDailyLimit(amount);
 
-        coreLedger.emit_(bank.corrAccountId, amount, reason);
+        altan.mint(bank.corrAccountAddress, amount, reason);
 
         totalEmitted += amount;
         dailyEmissionUsed += amount;
 
-        emit Emission(primaryBankId, bank.corrAccountId, amount, reason);
+        emit Emission(primaryBankId, bank.corrAccountAddress, amount, reason);
     }
 
     /// @notice Выполнить начальную эмиссию в главный банк
@@ -459,12 +417,12 @@ contract AltanCentralBank is AccessControl {
         if (bank.status != BankStatus.LICENSED) revert BankNotLicensed();
 
         // Начальная эмиссия не учитывает дневной лимит
-        coreLedger.emit_(bank.corrAccountId, INITIAL_EMISSION, "Initial Emission");
+        altan.mint(bank.corrAccountAddress, INITIAL_EMISSION, "Initial Emission");
 
         totalEmitted += INITIAL_EMISSION;
         initialEmissionComplete = true;
 
-        emit InitialEmissionCompleted(INITIAL_EMISSION, bank.corrAccountId, TARGET_POPULATION);
+        emit InitialEmissionCompleted(INITIAL_EMISSION, bank.corrAccountAddress, TARGET_POPULATION);
     }
 
     function _checkDailyLimit(uint256 amount) internal {
@@ -483,7 +441,7 @@ contract AltanCentralBank is AccessControl {
                     УНИЧТОЖЕНИЕ (СЖИГАНИЕ ALTAN)
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Уничтожить ALTAN с корр. счёта банка
+    /// @notice Уничтожить ALTAN с адреса банка
     /// @dev Используется когда банки возвращают ALTAN в ЦБ (напр., для обмена на USD)
     function destroy(
         uint256 bankId,
@@ -494,19 +452,19 @@ contract AltanCentralBank is AccessControl {
 
         LicensedBank storage bank = banks[bankId];
         if (bank.bankAddress == address(0)) revert BankNotFound();
-        if (bank.corrAccountId == bytes32(0)) revert NotCorrAccount();
+        if (bank.corrAccountAddress == address(0)) revert NotCorrAccount();
 
         // Проверить баланс
-        if (coreLedger.balanceOf(bank.corrAccountId) < amount) {
+        if (altan.balanceOf(bank.corrAccountAddress) < amount) {
             revert InsufficientBalance();
         }
 
-        // Уничтожить из суверенного реестра
-        coreLedger.destroy(bank.corrAccountId, amount, reason);
+        // Уничтожить
+        altan.burn(bank.corrAccountAddress, amount, reason);
 
         totalBurned += amount;
 
-        emit Destruction(bankId, bank.corrAccountId, amount, reason);
+        emit Destruction(bankId, bank.corrAccountAddress, amount, reason);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -569,8 +527,8 @@ contract AltanCentralBank is AccessControl {
     /// @notice Получить баланс корр. счёта банка
     function getBankBalance(uint256 bankId) external view returns (uint256) {
         LicensedBank storage bank = banks[bankId];
-        if (bank.corrAccountId == bytes32(0)) return 0;
-        return coreLedger.balanceOf(bank.corrAccountId);
+        if (bank.corrAccountAddress == address(0)) return 0;
+        return altan.balanceOf(bank.corrAccountAddress);
     }
 
     /// @notice Получить статистику денежной массы
@@ -579,12 +537,12 @@ contract AltanCentralBank is AccessControl {
         uint256 _totalBurned,
         uint256 _netSupply,
         uint256 _dailyLimitRemaining,
-        uint256 _coreLedgerSupply
+        uint256 _altanSupply
     ) {
         _totalEmitted = totalEmitted;
         _totalBurned = totalBurned;
         _netSupply = totalEmitted - totalBurned;
-        _coreLedgerSupply = coreLedger.totalSupply();
+        _altanSupply = altan.totalSupply();
 
         uint256 today = block.timestamp / 1 days;
         if (today == lastEmissionDay) {

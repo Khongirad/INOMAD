@@ -1,0 +1,17 @@
+ECONOMIC CONSTITUTION OF ALTAN NETWORK
+Version 2
+
+Article 1. Network Sovereignty
+The ALTAN network is a sovereign digital infrastructure.
+All transactions, fees, and settlements occur exclusively within ALTAN.
+
+Article 2. ALTAN Currency
+ALTAN is the native currency of the network.
+Issuance is performed exclusively by the Altan Central Bank
+based on Khural decisions.
+
+Article 3. Network Fee
+A unified network fee of 0.03% applies to all transactions.
+100% of the fee is routed to the INOMAD KHURAL Treasury.
+
+[... continue full text ...]
