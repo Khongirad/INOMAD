@@ -1,16 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {CoreLaw} from "./CoreLaw.sol";
+
 interface IAltanBankLedgerFeeOps {
     function transferBetweenAccounts(bytes32 fromId, bytes32 toId, address asset, uint256 amount, bytes32 memo) external;
 }
 
+/**
+ * @title FeeEngine
+ * @notice Движок расчёта и сбора комиссий
+ * @dev Интегрирован с CoreLaw для определения размера комиссии (Статья 27)
+ */
 contract FeeEngine {
     address public owner;
     IAltanBankLedgerFeeOps public ledger;
 
-    // 0.03% = 3 bps (basis points, 1 bps = 0.01%)
-    uint16 public constant FEE_BPS = 3;
+    // CoreLaw Source of Truth
+    CoreLaw public immutable coreLaw;
 
     // Where ALL protocol fees go (INOMAD INC)
     bytes32 public feeSinkAccountId;
@@ -36,10 +43,18 @@ contract FeeEngine {
         _;
     }
 
-    constructor(address ledgerAddr, bytes32 sinkAccountId) {
+    constructor(
+        address ledgerAddr, 
+        bytes32 sinkAccountId,
+        address _coreLaw
+    ) {
+        if (_coreLaw == address(0)) revert("ZERO_ADDR");
+        
         owner = msg.sender;
         ledger = IAltanBankLedgerFeeOps(ledgerAddr);
         feeSinkAccountId = sinkAccountId;
+        coreLaw = CoreLaw(_coreLaw);
+        
         emit LedgerSet(ledgerAddr);
         emit FeeSinkSet(sinkAccountId);
     }
@@ -67,9 +82,9 @@ contract FeeEngine {
         emit CollectorSet(collector, ok);
     }
 
-    function quoteFee(uint256 amount) public pure returns (uint256) {
-        // fee = amount * 3 / 10000
-        return (amount * FEE_BPS) / 10000;
+    /// @notice Рассчитать комиссию через CoreLaw
+    function quoteFee(uint256 amount) public view returns (uint256) {
+        return coreLaw.calculateNetworkFee(amount);
     }
 
     function collectFee(
@@ -91,5 +106,10 @@ contract FeeEngine {
         );
 
         emit FeeCollected(payerAccountId, feeSinkAccountId, asset, fee, memo);
+    }
+    
+    /// @notice Получить BPS комиссии из CoreLaw (для совместимости)
+    function getFeeBps() external view returns (uint16) {
+        return coreLaw.NETWORK_FEE_BPS();
     }
 }

@@ -1,66 +1,99 @@
-## Foundry
+# INOMAD KHURAL
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Decentralized governance platform with ALTAN economic system.
 
-Foundry consists of:
+## Quick Start
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+### Prerequisites
+- Node.js 20+
+- PostgreSQL (via Docker or local)
+- npm
 
-## Documentation
+### 1. Start Database (Docker)
 
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
+```bash
+cd backend
+docker-compose up -d
 ```
 
-### Test
+Or configure `DATABASE_URL` in `backend/.env` for your PostgreSQL instance.
 
-```shell
-$ forge test
+### 2. Backend Setup
+
+```bash
+cd backend
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+npm run build
+npm run start:dev
 ```
 
-### Format
+Backend runs at: http://localhost:3001/api
 
-```shell
-$ forge fmt
+### 3. Frontend Setup
+
+```bash
+# From project root
+npm install
+npm run dev
 ```
 
-### Gas Snapshots
+Frontend runs at: http://localhost:3000
 
-```shell
-$ forge snapshot
+### 4. Verify Setup
+
+```bash
+# Test backend endpoints
+cd backend
+./scripts/smoke-test.sh
+
+# Or manually
+curl http://localhost:3001/api/health
 ```
 
-### Anvil
+## Key Endpoints
 
-```shell
-$ anvil
+| Endpoint | Description |
+|----------|-------------|
+| GET /api/health | Health check |
+| GET /api/khural | List governance groups |
+| GET /api/guilds | List guilds/organizations |
+| GET /api/tasks | List contracts/tasks |
+| GET /api/audit/history | Public event history |
+
+## Key Pages
+
+| Route | Description |
+|-------|-------------|
+| /khural | Fractal governance map |
+| /board | Task/contract marketplace |
+| /registries/history | State archives & council review |
+
+## Architecture
+
+```
+inomad-client/
+├── src/                    # Next.js frontend
+│   ├── app/(app)/         # Main app routes
+│   ├── components/        # UI components
+│   └── lib/               # Utilities & API client
+├── backend/               # NestJS backend
+│   ├── src/               # API modules
+│   └── prisma/            # Database schema
+└── chain/                 # Solidity contracts
 ```
 
-### Deploy
+## Environment Variables
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+### Backend (`backend/.env`)
+```
+DATABASE_URL="postgresql://..."
+PORT=3001
+CORS_ORIGIN="http://localhost:3000"
 ```
 
-### Cast
-
-```shell
-$ cast <subcommand>
+### Frontend (`.env.local`)
 ```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+NEXT_PUBLIC_API_URL="http://localhost:3001/api"
 ```

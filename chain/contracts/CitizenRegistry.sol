@@ -1,45 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-interface ISeatSBT {
+import {NationRegistry} from "./NationRegistry.sol";
+import {CoreLaw} from "./CoreLaw.sol";
+
+interface ISeatSBTIssuer {
     function mintSeat(address to, uint256 seatId, uint32 cohortArbanId, uint16 competencyFlags) external;
     function exists(uint256 seatId) external view returns (bool);
 }
 
-interface IAltanWalletRegistry {
+interface IAltanWalletRegistryIssuer {
     function createWallet(uint256 seatId) external returns (address);
 }
 
-
-/**
- * ВАЖНО:
- * В вашем проекте уже есть ConstitutionAcceptanceRegistry.sol.
- * Здесь интерфейс сделан минимальным. Если у вас функция называется иначе —
- * просто переименуйте в interface ниже под фактическую сигнатуру.
- */
 interface IConstitutionAcceptanceRegistry {
     function hasAccepted(address who) external view returns (bool);
 }
 
 /**
- * ActivationRegistry (опционально):
- * Если у вас будет функция "setInitialLocked" — CitizenRegistry вызовет её.
- * Если нет — статус LOCKED и так дефолтный (0) в нашем ActivationRegistry.
- */
-interface IActivationRegistryOptional {
-    // recommended optional hook:
-    // function setInitialLocked(uint256 seatId, bytes32 reasonDoc) external;
-}
-
-/**
- * CitizenRegistry = issuer SeatSBT
- * - mint SeatSBT только если гражданин принял Конституцию (acceptance)
- * - SeatSBT НЕИЗЫМАЕМАЯ: тут нет revoke/burn логики
- * - По умолчанию статус правоспособности должен быть LOCKED (ActivationRegistry)
- * - Политические атрибуты фиксируются на уровне реестра (не в SeatSBT)
+ * @title CitizenRegistry
+ * @notice Реестр граждан Сибирской Конфедерации
+ * @dev Отвечает за:
+ * 1. Регистрацию граждан (1 Человек = 1 SeatSBT)
+ * 2. Привязку к Нации (NationRegistry)
+ * 3. Хранение политических метаданных (Арбан, Зун и т.д.)
+ * 4. Создание AltanWallet (через WalletRegistry)
  */
 contract CitizenRegistry {
-
+    
     /* ===================== Errors ===================== */
     error NotOwner();
     error ZeroAddress();
@@ -48,6 +36,9 @@ contract CitizenRegistry {
     error SeatAlreadyExists();
     error WalletRegistryAlreadySet();
     error WalletRegistryNotSet();
+    error NationNotFound();
+    error NationNotActive();
+    error InvalidArbanSize(); // Reserved for future validation
 
     /* ===================== Owner (MVP) ===================== */
     address public owner;
@@ -57,9 +48,12 @@ contract CitizenRegistry {
     }
 
     /* ===================== Dependencies ===================== */
-    ISeatSBT public seatSbt; // set once after deployment (или передайте в ctor если порядок позволяет)
-    IAltanWalletRegistry public walletRegistry; // set once after deployment
+    ISeatSBTIssuer public seatSbt; 
+    IAltanWalletRegistryIssuer public walletRegistry;
     IConstitutionAcceptanceRegistry public immutable acceptance;
+    NationRegistry public immutable nationRegistry;
+    CoreLaw public immutable coreLaw;
+    
     address public activationRegistry; // optional hook target
 
     /* ===================== Seat bookkeeping ===================== */
@@ -69,11 +63,12 @@ contract CitizenRegistry {
 
     /* ===================== Political metadata ===================== */
     struct CitizenMeta {
-        uint32 cohort_arban_id;
-        uint16 civ;
-        uint16 dom;
-        uint16 exp;
-        bytes32 ethics_hash;
+        bytes32 nationId;      // Принадлежность к народу
+        uint32 cohort_arban_id; // ID Арбана (первичной общины)
+        uint16 civ;            // Гражданский рейтинг (Civitas)
+        uint16 dom;            // Доминион (владения)
+        uint16 exp;            // Опыт (Experience)
+        bytes32 ethics_hash;   // Хеш этического профиля
         bool exists;
     }
     mapping(uint256 => CitizenMeta) public metaOf; // seatId -> meta
@@ -83,13 +78,23 @@ contract CitizenRegistry {
     event SeatSBTSet(address indexed seatSbt);
     event WalletRegistrySet(address indexed walletRegistry);
     event ActivationRegistrySet(address indexed activationRegistry);
-    event CitizenMinted(address indexed citizen, uint256 indexed seatId, uint32 cohortArbanId, bytes32 ethicsHash);
+    event CitizenMinted(address indexed citizen, uint256 indexed seatId, bytes32 indexed nationId, uint32 cohortArbanId);
     event InitialLockHookCalled(uint256 indexed seatId, bool ok);
 
-    constructor(address acceptanceRegistry_) {
+    constructor(
+        address acceptanceRegistry_,
+        address nationRegistry_,
+        address coreLaw_
+    ) {
         if (acceptanceRegistry_ == address(0)) revert ZeroAddress();
+        if (nationRegistry_ == address(0)) revert ZeroAddress();
+        if (coreLaw_ == address(0)) revert ZeroAddress();
+        
         owner = msg.sender;
         acceptance = IConstitutionAcceptanceRegistry(acceptanceRegistry_);
+        nationRegistry = NationRegistry(nationRegistry_);
+        coreLaw = CoreLaw(coreLaw_);
+        
         emit OwnerChanged(address(0), msg.sender);
     }
 
@@ -99,17 +104,16 @@ contract CitizenRegistry {
         if (seatSbt_ == address(0)) revert ZeroAddress();
         // set-once (чтобы issuer никогда не подменили)
         require(address(seatSbt) == address(0), "SEAT_SBT_ALREADY_SET");
-        seatSbt = ISeatSBT(seatSbt_);
+        seatSbt = ISeatSBTIssuer(seatSbt_);
         emit SeatSBTSet(seatSbt_);
     }
 
     function setWalletRegistry(address walletRegistry_) external onlyOwner {
         if (walletRegistry_ == address(0)) revert ZeroAddress();
         if (address(walletRegistry) != address(0)) revert WalletRegistryAlreadySet();
-        walletRegistry = IAltanWalletRegistry(walletRegistry_);
+        walletRegistry = IAltanWalletRegistryIssuer(walletRegistry_);
         emit WalletRegistrySet(walletRegistry_);
     }
-
 
     function setActivationRegistry(address activationRegistry_) external onlyOwner {
         // optional, can be zero
@@ -128,13 +132,13 @@ contract CitizenRegistry {
     /**
      * Self-registration:
      * 1) требует принятия Конституции (acceptance)
-     * 2) mint SeatSBT (неизымаемо)
-     * 3) записывает политические атрибуты
-     * 4) (опционально) дергает ActivationRegistry.setInitialLocked(seatId, reasonDoc)
-     *
-     * reasonDoc: хеш документа основания (заявление, доказательства, офчейн KYC, протокол арбана и т.д.)
+     * 2) проверяет существование NationId
+     * 3) mint SeatSBT (неизымаемо)
+     * 4) создаёт AltanWallet
+     * 5) (опционально) дергает ActivationRegistry
      */
     function registerSelf(
+        bytes32 nationId,
         uint32 cohortArbanId,
         uint16 civ,
         uint16 dom,
@@ -144,14 +148,23 @@ contract CitizenRegistry {
     ) external returns (uint256 seatId) {
         if (address(seatSbt) == address(0)) revert ZeroAddress();
         if (!acceptance.hasAccepted(msg.sender)) revert NotAcceptedConstitution();
-
         if (seatOf[msg.sender] != 0) revert AlreadyHasSeat();
+
+        // Проверка нации
+        try nationRegistry.getNation(nationId) returns (NationRegistry.Nation memory nation) {
+            if (!nation.active) revert NationNotActive();
+        } catch {
+            revert NationNotFound();
+        }
 
         seatId = nextSeatId++;
         // extra safety
         if (seatSbt.exists(seatId)) revert SeatAlreadyExists();
 
+        // Mint SeatSBT (Soulbound Token)
         seatSbt.mintSeat(msg.sender, seatId, cohortArbanId, 3);
+        
+        // Create Sovereign Wallet
         if (address(walletRegistry) == address(0)) revert WalletRegistryNotSet();
         walletRegistry.createWallet(seatId);
 
@@ -159,6 +172,7 @@ contract CitizenRegistry {
         ownerOfSeat[seatId] = msg.sender;
 
         metaOf[seatId] = CitizenMeta({
+            nationId: nationId,
             cohort_arban_id: cohortArbanId,
             civ: civ,
             dom: dom,
@@ -167,17 +181,17 @@ contract CitizenRegistry {
             exists: true
         });
 
-        emit CitizenMinted(msg.sender, seatId, cohortArbanId, ethicsHash);
+        emit CitizenMinted(msg.sender, seatId, nationId, cohortArbanId);
 
         _tryInitialLockHook(seatId, reasonDoc);
     }
 
     /**
      * Admin issuance (на MVP полезно для первичной загрузки граждан).
-     * Конституционное требование acceptance сохраняется: гражданин обязан принять Конституцию.
      */
     function registerByOwner(
         address citizen,
+        bytes32 nationId,
         uint32 cohortArbanId,
         uint16 civ,
         uint16 dom,
@@ -190,6 +204,13 @@ contract CitizenRegistry {
         if (!acceptance.hasAccepted(citizen)) revert NotAcceptedConstitution();
         if (seatOf[citizen] != 0) revert AlreadyHasSeat();
 
+        // Проверка нации
+        try nationRegistry.getNation(nationId) returns (NationRegistry.Nation memory nation) {
+            if (!nation.active) revert NationNotActive();
+        } catch {
+            revert NationNotFound();
+        }
+
         seatId = nextSeatId++;
         if (seatSbt.exists(seatId)) revert SeatAlreadyExists();
 
@@ -201,6 +222,7 @@ contract CitizenRegistry {
         ownerOfSeat[seatId] = citizen;
 
         metaOf[seatId] = CitizenMeta({
+            nationId: nationId,
             cohort_arban_id: cohortArbanId,
             civ: civ,
             dom: dom,
@@ -209,20 +231,13 @@ contract CitizenRegistry {
             exists: true
         });
 
-        emit CitizenMinted(citizen, seatId, cohortArbanId, ethicsHash);
+        emit CitizenMinted(citizen, seatId, nationId, cohortArbanId);
 
         _tryInitialLockHook(seatId, reasonDoc);
     }
 
     /* ===================== Optional ActivationRegistry hook ===================== */
 
-    /**
-     * Если ActivationRegistry поддерживает функцию:
-     *   setInitialLocked(uint256 seatId, bytes32 reasonDoc)
-     * то мы её вызовем.
-     *
-     * Если не поддерживает — ничего страшного: LOCKED должен быть дефолтом (0).
-     */
     function _tryInitialLockHook(uint256 seatId, bytes32 reasonDoc) internal {
         if (activationRegistry == address(0)) return;
 

@@ -328,7 +328,11 @@ contract AltanBankOfSiberia is AccessControl {
         if (toAcc.status != AccountStatus.ACTIVE) revert AccountNotActive();
 
         // Transfer from correspondent account
-        altan.safeTransferFrom(corrAccount, toAcc.owner, amount);
+        if (corrAccount == address(this)) {
+            altan.safeTransfer(toAcc.owner, amount);
+        } else {
+            altan.safeTransferFrom(corrAccount, toAcc.owner, amount);
+        }
 
         toAcc.lastActivityAt = uint64(block.timestamp);
 

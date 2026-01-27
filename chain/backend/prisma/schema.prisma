@@ -1,0 +1,466 @@
+// This is the Prisma schema file for INOMAD KHURAL / ALTAN platform
+// Database: PostgreSQL
+// ORM: Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ====================================
+// CORE USER & IDENTITY
+// ====================================
+
+enum UserRole {
+  CITIZEN
+  LEADER
+  ADMIN
+}
+
+enum WalletStatus {
+  LOCKED
+  PENDING
+  UNLOCKED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  seatId    String   @unique // On-chain SeatSBT reference
+  role      UserRole @default(CITIZEN)
+  walletStatus WalletStatus @default(LOCKED)
+  
+  // Registration Data
+  birthPlace     Json?   // { country, region, district, city }
+  currentAddress Json?
+  ethnicity      String[]
+  clan           String?
+  
+  // Verification State
+  verificationStatus VerificationStatus @default(DRAFT)
+  isSuperVerified    Boolean @default(false)
+  superVerifiedBy   String? // Seat ID of the Founder Mandate holder
+  
+  // Organization membership
+  organizationId String?
+  organization   Guild?  @relation("OrganizationMembers", fields: [organizationId], references: [id])
+  
+  // Relations
+  khuralSeats      KhuralSeat[]
+  guildMemberships GuildMember[]
+  tasksCreated     Task[]        @relation("TaskCreator")
+  tasksAssigned    Task[]        @relation("TaskAssignee")
+  altanLedger      AltanLedger?
+  
+  // Unlock Ceremony
+  unlockRequest    UnlockRequest?
+  approvalsGiven   UnlockApproval[]
+  
+  // Verifications received (Standard 3-local rule)
+  verificationsReceived Verification[] @relation("TargetUser")
+  verificationsIssued   Verification[] @relation("VerifierUser")
+
+  // Transaction History
+  sentTransactions     AltanTransaction[] @relation("SentTransactions")
+  receivedTransactions AltanTransaction[] @relation("ReceivedTransactions")
+  auditLogs            AuditLog[]
+  
+  // History & Council
+  proposedHistoryVersions KhuralEventVersion[] @relation("HistoryProposer")
+  councilVotes            CouncilVote[]        @relation("CouncilVoter")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([seatId])
+  @@index([organizationId])
+  @@index([verificationStatus])
+}
+
+enum VerificationStatus {
+  DRAFT
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Verification {
+  id             String   @id @default(uuid())
+  
+  targetUserId   String
+  targetUser     User     @relation("TargetUser", fields: [targetUserId], references: [id])
+  
+  verifierUserId String
+  verifierUser   User     @relation("VerifierUser", fields: [verifierUserId], references: [id])
+  
+  createdAt      DateTime @default(now())
+  
+  @@unique([targetUserId, verifierUserId])
+}
+
+// ====================================
+// KHURAL GOVERNANCE SYSTEM
+// ====================================
+
+model KhuralGroup {
+  id       String      @id @default(uuid())
+  level    KhuralLevel
+  name     String
+  
+  // Hierarchy
+  parentGroupId String?
+  parentGroup   KhuralGroup?  @relation("GroupHierarchy", fields: [parentGroupId], references: [id])
+  childGroups   KhuralGroup[] @relation("GroupHierarchy")
+  
+  // Seats (always 10)
+  seats KhuralSeat[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([level])
+  @@index([parentGroupId])
+}
+
+enum KhuralLevel {
+  ARBAN    // 10 people
+  ZUUN     // 100 people (10 Arbans)
+  MYANGAN  // 1000 people (10 Zuuns)
+  TUMEN    // 10000 people (10 Myangans)
+}
+
+model KhuralSeat {
+  id    String @id @default(uuid())
+  index Int    // 0-9 (position in circle)
+  
+  // Group reference
+  groupId String
+  group   KhuralGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  
+  // Occupant (nullable = empty seat)
+  occupantUserId String?
+  occupant       User?   @relation(fields: [occupantUserId], references: [id])
+  
+  // Seat metadata
+  isLeaderSeat Boolean @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([groupId, index]) // Enforce unique seat positions
+  @@index([groupId])
+  @@index([occupantUserId])
+}
+
+// ====================================
+// GUILDS & ORGANIZATIONS
+// ====================================
+
+model Guild {
+  id          String    @id @default(uuid())
+  type        GuildType
+  name        String
+  description String?
+  
+  // For profession guilds
+  professionId String?
+  profession   Profession? @relation(fields: [professionId], references: [id])
+  
+  // Members
+  members GuildMember[]
+  
+  // For organizations
+  organizationMembers User[] @relation("OrganizationMembers")
+  
+  // Tasks posted by this guild
+  tasks Task[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([type])
+  @@index([professionId])
+}
+
+enum GuildType {
+  CLAN         // Kinship-based
+  PROFESSION   // Skill-based
+  ORGANIZATION // Company/cooperative
+  GOVERNMENT   // State unit
+}
+
+model GuildMember {
+  id     String @id @default(uuid())
+  
+  guildId String
+  guild   Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  role           MemberRole @default(MEMBER)
+  
+  // Competence / Meritocracy
+  professionRank Int?       // Visual Rank (1=Wood, 2=Iron, etc.)
+  level          Int @default(1) // 1-100
+  xp             Int @default(0) // Experience Points
+
+  
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([guildId, userId]) // User can only be in guild once
+  @@index([guildId])
+  @@index([userId])
+}
+
+enum MemberRole {
+  MEMBER
+  OFFICER
+  LEADER
+}
+
+// ====================================
+// PROFESSIONS SYSTEM
+// ====================================
+
+model Profession {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  
+  // Associated guild
+  guilds Guild[]
+  
+  // Tasks requiring this profession
+  tasks Task[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([name])
+}
+
+// ====================================
+// TASKS & CONTRACTS
+// ====================================
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+  
+  // Profession requirement
+  professionId String?
+  profession   Profession? @relation(fields: [professionId], references: [id])
+  
+  // Reward
+  rewardAltan Decimal @db.Decimal(18, 6)
+  
+  // Status
+  status TaskStatus @default(OPEN)
+  
+  // Assignment
+  assignedUserId String?
+  assignedUser   User?   @relation("TaskAssignee", fields: [assignedUserId], references: [id])
+  
+  // Creator (organization/guild)
+  createdByUserId String
+  createdBy       User   @relation("TaskCreator", fields: [createdByUserId], references: [id])
+  
+  postedByGuildId String?
+  postedByGuild   Guild?  @relation(fields: [postedByGuildId], references: [id])
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+  
+  @@index([status])
+  @@index([professionId])
+  @@index([assignedUserId])
+  @@index([postedByGuildId])
+}
+
+enum TaskStatus {
+  OPEN
+  TAKEN
+  COMPLETED
+  CANCELLED
+}
+
+// ====================================
+// ALTAN LEDGER (OFF-CHAIN MIRROR)
+// ====================================
+
+model AltanLedger {
+  id     String @id @default(uuid())
+  
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  balance Decimal @default(0) @db.Decimal(18, 6)
+  
+  // Sync tracking
+  lastSyncedBlock BigInt?
+  lastSyncedAt    DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model AltanTransaction {
+  id        String   @id @default(uuid())
+  
+  fromUserId String? // Nullable for system mints
+  fromUser   User?   @relation("SentTransactions", fields: [fromUserId], references: [id])
+  
+  toUserId   String? // Nullable for system burns
+  toUser     User?   @relation("ReceivedTransactions", fields: [toUserId], references: [id])
+  
+  amount     Decimal @db.Decimal(18, 6)
+  type       TransactionType
+  status     TransactionStatus @default(COMPLETED)
+  
+  // On-chain link
+  txHash     String?
+  blockNumber BigInt?
+  
+  createdAt  DateTime @default(now())
+  
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([type])
+}
+
+enum TransactionType {
+  TRANSFER
+  MINT
+  BURN
+  REWARD
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// Module C: Audit & History
+model AuditLog {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  userId       String?
+  action       String   // e.g. "auth.login", "altan.transfer"
+  resourceType String?  // e.g. "User", "AltanTransaction"
+  resourceId   String?
+  metadata     Json?    // Context details
+  ipAddress    String?
+  userAgent    String?
+  hash         String?  // Integrity hash 
+
+  user         User?    @relation(fields: [userId], references: [id])
+}
+
+model KhuralEvent {
+  id          String   @id @default(uuid())
+  date        DateTime @default(now())
+  title       String
+  description String
+  type        KhuralEventType
+  
+  // High-level public status
+  isVerified  Boolean  @default(false)
+  
+  // Versioning (The Timeline)
+  versions    KhuralEventVersion[]
+  
+  // Optional relations
+  relatedProposalId String?
+}
+
+model KhuralEventVersion {
+  id          String   @id @default(uuid())
+  eventId     String
+  event       KhuralEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String
+  
+  // Who wrote this history?
+  proposedByUserId String
+  proposedByUser   User   @relation("HistoryProposer", fields: [proposedByUserId], references: [id])
+  
+  // Council Validation
+  isApproved       Boolean @default(false)
+  approvedAt       DateTime?
+  
+  votes            CouncilVote[]
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([eventId])
+}
+
+model CouncilVote {
+  id          String   @id @default(uuid())
+  
+  versionId   String
+  version     KhuralEventVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  
+  voterUserId String
+  voterUser   User   @relation("CouncilVoter", fields: [voterUserId], references: [id])
+  
+  vote        Boolean // true = APPROVE, false = REJECT
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([versionId, voterUserId])
+}
+
+enum KhuralEventType {
+  SESSION_START
+  DECREE_SIGNED
+  APPOINTMENT
+  AMENDMENT
+  EMERGENCY
+}
+
+// ====================================
+// MODULE: UNLOCK CEREMONY (SOVEREIGNTY)
+// ====================================
+
+model UnlockRequest {
+  id        String   @id @default(uuid())
+  
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status    WalletStatus @default(PENDING)
+  
+  approvals UnlockApproval[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model UnlockApproval {
+  id             String   @id @default(uuid())
+  
+  requestId      String
+  request        UnlockRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  
+  approverUserId String
+  approver       User          @relation(fields: [approverUserId], references: [id])
+  
+  createdAt      DateTime @default(now())
+  
+  @@unique([requestId, approverUserId]) // One approval per user per request
+}
