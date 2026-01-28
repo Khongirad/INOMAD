@@ -17,6 +17,16 @@ interface IConstitutionAcceptanceRegistry {
     function hasAccepted(address who) external view returns (bool);
 }
 
+interface IVerificationJustice {
+    function canVerify(address verifier) external view returns (bool);
+    function recordVerification(address verifier, uint256 seatId) external;
+}
+
+interface IVerificationLimits {
+    function canVerifyToday(address verifier) external view returns (bool);
+    function recordVerification(address verifier) external;
+}
+
 /**
  * @title CitizenRegistry
  * @notice Реестр граждан Сибирской Конфедерации
@@ -25,6 +35,7 @@ interface IConstitutionAcceptanceRegistry {
  * 2. Привязку к Нации (NationRegistry)
  * 3. Хранение политических метаданных (Арбан, Зун и т.д.)
  * 4. Создание AltanWallet (через WalletRegistry)
+ * 5. Tracking кто кого верифицировал (прозрачность)
  */
 contract CitizenRegistry {
     
@@ -38,7 +49,10 @@ contract CitizenRegistry {
     error WalletRegistryNotSet();
     error NationNotFound();
     error NationNotActive();
-    error InvalidArbanSize(); // Reserved for future validation
+    error InvalidArbanSize();
+    error VerifierSuspended();
+    error DailyLimitExceeded();
+    error NotAuthorizedVerifier();
 
     /* ===================== Owner (MVP) ===================== */
     address public owner;
@@ -54,12 +68,20 @@ contract CitizenRegistry {
     NationRegistry public immutable nationRegistry;
     CoreLaw public immutable coreLaw;
     
+    // Verification system integration
+    IVerificationJustice public verificationJustice;
+    IVerificationLimits public verificationLimits;
+    
     address public activationRegistry; // optional hook target
 
     /* ===================== Seat bookkeeping ===================== */
     uint256 public nextSeatId = 1;
     mapping(address => uint256) public seatOf;     // one human -> one seatId
     mapping(uint256 => address) public ownerOfSeat; // seatId -> human
+    
+    // VERIFICATION CHAIN TRANSPARENCY
+    mapping(uint256 => address) public verifiedBy;  // seatId -> verifier address
+    mapping(uint256 => uint256) public verifiedAt;  // seatId -> timestamp
 
     /* ===================== Political metadata ===================== */
     struct CitizenMeta {
@@ -125,6 +147,14 @@ contract CitizenRegistry {
         if (newOwner == address(0)) revert ZeroAddress();
         emit OwnerChanged(owner, newOwner);
         owner = newOwner;
+    }
+    
+    function setVerificationJustice(address justice_) external onlyOwner {
+        verificationJustice = IVerificationJustice(justice_);
+    }
+    
+    function setVerificationLimits(address limits_) external onlyOwner {
+        verificationLimits = IVerificationLimits(limits_);
     }
 
     /* ===================== Core issuance ===================== */

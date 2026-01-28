@@ -40,6 +40,17 @@ contract AltanBankOfSiberia is AccessControl {
 
     // Correspondent account (receives emission from CB)
     address public corrAccount;
+    
+    // Distribution Pool (for distributing to new citizens)
+    address public distributionPool;
+    
+    // Sovereign Wealth Fund (pension fund - remainder goes here)
+    address public sovereignFund;
+    
+    // Citizen distribution tracking
+    uint256 public perCitizenAmount;           // Initial amount per verified citizen
+    uint256 public totalDistributed;           // Total distributed to citizens
+    mapping(uint256 => bool) public hasReceivedDistribution;  // seatId => received
 
     // ============ ACCOUNT MANAGEMENT ============
 
@@ -84,6 +95,9 @@ contract AltanBankOfSiberia is AccessControl {
 
     event CentralBankSet(address indexed oldCB, address indexed newCB);
     event CorrAccountSet(address indexed oldCorr, address indexed newCorr);
+    event DistributionPoolSet(address indexed oldPool, address indexed newPool);
+    event SovereignFundSet(address indexed oldFund, address indexed newFund);
+    event PerCitizenAmountSet(uint256 oldAmount, uint256 newAmount);
 
     event AccountOpened(
         uint256 indexed accountId,
@@ -98,6 +112,8 @@ contract AltanBankOfSiberia is AccessControl {
     event Deposit(uint256 indexed accountId, address indexed from, uint256 amount);
     event Withdrawal(uint256 indexed accountId, address indexed to, uint256 amount);
     event InternalTransfer(uint256 indexed fromAccount, uint256 indexed toAccount, uint256 amount);
+    event CitizenDistributed(uint256 indexed seatId, uint256 indexed accountId, uint256 amount);
+    event FundTransferred(address indexed fund, uint256 amount, string reason);
 
     event DailyLimitSet(uint256 oldLimit, uint256 newLimit);
     event SingleTxLimitSet(uint256 oldLimit, uint256 newLimit);
@@ -162,6 +178,36 @@ contract AltanBankOfSiberia is AccessControl {
         address oldCB = centralBank;
         centralBank = newCB;
         emit CentralBankSet(oldCB, newCB);
+    }
+    
+    /**
+     * @notice Set distribution pool address
+     */
+    function setDistributionPool(address newPool) external onlyRole(CHAIRMAN_ROLE) {
+        if (newPool == address(0)) revert ZeroAddress();
+        address oldPool = distributionPool;
+        distributionPool = newPool;
+        emit DistributionPoolSet(oldPool, newPool);
+    }
+    
+    /**
+     * @notice Set sovereign wealth fund address
+     */
+    function setSovereignFund(address newFund) external onlyRole(CHAIRMAN_ROLE) {
+        if (newFund == address(0)) revert ZeroAddress();
+        address oldFund = sovereignFund;
+        sovereignFund = newFund;
+        emit SovereignFundSet(oldFund, newFund);
+    }
+    
+    /**
+     * @notice Set per-citizen distribution amount
+     * @dev This is the initial amount each verified citizen receives
+     */
+    function setPerCitizenAmount(uint256 newAmount) external onlyRole(CHAIRMAN_ROLE) {
+        uint256 oldAmount = perCitizenAmount;
+        perCitizenAmount = newAmount;
+        emit PerCitizenAmountSet(oldAmount, newAmount);
     }
 
     // ============ ACCOUNT MANAGEMENT ============
@@ -414,6 +460,65 @@ contract AltanBankOfSiberia is AccessControl {
         }
 
         dailyWithdrawn[accountId] += amount;
+    }
+
+    // ============ CITIZEN DISTRIBUTION ============
+
+    /**
+     * @notice Distribute ALTAN to a newly verified citizen
+     * @dev Auto-called when citizen becomes verified
+     * @param seatId Citizen's SeatSBT ID
+     * @param accountId Citizen's bank account ID
+     */
+    function distributeToNewCitizen(
+        uint256 seatId,
+        uint256 accountId
+    ) external onlyRole(OFFICER_ROLE) {
+        if (seatId == 0) revert ZeroAmount();
+        if (perCitizenAmount == 0) revert ZeroAmount();
+        if (distributionPool == address(0)) revert ZeroAddress();
+
+        // Check if already received
+        if (hasReceivedDistribution[seatId]) {
+            revert("Already received distribution");
+        }
+
+        BankAccount storage acc = accounts[accountId];
+        if (acc.owner == address(0)) revert AccountNotFound();
+        if (acc.status != AccountStatus.ACTIVE) revert AccountNotActive();
+        if (acc.seatId != seatId) revert("Account seatId mismatch");
+
+        // Transfer from distribution pool
+        altan.safeTransferFrom(distributionPool, acc.owner, perCitizenAmount);
+
+        // Mark as distributed
+        hasReceivedDistribution[seatId] = true;
+        totalDistributed += perCitizenAmount;
+
+        acc.lastActivityAt = uint64(block.timestamp);
+
+        emit CitizenDistributed(seatId, accountId, perCitizenAmount);
+        emit Deposit(accountId, distributionPool, perCitizenAmount);
+    }
+
+    /**
+     * @notice Transfer remaining balance from distribution pool to Sovereign Wealth Fund
+     * @dev Called after initial citizen distribution is complete
+     * @param amount Amount to transfer to fund
+     * @param reason Reason for transfer (e.g., "Initial distribution complete")
+     */
+    function transferToSovereignFund(
+        uint256 amount,
+        string calldata reason
+    ) external onlyRole(CHAIRMAN_ROLE) {
+        if (amount == 0) revert ZeroAmount();
+        if (distributionPool == address(0)) revert ZeroAddress();
+        if (sovereignFund == address(0)) revert ZeroAddress();
+
+        // Transfer from distribution pool to sovereign fund
+        altan.safeTransferFrom(distributionPool, sovereignFund, amount);
+
+        emit FundTransferred(sovereignFund, amount, reason);
     }
 
     // ============ VIEW FUNCTIONS ============
