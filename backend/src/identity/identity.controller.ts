@@ -1,12 +1,14 @@
 import { Controller, Post, Body, Get, Param, UseGuards, Request } from '@nestjs/common';
 import { RegistrationService } from './registration.service';
 import { VerificationService } from './verification.service';
+import { IdentityBlockchainService } from './identity-blockchain.service';
 
 @Controller('identity')
 export class IdentityController {
   constructor(
     private registrationService: RegistrationService,
-    private verificationService: VerificationService
+    private verificationService: VerificationService,
+    private identityBlockchain: IdentityBlockchainService,
   ) {}
 
   @Post('register')
@@ -34,5 +36,25 @@ export class IdentityController {
   async superVerify(@Request() req: any, @Body() body: { targetUserId: string; justification: string }) {
     const mandateSeatId = req.user?.seatId;
     return this.verificationService.superVerify(mandateSeatId, body.targetUserId, body.justification);
+  }
+
+  @Get('blockchain-status/:seatId')
+  async getBlockchainStatus(@Param('seatId') seatId: string) {
+    return this.identityBlockchain.getOnChainStatus(seatId);
+  }
+
+  @Get('verification-progress/:userId')
+  async getVerificationProgress(@Param('userId') userId: string) {
+    return this.identityBlockchain.getVerificationProgress(userId);
+  }
+
+  @Post('sync/:userId')
+  async syncFromBlockchain(@Param('userId') userId: string) {
+    return this.identityBlockchain.syncUserFromBlockchain(userId);
+  }
+
+  @Get('audit/:userId')
+  async auditUserState(@Param('userId') userId: string) {
+    return this.identityBlockchain.auditUserState(userId);
   }
 }

@@ -1,6 +1,7 @@
-import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { VerificationStatus } from '@prisma/client';
+import { BlockchainService } from '../blockchain/blockchain.service';
 
 @Injectable()
 export class VerificationService {
@@ -18,7 +19,12 @@ export class VerificationService {
     'MANDATE-010'
   ];
 
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(VerificationService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private blockchain: BlockchainService,
+  ) {}
 
   /**
    * Standard Verification: Requires 3 verified locals.
@@ -85,6 +91,15 @@ export class VerificationService {
           walletStatus: 'UNLOCKED'
         }
       });
+
+      // Check on-chain activation status (informational)
+      if (target.seatId && this.blockchain.isAvailable()) {
+        const isActivated = await this.blockchain.isActivated(target.seatId);
+        this.logger.log(
+          `Citizen ${target.seatId} verified in DB. On-chain activated: ${isActivated}`
+        );
+        // TODO: Trigger on-chain activation when gas sponsorship is ready
+      }
     }
 
     return { count, threshold: 3, verified: count >= 3 };
