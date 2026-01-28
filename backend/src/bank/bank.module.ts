@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
+import { BlockchainModule } from '../blockchain/blockchain.module';
 import { BankAuthController } from './bank-auth.controller';
 import { BankAuthService } from './bank-auth.service';
 import { BankAuthGuard } from './bank-auth.guard';
@@ -9,6 +10,7 @@ import { BankController } from './bank.controller';
 import { BankService } from './bank.service';
 import { BankFeeService } from './bank-fee.service';
 import { BankRewardService } from './bank-reward.service';
+import { BankBlockchainService } from './bank-blockchain.service';
 
 function parseExpiryToSeconds(expiry: string): number {
   const match = expiry.match(/^(\d+)(s|m|h|d)$/);
@@ -40,6 +42,7 @@ function parseExpiryToSeconds(expiry: string): number {
   imports: [
     ConfigModule,
     PrismaModule,
+    BlockchainModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -59,6 +62,7 @@ function parseExpiryToSeconds(expiry: string): number {
     BankService,
     BankFeeService,
     BankRewardService,
+    BankBlockchainService,
   ],
   // Export ONLY BankRewardService — limited to system-initiated transfers.
   // BankService (balance, history, user transfers) is NEVER exported.

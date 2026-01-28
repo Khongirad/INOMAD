@@ -57,6 +57,8 @@ export class AuthModule {
         { path: 'auth/logout-all', method: RequestMethod.POST },
         // Exclude bank endpoints (bank module handles its own auth)
         { path: 'bank/(.*)', method: RequestMethod.ALL },
+        // Exclude E2E test endpoints (public for testing)
+        { path: 'e2e/(.*)', method: RequestMethod.ALL },
       )
       .forRoutes('*');
   }
