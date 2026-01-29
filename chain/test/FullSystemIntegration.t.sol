@@ -63,14 +63,15 @@ contract FullSystemIntegrationTest is Test {
         
         // 1. Deploy CoreLaw & CoreLock
         coreLaw = new CoreLaw();
-        coreLock = new CoreLock(address(coreLaw));
+        coreLock = new CoreLock(governor, address(coreLaw));
         
         // 2. Deploy Altan
         altan = new Altan(
             address(coreLaw),
             address(this), // khural placeholder
             address(this), // centralBank placeholder
-            address(this)  // treasury placeholder
+            address(this), // treasury placeholder
+            1_000_000_000 * 1e6  // 1B maxSupply
         );
         
         // 3. Deploy Monetary
@@ -98,7 +99,7 @@ contract FullSystemIntegrationTest is Test {
         chairman = new ExecutiveChairman(address(khural));
         
         // 7. Deploy Judicial
-        supremeCourt = new SupremeCourt(governor);
+        supremeCourt = new SupremeCourt();
         judicialReview = new JudicialReview(
             address(supremeCourt),
             address(khural),
