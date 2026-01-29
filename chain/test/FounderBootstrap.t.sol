@@ -8,6 +8,7 @@ import "../contracts/CoreLaw.sol";
 import "../contracts/SeatSBT.sol";
 import "../contracts/NationRegistry.sol";
 import "../contracts/ConstitutionAcceptanceRegistry.sol";
+import "../contracts/AltanWalletRegistry.sol";
 
 /**
  * @title FounderBootstrapTest
@@ -20,6 +21,7 @@ contract FounderBootstrapTest is Test {
     SeatSBT public seatSbt;
     NationRegistry public nationRegistry;
     ConstitutionAcceptanceRegistry public acceptance;
+    AltanWalletRegistry public walletRegistry;
     
     address public khural = address(this);
     address public founder = address(0x1);
@@ -61,11 +63,28 @@ contract FounderBootstrapTest is Test {
         
         // Grant bootstrap contract permission to mint seats
         seatSbt.setIssuer(address(bootstrap), true);
+        
+        // Transfer CitizenRegistry ownership to bootstrap so it can call registerByOwner
+        citizenRegistry.transferOwnership(address(bootstrap));
+        
+        // Create and configure WalletRegistry
+        walletRegistry = new AltanWalletRegistry(address(seatSbt));
+        
+        // Transfer walletRegistry ownership to bootstrap
+        walletRegistry.transferOwnership(address(bootstrap));
+        
+        // Set wallet registry in CitizenRegistry (bootstrap owns both now)
+        vm.prank(address(bootstrap));
+        citizenRegistry.setWalletRegistry(address(walletRegistry));
     }
     
     /* ==================== BOOTSTRAP TESTS ==================== */
     
     function test_BootstrapFounder() public {
+        // Founder must accept constitution first
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         uint256 seatId = bootstrap.bootstrapFounder(
             founder,
             NATION_ID,
@@ -79,8 +98,13 @@ contract FounderBootstrapTest is Test {
         assertTrue(bootstrap.isBootstrapActive(), "Bootstrap should be active");
     }
     
-    function testFail_BootstrapTwice() public {
+    function test_RevertWhen_BootstrapTwice() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
+        
+        vm.expectRevert();
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH); // Should fail
     }
     
@@ -88,6 +112,9 @@ contract FounderBootstrapTest is Test {
     
     function test_VerifyInEpoch0() public {
         // Bootstrap founder
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         // Founder verifies citizen
@@ -107,6 +134,9 @@ contract FounderBootstrapTest is Test {
     }
     
     function test_RemainingVerifications() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         assertEq(bootstrap.getRemainingVerifications(), 100, "Should have 100 remaining");
@@ -119,6 +149,9 @@ contract FounderBootstrapTest is Test {
     }
     
     function test_Verify10InEpoch0() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         // Verify 10 citizens
@@ -137,6 +170,9 @@ contract FounderBootstrapTest is Test {
     /* ==================== EPOCH TRANSITION TESTS ==================== */
     
     function test_EpochTransition() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         assertEq(bootstrap.getCurrentEpoch(), 0, "Should start in epoch 0");
@@ -148,6 +184,9 @@ contract FounderBootstrapTest is Test {
     }
     
     function test_Verify10InMultipleEpochs() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         // Epoch 0: Verify 10 citizens
@@ -180,6 +219,9 @@ contract FounderBootstrapTest is Test {
     }
     
     function test_MultipleEpochTransitions() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         // Verify across 3 epochs
@@ -205,6 +247,9 @@ contract FounderBootstrapTest is Test {
     /* ==================== EPOCH STATS TESTS ==================== */
     
     function test_GetEpochStats() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         uint64 bootstrapTime = uint64(block.timestamp);
         
@@ -218,6 +263,9 @@ contract FounderBootstrapTest is Test {
     }
     
     function test_TimeRemainingInEpoch() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         uint256 timeRemaining = bootstrap.getTimeRemainingInEpoch();
@@ -231,16 +279,21 @@ contract FounderBootstrapTest is Test {
     
     /* ==================== SECURITY TESTS ==================== */
     
-    function testFail_NonFounderCannotVerify() public {
+    function test_RevertWhen_NonFounderCannotVerify() public {
+        vm.prank(founder);
+        acceptance.acceptDirect(0);
+        
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         // Non-founder tries to verify
+        vm.expectRevert();
         vm.prank(citizen1);
         bootstrap.verifyNewCitizen(citizen2, NATION_ID, ARBAN_ID, ETHICS_HASH);
         // Should fail
     }
     
-    function testFail_VerifyBeforeBootstrap() public {
+    function test_RevertWhen_VerifyBeforeBootstrap() public {
+        vm.expectRevert();
         vm.prank(founder);
         bootstrap.verifyNewCitizen(citizen1, NATION_ID, ARBAN_ID, ETHICS_HASH);
         // Should fail - not bootstrapped

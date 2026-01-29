@@ -80,7 +80,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max); // Approve max to cover fees
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -111,7 +111,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -152,7 +152,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 totalAmount = sellerAmount + platformAmount + courierAmount;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), totalAmount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](3);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -198,7 +198,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -235,7 +235,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 refundAmount = 30 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), totalAmount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -273,7 +273,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -304,7 +304,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -387,7 +387,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -418,7 +418,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -451,7 +451,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -505,7 +505,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -532,7 +532,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
@@ -568,7 +568,7 @@ contract AltanPaymentGatewayTest is Test {
         uint256 amount = 100 * 1e6;
         
         vm.prank(buyer);
-        altan.approve(address(gateway), amount);
+        altan.approve(address(gateway), type(uint256).max);
         
         AltanPaymentGateway.PaymentSplit[] memory splits = new AltanPaymentGateway.PaymentSplit[](1);
         splits[0] = AltanPaymentGateway.PaymentSplit({
