@@ -52,7 +52,7 @@ contract ItemAuctionHouse {
     /* ==================== ERRORS ==================== */
     error NotOwner();
     error ListingNotFound();
-    error ListingExpired();
+    error ListingAlreadyExpired();
     error ListingNotExpired();
     error BidTooLow();
     error CannotBuyOwnItem();
