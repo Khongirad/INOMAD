@@ -233,6 +233,10 @@ contract FullSystemIntegrationTest is Test {
         (uint256 currentRate,) = keyRatePolicy.getCurrentRate();
         assertEq(currentRate, 700);  // 7%
         
+        
+        // Wait sufficient time before rate change (avoid TooFrequentChange)
+        vm.warp(block.timestamp + 30 days);
+        
         // 2. Propose rate change
         vm.prank(boardMember1);
         uint256 decisionId = keyRatePolicy.proposeRateChange(

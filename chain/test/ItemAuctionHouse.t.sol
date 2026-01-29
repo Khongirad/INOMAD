@@ -214,7 +214,7 @@ contract ItemAuctionHouseTest is Test {
         );
         
         vm.startPrank(bidder1);
-        altan.approve(address(auctionHouse), 1000 * 1e6);
+        altan.approve(address(gateway), type(uint256).max);
         auctionHouse.buyout(listingId);
         vm.stopPrank();
         
@@ -241,7 +241,7 @@ contract ItemAuctionHouseTest is Test {
         
         // Bidder2 buyouts (should refund bidder1)
         vm.startPrank(bidder2);
-        altan.approve(address(auctionHouse), 1000 * 1e6);
+        altan.approve(address(gateway), type(uint256).max);
         auctionHouse.buyout(listingId);
         vm.stopPrank();
         
@@ -279,7 +279,7 @@ contract ItemAuctionHouseTest is Test {
         );
         
         vm.startPrank(bidder1);
-        altan.approve(address(auctionHouse), 1000 * 1e6);
+        altan.approve(address(gateway), type(uint256).max);
         auctionHouse.placeBid(listingId, 120 * 1e6);
         vm.stopPrank();
         
@@ -393,7 +393,7 @@ contract ItemAuctionHouseTest is Test {
         );
         
         vm.startPrank(bidder1);
-        altan.approve(address(auctionHouse), 1000 * 1e6);
+        altan.approve(address(gateway), type(uint256).max);
         auctionHouse.buyout(listingId);
         vm.stopPrank();
         
