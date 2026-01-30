@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import {ArbanCompletion} from "./ArbanCompletion.sol";
 
 /**
  * @title AltanBankOfSiberia
@@ -46,6 +47,9 @@ contract AltanBankOfSiberia is AccessControl {
     
     // Sovereign Wealth Fund (pension fund - remainder goes here)
     address public sovereignFund;
+    
+    // ArbanCompletion contract reference (for tier eligibility)
+    ArbanCompletion public arbanCompletion;
     
     // Citizen distribution tracking
     uint256 public perCitizenAmount;           // Initial amount per verified citizen
@@ -462,25 +466,105 @@ contract AltanBankOfSiberia is AccessControl {
         dailyWithdrawn[accountId] += amount;
     }
 
-    // ============ CITIZEN DISTRIBUTION ============
+    // ============ CITIZEN DISTRIBUTION (3-TIER MANUAL APPROVAL) ============
+    
+    bytes32 public constant BANKER_ROLE = keccak256("BANKER_ROLE");
+    
+    // Tier amounts (can be configured by chairman)
+    // Tier 1: Automatic on verification
+    uint256 public tier1Amount = 1_000 * 1e6;     // 1,000 ALTAN
+    
+    // Tier 2: Manual approval
+    // - Family Arban: Has at least 1 child
+    // - Org Arban: Has 10+ members
+    uint256 public tier2FamilyAmount = 5_000 * 1e6;    // 5,000 ALTAN for families
+    uint256 public tier2OrgAmount = 8_000 * 1e6;       // 8,000 ALTAN for orgs
+    
+    // Tier 3: Manual approval  
+    // - Family Arban: Married (eligible for Khural representative)
+    // - Org Arban: Leader elected
+    uint256 public tier3FamilyAmount = 11_241 * 1e6;   // 11,241 ALTAN for families
+    uint256 public tier3OrgAmount = 8_241 * 1e6;       // 8,241 ALTAN for orgs
+    
+    // Tier tracking per citizen
+    mapping(uint256 => mapping(uint256 => bool)) public hasReceivedTier; // seatId => tier => received
+    
+    enum ArbanType { NONE, FAMILY, ORG }  // Track which Arban type for distribution
+    
+    // Pending approvals queue
+    struct PendingDistribution {
+        uint256 seatId;
+        uint256 accountId;
+        uint256 tier;
+        ArbanType arbanType;    // Family or Organizational
+        uint256 arbanId;        // Arban ID
+        uint256 amount;
+        uint256 requestedAt;
+        bool approved;
+        bool rejected;
+        address approvedBy;
+        uint256 approvedAt;
+    }
+    
+    PendingDistribution[] public pendingDistributions;
+    mapping(uint256 => uint256[]) public pendingBySeatId; // seatId => pending indices
+    
+    event TierAmountSet(uint256 tier, uint256 newAmount);
+    event DistributionRequested(uint256 indexed seatId, uint256 indexed accountId, uint256 tier, uint256 amount);
+    event DistributionApproved(uint256 indexed seatId, uint256 indexed accountId, uint256 tier, uint256 amount, address indexed approvedBy);
+    event DistributionRejected(uint256 indexed seatId, uint256 tier, address indexed rejectedBy);
+    event TierDistributed(uint256 indexed seatId, uint256 indexed accountId, uint256 tier, uint256 amount);
 
     /**
-     * @notice Distribute ALTAN to a newly verified citizen
-     * @dev Auto-called when citizen becomes verified
+     * @notice Set ArbanCompletion contract address
+     * @dev Only chairman can set
+     */
+    function setArbanCompletion(address arbanCompletion_) external onlyRole(CHAIRMAN_ROLE) {
+        require(arbanCompletion_ != address(0), "Zero address");
+        arbanCompletion = ArbanCompletion(arbanCompletion_);
+    }
+    
+    /**
+     * @notice Set tier distribution amounts (separate for Family and Org)
+     * @dev Only chairman can configure amounts
+     */
+    function setTierAmounts(
+        uint256 tier1,
+        uint256 tier2Family,
+        uint256 tier2Org,
+        uint256 tier3Family,
+        uint256 tier3Org
+    ) external onlyRole(CHAIRMAN_ROLE) {
+        tier1Amount = tier1;
+        tier2FamilyAmount = tier2Family;
+        tier2OrgAmount = tier2Org;
+        tier3FamilyAmount = tier3Family;
+        tier3OrgAmount = tier3Org;
+        
+        emit TierAmountSet(1, tier1);
+        emit TierAmountSet(2, tier2Family);  // Family
+        emit TierAmountSet(2, tier2Org);     // Org  
+        emit TierAmountSet(3, tier3Family);  // Family
+        emit TierAmountSet(3, tier3Org);     // Org
+    }
+
+    /**
+     * @notice AUTO: Distribute Tier 1 to newly verified citizen
+     * @dev Called automatically on verification
      * @param seatId Citizen's SeatSBT ID
      * @param accountId Citizen's bank account ID
      */
-    function distributeToNewCitizen(
+    function distributeTier1Auto(
         uint256 seatId,
         uint256 accountId
     ) external onlyRole(OFFICER_ROLE) {
         if (seatId == 0) revert ZeroAmount();
-        if (perCitizenAmount == 0) revert ZeroAmount();
+        if (tier1Amount == 0) revert ZeroAmount();
         if (distributionPool == address(0)) revert ZeroAddress();
 
         // Check if already received
-        if (hasReceivedDistribution[seatId]) {
-            revert("Already received distribution");
+        if (hasReceivedTier[seatId][1]) {
+            revert("Already received Tier 1");
         }
 
         BankAccount storage acc = accounts[accountId];
@@ -488,17 +572,188 @@ contract AltanBankOfSiberia is AccessControl {
         if (acc.status != AccountStatus.ACTIVE) revert AccountNotActive();
         if (acc.seatId != seatId) revert("Account seatId mismatch");
 
-        // Transfer from distribution pool
-        altan.safeTransferFrom(distributionPool, acc.owner, perCitizenAmount);
+        // Automatic transfer for Tier 1
+        altan.safeTransferFrom(distributionPool, acc.owner, tier1Amount);
 
         // Mark as distributed
-        hasReceivedDistribution[seatId] = true;
-        totalDistributed += perCitizenAmount;
+        hasReceivedTier[seatId][1] = true;
+        totalDistributed += tier1Amount;
 
         acc.lastActivityAt = uint64(block.timestamp);
 
-        emit CitizenDistributed(seatId, accountId, perCitizenAmount);
-        emit Deposit(accountId, distributionPool, perCitizenAmount);
+        emit TierDistributed(seatId, accountId, 1, tier1Amount);
+        emit Deposit(accountId, distributionPool, tier1Amount);
+    }
+    
+    /**
+     * @notice REQUEST: Submit distribution request for manual approval (Tier 2 or 3)
+     * @dev Called when citizen becomes eligible for tier. Auto-detects Arban type.
+     * @param seatId Citizen's SeatSBT ID
+     * @param accountId Citizen's bank account ID
+     * @param tier Tier number (2 or 3)
+     */
+    function requestDistribution(
+        uint256 seatId,
+        uint256 accountId,
+        uint256 tier
+    ) external onlyRole(OFFICER_ROLE) {
+        require(tier == 2 || tier == 3, "Invalid tier (must be 2 or 3)");
+        require(!hasReceivedTier[seatId][tier], "Already received this tier");
+        require(address(arbanCompletion) != address(0), "ArbanCompletion not set");
+        
+        BankAccount storage acc = accounts[accountId];
+        require(acc.owner != address(0), "Account not found");
+        require(acc.seatId == seatId, "Account seatId mismatch");
+        
+        // Detect Arban type and verify eligibility
+        (ArbanCompletion.ArbanType arbanType, uint256 arbanId) = arbanCompletion.getArbanTypeForSeat(seatId);
+        
+        ArbanType distribType;
+        uint256 amount;
+        
+        if (arbanType == ArbanCompletion.ArbanType.FAMILY) {
+            distribType = ArbanType.FAMILY;
+            
+            // Verify eligibility for Family Arban
+            if (tier == 2) {
+                require(arbanCompletion.isEligibleForTier2(seatId), "Family not eligible for Tier 2 (needs children)");
+                amount = tier2FamilyAmount;
+            } else {
+                require(arbanCompletion.isEligibleForTier3(seatId), "Family not eligible for Tier 3 (needs Khural rep)");
+                amount = tier3FamilyAmount;
+            }
+        } else if (arbanType == ArbanCompletion.ArbanType.ORGANIZATIONAL) {
+            distribType = ArbanType.ORG;
+            
+            // Verify eligibility for Org Arban
+            if (tier == 2) {
+                require(arbanCompletion.isEligibleForTier2(seatId), "Org not eligible for Tier 2 (needs 10+ members)");
+                amount = tier2OrgAmount;
+            } else {
+                require(arbanCompletion.isEligibleForTier3(seatId), "Org not eligible for Tier 3 (needs leader)");
+                amount = tier3OrgAmount;
+            }
+        } else {
+            revert("Seat not in any Arban");
+        }
+        
+        // Create pending distribution
+        uint256 idx = pendingDistributions.length;
+        pendingDistributions.push(PendingDistribution({
+            seatId: seatId,
+            accountId: accountId,
+            tier: tier,
+            arbanType: distribType,
+            arbanId: arbanId,
+            amount: amount,
+            requestedAt: block.timestamp,
+            approved: false,
+            rejected: false,
+            approvedBy: address(0),
+            approvedAt: 0
+        }));
+        
+        pendingBySeatId[seatId].push(idx);
+        
+        emit DistributionRequested(seatId, accountId, tier, amount);
+    }
+
+    /**
+     * @notice APPROVE: Banker manually approves distribution (Tier 2 or 3)
+     * @dev Requires BANKER_ROLE
+     * @param pendingIdx Index in pendingDistributions array
+     */
+    function approveDistribution(uint256 pendingIdx) external onlyRole(BANKER_ROLE) {
+        require(pendingIdx < pendingDistributions.length, "Invalid index");
+        
+        PendingDistribution storage pending = pendingDistributions[pendingIdx];
+        require(!pending.approved, "Already approved");
+        require(!pending.rejected, "Already rejected");
+        
+        uint256 seatId = pending.seatId;
+        uint256 accountId = pending.accountId;
+        uint256 tier = pending.tier;
+        uint256 amount = pending.amount;
+        
+        // Check not already received
+        require(!hasReceivedTier[seatId][tier], "Already received this tier");
+        
+        BankAccount storage acc = accounts[accountId];
+        require(acc.owner != address(0), "Account not found");
+        require(acc.status == AccountStatus.ACTIVE, "Account not active");
+        
+        // Transfer from distribution pool
+        altan.safeTransferFrom(distributionPool, acc.owner, amount);
+        
+        // Mark as approved and distributed
+        pending.approved = true;
+        pending.approvedBy = msg.sender;
+        pending.approvedAt = block.timestamp;
+        
+        hasReceivedTier[seatId][tier] = true;
+        totalDistributed += amount;
+        
+        acc.lastActivityAt = uint64(block.timestamp);
+        
+        emit DistributionApproved(seatId, accountId, tier, amount, msg.sender);
+        emit TierDistributed(seatId, accountId, tier, amount);
+        emit Deposit(accountId, distributionPool, amount);
+    }
+    
+    /**
+     * @notice REJECT: Banker rejects distribution request
+     * @dev Requires BANKER_ROLE
+     */
+    function rejectDistribution(uint256 pendingIdx, string calldata reason) external onlyRole(BANKER_ROLE) {
+        require(pendingIdx < pendingDistributions.length, "Invalid index");
+        
+        PendingDistribution storage pending = pendingDistributions[pendingIdx];
+        require(!pending.approved, "Already approved");
+        require(!pending.rejected, "Already rejected");
+        
+        pending.rejected = true;
+        pending.approvedBy = msg.sender;
+        pending.approvedAt = block.timestamp;
+        
+        emit DistributionRejected(pending.seatId, pending.tier, msg.sender);
+    }
+    
+    /**
+     * @notice Get pending distributions count
+     */
+    function getPendingCount() external view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < pendingDistributions.length; i++) {
+            if (!pendingDistributions[i].approved && !pendingDistributions[i].rejected) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    /**
+     * @notice Get pending distributions for review
+     */
+    function getPendingDistributions() external view returns (PendingDistribution[] memory) {
+        // Count pending
+        uint256 count = 0;
+        for (uint256 i = 0; i < pendingDistributions.length; i++) {
+            if (!pendingDistributions[i].approved && !pendingDistributions[i].rejected) {
+                count++;
+            }
+        }
+        
+        // Collect pending
+        PendingDistribution[] memory result = new PendingDistribution[](count);
+        uint256 idx = 0;
+        for (uint256 i = 0; i < pendingDistributions.length; i++) {
+            if (!pendingDistributions[i].approved && !pendingDistributions[i].rejected) {
+                result[idx] = pendingDistributions[i];
+                idx++;
+            }
+        }
+        
+        return result;
     }
 
     /**
@@ -626,5 +881,20 @@ contract AltanBankOfSiberia is AccessControl {
      */
     function removeTeller(address teller) external onlyRole(OFFICER_ROLE) {
         _revokeRole(TELLER_ROLE, teller);
+    }
+    
+    /**
+     * @notice Add banker (manual approval authority)
+     */
+    function addBanker(address banker) external onlyRole(CHAIRMAN_ROLE) {
+        if (banker == address(0)) revert ZeroAddress();
+        _grantRole(BANKER_ROLE, banker);
+    }
+    
+    /**
+     * @notice Remove banker
+     */
+    function removeBanker(address banker) external onlyRole(CHAIRMAN_ROLE) {
+        _revokeRole(BANKER_ROLE, banker);
     }
 }

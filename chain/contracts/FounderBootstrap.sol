@@ -6,23 +6,24 @@ import {CoreLaw} from "./CoreLaw.sol";
 
 /**
  * @title FounderBootstrap
- * @notice Bootstrap contract for the first founder/creator with RENEWABLE limits
+ * @notice Bootstrap contract for the first founder/creator with DAILY RENEWABLE limits
  * 
  * Purpose:
  * 1. Mint SeatSBT #1 to the founder
- * 2. Grant SUPER_VERIFIER status (bypass 3-citizen verification)
- * 3. Enable founder to verify initial citizens
+ * 2. Grant SUPER_VERIFIER status (bypass single-verifier requirement)
+ * 3. Enable founder to verify initial citizens rapidly
  * 
  * Founder Role:
  * - First citizen (seatId = 1)
- * - Can verify up to 100 citizens PER DAY (24 hours)
- * - Limits RENEW every day automatically
+ * - Can verify up to 100 citizens PER DAY (renewable daily)
+ * - Limits automatically reset every 24 hours
+ * - NO TOTAL LIMIT - only daily limit
  * 
- * Epoch System:
- * - Epoch 0: Day 0 (first 24 hours)
- * - Epoch 1: Day 1 (next 24 hours)
- * - Epoch 2: Day 2, etc.
- * - Each epoch allows 100 verifications
+ * Daily Epoch System:
+ * - Day 0: First 24 hours (0-86400 seconds)
+ * - Day 1: Next 24 hours (86400-172800 seconds)
+ * - Day 2: Next 24 hours, etc.
+ * - Each day allows fresh 100 verifications
  * 
  * Transparency:
  * - All verifications tracked on-chain
@@ -31,9 +32,9 @@ import {CoreLaw} from "./CoreLaw.sol";
  * 
  * Security:
  * - One-time founder bootstrap
- * - Daily renewable limits
+ * - Daily renewable limits (anti-spam)
  * - Court-based accountability
- * - Wallet freeze during investigation
+ * - Permanent on-chain audit trail
  */
 contract FounderBootstrap {
     
