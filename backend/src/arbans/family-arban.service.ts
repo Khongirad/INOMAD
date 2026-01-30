@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { PrismaService } from '../prisma/prisma.service';
 import { ethers } from 'ethers';
 import { ArbanCompletion_ABI } from '../blockchain/abis/arbanCompletion.abi';
+import { ArbanCompletion__factory } from '../typechain-types/factories/ArbanCompletion__factory';
 import {
   FamilyArban,
   FamilyTree,
@@ -17,7 +18,7 @@ import {
 @Injectable()
 export class FamilyArbanService {
   private readonly logger = new Logger(FamilyArbanService.name);
-  private contract: ethers.Contract;
+  private contract: ReturnType<typeof ArbanCompletion__factory.connect>;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -26,7 +27,7 @@ export class FamilyArbanService {
     // TODO: Get provider and contract address from config
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
     const contractAddress = process.env.ARBAN_COMPLETION_ADDRESS || '';
-    this.contract = new ethers.Contract(contractAddress, ArbanCompletion_ABI, provider);
+    this.contract = ArbanCompletion__factory.connect(contractAddress, provider);
   }
 
   /**
