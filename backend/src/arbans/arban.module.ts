@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
+import { AuthModule } from '../auth/auth.module';
 import { FamilyArbanService } from './family-arban.service';
 import { ZunService } from './zun.service';
 import { OrganizationalArbanService } from './organizational-arban.service';
@@ -10,7 +11,7 @@ import { OrganizationalArbanController } from './organizational-arban.controller
 import { CreditController } from './credit.controller';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [
     FamilyArbanController,
     ZunController,
