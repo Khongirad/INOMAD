@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "outDir": "./typechain-types",
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "files": [
+    "../chain/artifacts/ArbanCreditLine.sol/ArbanCreditLine.json",
+    "../chain/artifacts/ArbanCompletion.sol/ArbanCompletion.json"
+  ]
+}

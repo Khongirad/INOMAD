@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { PrismaService } from '../prisma/prisma.service';
 import { ethers } from 'ethers';
 import { ArbanCreditLine_ABI, CreditType } from '../blockchain/abis/arbanCreditLine.abi';
+import { ArbanCreditLine__factory } from '../typechain-types/factories/ArbanCreditLine__factory';
 import {
   CreditLine,
   Loan,
@@ -15,12 +16,12 @@ import {
 @Injectable()
 export class CreditService {
   private readonly logger = new Logger(CreditService.name);
-  private contract: ethers.Contract;
+  private contract: ReturnType<typeof ArbanCreditLine__factory.connect>;
 
   constructor(private readonly prisma: PrismaService) {
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
     const contractAddress = process.env.ARBAN_CREDIT_LINE_ADDRESS || '';
-    this.contract = new ethers.Contract(contractAddress, ArbanCreditLine_ABI, provider);
+    this.contract = ArbanCreditLine__factory.connect(contractAddress, provider);
   }
 
   // ==================== FAMILY CREDIT ====================
