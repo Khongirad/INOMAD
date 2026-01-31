@@ -33,8 +33,8 @@ export class FamilyArbanController {
   @Post('marriage')
   @HttpCode(HttpStatus.CREATED)
   async registerMarriage(@Body() request: RegisterMarriageRequest, @Request() req: any) {
-    // Get user's wallet from session
-    const wallet = this.getWalletFromRequest(req);
+    // Get user's wallet from request body (privateKey sent by client)
+    const wallet = this.getWalletFromRequest(req, request.privateKey);
     return await this.familyArbanService.registerMarriage(request, wallet);
   }
 
@@ -46,10 +46,10 @@ export class FamilyArbanController {
   @HttpCode(HttpStatus.CREATED)
   async addChild(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { childSeatId: number },
+    @Body() body: { childSeatId: string; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: AddChildRequest = { arbanId, childSeatId: body.childSeatId };
     await this.familyArbanService.addChild(request, wallet);
     return { success: true, message: 'Child added successfully' };
@@ -63,10 +63,10 @@ export class FamilyArbanController {
   @HttpCode(HttpStatus.OK)
   async changeHeir(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { newHeirSeatId: number },
+    @Body() body: { newHeirSeatId: string; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: ChangeHeirRequest = { arbanId, newHeirSeatId: body.newHeirSeatId };
     await this.familyArbanService.changeHeir(request, wallet);
     return { success: true, message: 'Heir changed successfully' };
@@ -80,10 +80,10 @@ export class FamilyArbanController {
   @HttpCode(HttpStatus.OK)
   async setKhuralRep(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { repSeatId: number; birthYear: number },
+    @Body() body: { repSeatId: string; birthYear: number; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: SetKhuralRepRequest = {
       arbanId,
       repSeatId: body.repSeatId,
@@ -116,7 +116,7 @@ export class FamilyArbanController {
    * GET /arbans/family/by-seat/:seatId
    */
   @Get('by-seat/:seatId')
-  async getFamilyArbanBySeat(@Param('seatId', ParseIntPipe) seatId: number) {
+  async getFamilyArbanBySeat(@Param('seatId') seatId: string) {
     return await this.familyArbanService.getFamilyArbanBySeat(seatId);
   }
 
@@ -142,11 +142,10 @@ export class FamilyArbanController {
   }
 
   // Helper to extract wallet from request
-  private getWalletFromRequest(req: any): ethers.Wallet {
-    // TODO: Implement proper wallet extraction from user session
-    // For now, using a placeholder
-    const privateKey = req.user?.privateKey || process.env.DEFAULT_SIGNER_KEY;
+  private getWalletFromRequest(req: any, privateKey?: string): ethers.Wallet {
+    // Use privateKey from request body (sent by client) or fallback to env
+    const key = privateKey || process.env.DEFAULT_SIGNER_KEY;
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-    return new ethers.Wallet(privateKey, provider);
+    return new ethers.Wallet(key, provider);
   }
 }

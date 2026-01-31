@@ -9,12 +9,12 @@ import { CreditType } from '../../blockchain/abis/arbanCreditLine.abi';
 
 export interface FamilyArban {
   arbanId: number;
-  husbandSeatId: number;
-  wifeSeatId: number;
-  childrenSeatIds: number[];
-  heirSeatId: number;
+  husbandSeatId: string;
+  wifeSeatId: string;
+  childrenSeatIds: string[];
+  heirSeatId: string;
   zunId: number;
-  khuralRepSeatId: number;
+  khuralRepSeatId: string;
   khuralRepBirthYear: number;
   isActive: boolean;
   createdAt: Date;
@@ -47,7 +47,7 @@ export interface Zun {
   name: string;
   founderArbanId: number;
   memberArbanIds: number[];
-  elderSeatId: number;
+  elderSeatId: string;
   isActive: boolean;
   createdAt: Date;
 }
@@ -70,8 +70,8 @@ export interface ClanTree {
 export interface OrganizationalArban {
   arbanId: number;
   name: string;
-  memberSeatIds: number[];
-  leaderSeatId: number;
+  memberSeatIds: string[];
+  leaderSeatId: string;
   orgType: OrganizationType;
   powerBranch: PowerBranch;
   parentOrgId: number;
@@ -99,11 +99,11 @@ export interface CreditLine {
   arbanId: number;
   creditType: CreditType;
   creditRating: number; // 0-1000
-  creditLimit: bigint;
-  borrowed: bigint;
-  available: bigint;
-  totalBorrowed: bigint;
-  totalRepaid: bigint;
+  creditLimit: string;  // Changed to string for JSON serialization
+  borrowed: string;
+  available: string;
+  totalBorrowed: string;
+  totalRepaid: string;
   defaultCount: number;
   onTimeCount: number;
   isActive: boolean;
@@ -114,9 +114,9 @@ export interface Loan {
   loanId: number;
   arbanId: number;
   creditType: CreditType;
-  principal: bigint;
-  interest: bigint;
-  totalDue: bigint;
+  principal: string;  // Changed to string for JSON serialization
+  interest: string;
+  totalDue: string;
   dueDate: Date;
   borrowedAt: Date;
   repaidAt: Date | null;
@@ -138,7 +138,7 @@ export interface CreditDashboard {
 // ==================== TIER DISTRIBUTION ====================
 
 export interface TierDistribution {
-  seatId: number;
+  seatId: string;
   accountId: number;
   tier: 1 | 2 | 3;
   arbanType: ArbanType;
@@ -177,7 +177,7 @@ export interface TierStatus {
 // ==================== CITIZEN INFO ====================
 
 export interface CitizenInfo {
-  seatId: number;
+  seatId: string;
   address: string;
   name?: string;
   birthYear?: number;
@@ -191,7 +191,7 @@ export interface CitizenInfo {
 // ==================== KHURAL ====================
 
 export interface KhuralRepresentative {
-  seatId: number;
+  seatId: string;
   arbanId: number;
   name?: string;
   birthYear: number;
@@ -226,8 +226,9 @@ export interface EkheKhuralSession {
 
 // Marriage
 export interface RegisterMarriageRequest {
-  husbandSeatId: number;
-  wifeSeatId: number;
+  husbandSeatId: string;
+  wifeSeatId: string;
+  privateKey?: string; // Optional - used for signing blockchain transactions
 }
 
 export interface RegisterMarriageResponse {
@@ -238,18 +239,18 @@ export interface RegisterMarriageResponse {
 // Child
 export interface AddChildRequest {
   arbanId: number;
-  childSeatId: number;
+  childSeatId: string;
 }
 
 export interface ChangeHeirRequest {
   arbanId: number;
-  newHeirSeatId: number;
+  newHeirSeatId: string;
 }
 
 // Khural
 export interface SetKhuralRepRequest {
   arbanId: number;
-  repSeatId: number;
+  repSeatId: string;
   birthYear: number;
 }
 
@@ -257,6 +258,7 @@ export interface SetKhuralRepRequest {
 export interface FormZunRequest {
   zunName: string;
   arbanIds: number[];
+  privateKey?: string;
 }
 
 export interface FormZunResponse {
@@ -267,7 +269,9 @@ export interface FormZunResponse {
 // Organizational Arban
 export interface CreateOrgArbanRequest {
   name: string;
-  orgType: OrganizationType;
+  orgType: OrganizationType | string;  // Accept both enum value and string name
+  leaderSeatId?: string;
+  privateKey?: string;
 }
 
 export interface CreateOrgArbanResponse {
@@ -277,12 +281,12 @@ export interface CreateOrgArbanResponse {
 
 export interface AddOrgMemberRequest {
   arbanId: number;
-  seatId: number;
+  seatId: string;
 }
 
 export interface SetOrgLeaderRequest {
   arbanId: number;
-  leaderSeatId: number;
+  leaderSeatId: string;
 }
 
 export interface CreateDepartmentRequest {
@@ -320,7 +324,7 @@ export interface RepayLoanRequest {
 
 // Distribution
 export interface RequestDistributionRequest {
-  seatId: number;
+  seatId: string;
   accountId: number;
   tier: 2 | 3;
 }

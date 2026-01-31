@@ -35,7 +35,7 @@ export class OrganizationalArbanController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createOrgArban(@Body() request: CreateOrgArbanRequest, @Request() req: any) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, request.privateKey);
     return await this.orgArbanService.createOrganizationalArban(request, wallet);
   }
 
@@ -47,10 +47,10 @@ export class OrganizationalArbanController {
   @HttpCode(HttpStatus.CREATED)
   async addOrgMember(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { seatId: number },
+    @Body() body: { seatId: string; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: AddOrgMemberRequest = { arbanId, seatId: body.seatId };
     await this.orgArbanService.addOrgMember(request, wallet);
     return { success: true, message: 'Member added successfully' };
@@ -64,10 +64,10 @@ export class OrganizationalArbanController {
   @HttpCode(HttpStatus.OK)
   async setOrgLeader(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { leaderSeatId: number },
+    @Body() body: { leaderSeatId: string; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: SetOrgLeaderRequest = { arbanId, leaderSeatId: body.leaderSeatId };
     await this.orgArbanService.setOrgLeader(request, wallet);
     return { success: true, message: 'Leader set successfully' };
@@ -81,10 +81,10 @@ export class OrganizationalArbanController {
   @HttpCode(HttpStatus.CREATED)
   async createDepartment(
     @Param('parentOrgId', ParseIntPipe) parentOrgId: number,
-    @Body() body: { deptName: string },
+    @Body() body: { deptName: string; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: CreateDepartmentRequest = { parentOrgId, deptName: body.deptName };
     return await this.orgArbanService.createDepartment(request, wallet);
   }
@@ -120,9 +120,9 @@ export class OrganizationalArbanController {
     return await this.orgArbanService.getOrgsByType(orgType);
   }
 
-  private getWalletFromRequest(req: any): ethers.Wallet {
-    const privateKey = req.user?.privateKey || process.env.DEFAULT_SIGNER_KEY;
+  private getWalletFromRequest(req: any, privateKey?: string): ethers.Wallet {
+    const key = privateKey || req.user?.privateKey || process.env.DEFAULT_SIGNER_KEY;
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-    return new ethers.Wallet(privateKey, provider);
+    return new ethers.Wallet(key, provider);
   }
 }

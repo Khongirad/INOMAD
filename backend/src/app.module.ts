@@ -15,6 +15,11 @@ import { IdentityModule } from './identity/identity.module';
 import { BankModule } from './bank/bank.module';
 import { CentralBankModule } from './central-bank/central-bank.module';
 import { ArbanModule } from './arbans/arban.module';
+import { DigitalSealModule } from './digital-seal/digital-seal.module';
+import { AcademyModule } from './academy/academy.module';
+import { JusticeModule } from './justice/justice.module';
+import { TempleModule } from './temple/temple.module';
+import { MPCWalletModule } from './mpc-wallet/mpc-wallet.module';
 
 @Module({
   imports: [
@@ -36,6 +41,12 @@ import { ArbanModule } from './arbans/arban.module';
     BankModule,
     CentralBankModule,
     ArbanModule,
+    DigitalSealModule,
+    AcademyModule,
+    JusticeModule,
+    TempleModule,
+    MPCWalletModule,
   ],
 })
 export class AppModule {}
+

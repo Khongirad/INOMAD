@@ -44,8 +44,8 @@ export class FamilyArbanService {
       const existingHusbandArban = await this.prisma.familyArban.findFirst({
         where: {
           OR: [
-            { husbandSeatId: BigInt(request.husbandSeatId) },
-            { wifeSeatId: BigInt(request.husbandSeatId) },
+            { husbandSeatId: request.husbandSeatId },
+            { wifeSeatId: request.husbandSeatId },
           ],
           isActive: true,
         },
@@ -54,8 +54,8 @@ export class FamilyArbanService {
       const existingWifeArban = await this.prisma.familyArban.findFirst({
         where: {
           OR: [
-            { husbandSeatId: BigInt(request.wifeSeatId) },
-            { wifeSeatId: BigInt(request.wifeSeatId) },
+            { husbandSeatId: request.wifeSeatId },
+            { wifeSeatId: request.wifeSeatId },
           ],
           isActive: true,
         },
@@ -93,9 +93,9 @@ export class FamilyArbanService {
       // Store in database
       await this.prisma.familyArban.create({
         data: {
-          arbanId: BigInt(arbanId.toString()),
-          husbandSeatId: BigInt(request.husbandSeatId),
-          wifeSeatId: BigInt(request.wifeSeatId),
+          arbanId: arbanId.toString(),
+          husbandSeatId: request.husbandSeatId,
+          wifeSeatId: request.wifeSeatId,
           isActive: true,
         },
       });
@@ -121,7 +121,7 @@ export class FamilyArbanService {
     try {
       // Verify arban exists
       const arban = await this.prisma.familyArban.findUnique({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbanId: request.arbanId },
       });
 
       if (!arban) {
@@ -140,15 +140,15 @@ export class FamilyArbanService {
       // Store in database
       await this.prisma.familyArbanChild.create({
         data: {
-          arbanId: BigInt(request.arbanId),
-          childSeatId: BigInt(request.childSeatId),
+          arbanId: request.arbanId,
+          childSeatId: request.childSeatId,
         },
       });
 
       // Update heir (youngest child)
       await this.prisma.familyArban.update({
-        where: { arbanId: BigInt(request.arbanId) },
-        data: { heirSeatId: BigInt(request.childSeatId) },
+        where: { arbanId: request.arbanId },
+        data: { heirSeatId: request.childSeatId },
       });
 
       this.logger.log(`Child added successfully`);
@@ -168,8 +168,8 @@ export class FamilyArbanService {
       // Verify child exists
       const child = await this.prisma.familyArbanChild.findFirst({
         where: {
-          arbanId: BigInt(request.arbanId),
-          childSeatId: BigInt(request.newHeirSeatId),
+          arbanId: request.arbanId,
+          childSeatId: request.newHeirSeatId,
         },
       });
 
@@ -184,8 +184,8 @@ export class FamilyArbanService {
 
       // Update database
       await this.prisma.familyArban.update({
-        where: { arbanId: BigInt(request.arbanId) },
-        data: { heirSeatId: BigInt(request.newHeirSeatId) },
+        where: { arbanId: request.arbanId },
+        data: { heirSeatId: request.newHeirSeatId },
       });
 
       this.logger.log(`Heir changed successfully`);
@@ -216,7 +216,7 @@ export class FamilyArbanService {
 
       // Verify arban exists
       const arban = await this.prisma.familyArban.findUnique({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbanId: request.arbanId },
       });
 
       if (!arban) {
@@ -225,8 +225,8 @@ export class FamilyArbanService {
 
       // Verify rep is husband or wife
       if (
-        BigInt(request.repSeatId) !== arban.husbandSeatId &&
-        BigInt(request.repSeatId) !== arban.wifeSeatId
+        request.repSeatId !== arban.husbandSeatId &&
+        request.repSeatId !== arban.wifeSeatId
       ) {
         throw new BadRequestException('Khural representative must be husband or wife');
       }
@@ -242,9 +242,9 @@ export class FamilyArbanService {
 
       // Update database
       await this.prisma.familyArban.update({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbanId: request.arbanId },
         data: {
-          khuralRepSeatId: BigInt(request.repSeatId),
+          khuralRepSeatId: request.repSeatId,
           khuralRepBirthYear: request.birthYear,
         },
       });
@@ -278,7 +278,7 @@ export class FamilyArbanService {
     const currentYear = new Date().getFullYear();
 
     return arbans.map((arban) => ({
-      seatId: Number(arban.khuralRepSeatId!),
+      seatId: arban.khuralRepSeatId!,
       arbanId: Number(arban.arbanId),
       birthYear: arban.khuralRepBirthYear!,
       age: currentYear - arban.khuralRepBirthYear!,
@@ -291,7 +291,7 @@ export class FamilyArbanService {
    */
   async getFamilyArban(arbanId: number): Promise<FamilyArban> {
     const arban = await this.prisma.familyArban.findUnique({
-      where: { arbanId: BigInt(arbanId) },
+      where: { arbanId: arbanId },
       include: {
         children: true,
       },
@@ -303,12 +303,12 @@ export class FamilyArbanService {
 
     return {
       arbanId: Number(arban.arbanId),
-      husbandSeatId: Number(arban.husbandSeatId),
-      wifeSeatId: Number(arban.wifeSeatId),
-      childrenSeatIds: arban.children.map((c) => Number(c.childSeatId)),
-      heirSeatId: arban.heirSeatId ? Number(arban.heirSeatId) : 0,
+      husbandSeatId: arban.husbandSeatId,
+      wifeSeatId: arban.wifeSeatId,
+      childrenSeatIds: arban.children.map((c) => c.childSeatId),
+      heirSeatId: arban.heirSeatId || "",
       zunId: arban.zunId ? Number(arban.zunId) : 0,
-      khuralRepSeatId: arban.khuralRepSeatId ? Number(arban.khuralRepSeatId) : 0,
+      khuralRepSeatId: arban.khuralRepSeatId || "",
       khuralRepBirthYear: arban.khuralRepBirthYear || 0,
       isActive: arban.isActive,
       createdAt: arban.createdAt,
@@ -318,15 +318,15 @@ export class FamilyArbanService {
   /**
    * Get Family Arban by seat ID (husband, wife, or child)
    */
-  async getFamilyArbanBySeat(seatId: number): Promise<FamilyArban | null> {
+  async getFamilyArbanBySeat(seatId: string): Promise<FamilyArban | null> {
     const arban = await this.prisma.familyArban.findFirst({
       where: {
         OR: [
-          { husbandSeatId: BigInt(seatId) },
-          { wifeSeatId: BigInt(seatId) },
+          { husbandSeatId: seatId },
+          { wifeSeatId: seatId },
           {
             children: {
-              some: { childSeatId: BigInt(seatId) },
+              some: { childSeatId: seatId },
             },
           },
         ],
@@ -343,12 +343,12 @@ export class FamilyArbanService {
 
     return {
       arbanId: Number(arban.arbanId),
-      husbandSeatId: Number(arban.husbandSeatId),
-      wifeSeatId: Number(arban.wifeSeatId),
-      childrenSeatIds: arban.children.map((c) => Number(c.childSeatId)),
-      heirSeatId: arban.heirSeatId ? Number(arban.heirSeatId) : 0,
+      husbandSeatId: arban.husbandSeatId,
+      wifeSeatId: arban.wifeSeatId,
+      childrenSeatIds: arban.children.map((c) => c.childSeatId),
+      heirSeatId: arban.heirSeatId || "",
       zunId: arban.zunId ? Number(arban.zunId) : 0,
-      khuralRepSeatId: arban.khuralRepSeatId ? Number(arban.khuralRepSeatId) : 0,
+      khuralRepSeatId: arban.khuralRepSeatId || "",
       khuralRepBirthYear: arban.khuralRepBirthYear || 0,
       isActive: arban.isActive,
       createdAt: arban.createdAt,
@@ -360,7 +360,7 @@ export class FamilyArbanService {
    */
   async checkKhuralEligibility(arbanId: number): Promise<boolean> {
     const arban = await this.prisma.familyArban.findUnique({
-      where: { arbanId: BigInt(arbanId) },
+      where: { arbanId: arbanId },
     });
 
     if (!arban) {
@@ -385,36 +385,36 @@ export class FamilyArbanService {
 
       // Upsert arban
       await this.prisma.familyArban.upsert({
-        where: { arbanId: BigInt(arbanId) },
+        where: { arbanId: arbanId },
         create: {
-          arbanId: BigInt(arbanId),
-          husbandSeatId: BigInt(husbandSeatId.toString()),
-          wifeSeatId: BigInt(wifeSeatId.toString()),
-          heirSeatId: heirSeatId ? BigInt(heirSeatId.toString()) : null,
-          zunId: zunId ? BigInt(zunId.toString()) : null,
-          khuralRepSeatId: khuralRepSeatId ? BigInt(khuralRepSeatId.toString()) : null,
+          arbanId: arbanId,
+          husbandSeatId: husbandSeatId.toString(),
+          wifeSeatId: wifeSeatId.toString(),
+          heirSeatId: heirSeatId ? heirSeatId.toString() : null,
+          zunId: zunId,
+          khuralRepSeatId: khuralRepSeatId ? khuralRepSeatId.toString() : null,
           isActive,
         },
         update: {
-          husbandSeatId: BigInt(husbandSeatId.toString()),
-          wifeSeatId: BigInt(wifeSeatId.toString()),
-          heirSeatId: heirSeatId ? BigInt(heirSeatId.toString()) : null,
-          zunId: zunId ? BigInt(zunId.toString()) : null,
-          khuralRepSeatId: khuralRepSeatId ? BigInt(khuralRepSeatId.toString()) : null,
+          husbandSeatId: husbandSeatId.toString(),
+          wifeSeatId: wifeSeatId.toString(),
+          heirSeatId: heirSeatId ? heirSeatId.toString() : null,
+          zunId: zunId,
+          khuralRepSeatId: khuralRepSeatId ? khuralRepSeatId.toString() : null,
           isActive,
         },
       });
 
       // Sync children
       await this.prisma.familyArbanChild.deleteMany({
-        where: { arbanId: BigInt(arbanId) },
+        where: { arbanId: arbanId },
       });
 
       for (const childSeatId of childrenSeatIds) {
         await this.prisma.familyArbanChild.create({
           data: {
-            arbanId: BigInt(arbanId),
-            childSeatId: BigInt(childSeatId.toString()),
+            arbanId: arbanId,
+            childSeatId: childSeatId.toString(),
           },
         });
       }

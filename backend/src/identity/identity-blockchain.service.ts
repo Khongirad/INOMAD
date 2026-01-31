@@ -298,4 +298,225 @@ export class IdentityBlockchainService implements OnModuleInit {
       discrepancies,
     };
   }
+
+  // ==================== ON-CHAIN ACTIVATION ====================
+
+  /**
+   * Get detailed activation status from on-chain
+   */
+  async getActivationStatus(seatId: string): Promise<{
+    status: number;
+    statusName: string;
+    approvalsCount: number;
+    thresholdRequired: number;
+    isActive: boolean;
+    frozen: boolean;
+    banned: boolean;
+  } | null> {
+    const contract = this.blockchain.getActivationRegistryContract();
+    if (!contract) {
+      return null;
+    }
+
+    try {
+      const [status, approvalsCount, threshold, isActive, statusWithCourt] = await Promise.all([
+        contract.statusOf(seatId),
+        contract.approvalsCount(seatId),
+        contract.thresholdK(),
+        contract.isActive(seatId),
+        contract.statusWithCourt(seatId),
+      ]);
+
+      const statusNames = ['NONE', 'LOCKED', 'ACTIVE', 'BANNED'];
+
+      return {
+        status: Number(status),
+        statusName: statusNames[Number(status)] || 'UNKNOWN',
+        approvalsCount: Number(approvalsCount),
+        thresholdRequired: Number(threshold),
+        isActive,
+        frozen: statusWithCourt.frozen,
+        banned: statusWithCourt.banned,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get activation status for seat ${seatId}`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Request on-chain activation for a seat
+   * Must be called by the seat owner after accepting the Constitution
+   * 
+   * @param seatId - The seat ID to activate
+   * @param signer - ethers.Wallet with the seat owner's credentials
+   */
+  async requestActivation(
+    seatId: string,
+    signer: import('ethers').Wallet,
+  ): Promise<{
+    success: boolean;
+    txHash?: string;
+    error?: string;
+  }> {
+    const contract = this.blockchain.getActivationRegistryContract();
+    if (!contract) {
+      return { success: false, error: 'ActivationRegistry contract not available' };
+    }
+
+    try {
+      // Connect contract with signer
+      const contractWithSigner = contract.connect(signer) as import('ethers').Contract;
+      
+      // Execute transaction
+      const tx = await contractWithSigner.requestActivation(seatId);
+      const receipt = await tx.wait();
+
+      this.logger.log(`Activation requested for seat ${seatId}. TX: ${receipt.hash}`);
+
+      return {
+        success: true,
+        txHash: receipt.hash,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to request activation for seat ${seatId}`, error);
+      
+      // Parse common errors
+      let errorMessage = error.message;
+      if (error.message.includes('NO_CONSTITUTION')) {
+        errorMessage = 'User has not accepted the Constitution';
+      } else if (error.message.includes('NOT_SEAT_OWNER')) {
+        errorMessage = 'Only the seat owner can request activation';
+      } else if (error.message.includes('NOT_LOCKED')) {
+        errorMessage = 'Seat is not in LOCKED status';
+      }
+
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Approve activation for a seat (validator only)
+   * 
+   * @param seatId - The seat ID to approve
+   * @param validatorSigner - ethers.Wallet with validator credentials
+   */
+  async approveActivation(
+    seatId: string,
+    validatorSigner: import('ethers').Wallet,
+  ): Promise<{
+    success: boolean;
+    txHash?: string;
+    currentApprovals?: number;
+    isNowActive?: boolean;
+    error?: string;
+  }> {
+    const contract = this.blockchain.getActivationRegistryContract();
+    if (!contract) {
+      return { success: false, error: 'ActivationRegistry contract not available' };
+    }
+
+    try {
+      // Check if caller is a validator
+      const isValidator = await contract.isValidator(validatorSigner.address);
+      if (!isValidator) {
+        return { success: false, error: 'Caller is not a validator' };
+      }
+
+      // Check if already approved by this validator
+      const alreadyApproved = await contract.approvedBy(seatId, validatorSigner.address);
+      if (alreadyApproved) {
+        return { success: false, error: 'Validator has already approved this seat' };
+      }
+
+      // Connect contract with signer
+      const contractWithSigner = contract.connect(validatorSigner) as import('ethers').Contract;
+      
+      // Execute transaction
+      const tx = await contractWithSigner.approveActivation(seatId);
+      const receipt = await tx.wait();
+
+      // Get updated status
+      const [approvalsCount, isActive] = await Promise.all([
+        contract.approvalsCount(seatId),
+        contract.isActive(seatId),
+      ]);
+
+      this.logger.log(
+        `Activation approved for seat ${seatId} by ${validatorSigner.address}. ` +
+        `Approvals: ${approvalsCount}. Active: ${isActive}. TX: ${receipt.hash}`
+      );
+
+      return {
+        success: true,
+        txHash: receipt.hash,
+        currentApprovals: Number(approvalsCount),
+        isNowActive: isActive,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to approve activation for seat ${seatId}`, error);
+      
+      let errorMessage = error.message;
+      if (error.message.includes('NOT_VALIDATOR')) {
+        errorMessage = 'Caller is not a registered validator';
+      } else if (error.message.includes('NOT_LOCKED')) {
+        errorMessage = 'Seat is not in LOCKED status';
+      } else if (error.message.includes('ALREADY_APPROVED')) {
+        errorMessage = 'This validator has already approved';
+      }
+
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Check if an address is a validator
+   */
+  async isValidator(address: string): Promise<boolean> {
+    const contract = this.blockchain.getActivationRegistryContract();
+    if (!contract) {
+      return false;
+    }
+
+    try {
+      return await contract.isValidator(address);
+    } catch (error) {
+      this.logger.error(`Failed to check validator status for ${address}`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Sync activation status from blockchain to database
+   * Updates user's verificationStatus when on-chain activation changes
+   */
+  async syncActivationToDb(userId: string): Promise<{
+    synced: boolean;
+    wasActivated?: boolean;
+  }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    
+    if (!user || !user.seatId) {
+      return { synced: false };
+    }
+
+    const activationStatus = await this.getActivationStatus(user.seatId);
+    
+    if (!activationStatus) {
+      return { synced: false };
+    }
+
+    // If on-chain is active but DB is not VERIFIED, update DB
+    if (activationStatus.isActive && user.verificationStatus !== VerificationStatus.VERIFIED) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { verificationStatus: VerificationStatus.VERIFIED },
+      });
+
+      this.logger.log(`User ${userId} verified based on on-chain activation`);
+      return { synced: true, wasActivated: true };
+    }
+
+    return { synced: true, wasActivated: false };
+  }
 }

@@ -34,9 +34,28 @@ export class OrganizationalArbanService {
     this.logger.log(`Creating Organizational Arban: ${request.name} (${request.orgType})`);
 
     try {
+      // Convert string orgType to enum if needed
+      let orgTypeValue: OrganizationType;
+      if (typeof request.orgType === 'string') {
+        const typeMap: Record<string, OrganizationType> = {
+          NONE: OrganizationType.NONE,
+          EXECUTIVE: OrganizationType.EXECUTIVE,
+          JUDICIAL: OrganizationType.JUDICIAL,
+          BANKING: OrganizationType.BANKING,
+          PRIVATE_COMPANY: OrganizationType.PRIVATE_COMPANY,
+          STATE_COMPANY: OrganizationType.STATE_COMPANY,
+          GUILD: OrganizationType.GUILD,
+          SCIENTIFIC_COUNCIL: OrganizationType.SCIENTIFIC_COUNCIL,
+          EKHE_KHURAL: OrganizationType.EKHE_KHURAL,
+        };
+        orgTypeValue = typeMap[request.orgType] ?? OrganizationType.NONE;
+      } else {
+        orgTypeValue = request.orgType;
+      }
+
       // Call smart contract
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.createOrganizationalArban(request.name, request.orgType);
+      const tx = await contractWithSigner.createOrganizationalArban(request.name, orgTypeValue);
       const receipt = await tx.wait();
 
       // Parse event
@@ -83,7 +102,7 @@ export class OrganizationalArbanService {
         data: {
           arbanId: BigInt(arbanId.toString()),
           name: request.name,
-          orgType: orgTypeMap[request.orgType] as any,
+          orgType: orgTypeMap[orgTypeValue] as any,
           powerBranch: powerBranchMap[powerBranch] as any,
           isActive: true,
         },
@@ -118,7 +137,7 @@ export class OrganizationalArbanService {
       }
 
       // Check if already member
-      const existingMember = org.members.find((m) => m.seatId === BigInt(request.seatId));
+      const existingMember = org.members.find((m) => m.seatId === request.seatId);
       if (existingMember) {
         throw new BadRequestException('Seat is already a member');
       }
@@ -132,7 +151,7 @@ export class OrganizationalArbanService {
       await this.prisma.orgArbanMember.create({
         data: {
           arbanId: BigInt(request.arbanId),
-          seatId: BigInt(request.seatId),
+          seatId: request.seatId,
         },
       });
 
@@ -170,7 +189,7 @@ export class OrganizationalArbanService {
       // Update database
       await this.prisma.organizationalArban.update({
         where: { arbanId: BigInt(request.arbanId) },
-        data: { leaderSeatId: BigInt(request.leaderSeatId) },
+        data: { leaderSeatId: request.leaderSeatId },
       });
 
       this.logger.log(`Leader set successfully`);
@@ -263,8 +282,8 @@ export class OrganizationalArbanService {
     return {
       arbanId: Number(org.arbanId),
       name: org.name,
-      memberSeatIds: org.members.map((m) => Number(m.seatId)),
-      leaderSeatId: org.leaderSeatId ? Number(org.leaderSeatId) : 0,
+      memberSeatIds: org.members.map((m) => m.seatId),
+      leaderSeatId: org.leaderSeatId ||  "",
       orgType: this.mapOrgType(org.orgType),
       powerBranch: this.mapPowerBranch(org.powerBranch),
       parentOrgId: org.parentOrgId ? Number(org.parentOrgId) : 0,
@@ -302,8 +321,8 @@ export class OrganizationalArbanService {
     return orgs.map((org) => ({
       arbanId: Number(org.arbanId),
       name: org.name,
-      memberSeatIds: org.members.map((m) => Number(m.seatId)),
-      leaderSeatId: org.leaderSeatId ? Number(org.leaderSeatId) : 0,
+      memberSeatIds: org.members.map((m) => m.seatId),
+      leaderSeatId: org.leaderSeatId ||  "",
       orgType: this.mapOrgType(org.orgType),
       powerBranch: this.mapPowerBranch(org.powerBranch),
       parentOrgId: org.parentOrgId ? Number(org.parentOrgId) : 0,

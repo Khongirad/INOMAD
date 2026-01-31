@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -12,21 +13,33 @@ import { Decimal } from '@prisma/client/runtime/library';
  * Sybil resistance, reducing need for gas-based attack prevention.
  */
 @Injectable()
-export class BankBlockchainService implements OnModuleInit {
+export class BankBlockchainService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(BankBlockchainService.name);
 
   constructor(
     private prisma: PrismaService,
     private blockchain: BlockchainService,
+    private configService: ConfigService,
   ) {}
 
   async onModuleInit() {
     if (this.blockchain.isAvailable()) {
       this.logger.log('✅ Bank blockchain sync enabled');
-      // TODO: Start event listeners when gas sponsorship ready
+      
+      // Start event listeners if enabled
+      const enableListeners = this.configService.get<string>('ENABLE_EVENT_LISTENERS', 'false') === 'true';
+      if (enableListeners) {
+        await this.startTransferEventListener();
+      } else {
+        this.logger.log('   Event listeners: disabled (set ENABLE_EVENT_LISTENERS=true to enable)');
+      }
     } else {
       this.logger.warn('⚠️  Bank blockchain sync disabled (offline mode)');
     }
+  }
+
+  async onModuleDestroy() {
+    await this.stopTransferEventListener();
   }
 
   /**
@@ -234,24 +247,168 @@ export class BankBlockchainService implements OnModuleInit {
   }
 
   /**
-   * TODO: Event listener for Transfer events
-   * Will be implemented when gas sponsorship (in Altan) is ready
-   * 
-   * Architecture: Physical Arban verification + registration provides
-   * Sybil resistance, reducing reliance on gas for spam prevention
+   * Event listener for Transfer events
+   * Syncs on-chain transfers to database for account reconciliation
    */
+  private eventListenerActive = false;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+
   async startTransferEventListener(): Promise<void> {
     if (!this.blockchain.isAvailable()) {
+      this.logger.warn('⚠️  Cannot start event listener: blockchain unavailable');
       return;
     }
 
-    this.logger.log('🚧 Transfer event listener not yet implemented');
-    this.logger.log('   Waiting for gas sponsorship in Altan currency');
+    const contract = this.blockchain.getAltanCoreLedgerContract();
+    if (!contract) {
+      this.logger.warn('⚠️  AltanCoreLedger contract not available');
+      return;
+    }
+
+    if (this.eventListenerActive) {
+      this.logger.log('Event listener already active');
+      return;
+    }
+
+    try {
+      // Listen for Transfer events
+      contract.on('Transfer', async (from: string, to: string, value: bigint, event: any) => {
+        await this.handleTransferEvent(from, to, value, event);
+      });
+
+      this.eventListenerActive = true;
+      this.reconnectAttempts = 0;
+      this.logger.log('✅ Transfer event listener started');
+      this.logger.log(`   Listening on contract: ${await contract.getAddress()}`);
+    } catch (error) {
+      this.logger.error(`Failed to start event listener: ${error.message}`);
+      await this.attemptReconnect();
+    }
+  }
+
+  /**
+   * Stop the event listener
+   */
+  async stopTransferEventListener(): Promise<void> {
+    const contract = this.blockchain.getAltanCoreLedgerContract();
+    if (contract && this.eventListenerActive) {
+      contract.removeAllListeners('Transfer');
+      this.eventListenerActive = false;
+      this.logger.log('🛑 Transfer event listener stopped');
+    }
+  }
+
+  /**
+   * Handle incoming Transfer event
+   */
+  private async handleTransferEvent(
+    from: string,
+    to: string,
+    value: bigint,
+    event: any,
+  ): Promise<void> {
+    const blockNumber = event?.log?.blockNumber || 'unknown';
+    const txHash = event?.log?.transactionHash || 'unknown';
     
-    // TODO: Implement event listener
-    // altanCoreLedgerContract.on('Transfer', (from, to, value) => {
-    //   this.handleTransferEvent(from, to, value);
-    // });
+    this.logger.log(`📥 Transfer detected: ${from} → ${to} | ${value.toString()} | Block ${blockNumber}`);
+
+    try {
+      // Find users by wallet address
+      const [fromUser, toUser] = await Promise.all([
+        this.prisma.user.findFirst({ where: { walletAddress: from.toLowerCase() } }),
+        this.prisma.user.findFirst({ where: { walletAddress: to.toLowerCase() } }),
+      ]);
+
+      // Update sender's balance if they're a known user
+      if (fromUser && from !== '0x0000000000000000000000000000000000000000') {
+        await this.reconcileUserBalance(fromUser.id, from);
+      }
+
+      // Update receiver's balance if they're a known user
+      if (toUser && to !== '0x0000000000000000000000000000000000000000') {
+        await this.reconcileUserBalance(toUser.id, to);
+      }
+
+      // Log the transfer for audit trail
+      await this.logTransferEvent(from, to, value, txHash, blockNumber);
+
+    } catch (error) {
+      this.logger.error(`Error handling transfer event: ${error.message}`);
+    }
+  }
+
+  /**
+   * Reconcile user's database balance with on-chain balance
+   */
+  private async reconcileUserBalance(userId: string, walletAddress: string): Promise<void> {
+    const { balance: onChainBalance } = await this.getOnChainBalance(walletAddress);
+    
+    if (!onChainBalance) {
+      return;
+    }
+
+    // Get current database balance
+    const ledger = await this.prisma.altanLedger.findFirst({
+      where: { userId },
+    });
+
+    const dbBalance = ledger?.balance?.toString() || '0';
+
+    if (dbBalance !== onChainBalance) {
+      this.logger.log(`🔄 Reconciling balance for user ${userId}: DB=${dbBalance} → OnChain=${onChainBalance}`);
+      
+      // Update database to match on-chain (on-chain is source of truth)
+      await this.prisma.altanLedger.upsert({
+        where: { userId },
+        update: { 
+          balance: new Decimal(onChainBalance),
+          updatedAt: new Date(),
+        },
+        create: {
+          userId,
+          balance: new Decimal(onChainBalance),
+        },
+      });
+    }
+  }
+
+  /**
+   * Log transfer event for audit trail
+   */
+  private async logTransferEvent(
+    from: string,
+    to: string,
+    value: bigint,
+    txHash: string,
+    blockNumber: number | string,
+  ): Promise<void> {
+    try {
+      // Store in a transfer log (if table exists)
+      // This is optional - implement if TransferLog model exists
+      this.logger.debug(`Transfer logged: ${txHash}`);
+    } catch (error) {
+      // Non-critical, just log
+      this.logger.warn(`Could not log transfer: ${error.message}`);
+    }
+  }
+
+  /**
+   * Attempt to reconnect the event listener
+   */
+  private async attemptReconnect(): Promise<void> {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      this.logger.error(`❌ Max reconnect attempts (${this.maxReconnectAttempts}) reached. Giving up.`);
+      return;
+    }
+
+    this.reconnectAttempts++;
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000); // Exponential backoff, max 30s
+    
+    this.logger.log(`🔄 Reconnecting event listener in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    
+    await new Promise(resolve => setTimeout(resolve, delay));
+    await this.startTransferEventListener();
   }
 
   /**

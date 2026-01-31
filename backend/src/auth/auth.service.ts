@@ -104,11 +104,18 @@ export class AuthService {
     });
 
     // 4. Verify SeatSBT ownership on-chain
-    const seatIds = await this.blockchainService.getSeatsOwnedBy(address);
-    if (seatIds.length === 0) {
-      throw new UnauthorizedException('No SeatSBT found for this address');
+    // Can be bypassed for testing with SKIP_SEAT_VERIFICATION=true
+    const skipSeatVerification = this.configService.get<string>('SKIP_SEAT_VERIFICATION') === 'true';
+    
+    if (!skipSeatVerification) {
+      const seatIds = await this.blockchainService.getSeatsOwnedBy(address);
+      if (seatIds.length === 0) {
+        throw new UnauthorizedException('No SeatSBT found for this address. Must own a Seat to authenticate.');
+      }
+      this.logger.log(`Auth: Address ${address.slice(0, 10)}... owns ${seatIds.length} seat(s)`);
+    } else {
+      this.logger.warn('⚠️ SeatSBT verification BYPASSED (SKIP_SEAT_VERIFICATION=true)');
     }
-    const primarySeatId = seatIds[0];
 
     // 5. Find or bind user
     let user = await this.prisma.user.findUnique({
@@ -116,20 +123,7 @@ export class AuthService {
     });
 
     if (!user) {
-      // Try to find by seatId and bind wallet
-      user = await this.prisma.user.findUnique({
-        where: { seatId: primarySeatId },
-      });
-      if (user) {
-        user = await this.prisma.user.update({
-          where: { id: user.id },
-          data: { walletAddress: address.toLowerCase() },
-        });
-      }
-    }
-
-    if (!user) {
-      throw new UnauthorizedException('No user record found for this SeatSBT. Register first.');
+      throw new UnauthorizedException('No user record found for this wallet address. Register first.');
     }
 
     // 6. Issue tokens

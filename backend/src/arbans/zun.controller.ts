@@ -28,7 +28,7 @@ export class ZunController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async formZun(@Body() request: FormZunRequest, @Request() req: any) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, request.privateKey);
     return await this.zunService.formZun(request, wallet);
   }
 
@@ -40,10 +40,10 @@ export class ZunController {
   @HttpCode(HttpStatus.OK)
   async setZunElder(
     @Param('zunId', ParseIntPipe) zunId: number,
-    @Body() body: { elderSeatId: number },
+    @Body() body: { elderSeatId: string; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     await this.zunService.setZunElder(zunId, body.elderSeatId, wallet);
     return { success: true, message: 'Zun elder set successfully' };
   }
@@ -77,9 +77,9 @@ export class ZunController {
     return { success: true, message: 'Sync completed' };
   }
 
-  private getWalletFromRequest(req: any): ethers.Wallet {
-    const privateKey = req.user?.privateKey || process.env.DEFAULT_SIGNER_KEY;
+  private getWalletFromRequest(req: any, privateKey?: string): ethers.Wallet {
+    const key = privateKey || req.user?.privateKey || process.env.DEFAULT_SIGNER_KEY;
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-    return new ethers.Wallet(privateKey, provider);
+    return new ethers.Wallet(key, provider);
   }
 }

@@ -31,8 +31,12 @@ export class CreditController {
    */
   @Post('family/:arbanId/open')
   @HttpCode(HttpStatus.CREATED)
-  async openFamilyCreditLine(@Param('arbanId', ParseIntPipe) arbanId: number, @Request() req: any) {
-    const wallet = this.getWalletFromRequest(req);
+  async openFamilyCreditLine(
+    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Body() body: { privateKey?: string },
+    @Request() req: any,
+  ) {
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     return await this.creditService.openFamilyCreditLine(arbanId, wallet);
   }
 
@@ -44,10 +48,10 @@ export class CreditController {
   @HttpCode(HttpStatus.CREATED)
   async borrowFamily(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { amount: string; durationDays: number },
+    @Body() body: { amount: string; durationDays: number; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: BorrowRequest = {
       arbanId,
       creditType: 'FAMILY',
@@ -65,10 +69,10 @@ export class CreditController {
   @HttpCode(HttpStatus.OK)
   async repayFamily(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { loanIdx: number },
+    @Body() body: { loanIdx: number; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: RepayLoanRequest = {
       arbanId,
       creditType: 'FAMILY',
@@ -113,8 +117,12 @@ export class CreditController {
    */
   @Post('org/:arbanId/open')
   @HttpCode(HttpStatus.CREATED)
-  async openOrgCreditLine(@Param('arbanId', ParseIntPipe) arbanId: number, @Request() req: any) {
-    const wallet = this.getWalletFromRequest(req);
+  async openOrgCreditLine(
+    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Body() body: { privateKey?: string },
+    @Request() req: any,
+  ) {
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     return await this.creditService.openOrgCreditLine(arbanId, wallet);
   }
 
@@ -126,10 +134,10 @@ export class CreditController {
   @HttpCode(HttpStatus.CREATED)
   async borrowOrg(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { amount: string; durationDays: number },
+    @Body() body: { amount: string; durationDays: number; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: BorrowRequest = {
       arbanId,
       creditType: 'ORG',
@@ -147,10 +155,10 @@ export class CreditController {
   @HttpCode(HttpStatus.OK)
   async repayOrg(
     @Param('arbanId', ParseIntPipe) arbanId: number,
-    @Body() body: { loanIdx: number },
+    @Body() body: { loanIdx: number; privateKey?: string },
     @Request() req: any,
   ) {
-    const wallet = this.getWalletFromRequest(req);
+    const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: RepayLoanRequest = {
       arbanId,
       creditType: 'ORG',
@@ -212,9 +220,9 @@ export class CreditController {
     return { rateBps, percentagePerYear: (rateBps / 100).toFixed(2) };
   }
 
-  private getWalletFromRequest(req: any): ethers.Wallet {
-    const privateKey = req.user?.privateKey || process.env.DEFAULT_SIGNER_KEY;
+  private getWalletFromRequest(req: any, privateKey?: string): ethers.Wallet {
+    const key = privateKey || req.user?.privateKey || process.env.DEFAULT_SIGNER_KEY;
     const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-    return new ethers.Wallet(privateKey, provider);
+    return new ethers.Wallet(key, provider);
   }
 }
