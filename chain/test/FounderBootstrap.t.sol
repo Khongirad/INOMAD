@@ -70,10 +70,11 @@ contract FounderBootstrapTest is Test {
         // Create and configure WalletRegistry
         walletRegistry = new AltanWalletRegistry(address(seatSbt));
         
-        // Transfer walletRegistry ownership to bootstrap
-        walletRegistry.transferOwnership(address(bootstrap));
+        // IMPORTANT: Transfer walletRegistry ownership to citizenRegistry (not bootstrap)
+        // because citizenRegistry.registerByOwner() calls walletRegistry.createWallet()
+        walletRegistry.transferOwnership(address(citizenRegistry));
         
-        // Set wallet registry in CitizenRegistry (bootstrap owns both now)
+        // Set wallet registry in CitizenRegistry (bootstrap owns citizenRegistry)
         vm.prank(address(bootstrap));
         citizenRegistry.setWalletRegistry(address(walletRegistry));
     }
@@ -117,6 +118,10 @@ contract FounderBootstrapTest is Test {
         
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
+        // Citizen must accept constitution before verification
+        vm.prank(citizen1);
+        acceptance.acceptDirect(0);
+        
         // Founder verifies citizen
         vm.prank(founder);
         uint256 seatId = bootstrap.verifyNewCitizen(
@@ -141,6 +146,10 @@ contract FounderBootstrapTest is Test {
         
         assertEq(bootstrap.getRemainingVerifications(), 100, "Should have 100 remaining");
         
+        // Citizen must accept constitution
+        vm.prank(citizen1);
+        acceptance.acceptDirect(0);
+        
         // Verify one citizen
         vm.prank(founder);
         bootstrap.verifyNewCitizen(citizen1, NATION_ID, ARBAN_ID, ETHICS_HASH);
@@ -153,6 +162,13 @@ contract FounderBootstrapTest is Test {
         acceptance.acceptDirect(0);
         
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
+        
+        // Each citizen must accept constitution, then verify
+        for (uint160 i = 0; i < 10; i++) {
+            address citizen = address(uint160(0x1000) + i);
+            vm.prank(citizen);
+            acceptance.acceptDirect(0);
+        }
         
         // Verify 10 citizens
         vm.startPrank(founder);
@@ -177,10 +193,10 @@ contract FounderBootstrapTest is Test {
         
         assertEq(bootstrap.getCurrentEpoch(), 0, "Should start in epoch 0");
         
-        // Fast forward 90 days
-        vm.warp(block.timestamp + 90 days);
+        // Fast forward 1 day (EPOCH_DURATION = 1 days in contract)
+        vm.warp(block.timestamp + 1 days);
         
-        assertEq(bootstrap.getCurrentEpoch(), 1, "Should be epoch 1 after 90 days");
+        assertEq(bootstrap.getCurrentEpoch(), 1, "Should be epoch 1 after 1 day");
     }
     
     function test_Verify10InMultipleEpochs() public {
@@ -188,6 +204,18 @@ contract FounderBootstrapTest is Test {
         acceptance.acceptDirect(0);
         
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
+        
+        // All citizens must accept constitution first
+        for (uint160 i = 0; i < 10; i++) {
+            address citizen = address(uint160(0x1000) + i);
+            vm.prank(citizen);
+            acceptance.acceptDirect(0);
+        }
+        for (uint160 i = 0; i < 10; i++) {
+            address citizen = address(uint160(0x2000) + i);
+            vm.prank(citizen);
+            acceptance.acceptDirect(0);
+        }
         
         // Epoch 0: Verify 10 citizens
         vm.startPrank(founder);
@@ -200,8 +228,8 @@ contract FounderBootstrapTest is Test {
         assertEq(bootstrap.getCurrentEpochVerifications(), 10, "Epoch 0 should have 10");
         assertEq(bootstrap.getTotalVerified(), 10, "Total should be 10");
         
-        // Move to epoch 1
-        vm.warp(block.timestamp + 90 days);
+        // Move to epoch 1 (1 day = EPOCH_DURATION)
+        vm.warp(block.timestamp + 1 days);
         assertEq(bootstrap.getCurrentEpoch(), 1, "Should be epoch 1");
         assertEq(bootstrap.getCurrentEpochVerifications(), 0, "Epoch 1 should start at 0");
         assertEq(bootstrap.getRemainingVerifications(), 100, "Should have 100 remaining in epoch 1");
@@ -224,6 +252,15 @@ contract FounderBootstrapTest is Test {
         
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
+        // Pre-accept constitution for all citizens across 3 epochs
+        for (uint256 epoch = 0; epoch < 3; epoch++) {
+            for (uint160 i = 0; i < 5; i++) {
+                address citizen = address(uint160(0x1000 * (epoch + 1)) + i);
+                vm.prank(citizen);
+                acceptance.acceptDirect(0);
+            }
+        }
+        
         // Verify across 3 epochs
         for (uint256 epoch = 0; epoch < 3; epoch++) {
             assertEq(bootstrap.getCurrentEpoch(), epoch, "Epoch mismatch");
@@ -239,8 +276,10 @@ contract FounderBootstrapTest is Test {
             assertEq(bootstrap.getCurrentEpochVerifications(), 5, "Should have 5 in epoch");
             assertEq(bootstrap.getTotalVerified(), (epoch + 1) * 5, "Total mismatch");
             
-            // Move to next epoch
-            vm.warp(block.timestamp + 90 days);
+            // Move to next epoch only if not the last iteration
+            if (epoch < 2) {
+                vm.warp(block.timestamp + 1 days);
+            }
         }
     }
     
@@ -258,7 +297,7 @@ contract FounderBootstrapTest is Test {
         
         assertEq(verified, 0, "Epoch 0 should have 0 verified");
         assertEq(startTime, bootstrapTime, "Start time should match bootstrap");
-        assertEq(endTime, bootstrapTime + 90 days, "End time should be +90 days");
+        assertEq(endTime, bootstrapTime + 1 days, "End time should be +1 day");
         assertTrue(isActive, "Epoch 0 should be active");
     }
     
@@ -269,12 +308,12 @@ contract FounderBootstrapTest is Test {
         bootstrap.bootstrapFounder(founder, NATION_ID, ARBAN_ID, ETHICS_HASH);
         
         uint256 timeRemaining = bootstrap.getTimeRemainingInEpoch();
-        assertEq(timeRemaining, 90 days, "Should have 90 days remaining");
+        assertEq(timeRemaining, 1 days, "Should have 1 day remaining");
         
-        // Fast forward 30 days
-        vm.warp(block.timestamp + 30 days);
+        // Fast forward 12 hours
+        vm.warp(block.timestamp + 12 hours);
         timeRemaining = bootstrap.getTimeRemainingInEpoch();
-        assertEq(timeRemaining, 60 days, "Should have 60 days remaining");
+        assertEq(timeRemaining, 12 hours, "Should have 12 hours remaining");
     }
     
     /* ==================== SECURITY TESTS ==================== */

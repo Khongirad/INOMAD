@@ -459,6 +459,9 @@ contract AltanPaymentGateway {
     
     /**
      * @notice Разрешить спор (admin)
+     * @param paymentId Payment ID
+     * @param refundToPayer If true, partial refund to payer; if false, full release to recipients
+     * @param refundPercentage Percentage to refund (basis points, 10000 = 100%)
      */
     function resolveDispute(
         bytes32 paymentId,
@@ -470,21 +473,25 @@ contract AltanPaymentGateway {
         require(payment.status == PaymentStatus.DISPUTED, "Not disputed");
         
         if (refundToPayer) {
+            // Partial refund to payer, rest to recipients
             uint256 refundAmount = (payment.totalAmount * refundPercentage) / 10000;
             uint256 releaseAmount = payment.totalAmount - refundAmount;
             
-            // Refund portion
+            // Refund portion to payer
             if (refundAmount > 0) {
                 require(
                     altanToken.transfer(payment.payer, refundAmount),
                     "Refund failed"
                 );
+                totalRefunded += refundAmount;
             }
             
             // Release rest to recipients (proportionally)
             for (uint i = 0; i < payment.recipients.length; i++) {
+                // Calculate proportional amount
                 uint256 recipientAmount = (payment.amounts[i] * releaseAmount) / payment.totalAmount;
                 
+                // Decrease escrow balance by the original amount
                 escrowBalances[payment.recipients[i]] -= payment.amounts[i];
                 
                 if (recipientAmount > 0) {
@@ -495,7 +502,29 @@ contract AltanPaymentGateway {
                 }
             }
             
-            payment.status = PaymentStatus.REFUNDED;
+            // Fee proportional to released amount
+            if (payment.platformFee > 0 && releaseAmount > 0) {
+                uint256 proportionalFee = (payment.platformFee * releaseAmount) / payment.totalAmount;
+                if (proportionalFee > 0) {
+                    require(
+                        altanToken.transfer(treasury, proportionalFee),
+                        "Fee transfer failed"
+                    );
+                    totalFeesCollected += proportionalFee;
+                }
+            }
+            
+            payment.status = PaymentStatus.RELEASED;
+            payment.releasedAt = block.timestamp;
+            totalReleased += releaseAmount;
+            
+            emit PaymentReleased(
+                paymentId,
+                payment.recipients,
+                payment.amounts,
+                payment.platformFee
+            );
+        } else {
             // Full release to recipients
             payment.status = PaymentStatus.RELEASED;
             payment.releasedAt = block.timestamp;

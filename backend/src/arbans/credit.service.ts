@@ -556,11 +556,11 @@ export class CreditService {
       arbanId: Number(cl.arbanId),
       creditType: cl.creditType === 'FAMILY' ? CreditType.FAMILY : CreditType.ORG,
       creditRating: cl.creditRating,
-      creditLimit: BigInt(cl.creditLimit.toString()),
-      borrowed: BigInt(cl.borrowed.toString()),
-      available,
-      totalBorrowed: BigInt(cl.totalBorrowed.toString()),
-      totalRepaid: BigInt(cl.totalRepaid.toString()),
+      creditLimit: cl.creditLimit.toString(),
+      borrowed: cl.borrowed.toString(),
+      available: available.toString(),
+      totalBorrowed: cl.totalBorrowed.toString(),
+      totalRepaid: cl.totalRepaid.toString(),
       defaultCount: cl.defaultCount,
       onTimeCount: cl.onTimeCount,
       isActive: cl.isActive,
@@ -569,13 +569,17 @@ export class CreditService {
   }
 
   private mapLoan(loan: any): Loan {
+    const principal = BigInt(loan.principal.toString());
+    const interest = BigInt(loan.interest.toString());
+    const totalDue = principal + interest;
+    
     return {
       loanId: Number(loan.loanId),
       arbanId: Number(loan.arbanId),
       creditType: loan.creditType === 'FAMILY' ? CreditType.FAMILY : CreditType.ORG,
-      principal: BigInt(loan.principal.toString()),
-      interest: BigInt(loan.interest.toString()),
-      totalDue: BigInt(loan.principal.toString()) + BigInt(loan.interest.toString()),
+      principal: loan.principal.toString(),
+      interest: loan.interest.toString(),
+      totalDue: totalDue.toString(),
       dueDate: loan.dueDate,
       borrowedAt: loan.borrowedAt,
       repaidAt: loan.repaidAt,

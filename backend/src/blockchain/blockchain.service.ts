@@ -135,6 +135,33 @@ export class BlockchainService implements OnModuleInit {
   }
 
   /**
+   * Get AltanCoreLedger contract for event listening
+   */
+  getAltanCoreLedgerContract(): ethers.Contract | null {
+    if (!this.isAvailable() || !this.altanCoreLedgerContract) {
+      return null;
+    }
+    return this.altanCoreLedgerContract;
+  }
+
+  /**
+   * Get the provider for event subscriptions
+   */
+  getProvider(): ethers.JsonRpcProvider | null {
+    return this.isAvailable() ? this.provider : null;
+  }
+
+  /**
+   * Get ActivationRegistry contract for activation operations
+   */
+  getActivationRegistryContract(): ethers.Contract | null {
+    if (!this.isAvailable() || !this.activationRegistryContract) {
+      return null;
+    }
+    return this.activationRegistryContract;
+  }
+
+  /**
    * Get the owner address of a SeatSBT token
    */
   async getSeatOwner(seatId: string): Promise<string | null> {

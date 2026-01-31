@@ -1,299 +1,214 @@
-# iNomad Blockchain Platform
+# Altan - Digital Nation Infrastructure
 
-<div align="center">
+[![Build Status](https://img.shields.io/badge/build-in%20development-yellow)](https://github.com/inomadinc/inomad-client)
+[![Phase](https://img.shields.io/badge/phase-2%20governance-blue)]()
+[![License](https://img.shields.io/badge/license-proprietary-red)]()
 
-**Децентрализованная экономическая платформа для стран СНГ**
+## 🏛️ Overview
 
-[![Solidity](https://img.shields.io/badge/Solidity-^0.8.24-blue)](https://soliditylang.org/)
-[![Foundry](https://img.shields.io/badge/Foundry-Latest-yellow)](https://getfoundry.sh/)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+Altan is a comprehensive digital nation infrastructure built on Ethereum, implementing a decentralized governance system based on the Arban (household unit) model from Nomadic Culture Institute specifications.
 
-[Документация](./docs/) · [Архитектура](./docs/ARCHITECTURE.md) · [Timeline](./docs/PROJECT_TIMELINE.md)
+## 📊 Project Status
 
-</div>
+**Current Phase**: Phase 2 - Governance Systems  
+**Last Updated**: 2026-01-31
 
----
+### Completed Features ✅
 
-## 📖 О проекте
+| Module | Status | Description |
+|--------|--------|-------------|
+| **Citizen Registration** | ✅ Complete | Identity verification, seat IDs, wallet creation |
+| **Bank of Siberia** | ✅ Complete | Central bank, accounts, transactions |
+| **Two-Type Arban System** | ✅ Complete | FamilyArban + OrganizationalArban |
+| **Credit System** | ✅ Complete | Credit lines, borrowing, repayment |
+| **Zun Clans** | ✅ Complete | Extended family structures |
+| **Digital Seal** | ✅ Complete | 2-of-2 multisig contracts |
+| **Academy of Sciences** | ✅ Complete | Patent/discovery registration |
+| **Council of Justice** | ✅ Complete | Case filing, rulings |
+| **Temple of Heaven** | ✅ Complete | State records, donations |
+| **MPC Wallet (Week 1)** | ✅ Complete | Key splitting, recovery foundation |
 
-**iNomad** — комплексная блокчейн-экосистема для децентрализованной экономики стран СНГ с полным циклом от производства до торговли, включая систему управления, финансовые инструменты и трекинг товаров.
+### In Progress 🚧
 
-### Ключевые особенности
-
-- 🏛️ **Четырёхветвевая система управления** (Законодательная, Исполнительная, Судебная, Центральный Банк)
-- 👨‍👩‍👧‍👦 **Система Арбан двух типов** (Семейные + Организационные)
-- 💳 **Кредитная система для Арбанов** с рейтингом и процентами
-- 🎯 **3-уровневая система распределения** (автоматическая + ручная)
-- 💰 **Монетарная система ALTAN** с дефляционной моделью
-- 🛒 **5 типов маркетплейсов** (Retail, Services, Auctions, Commodities, Jobs)
-- 📈 **Финансовые биржи** (Фондовая, Валютная)
-- 🔐 **Цифровые паспорта товаров** (DPP) с полной трассировкой
-- 📄 **Автоматическая генерация документов** (СНГ стандарты)
-- 🛡️ **Защита от мошенничества** встроенная в систему
-
----
-
-## 🏗️ Архитектура системы
-
-```
-┌─────────────────────────────────────────────────┐
-│         GOVERNANCE LAYER (4 Branches)           │
-│  Legislative│Executive│Judicial│Supervisory     │
-└────────────────────┬────────────────────────────┘
-                     │
-┌────────────────────┴────────────────────────────┐
-│            MARKETPLACE LAYER (11)                │
-│  Retail│Service│Auction│Commodity│Job           │
-│  Stock│Forex│ItemAuction                        │
-└────────────────────┬────────────────────────────┘
-                     │
-┌────────────────────┴────────────────────────────┐
-│         PAYMENT & SETTLEMENT LAYER               │
-│      AltanPaymentGateway (Unified)               │
-└────────────────────┬────────────────────────────┘
-                     │
-┌────────────────────┴────────────────────────────┐
-│         INFRASTRUCTURE LAYER                     │
-│  DPP│Chancellery│AntiFraud│Compliance│Notary    │
-└──────────────────────────────────────────────────┘
-```
-
-Полное описание: [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+| Module | Status | ETA |
+|--------|--------|-----|
+| MPC Wallet (Week 2-4) | 🚧 In Progress | Feb 2026 |
+| Account Abstraction (ERC-4337) | 📋 Planned | Feb 2026 |
+| Gasless Transactions | 📋 Planned | Feb 2026 |
 
 ---
 
-## 📦 Основные контракты
-
-### Governance (Управление)
-- **Legislature.sol** — Законодательная власть (предложения, голосования)
-- **Executive.sol** — Исполнительная власть (Хан, министры)
-- **SupremeCourt.sol** — Судебная власть (споры, апелляции)
-- **Supervisory.sol** — Надзорная власть (проверки, расследования)
-
-### Arban System (⭐ NEW: Система Арбан)
-- **Arban.sol** — Базовая структура арбана
-- **ArbanCompletion.sol** — Создание и завершение арбанов
-- **ArbanCreditLine.sol** — Кредитные линии для арбанов
-- **ArbanRegistry.sol** — Реестр арбанов
-- **Zun.sol** — Кланы (10 семейных арбанов)
-- **ZunRegistry.sol** — Реестр кланов
-
-### Marketplaces (Торговые площадки)
-- **RetailMarketplace.sol** — Amazon-style розничная торговля
-- **ServiceMarketplace.sol** — Билеты и бронирование услуг
-- **AuctionHouse.sol** — 5 типов аукционов
-- **CommodityExchange.sol** — B2B сырьевая биржа
-- **JobMarketplace.sol** — Работа, гиги, тендеры
-
-### Financial (Финансы)
-- **AltanPaymentGateway.sol** — Единая платёжная система
-- **StockExchange.sol** — Фондовая биржа (IPO, акции)
-- **ForexExchange.sol** — Валютная биржа (ALTAN/USDT)
-- **ItemAuctionHouse.sol** — WoW-style аукционы
-
-### Infrastructure (Инфраструктура)
-- **DigitalProductPassport.sol** — Цифровые паспорта товаров
-- **UnifiedChancellery.sol** — Генерация СНГ документов
-- **AntiFraudEngine.sol** — Защита от мошенничества
-- **ComplianceMatrix.sol** — Проверка регуляций
-
----
-
-## 🚀 Быстрый старт
-
-### Установка
-
-```bash
-# Клонировать репозиторий
-git clone https://github.com/inomadinc/inomad-client.git
-cd inomad-client
-
-# Установить зависимости
-cd chain
-forge install
-
-# Компиляция контрактов
-forge build
-
-# Запустить тесты
-forge test
-```
-
-### Развёртывание
-
-```bash
-# 1. Настроить .env
-cp .env.example .env
-# Добавить PRIVATE_KEY и RPC_URL
-
-# 2. Deploy на localhost
-anvil  # В отдельном терминале
-
-# 3. Deploy контрактов
-forge script script/Deploy.s.sol --rpc-url localhost --broadcast
-
-# 4. Verify (для testnet/mainnet)
-forge verify-contract <ADDRESS> <CONTRACT> --chain <CHAIN_ID>
-```
-
----
-
-## 📚 Документация
-
-- [**Архитектура системы**](./docs/ARCHITECTURE.md) — Полное описание архитектуры
-- [**Timeline проекта**](./docs/PROJECT_TIMELINE.md) — История разработки
-- [**Контракты**](./docs/contracts/) — Детальная документация контрактов
-- [**Руководство разработчика**](./docs/DEVELOPER_GUIDE.md) — Гайды для разработчиков
-- [**API Reference**](./docs/API.md) — Справочник по функциям
-
----
-
-## 📊 Статистика проекта
-
-| Категория | Количество | Строк кода |
-|-----------|------------|------------|
-| **Smart Contracts** | 124+ | ~50,000+ |
-| **Backend Services** | 15 modules | ~30,000+ |
-| **Frontend Components** | 11 categories | ~25,000+ |
-| **Tests** | 126 | ~8,000+ |
-| **Test Coverage** | **90%** | 114/126 passing |
-| **Documentation** | 25+ docs | N/A |
-
-### Последние обновления
-
-**30 Января 2026** - 🎉 **Система Арбан**:
-- ✅ Двухтипная архитектура Арбанов (Семейные + Организационные)
-- ✅ Система кредитных линий с рейтингом (0-1000)
-- ✅ 3-уровневая система распределения (Tier 1-3)
-- ✅ Формирование Зунов (кланов)
-- ✅ Полный стек: Контракты + Backend API + Frontend UI
-- 📊 **90% покрытие тестами** (114/126 тестов)
-
-**Январь 2026** - Базовая инфраструктура:
-- ✅ Создана полная система управления (4 ветви)
-- ✅ Реализованы 5 основных маркетплейсов
-- ✅ Добавлены фондовая и валютная биржи
-- ✅ Интегрирован PaymentGateway во все маркетплейсы
-- ✅ Создана система DPP для трекинга товаров
-
-См. полный [PROJECT_TIMELINE.md](./docs/PROJECT_TIMELINE.md)
-
----
-
-## 🤝 Для новых сотрудников
-
-### Onboarding
-
-1. **Прочитать документацию**:
-   - [ARCHITECTURE.md](./docs/ARCHITECTURE.md) — Понять общую архитектуру
-   - [PROJECT_TIMELINE.md](./docs/PROJECT_TIMELINE.md) — Узнать историю проекта
-   - [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md) — Начать разработку
-
-2. **Настроить окружение**:
-   ```bash
-   # Установить Foundry
-   curl -L https://foundry.paradigm.xyz | bash
-   foundryup
-   
-   # Установить зависимости проекта
-   cd chain && forge install
-   ```
-
-3. **Запустить тесты**:
-   ```bash
-   forge test -vvv
-   ```
-
-4. **Изучить ключевые контракты** (по приоритету):
-   - `AltanPaymentGateway.sol` — Платежная система
-   - `RetailMarketplace.sol` — Пример маркетплейса
-   - `DigitalProductPassport.sol` — Трекинг товаров
-
-### Структура проекта
+## 🏗️ Architecture
 
 ```
 inomad-client/
-├── chain/                  # Blockchain контракты
-│   ├── contracts/         # Solidity контракты
-│   │   ├── governance/   # 4 ветви власти
-│   │   ├── marketplaces/ # Торговые площадки
-│   │   ├── financial/    # Финансовые контракты
-│   │   └── infrastructure/ # Инфраструктура
-│   ├── test/             # Foundry тесты
-│   └── script/           # Deployment скрипты
-├── backend/              # Backend сервисы
-├── frontend/             # Frontend приложение
-└── docs/                 # Документация
-    ├── ARCHITECTURE.md
-    ├── PROJECT_TIMELINE.md
-    ├── contracts/        # Документация по контрактам
-    └── diagrams/         # Диаграммы
+├── backend/          # NestJS API server
+│   ├── src/
+│   │   ├── auth/           # JWT authentication
+│   │   ├── arbans/         # Arban management
+│   │   ├── bank/           # Bank operations
+│   │   ├── central-bank/   # Central bank admin
+│   │   ├── mpc-wallet/     # MPC wallet (NEW)
+│   │   ├── digital-seal/   # Multisig contracts
+│   │   ├── academy/        # Academy of Sciences
+│   │   ├── justice/        # Council of Justice
+│   │   └── temple/         # Temple of Heaven
+│   └── prisma/       # Database schema
+├── chain/            # Solidity smart contracts
+│   ├── contracts/
+│   │   ├── AltanBankOfSiberia.sol
+│   │   ├── DigitalSeal.sol
+│   │   ├── AcademyOfSciences.sol
+│   │   ├── CouncilOfJustice.sol
+│   │   └── TempleOfHeaven.sol
+│   └── test/         # Foundry tests
+└── src/              # Next.js frontend
+    ├── components/
+    │   ├── arbans/         # Arban UI
+    │   └── governance/     # Governance UI
+    └── lib/
+        └── hooks/          # React hooks
 ```
 
 ---
 
-## 🛠️ Технологии
+## 🚀 Quick Start
 
-- **Smart Contracts**: Solidity ^0.8.24
-- **Framework**: Foundry (Forge, Cast, Anvil)
-- **Testing**: Foundry Test
-- **Deployment**: Foundry Scripts
-- **Standards**: ERC20, ERC721, ERC1155
+### Prerequisites
 
----
+- Node.js 18+
+- PostgreSQL 14+
+- Foundry (for smart contracts)
+- pnpm or npm
 
-## 🔐 Безопасность
+### Backend Setup
 
-- ✅ Reentrancy protection
-- ✅ Access control (roles)
-- ✅ Escrow mechanisms
-- ✅ Multi-sig support
-- ✅ Pausable contracts
-- ⏳ Audit planned (Q2 2026)
+```bash
+cd backend
+cp .env.example .env
+# Edit .env with your database credentials
 
-### Reporting Security Issues
+npm install
+npx prisma migrate dev
+npm run start:dev
+```
 
-Обнаружили уязвимость? Напишите на: security@inomad.io
+### Smart Contracts
 
----
+```bash
+cd chain
+forge build
+forge test
+```
 
-## 📝 Лицензия
+### Frontend
 
-MIT License — см. [LICENSE](LICENSE)
-
----
-
-## 👥 Команда
-
-- **Founder & CEO**: [Profile]
-- **CTO**: [Profile]  
-- **Lead Blockchain Developer**: [Profile]
-- **Smart Contract Auditor**: [Profile]
+```bash
+npm install
+npm run dev
+```
 
 ---
 
-## 🌐 Ссылки
+## 📚 Key Modules
 
-- **Website**: https://inomad.io
-- **Docs**: https://docs.inomad.io
-- **Twitter**: [@iNomadChain](https://twitter.com/iNomadChain)
-- **Discord**: [Join](https://discord.gg/inomad)
-- **Telegram**: [@iNomadOfficial](https://t.me/iNomadOfficial)
+### MPC Wallet (NEW - Week 1 Complete)
+
+Multi-Party Computation wallet with 2-of-3 threshold signing:
+- **Device Share**: Stored in user's browser
+- **Server Share**: Encrypted on backend
+- **Recovery Share**: Distributed to guardians
+
+API Endpoints:
+```
+POST /mpc-wallet/create
+POST /mpc-wallet/sign-transaction
+POST /mpc-wallet/guardians
+POST /mpc-wallet/recovery/initiate
+```
+
+### Two-Type Arban System
+
+- **FamilyArban**: Household units (husband + wife + children)
+- **OrganizationalArban**: Work/guild units (10 members + leader)
+
+### Digital Seal
+
+2-of-2 multisig for business contracts:
+```solidity
+contract DigitalSeal {
+    function approve() external;   // Both parties must approve
+    function execute() external;   // Execute after 2 approvals
+}
+```
 
 ---
 
-## 📞 Контакты
+## 📋 Database Models
 
-- **Email**: hello@inomad.io
-- **Support**: support@inomad.io
-- **Partnerships**: partners@inomad.io
+Key Prisma models (see `backend/prisma/schema.prisma`):
+
+| Model | Purpose |
+|-------|---------|
+| `User` | Citizen records with seatId |
+| `FamilyArban` | Household units |
+| `OrganizationalArban` | Work units |
+| `MPCWallet` | MPC wallet records |
+| `SmartAccount` | ERC-4337 accounts |
+| `DigitalSeal` | Multisig contracts |
 
 ---
 
-<div align="center">
+## 🔐 Environment Variables
 
-**Построено с ❤️ для СНГ**
+```env
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/inomad_khural
 
-[Сайт](https://inomad.io) · [Документация](./docs/) · [GitHub](https://github.com/inomadinc/inomad-client)
+# JWT
+JWT_SECRET=your-secret-key
 
-</div>
+# Blockchain
+CHAIN_RPC_URL=http://localhost:8545
+PRIVATE_KEY=0x...
+
+# MPC (NEW)
+SERVER_SHARE_KEY=your-32-byte-hex-key
+```
+
+---
+
+## 📝 Development Workflow
+
+1. **Branch from `main`** for feature work
+2. **Run tests** before committing: `npm test`
+3. **Database changes**: Create migration with `npx prisma migrate dev --name feature_name`
+4. **Smart contracts**: Test with `forge test -vvv`
+
+---
+
+## 👥 Team Contacts
+
+- **Architecture**: See `/docs/diagrams/`
+- **API Docs**: See Swagger at `http://localhost:3000/api`
+- **Contracts**: See `chain/DEPLOYMENT.md`
+
+---
+
+## 📅 Roadmap
+
+### Q1 2026
+- [x] Phase 1: Core Infrastructure
+- [x] Phase 2: Governance Systems
+- [ ] Phase 2.5: MPC Wallet + Account Abstraction
+
+### Q2 2026
+- [ ] Phase 3: Gasless Transactions
+- [ ] Phase 3.5: Mobile App Integration
+- [ ] Phase 4: Mainnet Deployment
+
+---
+
+## 📄 License
+
+Proprietary - Nomadic Culture Institute

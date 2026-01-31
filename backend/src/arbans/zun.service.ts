@@ -99,7 +99,7 @@ export class ZunService {
   /**
    * Set Zun elder
    */
-  async setZunElder(zunId: number, elderSeatId: number, signerWallet: ethers.Wallet): Promise<void> {
+  async setZunElder(zunId: number, elderSeatId: string, signerWallet: ethers.Wallet): Promise<void> {
     this.logger.log(`Setting elder for Zun ${zunId}: seat ${elderSeatId}`);
 
     try {
@@ -111,15 +111,15 @@ export class ZunService {
         throw new NotFoundException(`Zun ${zunId} not found or inactive`);
       }
 
-      // Call smart contract
+      // Call smart contract (eldeSeatId as uint256)
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.setZunElder(zunId, elderSeatId);
+      const tx = await contractWithSigner.setZunElder(zunId, BigInt(elderSeatId));
       await tx.wait();
 
       // Update database
       await this.prisma.zun.update({
         where: { zunId: BigInt(zunId) },
-        data: { elderSeatId: BigInt(elderSeatId) },
+        data: { elderSeatId: elderSeatId },
       });
 
       this.logger.log(`Zun elder set successfully`);
@@ -149,7 +149,7 @@ export class ZunService {
       name: zun.name,
       founderArbanId: Number(zun.founderArbanId),
       memberArbanIds: zun.memberArbans.map((a) => Number(a.arbanId)),
-      elderSeatId: zun.elderSeatId ? Number(zun.elderSeatId) : 0,
+      elderSeatId: zun.elderSeatId ? zun.elderSeatId || "" : "",
       isActive: zun.isActive,
       createdAt: zun.createdAt,
     };
@@ -180,7 +180,7 @@ export class ZunService {
         name: arban.zun.name,
         founderArbanId: Number(arban.zun.founderArbanId),
         memberArbanIds: arban.zun.memberArbans.map((a) => Number(a.arbanId)),
-        elderSeatId: arban.zun.elderSeatId ? Number(arban.zun.elderSeatId) : 0,
+        elderSeatId: arban.zun.elderSeatId ? arban.zun.elderSeatId || "" : "",
         isActive: arban.zun.isActive,
         createdAt: arban.zun.createdAt,
       },
@@ -204,13 +204,13 @@ export class ZunService {
           zunId: BigInt(zunId),
           name,
           founderArbanId: BigInt(founderArbanId.toString()),
-          elderSeatId: elderSeatId ? BigInt(elderSeatId.toString()) : null,
+          elderSeatId: elderSeatId ? String(elderSeatId) : null,
           isActive,
         },
         update: {
           name,
           founderArbanId: BigInt(founderArbanId.toString()),
-          elderSeatId: elderSeatId ? BigInt(elderSeatId.toString()) : null,
+          elderSeatId: elderSeatId ? String(elderSeatId) : null,
           isActive,
         },
       });

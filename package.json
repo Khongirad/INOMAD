@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@types/mapbox-gl": "^3.4.1",
+    "@web3auth/base": "^9.7.0",
+    "@web3auth/single-factor-auth": "^9.5.0",
     "clsx": "^2.1.1",
     "ethers": "^6.16.0",
     "lucide-react": "^0.562.0",

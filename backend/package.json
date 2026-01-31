@@ -25,6 +25,8 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^10.3.0",
     "@prisma/client": "^5.8.0",
+    "@web3auth/node-sdk": "^5.0.0",
+    "@web3auth/single-factor-auth": "^9.5.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "ethers": "^6.16.0",
