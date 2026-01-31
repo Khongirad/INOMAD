@@ -1,0 +1,19 @@
+---
+id: 5b8ddd8c-902f-47b3-8ad1-c848d4ec36d0
+---
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> RFP_Published: postRFP()
+    RFP_Published --> Bidding: submitBid()
+    Bidding --> Awarded: award()
+    Awarded --> Funded: Treasury.allocate()
+    Funded --> InExecution: startWork()
+    InExecution --> MilestoneReview: submitProof()
+    MilestoneReview --> Disbursed: success()
+    MilestoneReview --> Paused: fail()/timeout/flag
+    Paused --> Audit: escalate()
+    Audit --> Funded: cleared()
+    Audit --> Terminated: confirmedFraud
+    Disbursed --> InExecution: nextMilestone()
+    Disbursed --> [*]: allMilestonesDone
+    Terminated --> [*]

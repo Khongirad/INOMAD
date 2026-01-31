@@ -1,0 +1,29 @@
+---
+id: a4e59511-e5c6-491c-9444-cbc688e01ef5
+---
+flowchart LR
+  subgraph Timeline ["Time →"]
+    direction LR
+    C[Concept<br/>8%]
+    D[Design<br/>15%]
+    Dev[Develop<br/>20%]
+    PT[Prod/Test<br/>50%]
+    OP[Operations → Disposal<br/>100%]
+  end
+
+  C -->|MCR| D
+  D -->|SRR, SDR, PDR| Dev
+  Dev -->|CDR| PT
+  PT -->|SIR, ORR| OP
+  OP -->|DR/DRR| END[End]
+
+  classDef phase fill:#ffe699,stroke:#333;
+  class C,D,Dev,PT,OP phase;
+
+  %% Аннотации
+  CostChange(["Cost of change ↑ (3–6× → 20–100× → 500–1000×)"]):::note
+  Committed(["% expenses are already due (over time): 8% → 15% → 20% → 50% → 100%"]):::note
+  CostChange -.-> C
+  Committed -.-> OP
+
+  classDef note fill:#e6f0ff,stroke:#0a58ca,stroke-width:1, font-style:italic;

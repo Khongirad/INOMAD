@@ -1,0 +1,13 @@
+---
+id: ec29587c-8755-4a7d-9903-15f9793d16ca
+---
+flowchart TD
+    A["PartyAPayer"] --> C["SmartContract-Escrow"]
+    B["PartyB-Performer"] --> C
+    M["Middleman-1%"] --> C
+    N["NotaryLawyer-Arbitrator"] --> C & P["Payout"]
+    C --> D["DeliverableSubmitted"]
+    D --> R["Review"]
+    R --> P & X["Dispute"]
+    P --> B & M & N
+    X --> N

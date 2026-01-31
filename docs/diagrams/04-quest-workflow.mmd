@@ -1,0 +1,28 @@
+---
+id: 961c70f1-75d2-47d6-b17c-ffa3d31db532
+---
+flowchart TD
+  Start[Open app] --> Login[Log in]
+  Login --> JoinGuild[Join local guild]
+  JoinGuild --> FindGiver[Find quest giver]
+  FindGiver --> CreateQuest[Create quest]
+  CreateQuest --> FillForm[Fill form title description reward conditions acceptance delivery]
+  FillForm --> MapLoc[Set map location]
+  FillForm --> SelectRoles[Select roles party A party B notary lawyer mediator]
+  FillForm --> LinkLaw[Link to constitution and applicable law]
+  LinkLaw --> Register[Register quest in chancellery]
+  Register --> Ledger[Ledger store headers versions signatures CID]
+  Register --> Escrow[Fund escrow by party A]
+  Escrow --> Execute[Execute work by party B]
+  Execute --> Submit[Submit proofs and_delivery]
+  Submit --> GuildReview[Guild review and acceptance quorum]
+  GuildReview --> Release[Release payment]
+  GuildReview --> Court[Court decision if_dispute]
+  Court --> Release
+  Release --> MediatorFee[Pay mediator fee one percent]
+  Release --> Tax[Pay tax ten percent to treasury via guild]
+  Release --> Performer[Pay net amount to party B]
+  Performer --> Close[Close quest and_archive]
+  MapLoc --> Register
+  JoinGuild --> NotaryLawyer[Guild hosts notary and lawyer]
+  NotaryLawyer --> GuildReview

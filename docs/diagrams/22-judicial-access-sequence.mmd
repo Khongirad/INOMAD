@@ -1,0 +1,24 @@
+---
+id: 84206af5-4536-4259-adef-3e4e0096aba5
+---
+sequenceDiagram
+    autonumber
+    participant U as Citizen / Party
+    participant App as Khural dApp
+    participant ENC as Encrypted Contract (Civil Layer)
+    participant J as Judge (Judicial DAO)
+    participant JONFT as Judicial Order NFT
+    participant ACL as Access Control (ZK/Policy)
+    participant AUD as Audit Log
+
+    U->>App: Report fraud / request access
+    App->>J: Case submission (evidence, hashes)
+    J->>JONFT: Issue time-bound order (scope, purpose)
+    JONFT-->>ACL: Register order (who/what/why, expiry)
+    App->>ACL: Request decrypt (least privilege)
+    ACL->>ACL: Verify SeatSBT + JONFT validity
+    ACL->>ENC: Partial decrypt (scoped fields only)
+    ENC-->>App: Encrypted payload slice
+    App-->>U: Revealed fields (minimal necessary)
+    ACL-->>AUD: Append access event (who/what/why/when)
+    Note over J,JONFT: Judge may revoke order early\nor let it auto-expire

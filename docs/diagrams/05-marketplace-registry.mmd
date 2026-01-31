@@ -1,0 +1,34 @@
+---
+id: be8be0f9-6fb7-49de-9185-1473449cb4c2
+---
+flowchart TD
+CB[NationalBank]
+REG[MarketRegistry]
+CAT[TNVEDCatalog]
+VER[Verification]
+CERT[Certification]
+MKT[Marketplace]
+EX[MarketExchange]
+SELL[Sellers]
+BUY[Buyers]
+SC[SmartContracts]
+PAY[Payments]
+
+
+CB --> REG
+REG --> CAT
+REG --> VER
+REG --> MKT
+REG --> EX
+
+SELL --> VER
+BUY --> VER
+VER --> MKT
+VER --> EX
+
+MKT --> SC
+EX --> SC
+SC --> PAY
+
+SC --> CERT
+CERT --> REG

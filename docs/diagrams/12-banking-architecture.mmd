@@ -1,0 +1,21 @@
+---
+id: a65d18c7-8aeb-4a62-98fc-3f40f6deef7e
+---
+flowchart TD
+    CB["CentralBank"] --> NB["NationalBank"]
+    NB --> WAL["CitizenWallet - at National Bank"] & SWIFT["SWIFT"] & PB["PrivateBank"]
+    CIT["Citizen"] --> KYC["KYC_Verification"]
+    KYC --> WAL
+    WAL --> CIT
+    SWIFT --> IB["InternationalBank"]
+    PB --> IB
+
+    style CB stroke:#00C853
+    style NB stroke:#00C853
+    style WAL stroke:#FFD600
+    style SWIFT stroke:#FFD600
+    style PB stroke:#00C853
+    style CIT stroke:#00C853
+    style KYC stroke:#FFD600
+    style IB stroke:#00C853
+    linkStyle 5 stroke:#FF6D00,fill:none
