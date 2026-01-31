@@ -1,0 +1,33 @@
+---
+id: 8cf5e0df-a6ba-4e0f-9bf4-01aecf5c2227
+---
+flowchart TD
+C[Citizen]
+G[Guild]
+NQ[CreateQuest]
+TS[Task Spec]
+W[Wallet]
+E[Escrow]
+Q[QuestSmartContract]
+F[FindContributors]
+WK[Work]
+S[SubmitResult]
+R[AcceptanceCheck]
+P[AutoPayout]
+L[CompletedQuestsLedger]
+
+C --> G
+G --> NQ
+C --> TS
+C --> W
+W --> E
+NQ --> Q
+TS --> Q
+E --> Q
+Q --> F
+F --> WK
+WK --> S
+S --> R
+R --> P
+P --> W
+Q --> L

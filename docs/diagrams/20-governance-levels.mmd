@@ -1,0 +1,72 @@
+---
+id: b8925ec0-265c-4ec4-958b-74da2d1f5da7
+---
+graph TD
+    subgraph "Level 1: The People & Foundation"
+        A((The People <br/> Citizens with SeatSBT))
+        F(Technological & Legal Foundation <br/> SeatSBT, Blockchain, DocumentRegistry)
+    end
+
+    subgraph "Level 2: Branches of Power"
+        subgraph "Legislative Branch"
+            P[Parliament / Khural]
+        end
+
+        subgraph "Executive Branch"
+            E_Head[Head of the Executive]
+            E_College(Electoral College <br/> Leaders of Tumens/Regions)
+            Guilds(Guilds <br/> Production & Execution)
+            MinFin(Ministry of Finance)
+            MinEdu(Ministry of Education)
+        end
+        
+        subgraph "Judicial Branch"
+            J[Supreme Court]
+        end
+
+        subgraph "Financial Branch"
+            CB[Central Bank]
+            BIM(Bank Investment Management)
+        end
+    end
+    
+    subgraph "Level 3: Independent & Public Institutions"
+        AS(Academy of Sciences <br/> Expertise & Patents)
+        TN(Temple of Heaven <br/> Archive, Library, Cadastre)
+    end
+
+    subgraph "Level 4: Economy"
+        SWF(Sovereign Wealth Fund)
+    end
+
+    %% -- Flows of Power Formation --
+    A --"1. Directly Elects"--> P
+    P --"6. Elects & Appoints"--> J
+    
+    A --"Form Representatives"--> E_College
+    E_College --"2. Elects"--> E_Head
+    
+    AS --"3. Nominates Candidates"--> CB
+    P --"4. Confirms Candidate"--> CB
+
+    %% -- Functional & Financial Links --
+    E_Head --"Forms"--> MinFin & MinEdu
+    MinFin --"Defines Strategy for"--> SWF
+    P --"Oversees Reports from"--> MinFin
+
+    CB --"Operationally Manages"--> BIM
+    BIM --"Manages Assets of"--> SWF
+    
+    A --"5. Owns & Funds"--> TN
+    
+    MinEdu --"Sponsors"--> AS
+    CB --"Sponsor (Banks)"--> AS
+
+    Guilds --"Receive Credit Lines from"--> CB
+    E_Head --"Coordinates"--> Guilds
+
+    AS --"Submits Discoveries to"--> TN
+    J --"Registers Rulings in"--> TN
+
+    %% -- Dependency on Foundation --
+    P & E_Head & J & CB & AS & TN --"Operate on the"--> F

@@ -1,0 +1,163 @@
+---
+id: 141d57aa-f9f1-4db3-a2ef-d4c28f95b549
+---
+flowchart LR
+ subgraph MILPATH["MilitaryPath"]
+    direction RL
+        M4["Tumen10000"]
+        M3["Myangan1000"]
+        M2["Zuun100"]
+        M1["Arban10"]
+  end
+ subgraph ECON["EconomicPath"]
+    direction LR
+        L4["Tumen10000"]
+        L3["Myangan1000"]
+        L2["Zuun100"]
+        L1["Arban10"]
+  end
+ subgraph MARKET["MARKET_SIMEX_and_Economy"]
+    direction LR
+        MK["Siberian_International_Exchange_SIMEX"]
+        GE["State_Enterprises"]
+        PE["Private_Enterprises"]
+        BK["Public-Private_Banks"]
+        ZF["Factories_and_Plants"]
+        LG["Logistics"]
+        LT["Labor_Market"]
+        SV["Public_Services_and_Providers"]
+        FX["Currency_ALTN_and_FX"]
+        CM["Resources_and_Commodities"]
+        EQ["Stocks_and_Shares"]
+        DR["Derivatives"]
+        CC["Carbon_Credits"]
+        REAL["Real_Estate"]
+  end
+ subgraph GOVPATH["Political_Path"]
+    direction LR
+        G4["Tumen10000"]
+        G3["Myangan1000"]
+        G2["Zuun100"]
+        G1["Arban10"]
+  end
+ subgraph LEGIS["Legislative_Branch"]
+    direction LR
+        K1["Constitution_and_Rights"]
+        K2["Budget_and_Taxes"]
+        K3["Foreign_Affairs"]
+        K4["Natural_Resources"]
+        K5["Education_and_Healthcare"]
+        K6["Data_and_Registries"]
+        K7["Audit_and_Oversight"]
+  end
+ subgraph FIN["Financial_Branch"]
+    direction LR
+        B1["Monetary_Policy"]
+        B2["Payment_System_and_ALTN_Currency"]
+        B3["Issuance_and_Treasury"]
+        B4["Supervision_and_Licensing"]
+        B5["Sovereign_Fund"]
+        B6["Financial_Stability"]
+        B7["Clearing_and_Settlements"]
+  end
+ subgraph JUD["Judicial_Branch"]
+    direction LR
+        J1["Supreme_Court"]
+        J2["Constitutional_Court"]
+        J3["Appellate_Courts"]
+        J4["Administrative_Courts"]
+        J5["Commercial_and_Arbitration_Courts"]
+        J6["Anti-Corruption_Court"]
+        J7["Electoral_Tribunal"]
+        J8["Notaries_and_Legal_Registries"]
+  end
+ subgraph EXEC["Executive_Branch"]
+    direction LR
+        E1["Cabinet_and_Prime Minister"]
+        E2["Digital_Governance"]
+        E3["Finance_Ministry"]
+        E4["Economy_and_Trade"]
+        E5["Internal_Affairs"]
+        E6["Transport_and_Logistics"]
+        E7["Energy_and_Minerals"]
+        E8["Agriculture"]
+        E9["Healthcare"]
+        E10["Education_and_Science"]
+        E11["Environment"]
+        E12["Culture_and_Heritage"]
+        E13["Anti-Corruption"]
+  end
+ subgraph MIL_ARMY["Army_Commands_and_Agencies"]
+    direction LR
+        MA1["General_Staff"]
+        MA2["Ground_Forces_Corps"]
+        MA3["Territorial_Defense"]
+        MA4["Logistics_and_Support"]
+        MA5["Military_Medical_Service"]
+        MA6["Engineering_Corps"]
+        MA7["Cyber_and_Communications"]
+        MA8["Procurement_and_Supply"]
+  end
+ subgraph MIL_NAVY["Navy_Commands_and_Shipyards"]
+    direction LR
+        MN1["Fleet_Command"]
+        MN2["Surface_Fleet"]
+        MN3["Submarine_Forces"]
+        MN4["Naval_Aviation"]
+        MN5["Coast_Guard"]
+        MN6["Shipyards_and_Repair"]
+        MN7["Hydrography_and_Navigation"]
+        MN8["Fleet_Logistics"]
+  end
+ subgraph MIL_AIR["Air_and_Space_Commands"]
+    direction LR
+        MS1["Air_Force_Command"]
+        MS2["Air_Defense"]
+        MS3["Space_Command"]
+        MS4["UAV_and_Electronic_Warfare"]
+        MS5["Navigation_and_Communications"]
+        MS6["Maintenance"]
+        MS7["Fuel_and_Logistics"]
+        MS8["Procurement_and_R&D"]
+  end
+ subgraph CORE["Legal_Core"]
+    direction TB
+        SC["Smart_Contracts-Altan_Chain"]
+        RG["Unified_Registry_of_Rights_and_Acts"]
+        CV["Civil_Records-Birth_Death_Marriage_Inheritance"]
+        NT["Notaries-Access_and_Verification"]
+  end
+    P["People"] --> R["Registration_and_SeatSBT"]
+    R --> C["Citizen_and_SeatSBT"]
+    M1 --> M2
+    M2 --> M3
+    M3 --> M4
+    C --> M1 & L1 & G1
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    MK --> GE & PE & BK & ZF & LG & LT & SV & FX & CM & EQ & DR & CC & REAL & SC & RG
+    L4 --> MK
+    G1 --> G2
+    G2 --> G3
+    G3 --> G4
+    G4 --> K["Khural_and_Legislative_Assembly"] & B["Central_Bank"] & J["Judicial_Branch"] & E["Executive_Branch"]
+    K --> K1 & K2 & K3 & K4 & K5 & K6 & K7
+    B --> B1 & B2 & B3 & B4 & B5 & B6 & B7
+    J --> J1 & J2 & J3 & J4 & J5 & J6 & J7 & J8
+    E --> E1 & E2 & E3 & E4 & E5 & E6 & E7 & E8 & E9 & E10 & E11 & E12 & E13
+    M4 --> MA["Army"] & MN["Navy"] & MS["Air_and_Space"]
+    MA --> MA1 & MA2 & MA3 & MA4 & MA5 & MA6 & MA7 & MA8
+    MN --> MN1 & MN2 & MN3 & MN4 & MN5 & MN6 & MN7 & MN8
+    MS --> MS1 & MS2 & MS3 & MS4 & MS5 & MS6 & MS7 & MS8
+    SC --> RG
+    RG --> CV
+    NT --> RG & SC
+    K6 --> RG
+    J8 --> NT
+    J1 --> RG
+    B2 --> SC
+    E2 --> SC
+    MA8 --> MK
+    MN6 --> MK
+    MS8 --> MK

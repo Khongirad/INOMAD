@@ -1,0 +1,54 @@
+---
+id: 965f9f4b-33f0-46f0-b50e-d9ccd961a0b2
+---
+flowchart TB
+  %% ==== External context ====
+  RTOP[[Requirements from higher level]]
+  RBOT[[Requirements flow down to lower level]]
+  PTOP[[Realized products to higher level]]
+  PBOT[[Realized products from lower level]]
+
+  %% ==== System Design ====
+  subgraph SD["System Design Processes — iNomad KHURAL"]
+    direction TB
+    SD1["Stakeholder expectations: Citizens, State Chancellery, Ministries, Guilds"]
+    SD2["System requirements: Central Bank SC, SeatSBT, Altan Wallet, ALTN, Citizen Capsule"]
+    SD3["Logical decomposition: Capsule → Arban → Zun → Myangan → Tümen → Institutions"]
+    SD4["Design solution: Altan chain, Khural App, APIs, data/privacy model"]
+    SDa[[Design anchor]]
+  end
+
+  %% ==== Technical Management ====
+  subgraph TM["Technical Management Processes"]
+    direction TB
+    TM1["Technical planning"]
+    TM2["Requirements management"]
+    TM3["Interface management (ID, payments, governance)"]
+    TM4["Technical risk management"]
+    TM5["Configuration management (protocols, policies)"]
+    TM6["Technical data management"]
+    TM7["Technical assessment"]
+    TM8["Decision analysis (CM/DM, RFCs, on-chain votes)"]
+    TMa[[Mgmt anchor]]
+  end
+
+  %% ==== Product Realization ====
+  subgraph PR["Product Realization Processes"]
+    direction TB
+    PR1["Design realization: implement smart contracts (Central Bank, SeatSBT, ElectionRegistry)"]
+    PR2["Product integration: wallets, Capsule UI, services"]
+    PR3["Product verification: tests, audits"]
+    PR4["Product validation: pilots 10→100→1000"]
+    PR5["Product transition: launch v1, operations handover"]
+    PRa[[Realization anchor]]
+  end
+
+  %% ==== Flows ====
+  RTOP --> SDa
+  SDa --> RBOT
+  PBOT --> PRa
+  PRa --> PTOP
+
+  %% Cross-cutting management links
+  TMa --- SDa
+  TMa --- PRa

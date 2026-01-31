@@ -1,0 +1,26 @@
+---
+id: e4509bb2-5027-410c-997a-e7314d8691fe
+---
+flowchart TD
+S[State]
+W[One Window: Company and Guild Registration]
+
+subgraph COMPANY_PATH[Company Path]
+RC[Register Company]
+CC[Company Created]
+CO[Company Operations]
+end
+
+subgraph GUILD_PATH[Guild Path]
+RG[Register Guild]
+VP[Verify by 10 Professionals]
+GC[Guild Created]
+GT[Guild Tasks]
+end
+
+S --> W
+W --> COMPANY_PATH
+W --> GUILD_PATH
+
+COMPANY_PATH --> CO
+GUILD_PATH --> GT

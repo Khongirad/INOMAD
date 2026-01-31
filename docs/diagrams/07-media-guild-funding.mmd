@@ -1,0 +1,43 @@
+---
+id: ef386e38-b27f-4918-a3ea-8fe24b9111e4
+---
+flowchart TD
+S[State]
+LF[LegalFramework]
+BF[BaselineFunding]
+CIT[Citizens]
+VOTE[AnnualVoting]
+C10[CouncilofTen]
+G[MediaGuild]
+J[Journalists]
+PUB[Publications]
+CON[Consumption]
+SC[SmartContractPayments]
+JW[JournalistWallet]
+GF[GuildOperationsFund]
+SMF[StateMediaFund]
+FB[Feedback]
+LED[TrustLedger]
+
+S --> LF
+LF --> G
+
+S --> BF
+BF --> SC
+
+CIT --> VOTE
+VOTE --> C10
+C10 --> G
+G --> J
+J --> PUB
+
+CIT --> CON
+CON --> SC
+
+SC --> JW
+SC --> GF
+SC --> SMF
+
+CIT --> FB
+FB --> LED
+LED --> VOTE

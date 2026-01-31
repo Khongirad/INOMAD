@@ -1,0 +1,85 @@
+---
+id: f41b598f-4ed7-40ae-abac-b062fb23d13e
+---
+flowchart TB
+
+%% ===== Центр: Сотник (лидер сотни) =====
+ZC((Zuun Leader / Сотник))
+
+%% ===== Внутренний круг: 9 управляющих сотни (его личная десятка) =====
+M1((Manager 1))
+M2((Manager 2))
+M3((Manager 3))
+M4((Manager 4))
+M5((Manager 5))
+M6((Manager 6))
+M7((Manager 7))
+M8((Manager 8))
+M9((Manager 9))
+
+%% Видимые связи центра к менеджерам
+ZC --- M1
+ZC --- M2
+ZC --- M3
+ZC --- M4
+ZC --- M5
+ZC --- M6
+ZC --- M7
+ZC --- M8
+ZC --- M9
+
+%% Скрытое кольцо менеджеров — только для круговой раскладки (360°)
+M1 --- M2
+M2 --- M3
+M3 --- M4
+M4 --- M5
+M5 --- M6
+M6 --- M7
+M7 --- M8
+M8 --- M9
+M9 --- M1
+
+%% ===== Внешний круг: 10 лидеров десяток (Arban Leaders) =====
+AL1((Arban Leader 1\nСотников арбан-лидер))
+AL2((Arban Leader 2))
+AL3((Arban Leader 3))
+AL4((Arban Leader 4))
+AL5((Arban Leader 5))
+AL6((Arban Leader 6))
+AL7((Arban Leader 7))
+AL8((Arban Leader 8))
+AL9((Arban Leader 9))
+AL10((Arban Leader 10))
+
+%% Видимые связи центра к 10 лидерам десяток
+ZC --- AL1
+ZC --- AL2
+ZC --- AL3
+ZC --- AL4
+ZC --- AL5
+ZC --- AL6
+ZC --- AL7
+ZC --- AL8
+ZC --- AL9
+ZC --- AL10
+
+%% Скрытое кольцо лидеров десяток — только для круговой раскладки (360°)
+AL1 --- AL2
+AL2 --- AL3
+AL3 --- AL4
+AL4 --- AL5
+AL5 --- AL6
+AL6 --- AL7
+AL7 --- AL8
+AL8 --- AL9
+AL9 --- AL10
+AL10 --- AL1
+
+%% ===== Скрываем "технические" кольца (невидимые линии) =====
+%% Порядок рёбер:
+%% 0..8   : ZC—M1..M9
+%% 9..18  : ZC—AL1..AL10
+%% 19..27 : кольцо менеджеров (9 рёбер)
+%% 28..37 : кольцо арбан-лидеров (10 рёбер)
+linkStyle 19,20,21,22,23,24,25,26,27 stroke:transparent,stroke-width:0px
+linkStyle 28,29,30,31,32,33,34,35,36,37 stroke:transparent,stroke-width:0px

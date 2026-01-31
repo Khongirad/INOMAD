@@ -1,0 +1,64 @@
+---
+id: 0c4d7d95-bdfd-4967-8dc2-443c83889202
+---
+classDiagram
+    class SeatSBT {
+      +role: Role
+      +issuer: Authority
+      +nonTransferable: bool
+    }
+
+    class DigitalSeal {
+      +signers: Address[2]
+      +threshold: uint(2-of-2)
+      +verify(tx): bool
+    }
+
+    class GovContract {
+      +postRFP()
+      +submitBid()
+      +award()
+      +milestoneCheck()
+      +disburse()
+      +autoFlag()
+      #auditTrail: Hash[]
+    }
+
+    class CivilContract {
+      +encryptedData: bytes
+      +participants: Address[]
+      +hashCommitment: Hash
+    }
+
+    class ACL {
+      +requestAccess(scope)
+      +verifyOrder(orderId)
+      +partialDecrypt(fields) : bytes
+    }
+
+    class JudicialOrderNFT {
+      +caseId: string
+      +scope: string[]
+      +expiresAt: time
+      +revoked: bool
+    }
+
+    class Treasury {
+      +receiveTax()
+      +distribute3()
+      +distribute7()
+      +pauseOnAnomaly()
+    }
+
+    class AuditNode {
+      +monitor()
+      +patternDetect()
+      +emitAlert()
+    }
+
+    SeatSBT --> DigitalSeal : grants signing right
+    DigitalSeal --> GovContract : two-key approval
+    Treasury --> GovContract : funds / checks
+    AuditNode --> GovContract : oversight/flags
+    CivilContract --> ACL : guarded by policy
+    JudicialOrderNFT --> ACL : unlocks scoped access

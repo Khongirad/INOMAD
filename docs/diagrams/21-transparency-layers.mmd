@@ -1,0 +1,67 @@
+---
+id: 2357df7b-ca11-4db0-a0a9-7421eff3bc27
+---
+%% ДВУХСЛОЙНАЯ ПРОЗРАЧНОСТЬ: гос-слой открыт, гражданский — шифрован, доступ по ордеру
+flowchart LR
+
+  %% --- Граждане и DAO ---
+  subgraph Citizens["Citizens & Circles (Arban-Zuun-Myangan-Tumen)"]
+    C1["Citizen dApp"]
+    DAO["Khural DAO (proposals/votes)"]
+  end
+
+  %% --- Идентичности и подписи ---
+  subgraph Identity["Identity & Roles"]
+    SBT["SeatSBT (role-bound SBT)"]
+    Seal["Digital Seal (2-of-2)"]
+  end
+
+  %% --- Казначейство ---
+  subgraph Treasury["Central Treasury"]
+    CT["Audit Node & Ledger"]
+    Dist["Budget Distributor (3%/7%)"]
+  end
+
+  %% --- Гос-слой (прозрачный) ---
+  subgraph Gov["Public State Layer (transparent)"]
+    GSC["Gov Smart Contracts"]
+    View["Public Explorer (real-time)"]
+  end
+
+  %% --- Гражданский слой (шифрованный) ---
+  subgraph Civil["Private Civil Layer (encrypted)"]
+    ENC["Encrypted Civil Contracts"]
+    ACL["Access Control (ZK + policy)"]
+  end
+
+  %% --- Судебный слой ---
+  subgraph Judicial["Judicial DAO"]
+    J["Judge (elected)"]
+    JO["Judicial Order NFT (time-bound)"]
+  end
+
+  %% --- Вспомогательные узлы распределения ---
+  CT3["Federal Central Treasury 3%"]
+  REG7["Regional/Local/Guild 7%"]
+
+  %% --- Потоки / связи ---
+  C1 -->|Proposals/Votes| DAO
+  DAO -->|Approvals/Flags| GSC
+  DAO -->|Audit Requests| J
+
+  SBT --> Seal
+  Seal --> GSC
+  Seal --> CT
+
+  CT -->|Milestone checks| GSC
+  CT --> Dist
+  Dist -->|3%| CT3
+  Dist -->|7%| REG7
+
+  GSC -->|Events/Txs| View
+
+  C1 -->|Create/Sign| ENC
+  ENC --> ACL
+  J -->|Issue/Revoke| JO
+  JO --> ACL
+  ACL -->|Conditional decrypt| C1

@@ -1,0 +1,44 @@
+---
+id: 1e3786fe-7919-444a-b768-1df6e26eb487
+---
+flowchart TD
+S[State]
+GC[GuildCenter]
+G[GuildbyProfession]
+MG[MusicGuild]
+MED[MediaGuild]
+TOUR[TourismGuild]
+SPORT[SportsGuild]
+
+CR[Creator]
+REG[RegisterinGuild]
+WRK[PublishWork]
+SC[SmartContract]
+
+CIT[CitizenConsumer]
+ACT[PlayViewAttend]
+PAY[Payment]
+
+CW[CreatorWallet]
+COM[GuildCommission]
+TAX[Tax10%]
+
+S --> GC
+GC --> G
+G --> MG
+G --> MED
+G --> TOUR
+G --> SPORT
+
+CR --> REG
+REG --> G
+CR --> WRK
+WRK --> SC
+
+CIT --> ACT
+ACT --> SC
+
+SC --> CW
+SC --> COM
+SC --> TAX
+TAX --> S

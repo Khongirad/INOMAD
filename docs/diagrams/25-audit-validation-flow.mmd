@@ -1,0 +1,18 @@
+---
+id: a3a75803-c116-4d5d-beff-f329acba83eb
+---
+flowchart TD
+    Start[[Event Emitted from GovContract]]
+    Start --> CheckA{2-key\nsignature valid?}
+    CheckA -->|No| FlagA[Auto-Flag & Halt]
+    CheckA -->|Yes| CheckB{Milestone\nproof OK?}
+    CheckB -->|No| Pause[Pause & Re-Review]
+    CheckB -->|Yes| CheckC{Pattern\nAnomaly?}
+    CheckC -->|Yes| Alert[AuditNode Alert -> Judicial DAO]
+    CheckC -->|No| Pay[Disburse Funds]
+    Pause --> AuditPath[Escalate to Audit]
+    Alert --> AuditPath
+    AuditPath --> Clear{Cleared?}
+    Clear -->|Yes| Pay
+    Clear -->|No| Terminate[Terminate & Blacklist]
+    Pay --> End[[Done]]

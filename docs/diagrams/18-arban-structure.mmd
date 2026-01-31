@@ -1,0 +1,75 @@
+---
+id: 5bfbd581-ac79-4dda-abc2-0f7df0292cb9
+---
+flowchart TB
+
+%% ===== центр: лидер =====
+L((Leader))
+
+%% ===== орбита: 9 членов команды =====
+T1((Member 1))
+T2((Member 2))
+T3((Member 3))
+T4((Member 4))
+T5((Member 5))
+T6((Member 6))
+T7((Member 7))
+T8((Member 8))
+T9((Member 9))
+
+%% видимые связи: только лидер -> члены
+L --- T1
+L --- T2
+L --- T3
+L --- T4
+L --- T5
+L --- T6
+L --- T7
+L --- T8
+L --- T9
+
+%% семьи (по одному узлу на семью, можно детализировать позже)
+LF((Family))
+F1((Family ))
+F2((Family ))
+F3((Family ))
+F4((Family ))
+F5((Family ))
+F6((Family ))
+F7((Family ))
+F8((Family ))
+F9((Family ))
+
+%% связи к семьям
+L --> LF
+T1 --> F1
+T2 --> F2
+T3 --> F3
+T4 --> F4
+T5 --> F5
+T6 --> F6
+T7 --> F7
+T8 --> F8
+T9 --> F9
+
+%% ===== невидимое кольцо (только для круговой раскладки, не отображается) =====
+T1 --- T2
+T2 --- T3
+T3 --- T4
+T4 --- T5
+T5 --- T6
+T6 --- T7
+T7 --- T8
+T8 --- T9
+T9 --- T1
+
+%% спрятать "кольцо": индексы 19..27 (см. порядок рёбер выше)
+linkStyle 19 stroke:transparent,stroke-width:0px
+linkStyle 20 stroke:transparent,stroke-width:0px
+linkStyle 21 stroke:transparent,stroke-width:0px
+linkStyle 22 stroke:transparent,stroke-width:0px
+linkStyle 23 stroke:transparent,stroke-width:0px
+linkStyle 24 stroke:transparent,stroke-width:0px
+linkStyle 25 stroke:transparent,stroke-width:0px
+linkStyle 26 stroke:transparent,stroke-width:0px
+linkStyle 27 stroke:transparent,stroke-width:0px
