@@ -1,4 +1,4 @@
-# ALTAN - Digital Nation Infrastructure
+# INOMAD KHURAL - Digital Nation Infrastructure
 ## Siberian Confederation Sovereign Blockchain Platform
 
 [![License](https://img.shields.io/badge/license-proprietary-red)]()

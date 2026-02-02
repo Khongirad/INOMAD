@@ -1,4 +1,4 @@
-# iNomad / ALTAN - Digital Nation Operating System
+# INOMAD KHURAL - Digital Nation Operating System
 
 **One-liner**: A peaceful digital transition mechanism for the post-imperial Siberian Confederation.
 
