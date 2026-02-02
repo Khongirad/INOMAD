@@ -1,5 +1,5 @@
 # Y Combinator Readiness Analysis
-## Buryad-Mongol / ALTAN L1 Project
+## Buryad-Mongol / INOMAD KHURAL Project
 
 **Analysis Date**: February 2, 2026  
 **Analyst**: Technical Assessment  

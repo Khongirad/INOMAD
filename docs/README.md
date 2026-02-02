@@ -1,6 +1,6 @@
-# ALTAN Documentation Index
+# INOMAD KHURAL Documentation Index
 
-Complete documentation for the ALTAN Digital Nation Infrastructure project.
+Complete documentation for the **INOMAD KHURAL** Digital Nation Infrastructure project.
 
 ## 📚 Documentation Categories
 

@@ -1,4 +1,5 @@
-# ALTAN L1 Blockchain - Technical Specification
+# INOMAD KHURAL Platform & ALTAN L1 Blockchain
+## Technical Specification v1.0
 
 ## Executive Summary
 

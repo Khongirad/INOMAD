@@ -9,12 +9,12 @@
 
 ## 🎯 Executive Summary
 
-ALTAN is a comprehensive digital nation infrastructure for the Siberian Confederation, implementing constitutional governance and economic systems on blockchain technology.
+**INOMAD KHURAL** is a comprehensive digital nation infrastructure for the Siberian Confederation, implementing constitutional governance and economic systems on blockchain technology.
 
 **Key Components**:
 - **ALTAN L1 Blockchain** (Cosmos SDK) with 37 constitutional articles embedded
-- **Governance System** based on Arban (10-member household) model  
-- **Economic Framework** including AltanUSD stablecoin and dual banking system
+- **Governance System** (KHURAL) based on Arban (10-member household) model  
+- **Economic Framework** including Altan currency, AltanUSD stablecoin bridge
 - **Parliamentary Hierarchy**: Arban → Zun → Myangan → Tumen → Republican/Confederate Khurals
 
 **Revenue Model**: [Article 27](docs/blockchain/altan_l1_technical_spec.md#article-27-network-fee) - 0.03% network fee → INOMAD INC (constitutional mandate)
@@ -29,7 +29,7 @@ ALTAN is a comprehensive digital nation infrastructure for the Siberian Confeder
 | **Frontend** | Next.js 14 | ✅ Production | 15,000+ | Citizen portal, governance interface |
 | **Backend** | NestJS + PostgreSQL | ✅ Production | 20,000+ | API, authentication, database |
 | **Smart Contracts** | Solidity (Foundry) | ✅ Deployed | 10,000+ | Ethereum Layer 2 governance contracts |
-| **AltanUSD** | ERC-20 Stablecoin | 📋 Q2 2026 | - | USD-backed regulated stablecoin |
+| **AltanUSD** | ERC-20 Stablecoin | 📋 Q2 2026 | - | USD-backed regulated stablecoin bridge |
 
 **Total**: 47,000+ lines of production code
 
@@ -62,7 +62,7 @@ ALTAN is a comprehensive digital nation infrastructure for the Siberian Confeder
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     ALTAN Platform                          │
+│                   INOMAD KHURAL Platform                    │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  Frontend (Next.js)                                         │

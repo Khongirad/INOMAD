@@ -1,4 +1,4 @@
-# Quick Start Guide - iNomad Project
+# INOMAD KHURAL - Quick Start Guide - iNomad Project
 **Critical Path to Launch** 🚀
 
 ---

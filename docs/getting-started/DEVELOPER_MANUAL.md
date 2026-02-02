@@ -1,6 +1,5 @@
-# Developer Manual
-
-## Getting Started
+# INOMAD KHURAL - Developer Manual
+## Digital Nation Infrastructured
 
 ### Environment Setup
 
