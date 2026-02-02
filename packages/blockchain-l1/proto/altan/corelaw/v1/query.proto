@@ -1,0 +1,84 @@
+syntax = "proto3";
+package altan.corelaw.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "altan/corelaw/v1/params.proto";
+import "altan/corelaw/v1/article.proto";
+
+option go_package = "altan/x/corelaw/types";
+
+// Query defines the gRPC querier service for corelaw module
+service Query {
+  // Parameters queries the parameters of the module
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/altan/corelaw/v1/params";
+  }
+
+  // Article queries a specific article by number
+  rpc Article(QueryArticleRequest) returns (QueryArticleResponse) {
+    option (google.api.http).get = "/altan/corelaw/v1/articles/{article_number}";
+  }
+
+  // AllArticles queries all articles
+  rpc AllArticles(QueryAllArticlesRequest) returns (QueryAllArticlesResponse) {
+    option (google.api.http).get = "/altan/corelaw/v1/articles";
+  }
+
+  // CoreLawState queries the current state of the Core Law  
+  rpc CoreLawState(QueryCoreLawStateRequest) returns (QueryCoreLawStateResponse) {
+    option (google.api.http).get = "/altan/corelaw/v1/state";
+  }
+
+  // NetworkFee calculates the network fee for a given amount
+  rpc NetworkFee(QueryNetworkFeeRequest) returns (QueryNetworkFeeResponse) {
+    option (google.api.http).get = "/altan/corelaw/v1/network_fee/{amount}";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryArticleRequest is request type for the Query/Article RPC method
+message QueryArticleRequest {
+  uint32 article_number = 1;
+}
+
+// QueryArticleResponse is response type for the Query/Article RPC method
+message QueryArticleResponse {
+  Article article = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAllArticlesRequest is request type for the Query/AllArticles RPC method
+message QueryAllArticlesRequest {
+  ArticleCategory category = 1;  // Optional filter by category
+}
+
+// QueryAllArticlesResponse is response type for the Query/AllArticles RPC method
+message QueryAllArticlesResponse {
+  repeated Article articles = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryCoreLawStateRequest is request type for the Query/CoreLawState RPC method
+message QueryCoreLawStateRequest {}
+
+// QueryCoreLawStateResponse is response type for the Query/CoreLawState RPC method
+message QueryCoreLawStateResponse {
+  CoreLawState state = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryNetworkFeeRequest is request type for the Query/NetworkFee RPC method
+message QueryNetworkFeeRequest {
+  string amount = 1;  // Amount in ualtan
+}
+
+// QueryNetworkFeeResponse is response type for the Query/NetworkFee RPC method
+message QueryNetworkFeeResponse {
+  string fee = 1;  // Calculated fee in ualtan
+  string capped_fee = 2;  // Fee after applying cap
+}

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package altan.corelaw.v1;
+
+option go_package = "altan/x/corelaw/types";
+
+// Params defines the parameters for the corelaw module
+message Params {
+  // network_fee_bps is the network fee in basis points (3 = 0.03%)
+  uint32 network_fee_bps = 1;
+  
+  // network_fee_cap is the maximum network fee per transaction (in ualtan)
+  // 1000 ALTAN = 1,000,000,000 ualtan
+  string network_fee_cap = 2;
+  
+  // tax_rate_bps is the annual tax rate in basis points (1000 = 10%)
+  uint32 tax_rate_bps = 3;
+}

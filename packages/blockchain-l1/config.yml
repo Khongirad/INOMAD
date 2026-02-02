@@ -1,0 +1,22 @@
+version: 1
+
+accounts:
+  - name: alice
+    coins:
+      - 10000000000000000ualtan  # 10B ALTAN for testing
+  - name: bob
+    coins:
+      - 1000000000000000ualtan   # 1B ALTAN for testing
+
+validators:
+  - name: alice
+    bonded: 1000000000000ualtan  # 1M ALTAN staked
+
+client:
+  openapi:
+    path: docs/static/openapi.yml
+  
+faucet:
+  name: alice
+  coins:
+    - 100000000ualtan

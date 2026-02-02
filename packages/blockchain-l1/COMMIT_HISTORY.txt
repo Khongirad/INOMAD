@@ -1,0 +1,7 @@
+213bce4e4a7795f9ca24b765f7f97f88d78151cf|Bair Ivanov (INOMAD)|ceo@inomad.life|2026-02-02 03:02:43 -0600|fix: Resolve store/IAVL compatibility issues
+ebbf43f527d75a5dc87310946e17c9562330a4fb|Bair Ivanov (INOMAD)|ceo@inomad.life|2026-02-02 01:57:20 -0600|fix: Resolve ABCI compatibility issues
+3d532b47b6dc8cb59ed550eebc42192ac9545a7f|Bair Ivanov (INOMAD)|ceo@inomad.life|2026-02-02 01:33:55 -0600|feat: Complete x/corelaw module integration with manual approach
+17d15e25f43d03ec1b4e4db3679da986130ff13d|Bair Ivanov (INOMAD)|ceo@inomad.life|2026-02-01 00:12:10 -0600|fix: Update go.mod for Go 1.23 and toolchain compatibility
+ac669d4d581be3b10d65821d716c322e0e1715e4|Bair Ivanov (INOMAD)|ceo@inomad.life|2026-01-31 22:30:51 -0600|feat(corelaw): Add x/corelaw module with 37 constitutional articles
+6708768215a88dc3b8e681dcefa5fca6a1b87716|Bair Ivanov (INOMAD)|ceo@inomad.life|2026-01-31 21:49:10 -0600|Initial ALTAN blockchain with ualtan denomination
+dd2c960ccdab26672ae0a8ad62b5514c5c8e07ab|Developer Experience team at Ignite|hello@ignite.com|2026-01-31 21:05:08 -0600|Initialized with Ignite CLI
