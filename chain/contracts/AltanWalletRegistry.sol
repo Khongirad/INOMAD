@@ -12,7 +12,7 @@ contract AltanWalletRegistry {
     address public owner;         // Central Bank / Root Authority
     ISeatSBTFull public seatSbt;
 
-    uint256 public constant THRESHOLD = 3;
+    uint256 public constant THRESHOLD = 1;  // 1-of-N unlock (single verifier)
 
     mapping(uint256 => address) public walletOf;              // seatId -> wallet
     mapping(uint256 => bool) public isUnlocked;               // seatId -> unlocked

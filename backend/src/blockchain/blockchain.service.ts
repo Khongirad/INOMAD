@@ -8,6 +8,7 @@ import { AltanCoreLedger_ABI } from './abis/altanCoreLedger.abi';
 import { AltanWalletRegistry_ABI } from './abis/altanWalletRegistry.abi';
 import { AltanWallet_ABI } from './abis/altanWallet.abi';
 import { ActivationRegistry_ABI } from './abis/activationRegistry.abi';
+import { TaxEngine_ABI } from './abis/taxEngine.abi';
 
 /**
  * Blockchain service for interacting with ALTAN contracts
@@ -25,6 +26,7 @@ export class BlockchainService implements OnModuleInit {
   private activationRegistryContract: ethers.Contract;
   private altanCoreLedgerContract: ethers.Contract;
   private altanWalletRegistryContract: ethers.Contract;
+  private taxEngineContract: ethers.Contract;
 
   constructor(
     private configService: ConfigService,
@@ -125,6 +127,16 @@ export class BlockchainService implements OnModuleInit {
       );
       this.logger.log(`   ✓ AltanWalletRegistry: ${bankingAddresses.altanWalletRegistry}`);
     }
+
+    // Initialize TaxEngine
+    if (bankingAddresses.taxEngine) {
+      this.taxEngineContract = new ethers.Contract(
+        bankingAddresses.taxEngine,
+        TaxEngine_ABI,
+        this.provider,
+      );
+      this.logger.log(`   ✓ TaxEngine: ${bankingAddresses.taxEngine}`);
+    }
   }
 
   /**
@@ -159,6 +171,16 @@ export class BlockchainService implements OnModuleInit {
       return null;
     }
     return this.activationRegistryContract;
+  }
+
+  /**
+   * Get TaxEngine contract for tax operations
+   */
+  getTaxEngineContract(): ethers.Contract | null {
+    if (!this.isAvailable() || !this.taxEngineContract) {
+      return null;
+    }
+    return this.taxEngineContract;
   }
 
   /**
