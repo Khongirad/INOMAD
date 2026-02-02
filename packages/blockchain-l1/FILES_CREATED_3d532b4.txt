@@ -1,0 +1,14 @@
+app/app.go
+go.env
+go.mod.bak
+go.mod.bak2
+go.mod.bak3
+x/corelaw/keeper/genesis.go
+x/corelaw/module.go
+x/corelaw/types/genesis.go
+x/corelaw/types/genesis_ articles.go
+x/corelaw/types/genesis_ articles.go.bak2
+x/corelaw/types/genesis_ articles.go.bak3
+x/corelaw/types/genesis_ articles.go.bak4
+x/corelaw/types/genesis_ articles.go.bak5
+x/corelaw/types/params.go

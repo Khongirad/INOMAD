@@ -1,0 +1,32 @@
+syntax = "proto3";
+package altan.corelaw.v1;
+
+option go_package = "altan/x/corelaw/types";
+
+// ArticleCategory defines the категории статей Конституции
+enum ArticleCategory {
+  ARTICLE_CATEGORY_UNSPECIFIED = 0;
+  ARTICLE_CATEGORY_PRINCIPLES = 1;     // Принципы (статьи 1-7)
+  ARTICLE_CATEGORY_RIGHTS = 2;         // Права граждан (статьи 8-15)
+  ARTICLE_CATEGORY_GOVERNANCE = 3;     // Управление (статьи 16-22)
+  ARTICLE_CATEGORY_ECONOMY = 4;        // Экономика (статьи 23-30)
+  ARTICLE_CATEGORY_LAND = 5;           // Земля (статьи 31-33)
+  ARTICLE_CATEGORY_JUSTICE = 6;        // Правосудие (статьи 34-36)
+  ARTICLE_CATEGORY_SECURITY = 7;       // Безопасность (статья 37)
+}
+
+// Article represents a single статья of the Siberian Confederation Constitution
+message Article {
+  uint32 article_number = 1;
+  string title = 2;
+  string content = 3;
+  ArticleCategory category = 4;
+}
+
+// CoreLawState represents the complete state of the Core Law
+message CoreLawState {
+  repeated Article articles = 1;
+  bool is_frozen = 2;
+  string frozen_at = 3;
+  string law_hash = 4;  // SHA-256 hash of all articles (immutability proof)
+}
