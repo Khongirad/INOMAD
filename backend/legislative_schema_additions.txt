@@ -1,0 +1,134 @@
+// Add to User model (after line 47):
+  
+  // Legislative Branch relations
+  proposalsCreated        Proposal[]           @relation("ProposalCreator")
+  votesCast               Vote[]               @relation("VoteCaster")
+  khuralDelegacy          KhuralDelegate[]     @relation("KhuralDelegate")
+
+// Add at end of schema.prisma:
+
+// ============================================================================
+// LEGISLATIVE BRANCH (Khural) - Phase 3 Backend Integration
+// ============================================================================
+
+model Proposal {
+  id              String          @id @default(uuid())
+  proposalId      Int             @unique // On-chain proposal ID
+  proposalType    ProposalType
+  khuralLevel     KhuralLevel
+  khuralId        Int             // Specific Arban/Zun/Myangan/Tumen ID
+  
+  title           String
+  description     String
+  executionData   String?         // Hex encoded calldata
+  
+  proposer        String          // Wallet address
+  proposerSeatId  String?         // Link to User
+  
+  status          ProposalStatus  @default(ACTIVE)
+  votingPeriod    Int             // Duration in seconds
+  startTime       DateTime        @default(now())
+  endTime         DateTime
+  
+  votesFor        Int             @default(0)
+  votesAgainst    Int             @default(0)
+  quorumRequired  Int             // Number of votes needed
+  
+  finalized       Boolean         @default(false)
+  finalizedAt     DateTime?
+  executed        Boolean         @default(false)
+  executedAt      DateTime?
+  
+  txHash          String?         // Transaction hash
+  blockNumber     Int?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  votes           Vote[]
+  proposerUser    User?           @relation("ProposalCreator", fields: [proposerSeatId], references: [seatId])
+  
+  @@index([proposalId])
+  @@index([khuralLevel, khuralId])
+  @@index([status])
+  @@index([proposer])
+}
+
+model Vote {
+  id          String   @id @default(uuid())
+  proposalId  String
+  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  
+  voter       String   // Wallet address
+  voterSeatId String?  // Link to User
+  support     Boolean  // true = for, false = against
+  reason      String?
+  
+  khuralLevel KhuralLevel
+  votingPower Int      @default(1) // Usually 1, but can be weighted
+  
+  txHash      String?
+  blockNumber Int?
+  
+  createdAt   DateTime @default(now())
+  
+  voterUser   User?    @relation("VoteCaster", fields: [voterSeatId], references: [seatId])
+  
+  @@unique([proposalId, voter])
+  @@index([voter])
+  @@index([proposalId])
+}
+
+model KhuralDelegate {
+  id              String      @id @default(uuid())
+  
+  walletAddress   String
+  seatId          String?     // Link to User
+  
+  khuralLevel     KhuralLevel
+  khuralId        Int         // Specific Arban/Zun/Myangan/Tumen ID
+  
+  // Source information
+  sourceLevel     KhuralLevel? // Where they were elected from
+  sourceId        Int?         // Source Arban/Zun/Myangan ID
+  
+  role            String       // REPRESENTATIVE, DELEGATE, ELDER, LEADER, CHAIRMAN
+  
+  electedAt       DateTime     @default(now())
+  termEnds        DateTime?
+  active          Boolean      @default(true)
+  
+  // Stats
+  proposalsCreated Int         @default(0)
+  votesCast       Int          @default(0)
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  delegateUser    User?        @relation("KhuralDelegate", fields: [seatId], references: [seatId])
+  
+  @@unique([walletAddress, khuralLevel, khuralId])
+  @@index([seatId])
+  @@index([khuralLevel, khuralId])
+  @@index([active])
+}
+
+model VotingStatistics {
+  id              String      @id @default(uuid())
+  
+  khuralLevel     KhuralLevel
+  period          String      // e.g., "2026-01", "2026-Q1"
+  
+  totalProposals  Int         @default(0)
+  passedProposals Int         @default(0)
+  rejectedProposals Int       @default(0)
+  totalVotes      Int         @default(0)
+  
+  participationRate Float?    // Percentage
+  averageQuorum   Float?
+  
+  generatedAt     DateTime    @default(now())
+  
+  @@unique([khuralLevel, period])
+  @@index([khuralLevel])
+}

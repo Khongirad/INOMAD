@@ -45,11 +45,6 @@ model User {
   organization            Guild?               @relation("OrganizationMembers", fields: [organizationId], references: [id])
   verificationsReceived   Verification[]       @relation("TargetUser")
   verificationsIssued     Verification[]       @relation("VerifierUser")
-  
-  // Legislative Relations
-  proposalsCreated        Proposal[]           @relation("ProposalCreator")
-  votesCast               Vote[]               @relation("VoteCaster")
-  khuralDelegates         KhuralDelegate[]     @relation("KhuralDelegate")
 
   @@index([seatId])
   @@index([organizationId])
@@ -620,12 +615,6 @@ enum MemberRole {
   LEADER
 }
 
-enum TaskStatus {
-  OPEN
-  TAKEN
-  COMPLETED
-  CANCELLED
-}
 
 enum TransactionType {
   TRANSFER
@@ -1209,6 +1198,12 @@ enum ProposalStatus {
   CANCELLED
 }
 
+enum KhuralLevel {
+  ARBAN    // Level 1: 10 families
+  ZUN      // Level 2: 10 Arbans
+  MYANGAN  // Level 3: 10 Zuns
+  TUMEN    // Level 4: 10 Myangans (National)
+}
 
 model Proposal {
   id              String          @id @default(uuid())
@@ -1330,168 +1325,4 @@ model VotingStatistics {
   
   @@unique([khuralLevel, period])
   @@index([khuralLevel])
-}
-
-// ============== MARKETPLACE ==============
-
-model MarketplaceListing {
-  id            String              @id @default(uuid())
-  
-  sellerId      String
-  categoryId    Int
-  
-  listingType   MarketplaceListingType
-  status        MarketplaceListingStatus       @default(ACTIVE)
-  
-  title         String
-  description   String
-  images        String[]            // Array of image URLs (IPFS or uploaded)
-  
-  price         String              // ALTAN amount as string
-  stock         Int                 @default(0)  // 0 = unlimited for services
-  sold          Int                 @default(0)
-  
-  // Ratings
-  totalRating  Int                 @default(0)
-  reviewCount   Int                 @default(0)
-  
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  
-  purchases     MarketplacePurchase[]
-  
-  @@index([sellerId])
-  @@index([categoryId])
-  @@index([status])
-  @@index([listingType])
-}
-
-model MarketplacePurchase {
-  id            String              @id @default(uuid())
-  
-  listingId     String
-  buyerId       String
-  
-  quantity      Int
-  totalPrice    String              // ALTAN amount
-  
-  status        MarketplacePurchaseStatus      @default(PENDING)
-  shippingAddress String?
-  trackingInfo  String?
-  txHash        String?             // Blockchain transaction hash
-  escrowId      String?             // EscrowBank ID
-  
-  rating        Int?                // 1-5 stars
-  review        String?
-  
-  createdAt     DateTime            @default(now())
-  paidAt        DateTime?
-  shippedAt     DateTime?
-  deliveredAt   DateTime?
-  completedAt   DateTime?
-  
-  listing       MarketplaceListing  @relation(fields: [listingId], references: [id])
-  
-  @@index([listingId])
-  @@index([buyerId])
-  @@index([status])
-}
-
-model Job {
-  id            String              @id @default(uuid())
-  
-  employerId    String
-  categoryId    Int
-  
-  title         String
-  description   String
-  requirements  String?
-  
-  salary        String              // ALTAN amount
-  duration      String?             // e.g., "3 months", "ongoing"
-  location      String?
-  remote        Boolean             @default(false)
-  
-  status        JobPostingStatus           @default(OPEN)
-  
-  deadline      DateTime?           // Application deadline
-  startDate     DateTime?
-  
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  closedAt      DateTime?
-  
-  applications  JobApplication[]
-  
-  @@index([employerId])
-  @@index([categoryId])
-  @@index([status])
-}
-
-model JobApplication {
-  id            String              @id @default(uuid())
-  
-  jobId         String
-  applicantId   String
-  
-  coverLetter   String
-  resumeUrl     String?
-  expectedSalary String?            // If negotiable
-  
-  status        JobApplicationStatus   @default(PENDING)
-  
-  appliedAt     DateTime            @default(now())
-  respondedAt   DateTime?
-  
-  employerNotes String?
-  
-  job           Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  
-  @@index([jobId])
-  @@index([applicantId])
-  @@index([status])
-  @@unique([jobId, applicantId])  // One application per job per applicant
-}
-
-// ============== ENUMS ==============
-
-enum MarketplaceListingType {
-  PHYSICAL_GOOD
-  DIGITAL_GOOD
-  SERVICE
-  WORK
-}
-
-enum MarketplaceListingStatus {
-  DRAFT
-  ACTIVE
-  PAUSED
-  SOLD_OUT
-  ARCHIVED
-}
-
-enum MarketplacePurchaseStatus {
-  PENDING
-  PAID
-  SHIPPED
-  DELIVERED
-  COMPLETED
-  CANCELLED
-  DISPUTED
-  REFUNDED
-}
-
-enum JobPostingStatus {
-  OPEN
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  CLOSED
-}
-
-enum JobApplicationStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  WITHDRAWN
 }

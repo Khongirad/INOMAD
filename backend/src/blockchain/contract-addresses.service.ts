@@ -30,6 +30,8 @@ interface ContractAddresses {
   AUSD?: string;
   OperatorRegistry?: string;
   TreasuryVault?: string;
+  TaxEngine?: string;
+  TaxAuthority?: string;
 }
 
 interface ChainConfig {
@@ -170,6 +172,8 @@ export class ContractAddressesService {
       altanBankOfSiberia: this.addresses.AltanBankOfSiberia,
       altanCoreLedger: this.addresses.AltanCoreLedger,
       altanWalletRegistry: this.addresses.AltanWalletRegistry,
+      taxEngine: this.addresses.TaxEngine,
+      taxAuthority: this.addresses.TaxAuthority,
     };
   }
 }

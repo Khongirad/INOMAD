@@ -20,6 +20,10 @@ import { AcademyModule } from './academy/academy.module';
 import { JusticeModule } from './justice/justice.module';
 import { TempleModule } from './temple/temple.module';
 import { MPCWalletModule } from './mpc-wallet/mpc-wallet.module';
+import { WalletProtectionModule } from './wallet-protection/wallet-protection.module';
+import { LegislativeModule } from './legislative/legislative.module';
+import { TaxModule } from './tax/tax.module';
+import { MarketplaceModule } from './marketplace/marketplace.module';
 
 @Module({
   imports: [
@@ -46,6 +50,10 @@ import { MPCWalletModule } from './mpc-wallet/mpc-wallet.module';
     JusticeModule,
     TempleModule,
     MPCWalletModule,
+    WalletProtectionModule,
+    LegislativeModule,
+    TaxModule,
+    MarketplaceModule,
   ],
 })
 export class AppModule {}
