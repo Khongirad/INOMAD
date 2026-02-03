@@ -35,32 +35,32 @@ model User {
   isFrozen           Boolean            @default(false) // For Creator to freeze admin accounts
   frozenAt           DateTime?
   frozenBy           String? // Creator userId who froze this account
-  
+
   // Verification Chain
-  isVerified           Boolean   @default(false)
-  verifiedAt           DateTime?
+  isVerified            Boolean            @default(false)
+  verifiedAt            DateTime?
   verificationsReceived UserVerification[] @relation("VerifiedUser")
   verificationsGiven    UserVerification[] @relation("Verifier")
-  verificationCount     Int @default(0)
-  maxVerifications      Int @default(5)
-  
+  verificationCount     Int                @default(0)
+  maxVerifications      Int                @default(5)
+
   // Timeline
-  eventsAsActor   TimelineEvent[] @relation("EventActor")
-  eventsAsTarget  TimelineEvent[] @relation("EventTarget")
-  
+  eventsAsActor  TimelineEvent[] @relation("EventActor")
+  eventsAsTarget TimelineEvent[] @relation("EventTarget")
+
   // Historical records
   historicalRecords HistoricalRecord[] @relation("HistoricalAuthor")
-  
+
   // Hierarchical membership
-  familyId    String?
-  clanId      String?
+  familyId       String?
+  clanId         String?
   currentArbanId String?
-  hordeId     String?
-  nationId    String?
-  organizationId     String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  walletAddress      String?            @unique
+  hordeId        String?
+  nationId       String?
+  organizationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  walletAddress  String?  @unique
 
   // MPC Wallet (Phase 2)
   walletMigrated Boolean    @default(false)
@@ -81,16 +81,23 @@ model User {
   approvalsGiven          UnlockApproval[]
   unlockRequest           UnlockRequest?
   organization            Guild?               @relation("OrganizationMembers", fields: [organizationId], references: [id])
-  
+
   // Legacy verification support
-  oldVerificationsReceived Verification[]     @relation("TargetUser")
-  oldVerificationsIssued   Verification[]     @relation("VerifierUser")
+  oldVerificationsReceived Verification[] @relation("TargetUser")
+  oldVerificationsIssued   Verification[] @relation("VerifierUser")
 
   // Legislative Relations
   proposalsCreated Proposal[]       @relation("ProposalCreator")
   votesCast        Vote[]           @relation("VoteCaster")
   khuralDelegates  KhuralDelegate[] @relation("KhuralDelegate")
-  
+
+  // Chancellery & Archive Relations
+  documentsCreated  Document[]          @relation("DocumentCreator")
+  documentsSigned   DocumentSignature[] @relation("DocumentSigner")
+  questsGiven       Quest[]             @relation("QuestGiver")
+  questsTaken       Quest[]             @relation("QuestTaker")
+  reputationProfile ReputationProfile?  @relation("UserReputation")
+
   // Calendar
   calendarEvents CalendarEvent[]
   calendarNotes  CalendarNote[]
@@ -155,30 +162,30 @@ model Verification {
 
 // Enhanced verification with chain tracking
 model UserVerification {
-  id              String   @id @default(uuid())
-  createdAt       DateTime @default(now())
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
   // Who was verified
-  verifiedUserId  String
-  verifiedUser    User     @relation("VerifiedUser", fields: [verifiedUserId], references: [id])
-  
+  verifiedUserId String
+  verifiedUser   User   @relation("VerifiedUser", fields: [verifiedUserId], references: [id])
+
   // Who performed the verification
-  verifierId      String
-  verifier        User     @relation("Verifier", fields: [verifierId], references: [id])
-  
+  verifierId String
+  verifier   User   @relation("Verifier", fields: [verifierId], references: [id])
+
   // Verification details
-  verificationMethod String  // "ADMIN", "USER_REFERRAL"
-  notes           String?
-  
+  verificationMethod String // "ADMIN", "USER_REFERRAL"
+  notes              String?
+
   // Audit trail
-  ipAddress       String?
-  userAgent       String?
-  location        String?  // Geographic location
-  
+  ipAddress String?
+  userAgent String?
+  location  String? // Geographic location
+
   // Link to timeline event
-  timelineEventId String?  @unique
+  timelineEventId String?        @unique
   timelineEvent   TimelineEvent? @relation(fields: [timelineEventId], references: [id])
-  
+
   @@unique([verifiedUserId, verifierId])
   @@index([verifierId])
   @@index([verifiedUserId])
@@ -187,48 +194,49 @@ model UserVerification {
 
 // Timeline Event System
 model TimelineEvent {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
   // Event details
   type        EventType
   scope       EventScope @default(INDIVIDUAL)
   title       String
   description String?
-  
+
   // Actor (who performed the action)
-  actorId     String?
-  actor       User?     @relation("EventActor", fields: [actorId], references: [id])
-  
+  actorId String?
+  actor   User?   @relation("EventActor", fields: [actorId], references: [id])
+
   // Target (who/what was affected)
-  targetId    String?
-  target      User?     @relation("EventTarget", fields: [targetId], references: [id])
-  
+  targetId String?
+  target   User?   @relation("EventTarget", fields: [targetId], references: [id])
+
   // Location & Time
-  location    String?
-  timezone    String?   @default("UTC")
-  
+  location String?
+  timezone String? @default("UTC")
+
   // Hierarchical context
-  familyId    String?
-  clanId      String?
-  arbanId     String?
-  hordeId     String?
-  nationId    String?
-  
+  familyId String?
+  clanId   String?
+  arbanId  String?
+  hordeId  String?
+  nationId String?
+
   // Legal significance
-  isLegalContract Boolean @default(false)
+  isLegalContract Boolean  @default(false)
   contractHash    String?
   witnessIds      String[]
-  
+
   // Metadata
-  metadata    Json?
-  ipAddress   String?
-  userAgent   String?
-  
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+
   // Relations
-  verification   UserVerification?
-  taskId      String?
-  
+  verification UserVerification?
+  taskId       String?
+  Document     Document?
+
   @@index([actorId, createdAt])
   @@index([targetId, createdAt])
   @@index([type, scope])
@@ -239,34 +247,34 @@ model TimelineEvent {
 
 // Historical Records (written by specialists)
 model HistoricalRecord {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Scope of history
-  scope       EventScope
-  scopeId     String
-  
+  scope   EventScope
+  scopeId String
+
   // Time period
   periodStart DateTime
   periodEnd   DateTime?
-  
+
   // Content
-  title       String
-  narrative   String    // Markdown text
-  
+  title     String
+  narrative String // Markdown text
+
   // Authorship
-  authorId    String
-  author      User      @relation("HistoricalAuthor", fields: [authorId], references: [id])
-  
+  authorId String
+  author   User   @relation("HistoricalAuthor", fields: [authorId], references: [id])
+
   // Review status
   isPublished Boolean   @default(false)
   reviewedBy  String?
   reviewedAt  DateTime?
-  
+
   // Related events
-  eventIds    String[]
-  
+  eventIds String[]
+
   @@index([scope, scopeId])
   @@index([createdAt])
   @@index([isPublished])
@@ -275,66 +283,268 @@ model HistoricalRecord {
 // ============== CALENDAR SYSTEM ==============
 
 model CalendarEvent {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Event details
   title       String
   description String?
   startDate   DateTime
   endDate     DateTime?
   allDay      Boolean   @default(false)
-  
+
   // Location
-  location    String?
-  
+  location String?
+
   // Owner
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Visibility
-  isPublic    Boolean   @default(false)
-  
+  isPublic Boolean @default(false)
+
   // Categories/Tags
-  category    String?   // "WORK", "PERSONAL", "KHURAL", "MEETING", etc.
-  tags        String[]
-  
+  category String? // "WORK", "PERSONAL", "KHURAL", "MEETING", etc.
+  tags     String[]
+
   // Reminders
-  reminderMinutes Int?   // Minutes before event to remind
-  
+  reminderMinutes Int? // Minutes before event to remind
+
   // Link to timeline (optional)
   timelineEventId String?
-  
+
   // Color coding
-  color       String?   @default("#3B82F6")
-  
+  color String? @default("#3B82F6")
+
   @@index([userId, startDate])
   @@index([startDate])
   @@index([userId])
 }
 
 model CalendarNote {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Note details
-  title       String?
-  content     String    // Markdown supported
-  date        DateTime  // Date this note is attached to
-  
+  title   String?
+  content String // Markdown supported
+  date    DateTime // Date this note is attached to
+
   // Owner
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Tags
-  tags        String[]
-  
+  tags String[]
+
   // Color
-  color       String?   @default("#F59E0B")
-  
+  color String? @default("#F59E0B")
+
   @@index([userId, date])
+  @@index([userId])
+}
+
+// ============== CHANCELLERY & ARCHIVE SYSTEM ==============
+
+// Document Templates (GOST standards)
+model DocumentTemplate {
+  id String @id @default(uuid())
+
+  // Type and naming
+  type     DocumentType
+  name     String // "Трудовой Договор"
+  nameEn   String // "Employment Contract"
+  govtCode String? // "ГОСТ Р 7.0.97-2016"
+  category String // "CONTRACT", "QUEST", "PETITION"
+
+  // Template content
+  template String @db.Text // Markdown with {{variables}}
+  fields   Json // Field definitions: {name, type, required}
+
+  // Requirements
+  minSignatures     Int        @default(2)
+  requiresWitnesses Int        @default(0)
+  scope             EventScope @default(INDIVIDUAL)
+
+  // Lifecycle
+  version   Int      @default(1)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Relations
+  documents Document[]
+
+  @@index([type])
+  @@index([isActive])
+}
+
+// Document Instances
+model Document {
+  id String @id @default(uuid())
+
+  // Template reference
+  templateId String
+  template   DocumentTemplate @relation(fields: [templateId], references: [id])
+
+  // Status
+  status DocumentStatus @default(DRAFT)
+
+  // Parties
+  creatorId    String
+  creator      User     @relation("DocumentCreator", fields: [creatorId], references: [id])
+  recipientIds String[] // Multiple recipients possible
+  witnessIds   String[] // Witness user IDs
+
+  // Content
+  title    String
+  content  String @db.Text // Filled template (Markdown)
+  metadata Json // Parsed field values
+
+  // Signatures
+  signatures DocumentSignature[]
+
+  // Attachments
+  attachments String[] // File URLs/hashes
+
+  // Integration
+  timelineEventId String?        @unique
+  timelineEvent   TimelineEvent? @relation(fields: [timelineEventId], references: [id])
+
+  questId String? @unique
+  quest   Quest?
+
+  // Archive
+  archivedAt  DateTime?
+  archiveHash String? // IPFS CID or blockchain hash
+
+  // Lifecycle
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([templateId])
+  @@index([createdAt])
+}
+
+// Digital Signatures
+model DocumentSignature {
+  id String @id @default(uuid())
+
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  signerId String
+  signer   User   @relation("DocumentSigner", fields: [signerId], references: [id])
+
+  role      SignatureRole
+  signature String // Cryptographic signature from wallet
+  signedAt  DateTime      @default(now())
+
+  // Audit trail
+  ipAddress String?
+  userAgent String?
+  location  String?
+
+  @@index([documentId])
+  @@index([signerId])
+  @@index([signedAt])
+}
+
+// Quest/Task System (WoW-style)
+model Quest {
+  id String @id @default(uuid())
+
+  // Parties
+  giverId String
+  giver   User    @relation("QuestGiver", fields: [giverId], references: [id])
+  takerId String?
+  taker   User?   @relation("QuestTaker", fields: [takerId], references: [id])
+
+  // Quest details
+  title       String
+  description String @db.Text
+  objectives  Json[] // [{description, completed, evidence?}]
+
+  // Requirements
+  requirements  Json? // {skills: [], minReputation: 50}
+  minReputation Int?
+
+  // Rewards
+  rewardAltan    Decimal? @db.Decimal(18, 4)
+  rewardItems    Json? // NFTs, badges
+  reputationGain Int?
+
+  // Timing
+  deadline          DateTime?
+  estimatedDuration Int? // minutes
+
+  // Progress
+  status   QuestStatus @default(OPEN)
+  progress Int         @default(0) // 0-100%
+
+  // Evidence
+  submissions Json[] // [{url, description, timestamp}]
+
+  // Ratings (after completion)
+  giverRating   Int? // 1-5
+  takerRating   Int?
+  giverFeedback String?
+  takerFeedback String?
+
+  // Related documents
+  assignmentDocId String?   @unique
+  assignmentDoc   Document? @relation(fields: [assignmentDocId], references: [id])
+  completionDocId String?
+
+  // Lifecycle timestamps
+  acceptedAt  DateTime?
+  startedAt   DateTime?
+  submittedAt DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([giverId])
+  @@index([takerId])
+  @@index([status])
+  @@index([deadline])
+}
+
+// Reputation & Trust System
+model ReputationProfile {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation("UserReputation", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Deal statistics
+  totalDeals      Int     @default(0)
+  successfulDeals Int     @default(0)
+  successRate     Decimal @default(0) @db.Decimal(5, 2) // Percentage
+
+  // Rating statistics  
+  averageRating   Decimal @default(0) @db.Decimal(3, 2) // 1-5 scale
+  ratingsReceived Int     @default(0)
+
+  // Quest statistics
+  questsCompleted  Int     @default(0)
+  questsPosted     Int     @default(0)
+  questSuccessRate Decimal @default(0) @db.Decimal(5, 2)
+
+  // Contract statistics
+  contractsSigned Int @default(0)
+  activeContracts Int @default(0)
+
+  // Achievements
+  badges Json[] // [{id, name, earnedAt}]
+
+  updatedAt DateTime @updatedAt
+
   @@index([userId])
 }
 
@@ -1730,36 +1940,48 @@ enum EventType {
   ACCOUNT_CREATED
   IDENTITY_VERIFIED
   CITIZENSHIP_GRANTED
-  
+
   // Contracts & Agreements
   CONTRACT_SIGNED
   CONTRACT_COMPLETED
   CONTRACT_CANCELLED
-  
+
   // Tasks & Work
   TASK_ASSIGNED
   TASK_COMPLETED
   TASK_REVIEWED
-  
+
   // Banking & Finance
   LOAN_REQUESTED
   LOAN_APPROVED
   LOAN_REPAID
   PAYMENT_MADE
-  
+
   // Governance
   VOTE_CAST
   PROPOSAL_SUBMITTED
   LAW_ENACTED
-  
+
   // Education & Skills
   COURSE_COMPLETED
   CERTIFICATION_EARNED
-  
+
   // Justice
   CASE_FILED
   JUDGMENT_RENDERED
-  
+
+  // Quests (NEW)
+  QUEST_CREATED
+  QUEST_ACCEPTED
+  QUEST_SUBMITTED
+  QUEST_COMPLETED
+  QUEST_REJECTED
+
+  // Documents (NEW)
+  DOCUMENT_CREATED
+  DOCUMENT_SIGNED
+  DOCUMENT_FINALIZED
+
   // Custom
   CUSTOM_EVENT
 }
@@ -1773,4 +1995,53 @@ enum EventScope {
   HORDE
   NATION
   CONFEDERATION
+}
+
+// ============== CHANCELLERY & ARCHIVE SYSTEM ==============
+
+enum DocumentType {
+  EMPLOYMENT_CONTRACT
+  SERVICE_CONTRACT
+  PURCHASE_AGREEMENT
+  LEASE_AGREEMENT
+  LOAN_AGREEMENT
+  PARTNERSHIP_AGREEMENT
+  QUEST_ASSIGNMENT
+  WORK_ACCEPTANCE
+  COMPLETION_REPORT
+  PETITION
+  CERTIFICATE
+  ORDER
+  CUSTOM
+}
+
+enum DocumentStatus {
+  DRAFT
+  PENDING_SIGNATURES
+  PARTIALLY_SIGNED
+  FULLY_SIGNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum SignatureRole {
+  CREATOR
+  RECIPIENT
+  WITNESS
+  AUTHORITY
+}
+
+enum QuestStatus {
+  OPEN
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  COMPLETED
+  REJECTED
+  CANCELLED
+  EXPIRED
 }

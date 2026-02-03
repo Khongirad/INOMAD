@@ -26,6 +26,9 @@ import { VerificationModule } from './verification/verification.module';
 import { TimelineModule } from './timeline/timeline.module';
 import { HistoryModule } from './history/history.module';
 import { CalendarModule } from './calendar/calendar.module';
+import { ReputationModule } from './reputation/reputation.module';
+import { DocumentModule } from './documents/document.module';
+import { QuestModule } from './quests/quest.module';
 // import { LegislativeModule } from './legislative/legislative.module';
 // import { TaxModule } from './tax/tax.module';
 // import { MarketplaceModule } from './marketplace/marketplace.module';
@@ -61,6 +64,9 @@ import { AdminModule } from './admin/admin.module';
     TimelineModule,
     HistoryModule,
     CalendarModule,
+    ReputationModule,  // Reputation & Trust system
+    DocumentModule,    // Document management & signing
+    QuestModule,       // Quest/Task assignment system
     // LegislativeModule,  // Disabled - TS errors
     // TaxModule,  // Disabled - TS errors
     // MarketplaceModule,  // Disabled - TS errors
