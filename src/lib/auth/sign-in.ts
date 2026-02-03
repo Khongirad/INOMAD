@@ -16,6 +16,7 @@ interface AuthMeResponse {
     userId: string;
     seatId: string;
     address: string;
+    role: string; // Single role from backend
     roles: string[];
     status: string;
     walletStatus: string;
@@ -93,14 +94,9 @@ export async function getMe(isRetry = false): Promise<AuthMeResponse['me']> {
   if (!res.ok) {
     if (res.status === 401 && !isRetry) {
       const refreshed = await refreshSession();
-      if (!refreshed) {
-        AuthSession.clear();
-        throw new Error('Session expired');
-      }
-      return getMe(true);
+      if (refreshed) return getMe(true);
     }
-    AuthSession.clear();
-    throw new Error('Session expired');
+    throw new Error('Failed to fetch user information');
   }
 
   const data: AuthMeResponse = await res.json();

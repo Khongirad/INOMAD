@@ -1,0 +1,22 @@
+/*
+  Warnings:
+
+  - A unique constraint covering the columns `[username]` on the table `User` will be added. If there are existing duplicate values, this will fail.
+  - A unique constraint covering the columns `[email]` on the table `User` will be added. If there are existing duplicate values, this will fail.
+
+*/
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "constitutionAcceptedAt" TIMESTAMP(3),
+ADD COLUMN     "email" TEXT,
+ADD COLUMN     "hasAcceptedConstitution" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "hasAcceptedTOS" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "isLegalSubject" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "passwordHash" TEXT,
+ADD COLUMN     "tosAcceptedAt" TIMESTAMP(3),
+ADD COLUMN     "username" TEXT;
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");

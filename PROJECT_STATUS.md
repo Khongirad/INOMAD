@@ -23,12 +23,12 @@
 
 ---
 
-## Week 2 (Feb 3-7) 🚧 UPCOMING
+## Week 2 (Feb 3-7) 🚧 IN PROGRESS
 
 ### Goals
-- [ ] Complete transaction signing flow
-- [ ] Device share encryption with password
-- [ ] UI for wallet setup wizard
+- [x] Complete transaction signing flow (Backend broadcast + UI)
+- [x] Device share encryption with password (Web Crypto API)
+- [x] UI for wallet setup wizard
 - [ ] Integration with existing EmbeddedWallet
 
 ---

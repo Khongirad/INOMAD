@@ -1,0 +1,67 @@
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  Param, 
+  UseGuards, 
+  Request,
+  Ip,
+  Headers,
+} from '@nestjs/common';
+import { VerificationService } from './verification.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
+
+@Controller('verification')
+@UseGuards(JwtAuthGuard)
+export class VerificationController {
+  constructor(private readonly verificationService: VerificationService) {}
+
+  @Get('pending')
+  async getPendingUsers() {
+    return this.verificationService.getPendingUsers();
+  }
+
+  @Post('verify/:userId')
+  async verifyUser(
+    @Param('userId') userId: string,
+    @Request() req,
+    @Ip() ipAddress: string,
+    @Headers('user-agent') userAgent: string,
+    @Body() body: { notes?: string; location?: string },
+  ) {
+    return this.verificationService.verifyUser(
+      req.user.sub,
+      userId,
+      ipAddress,
+      userAgent,
+      body.notes,
+      body.location,
+    );
+  }
+
+  @Get('chain/:userId')
+  async getVerificationChain(@Param('userId') userId: string) {
+    return this.verificationService.getVerificationChain(userId);
+  }
+
+  @Get('stats')
+  async getMyStats(@Request() req) {
+    return this.verificationService.getVerifierStats(req.user.sub);
+  }
+
+  @Post('revoke/:verificationId')
+  @UseGuards(AdminGuard)
+  async revokeVerification(
+    @Param('verificationId') verificationId: string,
+    @Request() req,
+    @Body() body: { reason: string },
+  ) {
+    return this.verificationService.revokeVerification(
+      verificationId,
+      req.user.sub,
+      body.reason,
+    );
+  }
+}

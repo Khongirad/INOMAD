@@ -8,26 +8,64 @@ datasource db {
 }
 
 model User {
-  id                      String               @id @default(uuid())
-  seatId                  String               @unique
-  role                    UserRole             @default(CITIZEN)
-  walletStatus            WalletStatus         @default(LOCKED)
-  birthPlace              Json?
-  currentAddress          Json?
-  ethnicity               String[]
-  clan                    String?
-  verificationStatus      VerificationStatus   @default(DRAFT)
-  isSuperVerified         Boolean              @default(false)
-  superVerifiedBy         String?
-  organizationId          String?
-  createdAt               DateTime             @default(now())
-  updatedAt               DateTime             @updatedAt
-  walletAddress           String?              @unique
+  id     String @id @default(uuid())
+  seatId String @unique
+
+  // Authentication (Gates of Khural)
+  username     String? @unique
+  passwordHash String?
+  email        String? @unique
+
+  // Legal Status
+  hasAcceptedTOS          Boolean   @default(false)
+  tosAcceptedAt           DateTime?
+  hasAcceptedConstitution Boolean   @default(false)
+  constitutionAcceptedAt  DateTime?
+  isLegalSubject          Boolean   @default(false) // True after constitution acceptance
+
+  role               UserRole           @default(CITIZEN)
+  walletStatus       WalletStatus       @default(LOCKED)
+  birthPlace         Json?
+  currentAddress     Json?
+  ethnicity          String[]
+  clan               String?
+  verificationStatus VerificationStatus @default(DRAFT)
+  isSuperVerified    Boolean            @default(false)
+  superVerifiedBy    String?
+  isFrozen           Boolean            @default(false) // For Creator to freeze admin accounts
+  frozenAt           DateTime?
+  frozenBy           String? // Creator userId who froze this account
   
+  // Verification Chain
+  isVerified           Boolean   @default(false)
+  verifiedAt           DateTime?
+  verificationsReceived UserVerification[] @relation("VerifiedUser")
+  verificationsGiven    UserVerification[] @relation("Verifier")
+  verificationCount     Int @default(0)
+  maxVerifications      Int @default(5)
+  
+  // Timeline
+  eventsAsActor   TimelineEvent[] @relation("EventActor")
+  eventsAsTarget  TimelineEvent[] @relation("EventTarget")
+  
+  // Historical records
+  historicalRecords HistoricalRecord[] @relation("HistoricalAuthor")
+  
+  // Hierarchical membership
+  familyId    String?
+  clanId      String?
+  currentArbanId String?
+  hordeId     String?
+  nationId    String?
+  organizationId     String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  walletAddress      String?            @unique
+
   // MPC Wallet (Phase 2)
-  walletMigrated          Boolean              @default(false)
-  mpcWallet               MPCWallet?
-  
+  walletMigrated Boolean    @default(false)
+  mpcWallet      MPCWallet?
+
   altanLedger             AltanLedger?
   sentTransactions        AltanTransaction[]   @relation("SentTransactions")
   receivedTransactions    AltanTransaction[]   @relation("ReceivedTransactions")
@@ -43,19 +81,24 @@ model User {
   approvalsGiven          UnlockApproval[]
   unlockRequest           UnlockRequest?
   organization            Guild?               @relation("OrganizationMembers", fields: [organizationId], references: [id])
-  verificationsReceived   Verification[]       @relation("TargetUser")
-  verificationsIssued     Verification[]       @relation("VerifierUser")
   
+  // Legacy verification support
+  oldVerificationsReceived Verification[]     @relation("TargetUser")
+  oldVerificationsIssued   Verification[]     @relation("VerifierUser")
+
   // Legislative Relations
-  proposalsCreated        Proposal[]           @relation("ProposalCreator")
-  votesCast               Vote[]               @relation("VoteCaster")
-  khuralDelegates         KhuralDelegate[]     @relation("KhuralDelegate")
+  proposalsCreated Proposal[]       @relation("ProposalCreator")
+  votesCast        Vote[]           @relation("VoteCaster")
+  khuralDelegates  KhuralDelegate[] @relation("KhuralDelegate")
+  
+  // Calendar
+  calendarEvents CalendarEvent[]
+  calendarNotes  CalendarNote[]
 
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
 }
-
 
 model AuthNonce {
   id        String   @id @default(uuid())
@@ -98,6 +141,7 @@ model BankLink {
   @@index([bankCode])
 }
 
+// Legacy verification (keeping for backwards compatibility)
 model Verification {
   id             String   @id @default(uuid())
   targetUserId   String
@@ -107,6 +151,191 @@ model Verification {
   verifierUser   User     @relation("VerifierUser", fields: [verifierUserId], references: [id])
 
   @@unique([targetUserId, verifierUserId])
+}
+
+// Enhanced verification with chain tracking
+model UserVerification {
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+  
+  // Who was verified
+  verifiedUserId  String
+  verifiedUser    User     @relation("VerifiedUser", fields: [verifiedUserId], references: [id])
+  
+  // Who performed the verification
+  verifierId      String
+  verifier        User     @relation("Verifier", fields: [verifierId], references: [id])
+  
+  // Verification details
+  verificationMethod String  // "ADMIN", "USER_REFERRAL"
+  notes           String?
+  
+  // Audit trail
+  ipAddress       String?
+  userAgent       String?
+  location        String?  // Geographic location
+  
+  // Link to timeline event
+  timelineEventId String?  @unique
+  timelineEvent   TimelineEvent? @relation(fields: [timelineEventId], references: [id])
+  
+  @@unique([verifiedUserId, verifierId])
+  @@index([verifierId])
+  @@index([verifiedUserId])
+  @@index([createdAt])
+}
+
+// Timeline Event System
+model TimelineEvent {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  
+  // Event details
+  type        EventType
+  scope       EventScope @default(INDIVIDUAL)
+  title       String
+  description String?
+  
+  // Actor (who performed the action)
+  actorId     String?
+  actor       User?     @relation("EventActor", fields: [actorId], references: [id])
+  
+  // Target (who/what was affected)
+  targetId    String?
+  target      User?     @relation("EventTarget", fields: [targetId], references: [id])
+  
+  // Location & Time
+  location    String?
+  timezone    String?   @default("UTC")
+  
+  // Hierarchical context
+  familyId    String?
+  clanId      String?
+  arbanId     String?
+  hordeId     String?
+  nationId    String?
+  
+  // Legal significance
+  isLegalContract Boolean @default(false)
+  contractHash    String?
+  witnessIds      String[]
+  
+  // Metadata
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  
+  // Relations
+  verification   UserVerification?
+  taskId      String?
+  
+  @@index([actorId, createdAt])
+  @@index([targetId, createdAt])
+  @@index([type, scope])
+  @@index([createdAt])
+  @@index([arbanId])
+  @@index([clanId])
+}
+
+// Historical Records (written by specialists)
+model HistoricalRecord {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Scope of history
+  scope       EventScope
+  scopeId     String
+  
+  // Time period
+  periodStart DateTime
+  periodEnd   DateTime?
+  
+  // Content
+  title       String
+  narrative   String    // Markdown text
+  
+  // Authorship
+  authorId    String
+  author      User      @relation("HistoricalAuthor", fields: [authorId], references: [id])
+  
+  // Review status
+  isPublished Boolean   @default(false)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  
+  // Related events
+  eventIds    String[]
+  
+  @@index([scope, scopeId])
+  @@index([createdAt])
+  @@index([isPublished])
+}
+
+// ============== CALENDAR SYSTEM ==============
+
+model CalendarEvent {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Event details
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean   @default(false)
+  
+  // Location
+  location    String?
+  
+  // Owner
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Visibility
+  isPublic    Boolean   @default(false)
+  
+  // Categories/Tags
+  category    String?   // "WORK", "PERSONAL", "KHURAL", "MEETING", etc.
+  tags        String[]
+  
+  // Reminders
+  reminderMinutes Int?   // Minutes before event to remind
+  
+  // Link to timeline (optional)
+  timelineEventId String?
+  
+  // Color coding
+  color       String?   @default("#3B82F6")
+  
+  @@index([userId, startDate])
+  @@index([startDate])
+  @@index([userId])
+}
+
+model CalendarNote {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Note details
+  title       String?
+  content     String    // Markdown supported
+  date        DateTime  // Date this note is attached to
+  
+  // Owner
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Tags
+  tags        String[]
+  
+  // Color
+  color       String?   @default("#F59E0B")
+  
+  @@index([userId, date])
+  @@index([userId])
 }
 
 model KhuralGroup {
@@ -422,11 +651,11 @@ model MonetaryPolicyChange {
 model FamilyArban {
   id                 String             @id @default(uuid())
   arbanId            BigInt             @unique
-  husbandSeatId      String             // Changed from BigInt to String
-  wifeSeatId         String             // Changed from BigInt to String
-  heirSeatId         String?            // Changed from BigInt to String
+  husbandSeatId      String // Changed from BigInt to String
+  wifeSeatId         String // Changed from BigInt to String
+  heirSeatId         String? // Changed from BigInt to String
   zunId              BigInt?
-  khuralRepSeatId    String?            // Changed from BigInt to String
+  khuralRepSeatId    String? // Changed from BigInt to String
   khuralRepBirthYear Int?
   isActive           Boolean            @default(true)
   createdAt          DateTime           @default(now())
@@ -443,7 +672,7 @@ model FamilyArban {
 model FamilyArbanChild {
   id          String      @id @default(uuid())
   arbanId     BigInt
-  childSeatId String      // Changed from BigInt to String
+  childSeatId String // Changed from BigInt to String
   addedAt     DateTime    @default(now())
   familyArban FamilyArban @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
 
@@ -457,7 +686,7 @@ model Zun {
   zunId          BigInt        @unique
   name           String
   founderArbanId BigInt
-  elderSeatId    String?       // Changed from BigInt to String
+  elderSeatId    String? // Changed from BigInt to String
   isActive       Boolean       @default(true)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -474,7 +703,7 @@ model OrganizationalArban {
   orgType      OrgArbanType
   powerBranch  PowerBranchType
   parentOrgId  BigInt?
-  leaderSeatId String?              // Changed from BigInt to String
+  leaderSeatId String? // Changed from BigInt to String
   isActive     Boolean               @default(true)
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
@@ -491,7 +720,7 @@ model OrganizationalArban {
 model OrgArbanMember {
   id       String              @id @default(uuid())
   arbanId  BigInt
-  seatId   String  // Changed from BigInt to String
+  seatId   String // Changed from BigInt to String
   joinedAt DateTime            @default(now())
   org      OrganizationalArban @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
 
@@ -545,7 +774,7 @@ model Loan {
 
 model TierDistribution {
   id              String        @id @default(uuid())
-  seatId          String           // Changed from BigInt to String
+  seatId          String // Changed from BigInt to String
   accountId       BigInt
   tier            Int
   arbanType       TierArbanType
@@ -571,7 +800,7 @@ model TierDistribution {
 
 model TierReceived {
   id         String   @id @default(uuid())
-  seatId     String    // Changed from BigInt to String
+  seatId     String // Changed from BigInt to String
   tier       Int
   receivedAt DateTime @default(now())
   amount     Decimal  @db.Decimal(18, 6)
@@ -585,6 +814,7 @@ enum UserRole {
   CITIZEN
   LEADER
   ADMIN
+  CREATOR // Supreme admin - can manage all admins and users
 }
 
 enum WalletStatus {
@@ -698,20 +928,20 @@ enum TierArbanType {
 }
 
 model DigitalSeal {
-  id                String   @id @default(uuid())
-  contractAddress   String   @unique
-  signer1SeatId     String
-  signer2SeatId     String
-  documentHash      String?
-  title             String?
-  description       String?
-  approvalCount     Int      @default(0)
-  signer1Approved   Boolean  @default(false)
-  signer2Approved   Boolean  @default(false)
-  executed          Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  executedAt        DateTime?
-  updatedAt         DateTime @updatedAt
+  id              String    @id @default(uuid())
+  contractAddress String    @unique
+  signer1SeatId   String
+  signer2SeatId   String
+  documentHash    String?
+  title           String?
+  description     String?
+  approvalCount   Int       @default(0)
+  signer1Approved Boolean   @default(false)
+  signer2Approved Boolean   @default(false)
+  executed        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  executedAt      DateTime?
+  updatedAt       DateTime  @updatedAt
 
   @@index([signer1SeatId])
   @@index([signer2SeatId])
@@ -719,49 +949,49 @@ model DigitalSeal {
 }
 
 model TempleRecord {
-  id                String       @id @default(uuid())
-  contractAddress   String       // Temple contract address
-  documentHash      String       @unique
-  recordType        RecordType
-  submitterSeatId   String
-  scientificVerified Boolean     @default(false)
-  ethicalVerified    Boolean     @default(false)
+  id                 String     @id @default(uuid())
+  contractAddress    String // Temple contract address
+  documentHash       String     @unique
+  recordType         RecordType
+  submitterSeatId    String
+  scientificVerified Boolean    @default(false)
+  ethicalVerified    Boolean    @default(false)
   scientificVerifier String?
   ethicalVerifier    String?
-  metadata          String?      // IPFS CID or description
-  createdAt         DateTime     @default(now())
-  verifiedAt        DateTime?
+  metadata           String? // IPFS CID or description
+  createdAt          DateTime   @default(now())
+  verifiedAt         DateTime?
 
   @@index([submitterSeatId])
   @@index([recordType])
 }
 
 model ScientistCouncilMember {
-  id                String   @id @default(uuid())
-  seatId            String   @unique
-  degreeHash        String
+  id                 String    @id @default(uuid())
+  seatId             String    @unique
+  degreeHash         String
   nominatedByArbanId String
-  field             String   // e.g. "Physics", "Biology"
-  approvals         Int      @default(0)
-  approved          Boolean  @default(false)
-  walletAddress     String
-  createdAt         DateTime @default(now())
-  approvedAt        DateTime?
+  field              String // e.g. "Physics", "Biology"
+  approvals          Int       @default(0)
+  approved           Boolean   @default(false)
+  walletAddress      String
+  createdAt          DateTime  @default(now())
+  approvedAt         DateTime?
 
   @@index([seatId])
   @@index([approved])
 }
 
 model WisdomCouncilMember {
-  id                String   @id @default(uuid())
-  seatId            String   @unique
+  id                 String    @id @default(uuid())
+  seatId             String    @unique
   nominatedByArbanId String
-  virtues           String   // e.g. "kind, honest, compassionate, wise"
-  approvals         Int      @default(0)
-  approved          Boolean  @default(false)
-  walletAddress     String
-  joinedAt          DateTime @default(now())
-  approvedAt        DateTime?
+  virtues            String // e.g. "kind, honest, compassionate, wise"
+  approvals          Int       @default(0)
+  approved           Boolean   @default(false)
+  walletAddress      String
+  joinedAt           DateTime  @default(now())
+  approvedAt         DateTime?
 
   @@index([seatId])
   @@index([approved])
@@ -774,14 +1004,14 @@ enum RecordType {
 }
 
 model Patent {
-  id              String        @id @default(uuid())
-  patentId        Int           @unique
+  id              String       @id @default(uuid())
+  patentId        Int          @unique
   submitterSeatId String
   patentHash      String
   title           String
   field           String
-  status          PatentStatus  @default(PENDING)
-  submittedAt     DateTime      @default(now())
+  status          PatentStatus @default(PENDING)
+  submittedAt     DateTime     @default(now())
   reviewedAt      DateTime?
   reviewer        String?
   reviewNotes     String?
@@ -824,21 +1054,21 @@ model ResearchGrant {
 
 // Bank Hierarchy Employee Model
 model BankEmployee {
-  id                 String   @id @default(uuid())
-  seatId             String   @unique
-  wallet             String   @unique
-  employeeId         BigInt   @unique // On-chain employee ID
-  bankArbanId        BigInt   // Arban (10) this employee belongs to
-  bankZunId          BigInt?  // Zun (100) parent
-  bankMyanganId      BigInt?  // Myangan (1000) parent
-  bankTumenId        BigInt?  // Tumen (10000) parent
-  performance        Int      @default(75)
-  position           BankPosition @default(EMPLOYEE)
-  isActive           Boolean  @default(true)
-  joinedAt           DateTime @default(now())
-  lastActiveAt       DateTime @default(now())
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id            String       @id @default(uuid())
+  seatId        String       @unique
+  wallet        String       @unique
+  employeeId    BigInt       @unique // On-chain employee ID
+  bankArbanId   BigInt // Arban (10) this employee belongs to
+  bankZunId     BigInt? // Zun (100) parent
+  bankMyanganId BigInt? // Myangan (1000) parent
+  bankTumenId   BigInt? // Tumen (10000) parent
+  performance   Int          @default(75)
+  position      BankPosition @default(EMPLOYEE)
+  isActive      Boolean      @default(true)
+  joinedAt      DateTime     @default(now())
+  lastActiveAt  DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([seatId])
   @@index([wallet])
@@ -854,36 +1084,36 @@ enum BankPosition {
 }
 
 model CouncilOfJusticeMember {
-  id                String   @id @default(uuid())
-  memberId          Int      @unique
-  seatId            String   @unique
+  id                 String    @id @default(uuid())
+  memberId           Int       @unique
+  seatId             String    @unique
   legalEducationHash String
   nominatedByArbanId String
-  specialization    String
-  approvals         Int      @default(0)
-  approved          Boolean  @default(false)
-  walletAddress     String
-  casesHandled      Int      @default(0)
-  createdAt         DateTime @default(now())
-  approvedAt        DateTime?
+  specialization     String
+  approvals          Int       @default(0)
+  approved           Boolean   @default(false)
+  walletAddress      String
+  casesHandled       Int       @default(0)
+  createdAt          DateTime  @default(now())
+  approvedAt         DateTime?
 
   @@index([seatId])
   @@index([approved])
 }
 
 model JudicialCase {
-  id              String       @id @default(uuid())
-  caseId          Int          @unique
+  id              String     @id @default(uuid())
+  caseId          Int        @unique
   plaintiffSeatId String
   defendantSeatId String
   caseHash        String
   description     String
   rulingType      RulingType
-  status          CaseStatus   @default(PENDING)
+  status          CaseStatus @default(PENDING)
   assignedJudge   String?
   rulingHash      String?
   ruling          String?
-  filedAt         DateTime     @default(now())
+  filedAt         DateTime   @default(now())
   ruledAt         DateTime?
 
   @@index([plaintiffSeatId])
@@ -892,15 +1122,15 @@ model JudicialCase {
 }
 
 model LegalPrecedent {
-  id              String   @id @default(uuid())
-  precedentId     Int      @unique
-  sourceCaseId    Int
-  precedentHash   String
-  summary         String
-  legalPrinciple  String
-  judge           String
-  archived        Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  id             String   @id @default(uuid())
+  precedentId    Int      @unique
+  sourceCaseId   Int
+  precedentHash  String
+  summary        String
+  legalPrinciple String
+  judge          String
+  archived       Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   @@index([sourceCaseId])
 }
@@ -938,109 +1168,109 @@ enum RulingType {
 // Multi-Party Computation wallet for Altan Native Wallet
 
 model MPCWallet {
-  id              String          @id @default(uuid())
-  userId          String          @unique
-  
+  id     String @id @default(uuid())
+  userId String @unique
+
   // MPC Address
-  address         String          @unique    // Public wallet address
-  chainId         Int             @default(31337)
-  
+  address String @unique // Public wallet address
+  chainId Int    @default(31337)
+
   // Key Share Metadata (NOT actual keys!)
-  deviceShareId   String?         // Reference to device share in browser
-  serverShareEnc  String?         // Encrypted server share (AES-256-GCM)
-  recoveryMethod  RecoveryMethod  @default(SOCIAL)
-  
+  deviceShareId  String? // Reference to device share in browser
+  serverShareEnc String? // Encrypted server share (AES-256-GCM)
+  recoveryMethod RecoveryMethod @default(SOCIAL)
+
   // Status
-  status          MPCWalletStatus @default(PENDING_SETUP)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  lastUsedAt      DateTime?
-  
+  status     MPCWalletStatus @default(PENDING_SETUP)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  lastUsedAt DateTime?
+
   // Relations
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  keyShares       KeyShare[]
-  guardians       RecoveryGuardian[]
-  smartAccount    SmartAccount?
-  
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keyShares    KeyShare[]
+  guardians    RecoveryGuardian[]
+  smartAccount SmartAccount?
+
   @@index([address])
   @@index([status])
 }
 
 model KeyShare {
-  id              String          @id @default(uuid())
-  walletId        String
-  
+  id       String @id @default(uuid())
+  walletId String
+
   // Share metadata (NOT the actual share!)
-  shareType       ShareType       // DEVICE, SERVER, RECOVERY
-  shareIndex      Int             // 0, 1, or 2
-  publicKey       String          // Public component only
-  
+  shareType  ShareType // DEVICE, SERVER, RECOVERY
+  shareIndex Int // 0, 1, or 2
+  publicKey  String // Public component only
+
   // Device info (for device shares)
-  deviceId        String?
-  deviceName      String?
-  userAgent       String?
-  lastUsedAt      DateTime?
-  
+  deviceId   String?
+  deviceName String?
+  userAgent  String?
+  lastUsedAt DateTime?
+
   // Status
-  isActive        Boolean         @default(true)
-  createdAt       DateTime        @default(now())
-  revokedAt       DateTime?
-  revokeReason    String?
-  
-  wallet          MPCWallet       @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  revokedAt    DateTime?
+  revokeReason String?
+
+  wallet MPCWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
   @@unique([walletId, shareType, shareIndex])
   @@index([walletId])
   @@index([deviceId])
 }
 
 model RecoveryGuardian {
-  id              String          @id @default(uuid())
-  walletId        String
-  
+  id       String @id @default(uuid())
+  walletId String
+
   // Guardian info
-  guardianType    GuardianType    // FRIEND, FAMILY, EMAIL, PHONE
-  guardianUserId  String?         // If another Altan user
-  guardianRef     String          // Email, phone, or user ID
-  guardianName    String?
-  
+  guardianType   GuardianType // FRIEND, FAMILY, EMAIL, PHONE
+  guardianUserId String? // If another Altan user
+  guardianRef    String // Email, phone, or user ID
+  guardianName   String?
+
   // Status
-  isConfirmed     Boolean         @default(false)
-  confirmedAt     DateTime?
-  
+  isConfirmed Boolean   @default(false)
+  confirmedAt DateTime?
+
   // Recovery state
-  recoveryApproved Boolean        @default(false)
-  approvedAt      DateTime?
-  
-  wallet          MPCWallet       @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  
+  recoveryApproved Boolean   @default(false)
+  approvedAt       DateTime?
+
+  wallet MPCWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
   @@unique([walletId, guardianRef])
   @@index([walletId])
   @@index([guardianUserId])
 }
 
 model RecoverySession {
-  id              String              @id @default(uuid())
-  walletId        String
-  
+  id       String @id @default(uuid())
+  walletId String
+
   // Session state
-  status          RecoverySessionStatus @default(PENDING)
-  method          RecoveryMethod
-  
+  status RecoverySessionStatus @default(PENDING)
+  method RecoveryMethod
+
   // Verification
-  verificationCode String?
+  verificationCode   String?
   verificationSentTo String?
-  codeExpiresAt   DateTime?
-  
+  codeExpiresAt      DateTime?
+
   // Approval tracking (for SOCIAL recovery)
-  requiredApprovals Int             @default(2)
-  currentApprovals  Int             @default(0)
-  
+  requiredApprovals Int @default(2)
+  currentApprovals  Int @default(0)
+
   // Timestamps
-  createdAt       DateTime        @default(now())
-  expiresAt       DateTime
-  completedAt     DateTime?
-  
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  completedAt DateTime?
+
   @@index([walletId])
   @@index([status])
 }
@@ -1048,77 +1278,77 @@ model RecoverySession {
 // ==================== ACCOUNT ABSTRACTION (ERC-4337) ====================
 
 model SmartAccount {
-  id              String          @id @default(uuid())
-  walletId        String          @unique
-  
+  id       String @id @default(uuid())
+  walletId String @unique
+
   // ERC-4337 Smart Account
-  accountAddress  String          @unique    // Smart wallet address (counterfactual)
-  factoryAddress  String                     // Factory that deploys it
-  
+  accountAddress String @unique // Smart wallet address (counterfactual)
+  factoryAddress String // Factory that deploys it
+
   // State
-  nonce           BigInt          @default(0)
-  isDeployed      Boolean         @default(false)
-  deployedAt      DateTime?
-  deployTxHash    String?
-  
+  nonce        BigInt    @default(0)
+  isDeployed   Boolean   @default(false)
+  deployedAt   DateTime?
+  deployTxHash String?
+
   // Gas sponsorship tracking
-  totalGasSponsored BigInt        @default(0)
-  dailyGasUsed    BigInt          @default(0)
-  lastGasResetAt  DateTime        @default(now())
-  
-  createdAt       DateTime        @default(now())
-  
-  wallet          MPCWallet       @relation(fields: [walletId], references: [id])
-  userOps         UserOperation[]
-  
+  totalGasSponsored BigInt   @default(0)
+  dailyGasUsed      BigInt   @default(0)
+  lastGasResetAt    DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  wallet  MPCWallet       @relation(fields: [walletId], references: [id])
+  userOps UserOperation[]
+
   @@index([accountAddress])
 }
 
 model UserOperation {
-  id              String          @id @default(uuid())
-  accountId       String
-  
+  id        String @id @default(uuid())
+  accountId String
+
   // ERC-4337 UserOp data
-  userOpHash      String          @unique
-  sender          String
-  nonce           BigInt
-  initCode        String?         @db.Text
-  callData        String          @db.Text
-  
+  userOpHash String  @unique
+  sender     String
+  nonce      BigInt
+  initCode   String? @db.Text
+  callData   String  @db.Text
+
   // Gas parameters
-  callGasLimit    BigInt
+  callGasLimit         BigInt
   verificationGasLimit BigInt
-  preVerificationGas BigInt
-  maxFeePerGas    BigInt
+  preVerificationGas   BigInt
+  maxFeePerGas         BigInt
   maxPriorityFeePerGas BigInt
-  
+
   // Paymaster data
-  paymasterAndData String?        @db.Text
-  
+  paymasterAndData String? @db.Text
+
   // Signature
-  signature       String          @db.Text
-  
+  signature String @db.Text
+
   // Status tracking
-  status          UserOpStatus    @default(PENDING)
-  txHash          String?
-  blockNumber     BigInt?
-  gasUsed         BigInt?
-  
+  status      UserOpStatus @default(PENDING)
+  txHash      String?
+  blockNumber BigInt?
+  gasUsed     BigInt?
+
   // Sponsorship
-  isSponsored     Boolean         @default(true)
-  sponsorId       String?         // Paymaster ID
+  isSponsored     Boolean @default(true)
+  sponsorId       String? // Paymaster ID
   sponsoredAmount BigInt?
-  
+
   // Error handling
-  errorMessage    String?
-  revertReason    String?
-  
-  createdAt       DateTime        @default(now())
-  submittedAt     DateTime?
-  executedAt      DateTime?
-  
-  account         SmartAccount    @relation(fields: [accountId], references: [id])
-  
+  errorMessage String?
+  revertReason String?
+
+  createdAt   DateTime  @default(now())
+  submittedAt DateTime?
+  executedAt  DateTime?
+
+  account SmartAccount @relation(fields: [accountId], references: [id])
+
   @@index([accountId])
   @@index([status])
   @@index([userOpHash])
@@ -1128,60 +1358,59 @@ model UserOperation {
 // ==================== MPC ENUMS ====================
 
 enum MPCWalletStatus {
-  PENDING_SETUP     // Wallet created, MPC ceremony not complete
-  ACTIVE            // Fully functional
-  RECOVERY_MODE     // User lost access, recovery in progress
-  FROZEN            // Admin frozen
-  MIGRATING         // Migrating from old wallet
+  PENDING_SETUP // Wallet created, MPC ceremony not complete
+  ACTIVE // Fully functional
+  RECOVERY_MODE // User lost access, recovery in progress
+  FROZEN // Admin frozen
+  MIGRATING // Migrating from old wallet
 }
 
 enum ShareType {
-  DEVICE            // Stored in browser/mobile (IndexedDB)
-  SERVER            // Stored on backend (encrypted)
-  RECOVERY          // Stored with guardians or cloud backup
+  DEVICE // Stored in browser/mobile (IndexedDB)
+  SERVER // Stored on backend (encrypted)
+  RECOVERY // Stored with guardians or cloud backup
 }
 
 enum RecoveryMethod {
-  SOCIAL            // Friends/family approve recovery
-  EMAIL             // Email verification
-  PHONE             // SMS verification
-  HARDWARE          // Hardware key backup
-  ARBAN             // Arban-based recovery (spouse + rep)
-  NONE              // No recovery (dangerous)
+  SOCIAL // Friends/family approve recovery
+  EMAIL // Email verification
+  PHONE // SMS verification
+  HARDWARE // Hardware key backup
+  ARBAN // Arban-based recovery (spouse + rep)
+  NONE // No recovery (dangerous)
 }
 
 enum GuardianType {
-  SPOUSE            // Spouse from FamilyArban
-  FAMILY            // Other family member
-  KHURAL_REP        // Khural representative
-  FRIEND            // Another Altan user
-  EMAIL             // Email recovery
-  PHONE             // Phone recovery
+  SPOUSE // Spouse from FamilyArban
+  FAMILY // Other family member
+  KHURAL_REP // Khural representative
+  FRIEND // Another Altan user
+  EMAIL // Email recovery
+  PHONE // Phone recovery
 }
 
 enum RecoverySessionStatus {
-  PENDING           // Session created, waiting for verification
-  VERIFYING         // Code sent, waiting for input
-  APPROVING         // Waiting for guardian approvals
-  APPROVED          // Ready to restore
-  COMPLETED         // Recovery complete
-  EXPIRED           // Session timed out
-  CANCELLED         // User cancelled
-  FAILED            // Recovery failed
+  PENDING // Session created, waiting for verification
+  VERIFYING // Code sent, waiting for input
+  APPROVING // Waiting for guardian approvals
+  APPROVED // Ready to restore
+  COMPLETED // Recovery complete
+  EXPIRED // Session timed out
+  CANCELLED // User cancelled
+  FAILED // Recovery failed
 }
 
 enum UserOpStatus {
-  PENDING           // Waiting to be signed
-  SIGNED            // Signed, waiting for bundler
-  SUBMITTED         // Sent to bundler
-  MEMPOOL           // In bundler mempool
-  INCLUDED          // Included in block
-  CONFIRMED         // Confirmed (N blocks)
-  FAILED            // Execution failed
-  REVERTED          // Transaction reverted
-  DROPPED           // Dropped from mempool
+  PENDING // Waiting to be signed
+  SIGNED // Signed, waiting for bundler
+  SUBMITTED // Sent to bundler
+  MEMPOOL // In bundler mempool
+  INCLUDED // Included in block
+  CONFIRMED // Confirmed (N blocks)
+  FAILED // Execution failed
+  REVERTED // Transaction reverted
+  DROPPED // Dropped from mempool
 }
-
 
 // ============================================================================
 // LEGISLATIVE BRANCH (Khural) - Phase 3 Backend Integration
@@ -1209,44 +1438,43 @@ enum ProposalStatus {
   CANCELLED
 }
 
-
 model Proposal {
-  id              String          @id @default(uuid())
-  proposalId      Int             @unique // On-chain proposal ID
-  proposalType    ProposalType
-  khuralLevel     KhuralLevel
-  khuralId        Int             // Specific Arban/Zun/Myangan/Tumen ID
-  
-  title           String
-  description     String
-  executionData   String?         // Hex encoded calldata
-  
-  proposer        String          // Wallet address
-  proposerSeatId  String?         // Link to User
-  
-  status          ProposalStatus  @default(ACTIVE)
-  votingPeriod    Int             // Duration in seconds
-  startTime       DateTime        @default(now())
-  endTime         DateTime
-  
-  votesFor        Int             @default(0)
-  votesAgainst    Int             @default(0)
-  quorumRequired  Int             // Number of votes needed
-  
-  finalized       Boolean         @default(false)
-  finalizedAt     DateTime?
-  executed        Boolean         @default(false)
-  executedAt      DateTime?
-  
-  txHash          String?         // Transaction hash
-  blockNumber     Int?
-  
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
-  votes           Vote[]
-  proposerUser    User?           @relation("ProposalCreator", fields: [proposerSeatId], references: [seatId])
-  
+  id           String       @id @default(uuid())
+  proposalId   Int          @unique // On-chain proposal ID
+  proposalType ProposalType
+  khuralLevel  KhuralLevel
+  khuralId     Int // Specific Arban/Zun/Myangan/Tumen ID
+
+  title         String
+  description   String
+  executionData String? // Hex encoded calldata
+
+  proposer       String // Wallet address
+  proposerSeatId String? // Link to User
+
+  status       ProposalStatus @default(ACTIVE)
+  votingPeriod Int // Duration in seconds
+  startTime    DateTime       @default(now())
+  endTime      DateTime
+
+  votesFor       Int @default(0)
+  votesAgainst   Int @default(0)
+  quorumRequired Int // Number of votes needed
+
+  finalized   Boolean   @default(false)
+  finalizedAt DateTime?
+  executed    Boolean   @default(false)
+  executedAt  DateTime?
+
+  txHash      String? // Transaction hash
+  blockNumber Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  votes        Vote[]
+  proposerUser User?  @relation("ProposalCreator", fields: [proposerSeatId], references: [seatId])
+
   @@index([proposalId])
   @@index([khuralLevel, khuralId])
   @@index([status])
@@ -1254,58 +1482,58 @@ model Proposal {
 }
 
 model Vote {
-  id          String   @id @default(uuid())
-  proposalId  String
-  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-  
-  voter       String   // Wallet address
-  voterSeatId String?  // Link to User
-  support     Boolean  // true = for, false = against
+  id         String   @id @default(uuid())
+  proposalId String
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  voter       String // Wallet address
+  voterSeatId String? // Link to User
+  support     Boolean // true = for, false = against
   reason      String?
-  
+
   khuralLevel KhuralLevel
-  votingPower Int      @default(1) // Usually 1, but can be weighted
-  
+  votingPower Int         @default(1) // Usually 1, but can be weighted
+
   txHash      String?
   blockNumber Int?
-  
-  createdAt   DateTime @default(now())
-  
-  voterUser   User?    @relation("VoteCaster", fields: [voterSeatId], references: [seatId])
-  
+
+  createdAt DateTime @default(now())
+
+  voterUser User? @relation("VoteCaster", fields: [voterSeatId], references: [seatId])
+
   @@unique([proposalId, voter])
   @@index([voter])
   @@index([proposalId])
 }
 
 model KhuralDelegate {
-  id              String      @id @default(uuid())
-  
-  walletAddress   String
-  seatId          String?     // Link to User
-  
-  khuralLevel     KhuralLevel
-  khuralId        Int         // Specific Arban/Zun/Myangan/Tumen ID
-  
+  id String @id @default(uuid())
+
+  walletAddress String
+  seatId        String? // Link to User
+
+  khuralLevel KhuralLevel
+  khuralId    Int // Specific Arban/Zun/Myangan/Tumen ID
+
   // Source information
-  sourceLevel     KhuralLevel? // Where they were elected from
-  sourceId        Int?         // Source Arban/Zun/Myangan ID
-  
-  role            String       // REPRESENTATIVE, DELEGATE, ELDER, LEADER, CHAIRMAN
-  
-  electedAt       DateTime     @default(now())
-  termEnds        DateTime?
-  active          Boolean      @default(true)
-  
+  sourceLevel KhuralLevel? // Where they were elected from
+  sourceId    Int? // Source Arban/Zun/Myangan ID
+
+  role String // REPRESENTATIVE, DELEGATE, ELDER, LEADER, CHAIRMAN
+
+  electedAt DateTime  @default(now())
+  termEnds  DateTime?
+  active    Boolean   @default(true)
+
   // Stats
-  proposalsCreated Int         @default(0)
-  votescast       Int          @default(0)
-  
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  
-  delegateUser    User?        @relation("KhuralDelegate", fields: [seatId], references: [seatId])
-  
+  proposalsCreated Int @default(0)
+  votescast        Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  delegateUser User? @relation("KhuralDelegate", fields: [seatId], references: [seatId])
+
   @@unique([walletAddress, khuralLevel, khuralId])
   @@index([seatId])
   @@index([khuralLevel, khuralId])
@@ -1313,21 +1541,21 @@ model KhuralDelegate {
 }
 
 model VotingStatistics {
-  id              String      @id @default(uuid())
-  
-  khuralLevel     KhuralLevel
-  period          String      // e.g., "2026-01", "2026-Q1"
-  
- totalProposals  Int         @default(0)
-  passedProposals Int         @default(0)
-  rejectedProposals Int       @default(0)
-  totalVotes      Int         @default(0)
-  
-  participationRate Float?    // Percentage
-  averageQuorum   Float?
-  
-  generatedAt     DateTime    @default(now())
-  
+  id String @id @default(uuid())
+
+  khuralLevel KhuralLevel
+  period      String // e.g., "2026-01", "2026-Q1"
+
+  totalProposals    Int @default(0)
+  passedProposals   Int @default(0)
+  rejectedProposals Int @default(0)
+  totalVotes        Int @default(0)
+
+  participationRate Float? // Percentage
+  averageQuorum     Float?
+
+  generatedAt DateTime @default(now())
+
   @@unique([khuralLevel, period])
   @@index([khuralLevel])
 }
@@ -1335,31 +1563,31 @@ model VotingStatistics {
 // ============== MARKETPLACE ==============
 
 model MarketplaceListing {
-  id            String              @id @default(uuid())
-  
-  sellerId      String
-  categoryId    Int
-  
-  listingType   MarketplaceListingType
-  status        MarketplaceListingStatus       @default(ACTIVE)
-  
-  title         String
-  description   String
-  images        String[]            // Array of image URLs (IPFS or uploaded)
-  
-  price         String              // ALTAN amount as string
-  stock         Int                 @default(0)  // 0 = unlimited for services
-  sold          Int                 @default(0)
-  
+  id String @id @default(uuid())
+
+  sellerId   String
+  categoryId Int
+
+  listingType MarketplaceListingType
+  status      MarketplaceListingStatus @default(ACTIVE)
+
+  title       String
+  description String
+  images      String[] // Array of image URLs (IPFS or uploaded)
+
+  price String // ALTAN amount as string
+  stock Int    @default(0) // 0 = unlimited for services
+  sold  Int    @default(0)
+
   // Ratings
-  totalRating  Int                 @default(0)
-  reviewCount   Int                 @default(0)
-  
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  
-  purchases     MarketplacePurchase[]
-  
+  totalRating Int @default(0)
+  reviewCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchases MarketplacePurchase[]
+
   @@index([sellerId])
   @@index([categoryId])
   @@index([status])
@@ -1367,90 +1595,90 @@ model MarketplaceListing {
 }
 
 model MarketplacePurchase {
-  id            String              @id @default(uuid())
-  
-  listingId     String
-  buyerId       String
-  
-  quantity      Int
-  totalPrice    String              // ALTAN amount
-  
-  status        MarketplacePurchaseStatus      @default(PENDING)
+  id String @id @default(uuid())
+
+  listingId String
+  buyerId   String
+
+  quantity   Int
+  totalPrice String // ALTAN amount
+
+  status          MarketplacePurchaseStatus @default(PENDING)
   shippingAddress String?
-  trackingInfo  String?
-  txHash        String?             // Blockchain transaction hash
-  escrowId      String?             // EscrowBank ID
-  
-  rating        Int?                // 1-5 stars
-  review        String?
-  
-  createdAt     DateTime            @default(now())
-  paidAt        DateTime?
-  shippedAt     DateTime?
-  deliveredAt   DateTime?
-  completedAt   DateTime?
-  
-  listing       MarketplaceListing  @relation(fields: [listingId], references: [id])
-  
+  trackingInfo    String?
+  txHash          String? // Blockchain transaction hash
+  escrowId        String? // EscrowBank ID
+
+  rating Int? // 1-5 stars
+  review String?
+
+  createdAt   DateTime  @default(now())
+  paidAt      DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  completedAt DateTime?
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id])
+
   @@index([listingId])
   @@index([buyerId])
   @@index([status])
 }
 
 model Job {
-  id            String              @id @default(uuid())
-  
-  employerId    String
-  categoryId    Int
-  
-  title         String
-  description   String
-  requirements  String?
-  
-  salary        String              // ALTAN amount
-  duration      String?             // e.g., "3 months", "ongoing"
-  location      String?
-  remote        Boolean             @default(false)
-  
-  status        JobPostingStatus           @default(OPEN)
-  
-  deadline      DateTime?           // Application deadline
-  startDate     DateTime?
-  
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  closedAt      DateTime?
-  
-  applications  JobApplication[]
-  
+  id String @id @default(uuid())
+
+  employerId String
+  categoryId Int
+
+  title        String
+  description  String
+  requirements String?
+
+  salary   String // ALTAN amount
+  duration String? // e.g., "3 months", "ongoing"
+  location String?
+  remote   Boolean @default(false)
+
+  status JobPostingStatus @default(OPEN)
+
+  deadline  DateTime? // Application deadline
+  startDate DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  applications JobApplication[]
+
   @@index([employerId])
   @@index([categoryId])
   @@index([status])
 }
 
 model JobApplication {
-  id            String              @id @default(uuid())
-  
-  jobId         String
-  applicantId   String
-  
-  coverLetter   String
-  resumeUrl     String?
-  expectedSalary String?            // If negotiable
-  
-  status        JobApplicationStatus   @default(PENDING)
-  
-  appliedAt     DateTime            @default(now())
-  respondedAt   DateTime?
-  
+  id String @id @default(uuid())
+
+  jobId       String
+  applicantId String
+
+  coverLetter    String
+  resumeUrl      String?
+  expectedSalary String? // If negotiable
+
+  status JobApplicationStatus @default(PENDING)
+
+  appliedAt   DateTime  @default(now())
+  respondedAt DateTime?
+
   employerNotes String?
-  
-  job           Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, applicantId]) // One application per job per applicant
   @@index([jobId])
   @@index([applicantId])
   @@index([status])
-  @@unique([jobId, applicantId])  // One application per job per applicant
 }
 
 // ============== ENUMS ==============
@@ -1494,4 +1722,55 @@ enum JobApplicationStatus {
   ACCEPTED
   REJECTED
   WITHDRAWN
+}
+
+// Timeline Event Types
+enum EventType {
+  // Identity & Verification
+  ACCOUNT_CREATED
+  IDENTITY_VERIFIED
+  CITIZENSHIP_GRANTED
+  
+  // Contracts & Agreements
+  CONTRACT_SIGNED
+  CONTRACT_COMPLETED
+  CONTRACT_CANCELLED
+  
+  // Tasks & Work
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  TASK_REVIEWED
+  
+  // Banking & Finance
+  LOAN_REQUESTED
+  LOAN_APPROVED
+  LOAN_REPAID
+  PAYMENT_MADE
+  
+  // Governance
+  VOTE_CAST
+  PROPOSAL_SUBMITTED
+  LAW_ENACTED
+  
+  // Education & Skills
+  COURSE_COMPLETED
+  CERTIFICATION_EARNED
+  
+  // Justice
+  CASE_FILED
+  JUDGMENT_RENDERED
+  
+  // Custom
+  CUSTOM_EVENT
+}
+
+// Event Scope (hierarchical levels)
+enum EventScope {
+  INDIVIDUAL
+  FAMILY
+  CLAN
+  ARBAN
+  HORDE
+  NATION
+  CONFEDERATION
 }

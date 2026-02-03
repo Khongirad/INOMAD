@@ -1,10 +1,13 @@
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { AuthPasswordService } from './auth-password.service';
+import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthMiddleware } from './auth.middleware';
+import { PrismaModule } from '../prisma/prisma.module';
 
 function parseExpiryToSeconds(expiry: string): number {
   const match = expiry.match(/^(\d+)(s|m|h|d)$/);
@@ -21,6 +24,7 @@ function parseExpiryToSeconds(expiry: string): number {
 
 @Module({
   imports: [
+    PrismaModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -33,8 +37,8 @@ function parseExpiryToSeconds(expiry: string): number {
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard],
-  exports: [AuthService, AuthGuard, JwtModule],
+  providers: [AuthService, AuthPasswordService, AuthGuard, JwtAuthGuard],
+  exports: [AuthService, AuthPasswordService, AuthGuard, JwtModule],
 })
 export class AuthModule {
   /**
@@ -55,6 +59,12 @@ export class AuthModule {
         { path: 'auth/refresh', method: RequestMethod.POST },
         { path: 'auth/logout', method: RequestMethod.POST },
         { path: 'auth/logout-all', method: RequestMethod.POST },
+        // Gates of Khural endpoints  
+        { path: 'auth/register', method: RequestMethod.POST },
+        { path: 'auth/login-password', method: RequestMethod.POST },
+        { path: 'auth/accept-tos', method: RequestMethod.POST },
+        { path: 'auth/accept-constitution', method: RequestMethod.POST },
+        { path: 'auth/change-password', method: RequestMethod.POST },
         // Exclude bank endpoints (bank module handles its own auth)
         { path: 'bank/(.*)', method: RequestMethod.ALL },
         // Exclude E2E test endpoints (public for testing)

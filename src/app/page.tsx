@@ -1,26 +1,48 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { User, Building2, Landmark, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GatewayPortal } from "@/components/geo/GatewayPortal";
 
 export default function LandingPage() {
+  const [entered, setEntered] = useState(false);
+
+  // If not entered, show the Gate
+  if (!entered) {
+    return (
+      <GatewayPortal
+        isOpen={true}
+        onEnter={() => setEntered(true)}
+        title="Врата Хурала"
+        subtitle="Sovereign Territory Gateway"
+        lang="ru"
+      >
+        <div /> 
+      </GatewayPortal>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 p-4 relative overflow-hidden">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 p-4 relative overflow-hidden animate-in fade-in duration-1000">
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-800/20 via-zinc-950/80 to-zinc-950 pointer-events-none" />
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50" />
 
       {/* Hero Content */}
-      <div className="relative z-10 max-w-5xl w-full text-center space-y-8 animate-in mt-10">
+      <div className="relative z-10 max-w-5xl w-full text-center space-y-8 mt-10">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-gold-border/30 bg-gold-surface px-3 py-1 text-xs font-medium tracking-widest text-gold-primary uppercase shadow-[0_0_15px_-5px_var(--gold-glow)]">
             <span className="h-1.5 w-1.5 rounded-full bg-gold-primary animate-pulse" />
             Sovereign Operating System
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white">
-            INOMAD <span className="text-zinc-500">KHURAL</span>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-2">
+            Siberian <span className="text-zinc-500">Confederation</span>
           </h1>
+          <div className="text-gold-primary/70 font-mono text-sm uppercase tracking-widest mb-6 border-b border-gold-primary/10 inline-block pb-1">
+            Capital city: Erkhu (Irkutsk)
+          </div>
           <p className="mx-auto max-w-2xl text-lg text-zinc-400 leading-relaxed md:text-xl">
             A state-grade digital governance platform.
             <br className="hidden md:block" />
@@ -29,27 +51,13 @@ export default function LandingPage() {
         </div>
 
         {/* Pillars / Entry Points */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 px-4">
+        <div className="flex justify-center pt-10 px-4">
           <EntryCard
-            title="Citizen"
-            subtitle="Personal Identity"
-            icon={User}
-            href="/register"
-            delay="0s"
-          />
-          <EntryCard
-            title="Organization"
-            subtitle="Business & Guilds"
-            icon={Building2}
-            href="/dashboard"
-            delay="0.1s"
-          />
-          <EntryCard
-            title="Government"
-            subtitle="Official Access"
-            icon={Landmark}
-            href="/dashboard"
-            delay="0.2s"
+             title="Citizen Portal"
+             subtitle="Begin State Entry Ritual"
+             icon={User}
+             href="/register"
+             delay="0s"
           />
         </div>
 

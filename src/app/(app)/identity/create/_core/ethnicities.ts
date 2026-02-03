@@ -16,7 +16,7 @@ export const ETHNICITIES: EthnicityRecord[] = [
   { code: "bash", label: "Башкиры", regionHint: "unknown", isIndigenous: true },
 
   // Siberia
-  { code: "bur", label: "Буряты", regionHint: "siberia", isIndigenous: true },
+  { code: "bur", label: "Буряад-Монгол", regionHint: "siberia", isIndigenous: true },
   { code: "tuv", label: "Тувинцы", regionHint: "siberia", isIndigenous: true },
   { code: "alt", label: "Алтайцы", regionHint: "siberia", isIndigenous: true },
   { code: "khk", label: "Хакасы", regionHint: "siberia", isIndigenous: true },

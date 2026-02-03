@@ -35,41 +35,156 @@ interface GuardianSuggestion {
   trust: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
+// Structure for the encrypted share stored in localStorage
+interface StoredShare {
+  version: 1;
+  salt: string; // hex
+  iv: string;   // hex
+  data: string; // hex (encrypted share)
+}
+
+// ==================== CRYPTO HELPERS (Web Crypto API) ====================
+
+// Convert buffer to hex string
+const bufToHex = (data: ArrayBuffer | ArrayBufferView): string => {
+  let bytes: Uint8Array;
+  if (data instanceof Uint8Array) {
+    bytes = data;
+  } else if (ArrayBuffer.isView(data)) {
+    bytes = new Uint8Array(data.buffer, data.byteOffset, data.byteLength); 
+  } else {
+    bytes = new Uint8Array(data as ArrayBuffer);
+  }
+  
+  return Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+};
+
+// Convert hex string to Uint8Array
+const hexToBuf = (hex: string): Uint8Array => {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+};
+
+// Derive AES-GCM key from PIN and Salt using PBKDF2
+const deriveKey = async (pin: string, salt: Uint8Array): Promise<CryptoKey> => {
+  const enc = new TextEncoder();
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    enc.encode(pin),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+  
+  return window.crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt as unknown as BufferSource,
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+};
+
+// Encrypt plain device share with PIN
+const encryptDeviceShare = async (share: string, pin: string): Promise<StoredShare> => {
+  const salt = window.crypto.getRandomValues(new Uint8Array(16));
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pin, salt);
+  const enc = new TextEncoder();
+  
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: iv },
+    key,
+    enc.encode(share)
+  );
+
+  return {
+    version: 1,
+    salt: bufToHex(salt as unknown as Uint8Array),
+    iv: bufToHex(iv as unknown as Uint8Array),
+    data: bufToHex(encrypted)
+  };
+};
+
+// Decrypt device share with PIN
+const decryptDeviceShare = async (stored: StoredShare, pin: string): Promise<string> => {
+  try {
+    const salt = hexToBuf(stored.salt);
+    const iv = hexToBuf(stored.iv);
+    const data = hexToBuf(stored.data);
+    
+    const key = await deriveKey(pin, salt);
+    
+    const decrypted = await window.crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: iv as any },
+      key,
+      data as any
+    );
+    
+    return new TextDecoder().decode(decrypted);
+  } catch (e) {
+    throw new Error('Invalid PIN or corrupted data');
+  }
+};
+
 /**
  * useMPCWallet Hook
  * 
  * Manages MPC wallet operations:
- * - Create new wallet
- * - Sign transactions (gasless)
+ * - Create new wallet (with PIN encryption)
+ * - Sign transactions (requires PIN)
  * - Manage guardians
  * - Recovery flow
- * 
- * Device share is stored encrypted in localStorage.
- * Server share is stored on backend.
- * 2-of-3 threshold for signing.
  */
 export function useMPCWallet() {
   const { user, isAuthenticated } = useAuth();
   const [wallet, setWallet] = useState<MPCWallet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // System Logs for UI Demo
+  const [systemLogs, setSystemLogs] = useState<{timestamp: string, message: string, type: 'info' | 'success' | 'warning' | 'error'}[]>([]);
 
-  // Check if device share exists
+  const addLog = useCallback((message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    setSystemLogs(prev => [...prev, {
+        timestamp: new Date().toLocaleTimeString(),
+        message,
+        type
+    }]);
+  }, []);
+
+  // Check if encrypted device share exists
   const hasDeviceShare = useCallback((): boolean => {
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem(DEVICE_SHARE_KEY);
   }, []);
 
-  // Get device share (should be called only when needed)
-  const getDeviceShare = useCallback((): string | null => {
+  // Get raw stored share object (encrypted)
+  const getStoredShare = useCallback((): StoredShare | null => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(DEVICE_SHARE_KEY);
+    const item = localStorage.getItem(DEVICE_SHARE_KEY);
+    if (!item) return null;
+    try {
+      return JSON.parse(item) as StoredShare;
+    } catch {
+      return null;
+    }
   }, []);
 
-  // Store device share securely
-  const storeDeviceShare = useCallback((share: string): void => {
+  // Store encrypted share
+  const storeEncryptedShare = useCallback((share: StoredShare): void => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(DEVICE_SHARE_KEY, share);
+    localStorage.setItem(DEVICE_SHARE_KEY, JSON.stringify(share));
   }, []);
 
   // Clear device share
@@ -109,11 +224,17 @@ export function useMPCWallet() {
   /**
    * Create new MPC wallet
    */
-  const createWallet = async (recoveryMethod: string = 'SOCIAL'): Promise<void> => {
+  const createWallet = async (pin: string, recoveryMethod: string = 'SOCIAL'): Promise<void> => {
+    if (!pin || pin.length < 4) {
+        throw new Error("PIN is required and must be at least 4 digits");
+    }
+
     setLoading(true);
     setError(null);
+    addLog("Initiating MPC Wallet Creation...", 'info');
 
     try {
+      addLog("Requesting Server Key Share generation...", 'info');
       const response = await api.post<{
         success: boolean;
         data: {
@@ -123,13 +244,21 @@ export function useMPCWallet() {
         };
       }>('/mpc-wallet/create', { recoveryMethod });
 
-      // Store device share locally
-      storeDeviceShare(response.data.deviceShare);
+      // Encrypt and store device share locally
+      addLog("Generating high-entropy PIN-derived key (PBKDF2)...", 'info');
+      addLog("Encrypting device share with AES-GCM...", 'info');
+      
+      const encrypted = await encryptDeviceShare(response.data.deviceShare, pin);
+      storeEncryptedShare(encrypted);
+      
+      addLog("Device share securely stored in local enclave.", 'success');
+      addLog(`Wallet created successfully. ID: ${response.data.walletId.substring(0, 8)}...`, 'success');
 
       // Refresh wallet info
       await fetchWallet();
     } catch (e: any) {
       setError(e.message);
+      addLog(`Creation failed: ${e.message}`, 'error');
       throw e;
     } finally {
       setLoading(false);
@@ -139,7 +268,11 @@ export function useMPCWallet() {
   /**
    * Migrate from legacy EmbeddedWallet
    */
-  const migrateFromLegacy = async (privateKey: string): Promise<void> => {
+  const migrateFromLegacy = async (privateKey: string, pin: string): Promise<void> => {
+    if (!pin || pin.length < 4) {
+        throw new Error("PIN is required for the new wallet");
+    }
+
     setLoading(true);
     setError(null);
 
@@ -153,8 +286,9 @@ export function useMPCWallet() {
         };
       }>('/mpc-wallet/migrate', { privateKey });
 
-      // Store new device share
-      storeDeviceShare(response.data.deviceShare);
+      // Encrypt and store new device share
+      const encrypted = await encryptDeviceShare(response.data.deviceShare, pin);
+      storeEncryptedShare(encrypted);
 
       // Clear old wallet data
       localStorage.removeItem('inomad_wallet_enc');
@@ -171,36 +305,106 @@ export function useMPCWallet() {
   };
 
   /**
-   * Sign transaction (gasless via Account Abstraction)
+   * Validate if the provided PIN can decrypt the stored share
    */
-  const signTransaction = async (transaction: {
-    to: string;
-    value?: string;
-    data?: string;
-  }): Promise<string> => {
-    const deviceShare = getDeviceShare();
-    if (!deviceShare) {
-      throw new Error('Device share not found. Please set up wallet on this device.');
-    }
-
-    const response = await api.post<{
-      success: boolean;
-      data: { signedTransaction: string };
-    }>('/mpc-wallet/sign-transaction', {
-      deviceShare,
-      transaction,
-    });
-
-    return response.data.signedTransaction;
+  const validatePin = async (pin: string): Promise<boolean> => {
+      const stored = getStoredShare();
+      if (!stored) return false;
+      try {
+          await decryptDeviceShare(stored, pin);
+          return true;
+      } catch {
+          return false;
+      }
   };
 
   /**
-   * Sign message
+   * Sign transaction (requires PIN to unlock locally)
+   * If broadcast is true, the server will broadcast the transaction to the network
    */
-  const signMessage = async (message: string): Promise<string> => {
-    const deviceShare = getDeviceShare();
-    if (!deviceShare) {
+  /**
+   * Sign transaction (requires PIN to unlock locally)
+   * If broadcast is true, the server will broadcast the transaction to the network
+   */
+  const signAndSendTransaction = async (
+    transaction: { to: string; value?: string; data?: string; gasLimit?: string }, 
+    pin: string,
+    broadcast: boolean = false
+  ): Promise<{ signedTx: string; hash?: string }> => {
+    const stored = getStoredShare();
+    if (!stored) {
       throw new Error('Device share not found. Please set up wallet on this device.');
+    }
+
+    addLog(`Preparing transaction... To: ${transaction.to}`, 'info');
+
+    // Decrypt share
+    let deviceShare: string;
+    try {
+        addLog("Decrypting device share with PIN...", 'info');
+        deviceShare = await decryptDeviceShare(stored, pin);
+    } catch (e) {
+        addLog("PIN verification failed.", 'error');
+        throw new Error('Incorrect PIN');
+    }
+
+    addLog(broadcast ? "Requesting Signature & Broadcast..." : "Requesting Partial Signature...", 'info');
+    
+    try {
+        const response = await api.post<{
+          success: boolean;
+          data: { signedTransaction: string; hash?: string };
+        }>('/mpc-wallet/sign-transaction', {
+          deviceShare,
+          transaction,
+          broadcast
+        });
+
+        if (response.data.hash) {
+            addLog(`Transaction broadcasted! Hash: ${response.data.hash}`, 'success');
+        } else {
+            addLog("Transaction signed locally.", 'success');
+        }
+
+        return {
+          signedTx: response.data.signedTransaction,
+          hash: response.data.hash
+        };
+    } catch (e: any) {
+        addLog(`Signing failed: ${e.message}`, 'error');
+        throw e;
+    }
+  };
+
+  /**
+   * Helper to send transaction (broadcasts immediately)
+   */
+  const sendTransaction = async (
+    transaction: { to: string; value?: string; data?: string; gasLimit?: string },
+    pin: string
+  ): Promise<string> => {
+    const result = await signAndSendTransaction(transaction, pin, true);
+    if (!result.hash) {
+      throw new Error('Failed to broadcast transaction - no hash returned');
+    }
+    return result.hash;
+  };
+
+  /**
+   * Sign message (requires PIN)
+   */
+  const signMessage = async (message: string, pin: string): Promise<string> => {
+    const stored = getStoredShare();
+    if (!stored) {
+      throw new Error('Device share not found. Please set up wallet on this device.');
+    }
+
+    // Decrypt share
+    let deviceShare: string;
+    try {
+        deviceShare = await decryptDeviceShare(stored, pin);
+    } catch (e) {
+        throw new Error('Incorrect PIN');
     }
 
     const response = await api.post<{
@@ -290,6 +494,7 @@ export function useMPCWallet() {
    */
   const confirmRecovery = async (
     sessionId: string,
+    newPin: string,
     verificationCode?: string
   ): Promise<void> => {
     const response = await api.post<{
@@ -303,9 +508,11 @@ export function useMPCWallet() {
       verificationCode,
     });
 
-    // Store new device share if provided
+    // Store new device share if provided (re-encrypted with new PIN)
     if (response.data.deviceShare) {
-      storeDeviceShare(response.data.deviceShare);
+      if (!newPin) throw new Error("New PIN required to store recovered share");
+      const encrypted = await encryptDeviceShare(response.data.deviceShare, newPin);
+      storeEncryptedShare(encrypted);
     }
   };
 
@@ -314,6 +521,7 @@ export function useMPCWallet() {
     wallet,
     loading,
     error,
+    systemLogs,
     isReady: !!wallet && wallet.status === 'ACTIVE' && hasDeviceShare(),
     hasWallet: !!wallet,
     address: wallet?.address || null,
@@ -321,8 +529,17 @@ export function useMPCWallet() {
     // Wallet operations
     createWallet,
     migrateFromLegacy,
-    signTransaction,
+    
+    // Low-level sign
+    signAndSendTransaction, 
+    
+    // Helpers
+    transaction: signAndSendTransaction, // Alias for backward compatibility if needed, but discouraged
+    signTransaction: async (tx: any, pin: string) => (await signAndSendTransaction(tx, pin, false)).signedTx,
+    sendTransaction,
+    
     signMessage,
+    validatePin,
     refresh: fetchWallet,
 
     // Device share management

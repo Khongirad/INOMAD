@@ -20,6 +20,7 @@ class CreateWalletDto {
   recoveryMethod?: RecoveryMethod;
 }
 
+
 class SignTransactionDto {
   deviceShare: string;
   transaction: {
@@ -28,6 +29,7 @@ class SignTransactionDto {
     data?: string;
     gasLimit?: string;
   };
+  broadcast?: boolean;
 }
 
 class SignMessageDto {
@@ -55,6 +57,7 @@ class ConfirmRecoveryDto {
   sessionId: string;
   verificationCode?: string;
 }
+
 
 // ==================== CONTROLLER ====================
 
@@ -123,7 +126,7 @@ export class MPCWalletController {
   ) {
     const wallet = await this.walletService.getWallet(req.user.userId);
     
-    const signedTx = await this.walletService.signTransaction(
+    const result = await this.walletService.signTransaction(
       wallet.id,
       dto.deviceShare,
       {
@@ -131,13 +134,15 @@ export class MPCWalletController {
         value: dto.transaction.value,
         data: dto.transaction.data,
         gasLimit: dto.transaction.gasLimit,
-      }
+      },
+      dto.broadcast
     );
     
     return {
       success: true,
       data: {
-        signedTransaction: signedTx,
+        signedTransaction: result.signedTx,
+        hash: result.hash,
       }
     };
   }

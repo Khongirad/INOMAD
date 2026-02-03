@@ -9,7 +9,8 @@ interface AuthUser {
   userId: string;
   seatId: string;
   address: string;
-  roles: string[];
+  role: string;  // Single role (CITIZEN, LEADER, ADMIN, CREATOR)
+  roles: string[];  // For backward compatibility
   status: string;
   walletStatus: string;
   hasBankLink: boolean;
@@ -79,6 +80,7 @@ export function useAuth() {
     loading,
     error,
     isAuthenticated: !!user,
+    token: AuthSession.getAccessToken(),
     login,
     logout,
     refresh: fetchMe,

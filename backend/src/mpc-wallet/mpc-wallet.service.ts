@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { BlockchainService } from '../blockchain/blockchain.service';
 import { ethers } from 'ethers';
 import * as crypto from 'crypto';
 import { 
@@ -26,7 +27,10 @@ export class MPCWalletService {
   // Encryption key for server shares (from env)
   private readonly serverShareKey: Buffer;
   
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private prisma: PrismaService,
+    private blockchainService: BlockchainService
+  ) {
     const keyHex = process.env.SERVER_SHARE_KEY || crypto.randomBytes(32).toString('hex');
     this.serverShareKey = Buffer.from(keyHex, 'hex');
     
@@ -189,14 +193,25 @@ export class MPCWalletService {
   async signTransaction(
     walletId: string,
     deviceShare: string,
-    transaction: ethers.TransactionRequest
-  ): Promise<string> {
+    transaction: ethers.TransactionRequest,
+    broadcast: boolean = false
+  ): Promise<{ signedTx: string; hash?: string }> {
     const signer = await this.reconstructSigner(walletId, deviceShare);
     const signedTx = await signer.signTransaction(transaction);
     
     this.logger.log(`Signed transaction for wallet ${walletId}`);
     
-    return signedTx;
+    let hash: string | undefined;
+    if (broadcast) {
+      if (!this.blockchainService.isAvailable()) {
+         throw new BadRequestException('Blockchain service unavailable for broadcast');
+      }
+      const tx = await this.blockchainService.broadcastTransaction(signedTx);
+      hash = tx.hash;
+      this.logger.log(`Broadcasted transaction: ${hash}`);
+    }
+
+    return { signedTx, hash };
   }
 
   /**

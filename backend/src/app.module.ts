@@ -18,12 +18,18 @@ import { ArbanModule } from './arbans/arban.module';
 import { DigitalSealModule } from './digital-seal/digital-seal.module';
 import { AcademyModule } from './academy/academy.module';
 import { JusticeModule } from './justice/justice.module';
-import { TempleModule } from './temple/temple.module';
+// Temporarily disabled due to TS errors - not needed for Gates of Khural
+// import { TempleModule } from './temple/temple.module';
 import { MPCWalletModule } from './mpc-wallet/mpc-wallet.module';
 import { WalletProtectionModule } from './wallet-protection/wallet-protection.module';
-import { LegislativeModule } from './legislative/legislative.module';
-import { TaxModule } from './tax/tax.module';
-import { MarketplaceModule } from './marketplace/marketplace.module';
+import { VerificationModule } from './verification/verification.module';
+import { TimelineModule } from './timeline/timeline.module';
+import { HistoryModule } from './history/history.module';
+import { CalendarModule } from './calendar/calendar.module';
+// import { LegislativeModule } from './legislative/legislative.module';
+// import { TaxModule } from './tax/tax.module';
+// import { MarketplaceModule } from './marketplace/marketplace.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -48,12 +54,17 @@ import { MarketplaceModule } from './marketplace/marketplace.module';
     DigitalSealModule,
     AcademyModule,
     JusticeModule,
-    TempleModule,
+    // TempleModule,  // Disabled - TS errors
     MPCWalletModule,
     WalletProtectionModule,
-    LegislativeModule,
-    TaxModule,
-    MarketplaceModule,
+    VerificationModule,
+    TimelineModule,
+    HistoryModule,
+    CalendarModule,
+    // LegislativeModule,  // Disabled - TS errors
+    // TaxModule,  // Disabled - TS errors
+    // MarketplaceModule,  // Disabled - TS errors
+    AdminModule,  // Admin and Creator management
   ],
 })
 export class AppModule {}

@@ -15,6 +15,9 @@ import {
   Building2,
   Globe,
   LogOut,
+  Shield,
+  UserCog,
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -124,6 +127,64 @@ export function Sidebar() {
               </div>
             </div>
           ))}
+
+          {/* Admin Section (ADMIN + CREATOR) */}
+          {(user?.role === 'ADMIN' || user?.role === 'CREATOR') && (
+            <div>
+              <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-purple-700/70 border-b border-purple-900/10 pb-1">
+                Administration
+              </div>
+              <div className="space-y-1">
+                <Link
+                  href="/admin"
+                  className={cn(
+                    "group flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-300",
+                    pathname === "/admin"
+                      ? "bg-purple-950/40 text-purple-400 border-l-2 border-purple-500 shadow-[inset_10px_0_20px_-10px_rgba(168,85,247,0.1)]"
+                      : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 hover:pl-4"
+                  )}
+                >
+                  <Shield className={cn("h-4 w-4 transition-colors", pathname === "/admin" ? "text-purple-500" : "text-zinc-600 group-hover:text-zinc-400")} />
+                  Dashboard
+                </Link>
+                <Link
+                  href="/admin/users"
+                  className={cn(
+                    "group flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-300",
+                    pathname?.startsWith("/admin/users")
+                      ? "bg-purple-950/40 text-purple-400 border-l-2 border-purple-500 shadow-[inset_10px_0_20px_-10px_rgba(168,85,247,0.1)]"
+                      : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 hover:pl-4"
+                  )}
+                >
+                  <UserCog className={cn("h-4 w-4 transition-colors", pathname?.startsWith("/admin/users") ? "text-purple-500" : "text-zinc-600 group-hover:text-zinc-400")} />
+                  Users
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Creator Section (CREATOR ONLY) */}
+          {user?.role === 'CREATOR' && (
+            <div>
+              <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-700/70 border-b border-amber-900/10 pb-1">
+                Creator
+              </div>
+              <div className="space-y-1">
+                <Link
+                  href="/creator/admins"
+                  className={cn(
+                    "group flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-all duration-300",
+                    pathname?.startsWith("/creator/admins")
+                      ? "bg-amber-950/40 text-amber-400 border-l-2 border-amber-500 shadow-[inset_10px_0_20px_-10px_rgba(245,158,11,0.1)]"
+                      : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 hover:pl-4"
+                  )}
+                >
+                  <Crown className={cn("h-4 w-4 transition-colors", pathname?.startsWith("/creator/admins") ? "text-amber-500" : "text-zinc-600 group-hover:text-zinc-400")} />
+                  Manage Admins
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Wallet Status Footer */}

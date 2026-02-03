@@ -4,9 +4,10 @@ import { MPCWalletController } from './mpc-wallet.controller';
 import { KeyShareService } from './key-share.service';
 import { RecoveryService } from './recovery.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [MPCWalletController],
   providers: [MPCWalletService, KeyShareService, RecoveryService],
   exports: [MPCWalletService, KeyShareService],

@@ -9,13 +9,18 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { AuthPasswordService } from './auth-password.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthGuard, AuthenticatedRequest } from './auth.guard';
 import { RequestNonceDto, VerifySignatureDto, RefreshTokenDto } from './dto/auth.dto';
 import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authPasswordService: AuthPasswordService,
+  ) {}
 
   /**
    * POST /auth/nonce
@@ -106,5 +111,73 @@ export class AuthController {
   async logoutAll(@Req() req: AuthenticatedRequest) {
     await this.authService.logoutAll(req.user.userId);
     return { ok: true };
+  }
+
+  // ========================================
+  // GATES OF KHURAL - Password-Based Auth
+  // ========================================
+
+  /**
+   * POST /auth/register
+   * Register new user with username and password
+   * Gates of Khural entrance - step 1
+   */
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() dto: { username: string; password: string; email?: string }) {
+    return this.authPasswordService.register(dto);
+  }
+
+  /**
+   * POST /auth/login-password
+   * Login with username and password
+   * Gates of Khural entrance
+   */
+  @Post('login-password')
+  @HttpCode(HttpStatus.OK)
+  async loginPassword(@Body() dto: { username: string; password: string }) {
+    return this.authPasswordService.login(dto);
+  }
+
+  /**
+   * POST /auth/accept-tos
+   * Accept Terms of Service
+   * Required before constitution acceptance
+   */
+  @Post('accept-tos')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async acceptTOS(@Req() req: AuthenticatedRequest) {
+    return this.authPasswordService.acceptTOS(req.user.userId);
+  }
+
+  /**
+   * POST /auth/accept-constitution
+   * Accept INOMAD KHURAL Constitution
+   * USER BECOMES LEGAL SUBJECT - gains rights and responsibilities
+   */
+  @Post('accept-constitution')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async acceptConstitution(@Req() req: AuthenticatedRequest) {
+    return this.authPasswordService.acceptConstitution(req.user.userId);
+  }
+
+  /**
+   * POST /auth/change-password
+   * Change user password
+   */
+  @Post('change-password')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: { oldPassword: string; newPassword: string },
+  ) {
+    return this.authPasswordService.changePassword(
+      req.user.userId,
+      dto.oldPassword,
+      dto.newPassword,
+    );
   }
 }

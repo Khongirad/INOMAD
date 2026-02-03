@@ -360,6 +360,25 @@ export class BlockchainService implements OnModuleInit {
   }
 
   /**
+   * Broadcast a signed transaction to the network
+   */
+  async broadcastTransaction(signedTx: string): Promise<ethers.TransactionResponse> {
+    if (!this.isAvailable()) {
+      throw new Error('Blockchain not available');
+    }
+
+    try {
+      this.logger.log(`Broadcasting transaction...`);
+      const txResponse = await this.provider.broadcastTransaction(signedTx);
+      this.logger.log(`Transaction sent: ${txResponse.hash}`);
+      return txResponse;
+    } catch (error) {
+      this.logger.error('Failed to broadcast transaction', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get current block number
    */
   async getCurrentBlock(): Promise<number> {

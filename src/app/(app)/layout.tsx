@@ -11,7 +11,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (!AuthSession.isAuthenticated()) {
+    // Allow access to /wallet if user has pending wallet setup from registration
+    const hasPendingWalletSetup = typeof window !== 'undefined' && 
+      window.localStorage.getItem('pending_wallet_pin') !== null;
+    
+    if (!AuthSession.isAuthenticated() && !hasPendingWalletSetup) {
       router.replace('/login');
     } else {
       setChecked(true);

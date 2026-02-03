@@ -293,77 +293,196 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
     coordinates: { lat: 43.5, lng: 44.0 },
     bounds: { north: 46.5, south: 41.0, east: 50.0, west: 36.0 },
     indigenousPeoples: [
-      "che",
-      "ava",
-      "dar",
-      "lez",
-      "kab",
-      "os",
-      "ing",
-      "ady",
-      "crk",
-      "bal",
-      "krn",
-      "tat_cr",
-      "nog",
-      "kum",
-      "lak",
-      "tab",
-      "rut",
-      "agh",
-      "tsa",
+      "che", "ava", "dar", "lez", "kab", "os", "ing", "ady", "crk", "bal", "kum", "lak", "tab"
     ],
-    languages: [
-      "Русский",
-      "Чеченский",
-      "Аварский",
-      "Даргинский",
-      "Лезгинский",
-      "Кабардинский",
-      "Осетинский",
-      "Ингушский",
-      "Адыгейский",
-      "Карачаево-балкарский",
+    languages: ["Русский", "Чеченский", "Аварский", "Осетинский"],
+    subRegions: [
+        {
+            id: "dagestan",
+            name: "Republic of Dagestan",
+            nameRu: "Республика Дагестан",
+            capital: "Makhachkala",
+            capitalRu: "Махачкала",
+            coordinates: { lat: 42.98, lng: 47.5 },
+            bounds: { north: 45.0, south: 41.0, east: 48.0, west: 45.0 },
+            indigenousPeoples: ["ava", "dar", "lez", "kum", "lak", "tab"],
+            description: "Land of Mountains. Most diverse region.",
+            descriptionRu: "Страна гор. Самый многонациональный регион."
+        },
+        {
+            id: "chechnya",
+            name: "Chechen Republic",
+            nameRu: "Чеченская Республика",
+            capital: "Grozny",
+            capitalRu: "Грозный",
+            coordinates: { lat: 43.31, lng: 45.69 },
+            bounds: { north: 44.0, south: 42.0, east: 46.5, west: 44.5 },
+            indigenousPeoples: ["che"],
+            description: "Heart of the Vainakh people.",
+            descriptionRu: "Сердце вайнахского народа."
+        },
+         {
+            id: "ingushetia",
+            name: "Republic of Ingushetia",
+            nameRu: "Республика Ингушетия",
+            capital: "Magas",
+            capitalRu: "Магас",
+            coordinates: { lat: 43.16, lng: 44.81 },
+            bounds: { north: 43.5, south: 42.5, east: 45.5, west: 44.0 },
+            indigenousPeoples: ["ing"],
+            description: "Land of Towers.",
+            descriptionRu: "Страна башен."
+        },
+        {
+            id: "ossetia",
+            name: "North Ossetia-Alania",
+            nameRu: "Северная Осетия — Алания",
+            capital: "Vladikavkaz",
+            capitalRu: "Владикавказ",
+            coordinates: { lat: 43.02, lng: 44.68 },
+            bounds: { north: 43.8, south: 42.5, east: 45.0, west: 43.5 },
+            indigenousPeoples: ["os"],
+            description: "Descendants of Alans.",
+            descriptionRu: "Потомки аланов."
+        },
+        {
+            id: "kabardino_balkaria",
+            name: "Kabardino-Balkaria",
+            nameRu: "Кабардино-Балкария",
+            capital: "Nalchik",
+            capitalRu: "Нальчик",
+            coordinates: { lat: 43.48, lng: 43.61 },
+            bounds: { north: 44.0, south: 42.8, east: 44.5, west: 42.5 },
+            indigenousPeoples: ["kab", "bal"],
+            description: "Home of Mount Elbrus.",
+            descriptionRu: "Родина Эльбруса."
+        },
+        {
+            id: "karachay_cherkessia",
+            name: "Karachay-Cherkessia",
+            nameRu: "Карачаево-Черкесия",
+            capital: "Cherkessk",
+            capitalRu: "Черкесск",
+            coordinates: { lat: 44.22, lng: 42.05 },
+            bounds: { north: 44.5, south: 43.0, east: 43.0, west: 40.5 },
+            indigenousPeoples: ["kar", "crk"],
+            description: "Western Caucasus peaks.",
+            descriptionRu: "Вершины Западного Кавказа."
+        },
+        {
+            id: "adygea",
+            name: "Republic of Adygea",
+            nameRu: "Республика Адыгея",
+            capital: "Maykop",
+            capitalRu: "Майкоп",
+            coordinates: { lat: 44.6, lng: 40.1 },
+            bounds: { north: 45.2, south: 43.8, east: 40.8, west: 38.8 },
+            indigenousPeoples: ["ady"],
+            description: "Circassian homeland.",
+            descriptionRu: "Черкесская родина."
+        }
     ],
     description:
       "Mountain fortress of dozens of nations. One of the most linguistically diverse regions on Earth.",
     descriptionRu:
       "Горная крепость десятков народов. Один из наиболее лингвистически разнообразных регионов на Земле.",
     culturalNotes:
-      "Caucasian cultures are defined by mountain isolation, clan structures, and codes of honor (adat). Islam predominates alongside ancient customs. Each valley may have its own language.",
+      "Caucasian cultures are defined by mountain isolation, clan structures, and codes of honor. Islam predominates alongside ancient customs.",
     culturalNotesRu:
-      "Кавказские культуры определяются горной изоляцией, клановыми структурами и кодексами чести (адат). Ислам преобладает наряду с древними обычаями. Каждая долина может иметь свой язык.",
+      "Кавказские культуры определяются горной изоляцией, клановыми структурами и кодексами чести. Ислам преобладает наряду с древними обычаями.",
     responsibilityPrinciple:
       "The peoples of the Caucasus guard their mountains and welcome guests with sacred hospitality.",
     responsibilityPrincipleRu:
       "Народы Кавказа хранят свои горы и встречают гостей священным гостеприимством.",
   },
 
-  // ЗОЛОТОЕ КОЛЬЦО (Центральная Россия)
+  // ЦЕНТРАЛЬНЫЕ ЗЕМЛИ (Залесье)
   {
-    id: "golden_ring",
+    id: "central_heartland",
     code: "golden_ring",
-    name: "Russia (Golden Ring)",
-    nameRu: "Россия (Золотое кольцо)",
+    name: "Central Heartland",
+    nameRu: "Центральные Земли",
     status: "state",
     color: "#ca8a04", // золотой
     opacity: 0.2,
     coordinates: { lat: 56.5, lng: 40.0 },
     bounds: { north: 62.0, south: 50.0, east: 60.0, west: 30.0 },
-    indigenousPeoples: ["rus"],
+    indigenousPeoples: [],
     languages: ["Русский"],
+    subRegions: [
+        {
+            id: "vladimir",
+            name: "Vladimir Oblast",
+            nameRu: "Владимирская область",
+            capital: "Vladimir",
+            capitalRu: "Владимир",
+            coordinates: { lat: 56.12, lng: 40.40 },
+            bounds: { north: 57.0, south: 55.0, east: 43.0, west: 38.0 },
+            indigenousPeoples: [],
+            description: "Ancient capital of Rus.",
+            descriptionRu: "Древняя столица Руси."
+        },
+        {
+            id: "yaroslavl",
+            name: "Yaroslavl Oblast",
+            nameRu: "Ярославская область",
+            capital: "Yaroslavl",
+            capitalRu: "Ярославль",
+            coordinates: { lat: 57.62, lng: 39.89 },
+            bounds: { north: 59.0, south: 56.5, east: 41.5, west: 38.0 },
+            indigenousPeoples: [],
+            description: "Pearl of the Golden Ring.",
+            descriptionRu: "Жемчужина Золотого кольца."
+        },
+        {
+            id: "moscow_oblast",
+            name: "Moscow Oblast",
+            nameRu: "Московская область",
+            capital: "Krasnogorsk",
+            capitalRu: "Красногорск",
+            coordinates: { lat: 55.8, lng: 37.3 },
+            bounds: { north: 57.0, south: 54.5, east: 40.0, west: 35.0 },
+            indigenousPeoples: [],
+            description: "Heart of the Federation.",
+            descriptionRu: "Сердце Федерации."
+        },
+        {
+            id: "tver",
+            name: "Tver Oblast",
+            nameRu: "Тверская область",
+            capital: "Tver",
+            capitalRu: "Тверь",
+            coordinates: { lat: 56.85, lng: 35.9 },
+            bounds: { north: 58.0, south: 56.0, east: 38.0, west: 34.0 },
+            indigenousPeoples: ["krl"],
+            description: "Upper Volga.",
+            descriptionRu: "Верхневолжье."
+        },
+         {
+            id: "kostroma",
+            name: "Kostroma Oblast",
+            nameRu: "Костромская область",
+            capital: "Kostroma",
+            capitalRu: "Кострома",
+            coordinates: { lat: 57.76, lng: 40.92 },
+            bounds: { north: 59.5, south: 57.0, east: 47.0, west: 40.0 },
+            indigenousPeoples: [],
+            description: "Forest lands.",
+            descriptionRu: "Лесные земли."
+        }
+    ],
     description:
-      "Historical heartland of Russia. Ancient cities, monasteries, and Slavic culture.",
+      "Historical heartland.",
     descriptionRu:
-      "Историческое сердце России. Древние города, монастыри и славянская культура.",
+      "Историческое сердце.",
     culturalNotes:
-      "The Golden Ring represents the core of Russian Orthodox civilization. Historic cities like Vladimir, Suzdal, Yaroslavl preserve medieval architecture and traditions.",
+      "Core of the civilization.",
     culturalNotesRu:
-      "Золотое кольцо представляет ядро русской православной цивилизации. Исторические города как Владимир, Суздаль, Ярославль хранят средневековую архитектуру и традиции.",
+      "Ядро цивилизации.",
     responsibilityPrinciple:
-      "The Russian people preserve and develop their land while respecting the autonomy of indigenous peoples.",
+      "Stewardship of the central lands.",
     responsibilityPrincipleRu:
-      "Русский народ сохраняет и развивает свою землю, уважая автономию коренных народов.",
+      "Попечение о центральных землях.",
   },
 
   // СЕВЕР (коренные земли)
@@ -371,87 +490,118 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
     id: "north",
     code: "north",
     name: "The North",
-    nameRu: "Север",
+    nameRu: "Северные Земли",
     status: "indigenous",
     color: "#0891b2", // циан
     opacity: 0.25,
     coordinates: { lat: 65.0, lng: 40.0 },
     bounds: { north: 82.0, south: 60.0, east: 60.0, west: 28.0 },
-    indigenousPeoples: ["krl", "kom", "pom", "smi", "nen", "vep"],
-    languages: [
-      "Русский",
-      "Карельский",
-      "Коми",
-      "Ненецкий",
-      "Саамский",
-      "Вепсский",
+    indigenousPeoples: ["krl", "kom", "pom", "nen"],
+    languages: ["Русский", "Карельский", "Коми"],
+    subRegions: [
+         {
+            id: "komi",
+            name: "Komi Republic",
+            nameRu: "Республика Коми",
+            capital: "Syktyvkar",
+            capitalRu: "Сыктывкар",
+            coordinates: { lat: 61.66, lng: 50.81 },
+            bounds: { north: 68.0, south: 59.0, east: 66.0, west: 45.0 },
+            indigenousPeoples: ["kom"],
+            description: "Vast northern taiga.",
+            descriptionRu: "Бескрайняя северная тайга."
+        },
+         {
+            id: "karelia",
+            name: "Republic of Karelia",
+            nameRu: "Республика Карелия",
+            capital: "Petrozavodsk",
+            capitalRu: "Петрозаводск",
+            coordinates: { lat: 61.78, lng: 34.35 },
+            bounds: { north: 66.0, south: 60.0, east: 37.0, west: 29.0 },
+            indigenousPeoples: ["krl"],
+            description: "Land of lakes and forests.",
+            descriptionRu: "Страна озёр и лесов."
+        },
+        {
+            id: "murmansk",
+            name: "Murmansk Region",
+            nameRu: "Мурманская область",
+            capital: "Murmansk",
+            capitalRu: "Мурманск",
+            coordinates: { lat: 68.95, lng: 33.08 },
+            bounds: { north: 70.0, south: 66.0, east: 42.0, west: 28.0 },
+            indigenousPeoples: ["smi"],
+            description: "Gateway to the Arctic.",
+            descriptionRu: "Ворота в Арктику."
+        },
+        {
+            id: "arkhangelsk",
+            name: "Arkhangelsk Region",
+            nameRu: "Архангельская область",
+            capital: "Arkhangelsk",
+            capitalRu: "Архангельск",
+            coordinates: { lat: 64.54, lng: 40.51 },
+            bounds: { north: 66.0, south: 61.0, east: 48.0, west: 36.0 },
+            indigenousPeoples: ["pom", "nen"],
+            description: "White Sea coast.",
+            descriptionRu: "Беломорье."
+        }
     ],
     description:
-      "Arctic and subarctic indigenous lands. Reindeer herding cultures. Northern Sea Route access.",
+      "Arctic and subarctic indigenous lands.",
     descriptionRu:
-      "Арктические и субарктические коренные земли. Культуры оленеводства. Доступ к Северному морскому пути.",
+      "Арктические и субарктические коренные земли.",
     culturalNotes:
-      "Northern peoples developed unique adaptations to Arctic conditions. Reindeer herding, fishing, and hunting remain central to identity. Animist traditions persist.",
+      "Northern peoples developed unique adaptations to Arctic conditions.",
     culturalNotesRu:
-      "Северные народы развили уникальные адаптации к арктическим условиям. Оленеводство, рыболовство и охота остаются центральными для идентичности. Анимистические традиции сохраняются.",
+      "Северные народы развили уникальные адаптации к арктическим условиям.",
     responsibilityPrinciple:
-      "The peoples of the North protect the Arctic ecosystem and traditional ways of life.",
+      "The peoples of the North protect the Arctic ecosystem.",
     responsibilityPrincipleRu:
-      "Народы Севера защищают арктическую экосистему и традиционный уклад жизни.",
+      "Народы Севера защищают арктическую экосистему.",
   },
 
-  // МОСКВА — город-государство
+  // МОСКВА
   {
     id: "moscow",
     code: "moscow",
     name: "Moscow",
     nameRu: "Москва",
     status: "city_state",
-    color: "#7c3aed", // фиолетовый
+    color: "#7c3aed",
     opacity: 0.3,
     coordinates: { lat: 55.75, lng: 37.62 },
     bounds: { north: 56.0, south: 55.5, east: 38.0, west: 37.0 },
     indigenousPeoples: [],
     languages: ["Русский"],
-    description:
-      "City-state. Former imperial capital. Multicultural metropolis with special administrative status.",
-    descriptionRu:
-      "Город-государство. Бывшая имперская столица. Мультикультурный мегаполис с особым административным статусом.",
-    culturalNotes:
-      "Moscow is a cosmopolitan center where all peoples of the former empire meet. It has its own distinct urban culture separate from provincial Russia.",
-    culturalNotesRu:
-      "Москва — космополитический центр, где встречаются все народы бывшей империи. Имеет собственную городскую культуру, отличную от провинциальной России.",
-    responsibilityPrinciple:
-      "Moscow serves as a neutral ground where all nations can meet, trade, and cooperate.",
-    responsibilityPrincipleRu:
-      "Москва служит нейтральной территорией, где все нации могут встречаться, торговать и сотрудничать.",
+    description: "City-state. Metropolis.",
+    descriptionRu: "Город-государство. Мегаполис.",
+    culturalNotes: "Cosmopolitan center.",
+    culturalNotesRu: "Космополитический центр.",
+    responsibilityPrinciple: "Moscow serves as a neutral ground.",
+    responsibilityPrincipleRu: "Москва служит нейтральной территорией.",
   },
 
-  // САНКТ-ПЕТЕРБУРГ — город-государство
+  // САНКТ-ПЕТЕРБУРГ
   {
     id: "spb",
     code: "spb",
     name: "Saint Petersburg",
     nameRu: "Санкт-Петербург",
     status: "city_state",
-    color: "#0ea5e9", // голубой
+    color: "#0ea5e9",
     opacity: 0.3,
     coordinates: { lat: 59.93, lng: 30.34 },
     bounds: { north: 60.1, south: 59.7, east: 30.8, west: 29.8 },
     indigenousPeoples: [],
     languages: ["Русский"],
-    description:
-      "City-state. Window to Europe. Cultural capital with Baltic maritime identity.",
-    descriptionRu:
-      "Город-государство. Окно в Европу. Культурная столица с балтийской морской идентичностью.",
-    culturalNotes:
-      "Petersburg represents the European face of Russian culture. Built as an imperial project, it developed a distinct intellectual and artistic tradition.",
-    culturalNotesRu:
-      "Петербург представляет европейское лицо русской культуры. Построенный как имперский проект, он развил особую интеллектуальную и художественную традицию.",
-    responsibilityPrinciple:
-      "Saint Petersburg bridges East and West, fostering cultural exchange and European connections.",
-    responsibilityPrincipleRu:
-      "Санкт-Петербург соединяет Восток и Запад, способствуя культурному обмену и европейским связям.",
+    description: "Cultural capital.",
+    descriptionRu: "Культурная столица.",
+    culturalNotes: "European face of Russia.",
+    culturalNotesRu: "Европейское лицо России.",
+    responsibilityPrinciple: "Bridge between East and West.",
+    responsibilityPrincipleRu: "Мост между Востоком и Западом.",
   },
 
   // ПОВОЛЖЬЕ
@@ -466,27 +616,93 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
     coordinates: { lat: 55.0, lng: 49.0 },
     bounds: { north: 60.0, south: 48.0, east: 60.0, west: 40.0 },
     indigenousPeoples: ["tat", "bash", "chu", "mrd", "mar", "udm"],
-    languages: [
-      "Русский",
-      "Татарский",
-      "Башкирский",
-      "Чувашский",
-      "Марийский",
-      "Удмуртский",
-      "Мордовский",
+    languages: ["Русский", "Татарский", "Башкирский"],
+    subRegions: [
+        {
+            id: "tatarstan",
+            name: "Republic of Tatarstan",
+            nameRu: "Республика Татарстан",
+            capital: "Kazan",
+            capitalRu: "Казань",
+            coordinates: { lat: 55.79, lng: 49.1 },
+            bounds: { north: 56.7, south: 53.9, east: 54.3, west: 47.2 },
+            indigenousPeoples: ["tat"],
+            description: "Heart of the Volga.",
+            descriptionRu: "Сердце Поволжья."
+        },
+        {
+            id: "bashkortostan",
+            name: "Republic of Bashkortostan",
+            nameRu: "Республика Башкортостан",
+            capital: "Ufa",
+            capitalRu: "Уфа",
+            coordinates: { lat: 54.73, lng: 55.95 },
+            bounds: { north: 56.5, south: 51.5, east: 60.0, west: 53.0 },
+            indigenousPeoples: ["bash"],
+            description: "Southern Urals.",
+            descriptionRu: "Южный Урал."
+        },
+        {
+            id: "chuvashia",
+            name: "Chuvash Republic",
+            nameRu: "Чувашская Республика",
+            capital: "Cheboksary",
+            capitalRu: "Чебоксары",
+            coordinates: { lat: 56.1, lng: 47.2 },
+            bounds: { north: 56.2, south: 54.9, east: 48.2, west: 46.0 },
+            indigenousPeoples: ["chu"],
+            description: "Land of Hundred Embroideries.",
+            descriptionRu: "Край ста тысяч вышивок."
+        },
+         {
+            id: "mari_el",
+            name: "Mari El Republic",
+            nameRu: "Республика Марий Эл",
+            capital: "Yoshkar-Ola",
+            capitalRu: "Йошкар-Ола",
+            coordinates: { lat: 56.63, lng: 47.88 },
+            bounds: { north: 57.3, south: 55.8, east: 50.2, west: 45.6 },
+            indigenousPeoples: ["mar"],
+            description: "Last Pagans of Europe.",
+            descriptionRu: "Последние язычники Европы."
+        },
+        {
+            id: "udmurtia",
+            name: "Udmurt Republic",
+            nameRu: "Удмуртская Республика",
+            capital: "Izhevsk",
+            capitalRu: "Ижевск",
+            coordinates: { lat: 56.8, lng: 53.2 },
+            bounds: { north: 58.6, south: 55.9, east: 54.5, west: 51.1 },
+            indigenousPeoples: ["udm"],
+            description: "Spring land.",
+            descriptionRu: "Родниковый край."
+        },
+        {
+            id: "mordovia",
+            name: "Republic of Mordovia",
+            nameRu: "Республика Мордовия",
+            capital: "Saransk",
+            capitalRu: "Саранск",
+            coordinates: { lat: 54.18, lng: 45.17 },
+            bounds: { north: 55.2, south: 53.6, east: 46.9, west: 42.1 },
+            indigenousPeoples: ["mrd"],
+            description: "Finno-Ugric heritage.",
+            descriptionRu: "Финно-угорское наследие."
+        }
     ],
     description:
-      "Volga river basin. Meeting point of Slavic, Turkic, and Finno-Ugric peoples.",
+      "Volga river basin.",
     descriptionRu:
-      "Бассейн реки Волги. Место встречи славянских, тюркских и финно-угорских народов.",
+      "Бассейн реки Волги.",
     culturalNotes:
-      "The Volga region is a historical crossroads. Kazan was the capital of a powerful Tatar khanate. The region preserves both Islamic (Tatar, Bashkir) and Christian (Chuvash, Mari, Mordvin) traditions.",
+      "Meeting point of Slavic, Turkic, and Finno-Ugric peoples.",
     culturalNotesRu:
-      "Поволжье — исторический перекрёсток. Казань была столицей могущественного татарского ханства. Регион сохраняет как исламские (татарские, башкирские), так и христианские (чувашские, марийские, мордовские) традиции.",
+      "Место встречи славянских, тюркских и финно-угорских народов.",
     responsibilityPrinciple:
-      "The peoples of the Volga maintain the great river and the harmony between different faiths and nations.",
+      "The peoples of the Volga maintain the great river.",
     responsibilityPrincipleRu:
-      "Народы Поволжья хранят великую реку и гармонию между разными верами и нациями.",
+      "Народы Поволжья хранят великую реку.",
   },
 ];
 
@@ -498,19 +714,19 @@ export const NATIONS: Nation[] = [
   // СИБИРСКИЕ НАРОДЫ
   {
     code: "bur",
-    name: "Buryats",
-    nameRu: "Буряты",
-    nativeName: "Буряад",
+    name: "Buryad-Mongol",
+    nameRu: "Буряад-Монгол",
+    nativeName: "Буряад-Монгол",
     languages: ["Бурятский", "Русский"],
     regions: ["siberia", "buryad_mongolia"],
     isIndigenous: true,
     population: "~500,000",
     history:
-      "The Buryats are a Mongolic people native to the Lake Baikal region. They were the largest ethnic minority in Siberia, with a rich nomadic heritage. The Buryat-Mongol ASSR existed from 1923 to 1958.",
+      "The Buryad-Mongol are a Mongolic people native to the Lake Baikal region. They were the largest ethnic minority in Siberia, with a rich nomadic heritage. The Buryat-Mongol ASSR existed from 1923 to 1958.",
     historyRu:
       "Буряты — монгольский народ, коренной для региона озера Байкал. Были крупнейшим этническим меньшинством в Сибири с богатым кочевым наследием. Бурят-Монгольская АССР существовала с 1923 по 1958 год.",
     culture:
-      "Buryat culture blends Mongolic traditions with Tibetan Buddhism and Siberian shamanism. Famous for epic poetry (Geser), throat singing, and distinctive round felt tents (ger/yurt).",
+      "Buryad-Mongol culture blends Mongolic traditions with Tibetan Buddhism and Siberian shamanism. Famous for epic poetry (Geser), throat singing, and distinctive round felt tents (ger/yurt).",
     cultureRu:
       "Бурятская культура сочетает монгольские традиции с тибетским буддизмом и сибирским шаманизмом. Известны эпической поэзией (Гэсэр), горловым пением и характерными круглыми войлочными юртами.",
     traditions: [
