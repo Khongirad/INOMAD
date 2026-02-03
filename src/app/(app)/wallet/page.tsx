@@ -1,16 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useMPCWallet } from '@/lib/hooks/use-mpc-wallet';
+import { useWallet } from '@/lib/hooks/use-wallet';
 import { WalletSetupWizard } from '@/components/wallet/WalletSetupWizard';
+import { MigrationWizard } from '@/components/wallet/MigrationWizard';
+import { MigrationBanner } from '@/components/wallet/MigrationBanner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Shield, Key, Copy, Check, RefreshCcw } from 'lucide-react';
 import { PinPad } from '@/components/wallet/PinPad';
 
 export default function WalletPage() {
-  const { wallet, isReady, loading, refresh, signMessage, validatePin, signAndSendTransaction, systemLogs } = useMPCWallet();
+  const wallet = useWallet();
   const [copied, setCopied] = useState(false);
+  const [showMigrationWizard, setShowMigrationWizard] = useState(false);
   const [testMode, setTestMode] = useState(false);
   const [testPin, setTestPin] = useState('');
   const [signStatus, setSignStatus] = useState<'IDLE' | 'SIGNING' | 'SUCCESS' | 'ERROR'>('IDLE');
@@ -24,14 +27,16 @@ export default function WalletPage() {
   const [amount, setAmount] = useState('');
   const [showPinForSend, setShowPinForSend] = useState(false);
 
-  // Auto-scroll for console
+  // Auto-scroll for console (only for MPC wallet)
   const consoleEndRef = React.useRef<HTMLDivElement>(null);
+  const systemLogs = wallet.walletType === 'mpc' ? wallet.mpc.systemLogs : [];
+  
   React.useEffect(() => {
     consoleEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [systemLogs]);
 
   const copyAddress = () => {
-    if (wallet?.address) {
+    if (wallet.address) {
       navigator.clipboard.writeText(wallet.address);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -41,7 +46,7 @@ export default function WalletPage() {
   const handleTestSign = async (pin: string) => {
     setSignStatus('SIGNING');
     try {
-        const sig = await signMessage("Test Signature from Inomad Khural", pin);
+        const sig = await wallet.signMessage("Test Signature from Inomad Khural", pin);
         setSignature(sig);
         setSignStatus('SUCCESS');
     } catch (e) {
@@ -53,51 +58,73 @@ export default function WalletPage() {
     setSendStatus('SENDING');
     try {
         // Construct transaction object (simple transfer)
-        // Note: Value processing and gas estimation would happen here in a real app
-        // For now we send the raw params to the hook which passes to backend
         const tx = {
             to: recipient,
             value: amount ? `0x${(parseFloat(amount) * 1e18).toString(16)}` : '0x0', // Simple ETH conversion
         };
         
-        const result = await signAndSendTransaction(tx, pin, true); // true = broadcast
+        const hash = await wallet.sendTransaction(tx, pin);
         
-        if (result.hash) {
-            setSendHash(result.hash);
-            setSendStatus('SUCCESS');
-        } else {
-            throw new Error("No hash returned");
-        }
+        setSendHash(hash);
+        setSendStatus('SUCCESS');
     } catch (e) {
         console.error(e);
         setSendStatus('ERROR');
     }
   };
 
-  if (loading) {
+
+  if (wallet.loading) {
      return <div className="p-8 text-center animate-pulse">Checking wallet status...</div>;
   }
 
-  // If no wallet or incomplete setup, show Wizard
-  if (!wallet || wallet.status === 'PENDING_SETUP') {
+  // If no wallet at all, show setup wizard
+  if (!wallet.hasWallet) {
      return (
         <div className="container max-w-2xl py-12">
             <h1 className="text-3xl font-bold mb-8 text-center text-white">Setup Wallet</h1>
-            <h1 className="text-3xl font-bold mb-8 text-center text-white">Setup Wallet</h1>
             <WalletSetupWizard 
                 onComplete={() => {
-                    refresh();
+                    wallet.mpc.refresh();
                     // Redirect to dashboard after successful setup
                     window.location.href = '/dashboard';
                 }} 
-                systemLogs={systemLogs} 
+                systemLogs={wallet.mpc.systemLogs} 
             />
         </div>
      );
   }
 
+  // If MPC wallet but not active yet, show setup wizard
+  if (wallet.walletType === 'mpc' && wallet.mpc.wallet?.status === 'PENDING_SETUP') {
+     return (
+        <div className="container max-w-2xl py-12">
+            <h1 className="text-3xl font-bold mb-8 text-center text-white">Complete Wallet Setup</h1>
+            <WalletSetupWizard 
+                onComplete={() => {
+                    wallet.mpc.refresh();
+                    window.location.href = '/dashboard';
+                }} 
+                systemLogs={wallet.mpc.systemLogs} 
+            />
+        </div>
+     );
+  }
+
+
   return (
     <div className="container max-w-4xl py-8 space-y-8 animate-in fade-in pb-20">
+        {/* Migration Wizard Overlay */}
+        {showMigrationWizard && (
+            <MigrationWizard 
+                onComplete={() => {
+                    setShowMigrationWizard(false);
+                    wallet.mpc.refresh();
+                }}
+                onCancel={() => setShowMigrationWizard(false)}
+            />
+        )}
+
         {/* HEADER */}
         <div className="flex justify-between items-center">
             <div>
@@ -105,7 +132,9 @@ export default function WalletPage() {
                     <Shield className="text-gold-primary" />
                     My Sovereign Wallet
                 </h1>
-                <p className="text-zinc-400 text-sm ml-8">MPC-secured Native Assets</p>
+                <p className="text-zinc-400 text-sm ml-8">
+                    {wallet.walletType === 'mpc' ? 'MPC-secured Native Assets' : 'Legacy Wallet'}
+                </p>
             </div>
             <div className="flex gap-4 text-xs font-mono">
                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800">
@@ -114,13 +143,28 @@ export default function WalletPage() {
                  </div>
                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800">
                     <div className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span className="text-zinc-400">MPC Shares: 2/3</span>
+                    <span className="text-zinc-400">
+                        {wallet.walletType === 'mpc' ? 'MPC Shares: 2/2' : 'Legacy Mode'}
+                    </span>
                  </div>
-                 <Button variant="outline" size="sm" onClick={refresh} className="h-7 text-xs">
+                 <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => wallet.walletType === 'mpc' && wallet.mpc.refresh()} 
+                    className="h-7 text-xs"
+                >
                     <RefreshCcw className="w-3 h-3 mr-2" /> Refresh
                 </Button>
             </div>
         </div>
+
+        {/* MIGRATION BANNER for legacy users */}
+        {wallet.needsMigration && (
+            <MigrationBanner 
+                onMigrate={() => setShowMigrationWizard(true)}
+                onDismiss={() => {/* Maybe set a cookie to not show again */}}
+            />
+        )}
 
         {/* CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -139,7 +183,8 @@ export default function WalletPage() {
                     </div>
                     <div className="mt-4 flex gap-2 text-xs text-zinc-500">
                         <span className="flex items-center gap-1">
-                            <Key className="w-3 h-3" /> MPC Secured
+                            <Key className="w-3 h-3" /> 
+                            {wallet.walletType === 'mpc' ? 'MPC Secured' : 'Legacy'}
                         </span>
                         <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full">
                             Active
