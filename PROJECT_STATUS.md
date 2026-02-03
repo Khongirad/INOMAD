@@ -23,13 +23,120 @@
 
 ---
 
-## Week 2 (Feb 3-7) 🚧 IN PROGRESS
+## Week 2 (Feb 3-7) ✅ COMPLETE
 
 ### Goals
 - [x] Complete transaction signing flow (Backend broadcast + UI)
 - [x] Device share encryption with password (Web Crypto API)
 - [x] UI for wallet setup wizard
-- [ ] Integration with existing EmbeddedWallet
+- [x] **🌙 Dual-Calendar System** - Complete implementation
+- [ ] Integration with existing EmbeddedWallet (moved to Week 3)
+
+### 🌙 Dual-Calendar System - NEW FEATURE
+
+**Implementation Date:** Feb 3, 2026  
+**Status:** ✅ Production-Ready  
+**Route:** `/calendar`
+
+#### Overview
+Implemented comprehensive calendar system supporting both **Gregorian** and **Lunar (Mongolian)** calendars with seamless toggling, honoring Mongolian cultural heritage.
+
+#### Database Schema
+- **CalendarEvent** model (14 fields)
+  - Event scheduling with start/end dates
+  - All-day event support
+  - Categories (Work, Personal, Khural, Meeting, etc.)
+  - Color coding and tags
+  - Reminder system (5min to 1 day)
+  - Public/private visibility
+  - Location tracking
+  - Timeline integration hook
+
+- **CalendarNote** model (8 fields)
+  - Markdown content support
+  - Tag-based organization
+  - Color coding
+  - Date attachment
+
+- **Migration:** `20260203090333_add_calendar_system` ✅
+
+#### Backend Services
+- **CalendarModule** - Registered in app.module.ts
+- **CalendarService** - 12+ methods for CRUD operations
+- **CalendarController** - 10+ REST endpoints
+  - Events: GET/POST/PUT/DELETE with date range filtering
+  - Notes: Full CRUD with Markdown support
+  - Upcoming events API (dashboard integration)
+- **Security:** JWT auth, ownership validation, cascade delete
+
+#### Lunar Calendar System
+- **File:** `src/lib/lunar-calendar.ts`
+- **Mongolian Month Names:** 12 traditional names
+  - Цагаан сар (Tsagaan Sar) - Lunar New Year
+  - Хоёрдугаар сар - 2nd month
+  - ... (all 12 months)
+- **Moon Phases:** 8 phases with emojis (🌑🌒🌓🌔🌕🌖🌗🌘)
+- **Cultural Events:**
+  - Tsagaan Sar detection
+  - Full moon days (бүтэн сар)
+  - New moon days (шинэ сар)
+- **Key Functions:**
+  - `gregorianToLunar()` - Date conversion
+  - `formatDualDate()` - "Feb 15, 2026 (Цагаан сар 18 🌕)"
+  - `getLunarEventsForMonth()` - Cultural events
+  - `isTsagaanSar()` - Lunar New Year detection
+
+#### Frontend Components
+1. **Calendar.tsx** - Dual-view calendar
+   - Gregorian view: Standard 7-day grid
+   - Lunar view: Mongolian months + moon phases
+   - Seamless toggle with no data loss
+   - Month navigation, today highlighting
+   - Event display with color coding
+   - Preference persistence (localStorage)
+
+2. **EventForm.tsx** - Event creation/editing
+   - 7 preset categories with colors
+   - Custom color picker
+   - Reminder options
+   - All-day toggle
+   - Dual-date display
+   - Form validation
+
+3. **NoteForm.tsx** - Note creation/editing
+   - Markdown editor with preview
+   - 7 preset colors
+   - Tag system
+   - Dual-date display
+
+4. **CalendarPage** - Main interface
+   - Sidebar with upcoming events
+   - Quick action buttons
+   - Modal-based forms
+   - Info panels for both calendar types
+   - Responsive design
+
+#### Cultural Significance
+- Authentic Mongolian month names
+- Traditional moon phase symbolism
+- Cultural event recognition
+- Dual-date display throughout
+- Honors nomadic heritage
+
+#### Files Changed
+- `backend/prisma/schema.prisma` - CalendarEvent, CalendarNote models
+- `backend/src/calendar/*` - New module (3 files)
+- `backend/src/app.module.ts` - CalendarModule registration
+- `src/lib/lunar-calendar.ts` - Lunar utilities
+- `src/lib/hooks/use-auth.ts` - Added token getter
+- `src/components/calendar/*` - 3 new components
+- `src/app/(app)/calendar/page.tsx` - Calendar page
+
+#### Documentation
+- `calendar_walkthrough.md` - 60+ page comprehensive guide
+- API documentation included
+- Testing procedures outlined
+- Future enhancement roadmap
 
 ---
 
@@ -95,4 +202,5 @@
 
 ---
 
-*Last updated: 2026-01-31 00:30 CST*
+*Last updated: 2026-02-03 03:13 CST*
+
