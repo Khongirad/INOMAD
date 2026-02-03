@@ -2112,6 +2112,10 @@ model Organization {
   // Geographic/ethnic scope
   republicId String?
   republic   String? // "Russian", "Buryad-Mongol", etc.
+  
+  // Guild-specific education requirements
+  requiresEducation Boolean  @default(false)
+  fieldOfStudy      String?  // "Engineering", "Medicine", etc.
 
   // Leadership
   leaderId String
