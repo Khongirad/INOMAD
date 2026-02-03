@@ -26,6 +26,27 @@ export class OrganizationController {
     return this.organizationService.createOrganization(data);
   }
 
+  // ============== Leaderboard (before :id) ==============
+
+  @Get('leaderboard')
+  async getLeaderboard(@Query('type') type?: OrganizationType, @Query('limit') limit?: string) {
+    return this.organizationService.getLeaderboard(type, limit ? parseInt(limit) : 100);
+  }
+
+  // ============== Network Map (before :id) ==============
+
+  @Get('network/map')
+  async getNetworkMap() {
+    return this.organizationService.getFullNetworkMap();
+  }
+
+  @Get('network/:arbanId')
+  async getArbanNetwork(@Param('arbanId') arbanId: string) {
+    return this.organizationService.getArbanNetwork(arbanId);
+  }
+
+  // ============== Get by ID ==============
+
   @Get(':id')
   async get(@Param('id') id: string) {
     return this.organizationService.getOrganization(id);
@@ -89,25 +110,6 @@ export class OrganizationController {
   async getRatings(@Param('id') id: string) {
     const org = await this.organizationService.getOrganization(id);
     return org.ratings;
-  }
-
-  // ============== Leaderboard ==============
-
-  @Get('leaderboard')
-  async getLeaderboard(@Query('type') type?: OrganizationType, @Query('limit') limit?: string) {
-    return this.organizationService.getLeaderboard(type, limit ? parseInt(limit) : 100);
-  }
-
-  // ============== Network Map ==============
-
-  @Get('network/map')
-  async getNetworkMap() {
-    return this.organizationService.getFullNetworkMap();
-  }
-
-  @Get('network/:arbanId')
-  async getArbanNetwork(@Param('arbanId') arbanId: string) {
-    return this.organizationService.getArbanNetwork(arbanId);
   }
 
   // ============== Financial ==============
