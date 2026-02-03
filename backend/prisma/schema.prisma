@@ -99,9 +99,20 @@ model User {
   reputationProfile ReputationProfile?  @relation("UserReputation")
 
   // Guild & Organization Relations
-  organizationsLed        Organization[]        @relation("OrganizationLeader")
-  organizationMemberships OrganizationMember[]  @relation("OrganizationMemberships")
-  organizationRatings     OrganizationRating[]  @relation("OrganizationRatingsGiven")
+  organizationsLed        Organization[]       @relation("OrganizationLeader")
+  organizationMemberships OrganizationMember[] @relation("OrganizationMemberships")
+  memberInvitations       OrganizationMember[] @relation("MemberInvitations")
+  organizationRatings     OrganizationRating[] @relation("OrganizationRatingsGiven")
+
+  // Education & Invitations
+  educationVerifications   EducationVerification[] @relation("EducationVerifications")
+  educationRecommendations EducationVerification[] @relation("EducationRecommendations")
+  invitationsSent          GuildInvitation[]       @relation("InvitationsSent")
+  invitationsReceived      GuildInvitation[]       @relation("InvitationsReceived")
+
+  // Elections
+  electionsWon        Election[]          @relation("ElectionsWon")
+  electionCandidacies ElectionCandidate[] @relation("ElectionCandidacies")
 
   // Calendar
   calendarEvents CalendarEvent[]
@@ -2004,14 +2015,14 @@ enum EventScope {
 
 // Guild & Organization Rating System
 enum OrganizationType {
-  GUILD          // Craftsmen, merchants
-  COMMITTEE      // Temporary working groups
-  SERVICE        // Public services
-  ARBAN          // 10-person unit
-  HUNDRED        // 100-person unit
-  THOUSAND       // 1000-person unit
-  REPUBLIC       // Republic-level
-  CONFEDERATION  // Confederation-level
+  GUILD // Craftsmen, merchants
+  COMMITTEE // Temporary working groups
+  SERVICE // Public services
+  ARBAN // 10-person unit
+  HUNDRED // 100-person unit
+  THOUSAND // 1000-person unit
+  REPUBLIC // Republic-level
+  CONFEDERATION // Confederation-level
 }
 
 enum BranchType {
@@ -2082,143 +2093,289 @@ enum QuestStatus {
 // ============== GUILD & ORGANIZATION RATING SYSTEM ==============
 
 model Organization {
-  id          String   @id @default(uuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Basic info
   name        String
   type        OrganizationType
   branch      BranchType?
   description String?
-  
+
   // Hierarchical structure
-  parentId    String?
-  parent      Organization?  @relation("SubOrganizations", fields: [parentId], references: [id])
-  children    Organization[] @relation("SubOrganizations")
-  level       Int         // 1=Arban, 10=Hundred, 100=Thousand, etc.
-  
+  parentId String?
+  parent   Organization?  @relation("SubOrganizations", fields: [parentId], references: [id])
+  children Organization[] @relation("SubOrganizations")
+  level    Int // 1=Arban, 10=Hundred, 100=Thousand, etc.
+
   // Geographic/ethnic scope
-  republicId  String?
-  republic    String?     // "Russian", "Buryad-Mongol", etc.
-  
+  republicId String?
+  republic   String? // "Russian", "Buryad-Mongol", etc.
+
   // Leadership
-  leaderId    String
-  leader      User     @relation("OrganizationLeader", fields: [leaderId], references: [id])
-  
+  leaderId String
+  leader   User   @relation("OrganizationLeader", fields: [leaderId], references: [id])
+
   // Members
-  members     OrganizationMember[]
-  minMembers  Int      @default(10)
-  maxMembers  Int      @default(10)
-  
+  members    OrganizationMember[]
+  minMembers Int                  @default(10)
+  maxMembers Int                  @default(10)
+
   // Financial
-  treasury    Decimal  @default(0)
-  totalEarned Decimal  @default(0)
-  
+  treasury    Decimal @default(0)
+  totalEarned Decimal @default(0)
+
   // Ratings (1-10 scale)
-  trustScore      Decimal @default(5.0)
-  qualityScore    Decimal @default(5.0)
-  financialScore  Decimal @default(5.0)
-  overallRating   Decimal @default(5.0)  // Weighted average
-  
+  trustScore     Decimal @default(5.0)
+  qualityScore   Decimal @default(5.0)
+  financialScore Decimal @default(5.0)
+  overallRating  Decimal @default(5.0) // Weighted average
+
   // Statistics
-  contractsCompleted Int @default(0)
-  contractsActive    Int @default(0)
+  contractsCompleted Int     @default(0)
+  contractsActive    Int     @default(0)
   totalRevenue       Decimal @default(0)
-  
+
   // Rankings
-  currentRank        Int?
-  previousRank       Int?
-  
+  currentRank  Int?
+  previousRank Int?
+
   // Relations
-  ratings            OrganizationRating[]
-  achievements       OrganizationAchievement[]
-  networkNodes       ArbanNetwork[]
-  
+  ratings      OrganizationRating[]
+  achievements OrganizationAchievement[]
+  networkNodes ArbanNetwork[]
+  invitations  GuildInvitation[]         @relation("GuildInvitations")
+  elections    Election[]                @relation("Elections")
+
   @@index([type, overallRating])
   @@index([republicId])
   @@index([currentRank])
 }
 
 model OrganizationMember {
-  id             String   @id @default(uuid())
-  createdAt      DateTime @default(now())
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
-  
-  userId         String
-  user           User     @relation("OrganizationMemberships", fields: [userId], references: [id])
-  
-  role           MemberRole @default(MEMBER)
-  joinedAt       DateTime @default(now())
-  leftAt         DateTime?
-  
+
+  userId String
+  user   User   @relation("OrganizationMemberships", fields: [userId], references: [id])
+
+  // WHO INVITED THIS MEMBER (for trust chain)
+  invitedBy String?
+  inviter   User?   @relation("MemberInvitations", fields: [invitedBy], references: [id])
+
+  role     MemberRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
+  leftAt   DateTime?
+
   // Performance
   contributionScore Decimal @default(0)
-  
+
   @@unique([organizationId, userId])
   @@index([userId])
 }
 
 model OrganizationRating {
-  id             String   @id @default(uuid())
-  createdAt      DateTime @default(now())
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
-  
-  raterId        String
-  rater          User     @relation("OrganizationRatingsGiven", fields: [raterId], references: [id])
-  
-  category       RatingCategory
-  score          Int      // 1-10
-  comment        String?
-  
+
+  raterId String
+  rater   User   @relation("OrganizationRatingsGiven", fields: [raterId], references: [id])
+
+  category RatingCategory
+  score    Int // 1-10
+  comment  String?
+
   // Context
-  contractId     String?  // If rating based on contract
-  
+  contractId String? // If rating based on contract
+
   @@index([organizationId, category])
   @@index([raterId])
 }
 
 model OrganizationAchievement {
-  id             String   @id @default(uuid())
-  awardedAt      DateTime @default(now())
-  
+  id        String   @id @default(uuid())
+  awardedAt DateTime @default(now())
+
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
-  
-  title          String
-  description    String
-  category       String   // "Top 10", "Top 100", "Innovation", etc.
-  rank           Int?
-  
+
+  title       String
+  description String
+  category    String // "Top 10", "Top 100", "Innovation", etc.
+  rank        Int?
+
   // Rewards
-  rewardAltan    Decimal?
-  badge          String?
-  
+  rewardAltan Decimal?
+  badge       String?
+
   @@index([organizationId])
 }
 
 model ArbanNetwork {
-  id          String   @id @default(uuid())
-  createdAt   DateTime @default(now())
-  
-  arbanId     String   @unique
-  arban       Organization @relation(fields: [arbanId], references: [id])
-  
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  arbanId String       @unique
+  arban   Organization @relation(fields: [arbanId], references: [id])
+
   // Network position (for interactive map)
-  positionX   Float
-  positionY   Float
-  layer       Int      // Hierarchical layer
-  
+  positionX Float
+  positionY Float
+  layer     Int // Hierarchical layer
+
   // Connections
   connectedTo String[] // Array of connected Arban IDs
-  
+
   // Visual metadata
-  clusterColor String?  // Gold for center, white for outer
-  importance   Int @default(0)
-  
+  clusterColor String? // Gold for center, white for outer
+  importance   Int     @default(0)
+
   @@index([layer])
 }
+
+// Guild & Organization Extension Enums
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ElectionStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum EducationType {
+  DIPLOMA
+  CERTIFICATE
+  RECOMMENDATION
+}
+
+// ============== EDUCATION VERIFICATION ==============
+
+model EducationVerification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation("EducationVerifications", fields: [userId], references: [id])
+
+  // Document details
+  type           EducationType
+  institution    String // University/school name
+  fieldOfStudy   String // "Engineering", "Medicine", etc.
+  graduationYear Int?
+
+  // Verification
+  documentHash String? // Hash of uploaded document
+  documentUrl  String? // IPFS or storage URL
+
+  // Recommendation (if type = RECOMMENDATION)
+  recommenderId String?
+  recommender   User?   @relation("EducationRecommendations", fields: [recommenderId], references: [id])
+
+  // Status
+  isVerified Boolean   @default(false)
+  verifiedBy String? // Admin who verified
+  verifiedAt DateTime?
+
+  // Guilds this qualification allows
+  validForGuilds String[] // Array of guild IDs or categories
+
+  @@index([userId])
+  @@index([isVerified])
+  @@index([fieldOfStudy])
+}
+
+// ============== GUILD INVITATIONS ==============
+
+model GuildInvitation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  guildId String
+  guild   Organization @relation("GuildInvitations", fields: [guildId], references: [id])
+
+  inviterId String
+  inviter   User   @relation("InvitationsSent", fields: [inviterId], references: [id])
+
+  inviteeId String
+  invitee   User   @relation("InvitationsReceived", fields: [inviteeId], references: [id])
+
+  status InvitationStatus @default(PENDING)
+
+  // Responsibility chain
+  message String? // Why inviting this person
+
+  acceptedAt DateTime?
+  rejectedAt DateTime?
+  expiredAt  DateTime?
+
+  @@unique([guildId, inviteeId])
+  @@index([inviterId])
+  @@index([inviteeId])
+  @@index([guildId, status])
+}
+
+// ============== ELECTION SYSTEM ==============
+
+model Election {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation("Elections", fields: [organizationId], references: [id])
+
+  // Election details
+  startDate DateTime
+  endDate   DateTime
+  status    ElectionStatus @default(UPCOMING)
+
+  // Candidates (leaders of child organizations)
+  candidates ElectionCandidate[]
+
+  // Winner
+  winnerId    String?
+  winner      User?   @relation("ElectionsWon", fields: [winnerId], references: [id])
+  winnerVotes Int?
+
+  totalVotes  Int      @default(0)
+  turnoutRate Decimal? // Percentage
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([startDate])
+}
+
+model ElectionCandidate {
+  id String @id @default(uuid())
+
+  electionId String
+  election   Election @relation(fields: [electionId], references: [id])
+
+  candidateId String
+  candidate   User   @relation("ElectionCandidacies", fields: [candidateId], references: [id])
+
+  // Campaign
+  platform String? // Candidate's platform/promises
+  votes    Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([electionId, candidateId])
+  @@index([electionId])
+  @@index([candidateId])
+}
+
+// ============== UPDATE ORGANIZATION MEMBER ==============
+// Add invitedBy field tracking (will update in separate step)

@@ -29,6 +29,7 @@ import { CalendarModule } from './calendar/calendar.module';
 import { ReputationModule } from './reputation/reputation.module';
 import { DocumentModule } from './documents/document.module';
 import { QuestModule } from './quests/quest.module';
+import { OrganizationModule } from './organizations/organization.module';
 // import { LegislativeModule } from './legislative/legislative.module';
 // import { TaxModule } from './tax/tax.module';
 // import { MarketplaceModule } from './marketplace/marketplace.module';
@@ -67,6 +68,7 @@ import { AdminModule } from './admin/admin.module';
     ReputationModule,  // Reputation & Trust system
     DocumentModule,    // Document management & signing
     QuestModule,       // Quest/Task assignment system
+    OrganizationModule, // Guild & Organization Rating System
     // LegislativeModule,  // Disabled - TS errors
     // TaxModule,  // Disabled - TS errors
     // MarketplaceModule,  // Disabled - TS errors
