@@ -306,7 +306,7 @@ Article 27 of the Siberian Confederation Constitution establishes INOMAD INC as 
 
 ## 🤝 Contributing
 
-This is a proprietary project. For partnership inquiries, contact: partnerships@inomad.life
+This is a proprietary project. For partnership inquiries, contact: ceo@inomad.life
 
 ---
 
