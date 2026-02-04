@@ -24,4 +24,20 @@ I am building **iNomad** not just as a startup, but as a lifeboat for 190+ indig
 - **System Architecture**: Designed a scalable L1 capable of supporting a multi-continental confederation.
 
 **Current Focus**:
-Transitioning from "Solo Architect" to "Team Leader". Seeking funding to bring in **Security Auditing** and **Cryptographic Experts** to validate and harden the system I have built.
+Transitioning from "Solo Architect" to "Team Leader". Seeking funding to bring in critical technical specialists:
+
+## Bair's Unique Expertise
+
+**Geopolitical Advisor Background**:
+- Trained as советник-переводчик (advisor-translator) in Russian government
+- Worked in geopolitical analysis: RF, Central Asia, China relations
+- Deep understanding of Siberian regional politics and indigenous movements
+- Personal network across Buryatia, Mongolia, and Turkic nations
+
+**Why This Matters for INOMAD**:
+- Can navigate complex RF→Siberian Confederation transition
+- Understands power dynamics in target regions  
+- Has credibility with indigenous peoples (not outsider)
+- Knows exactly how RF government will respond (and how to defend)
+
+**Advisor Role Post-Funding**: Bair serves as in-house geopolitical strategist (no need to hire external advisor)ing** and **Cryptographic Experts** to validate and harden the system I have built.
