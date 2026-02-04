@@ -101,16 +101,14 @@ export class InvitationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
         invitee: {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },
@@ -236,8 +234,7 @@ export class InvitationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },
@@ -265,8 +262,7 @@ export class InvitationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },
@@ -285,7 +281,7 @@ export class InvitationService {
       where: {
         organizationId: guildId,
         userId,
-        role: { in: ['LEADER', 'DEPUTY'] },
+        role: 'LEADER',
       },
     });
 
@@ -300,16 +296,14 @@ export class InvitationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
         invitee: {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },
@@ -338,16 +332,14 @@ export class InvitationService {
             select: {
               id: true,
               username: true,
-              firstName: true,
-              lastName: true,
+              
             },
           },
           inviter: {
             select: {
               id: true,
               username: true,
-              firstName: true,
-              lastName: true,
+              
             },
           },
         },

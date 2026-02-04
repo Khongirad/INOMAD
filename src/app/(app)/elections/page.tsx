@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Container, Typography, Box, Tabs, Tab, Alert } from '@mui/material';
 import { ElectionCard } from '@/components/elections/ElectionCard';
 import { Vote, Clock, CheckCircle } from 'lucide-react';
+import { getActiveElections, getUpcomingElections, castVote } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function ElectionsPage() {
   const [currentTab, setCurrentTab] = useState(0);
@@ -20,35 +22,23 @@ export default function ElectionsPage() {
 
   const fetchElections = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Fetch active elections
-      const activeRes = await fetch('/api/elections/status/active', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!activeRes.ok) throw new Error('Failed to fetch active elections');
-      const activeData = await activeRes.json();
-
-      // Fetch upcoming elections
-      const upcomingRes = await fetch('/api/elections/status/upcoming', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!upcomingRes.ok) throw new Error('Failed to fetch upcoming elections');
-      const upcomingData = await upcomingRes.json();
+      // Fetch both in parallel
+      const [activeData, upcomingData] = await Promise.all([
+        getActiveElections(),
+        getUpcomingElections(),
+      ]);
 
       setActiveElections(activeData);
       setUpcomingElections(upcomingData);
 
       // TODO: Fetch completed elections (need new endpoint)
-      // For now, empty
       setCompletedElections([]);
     } catch (err: any) {
-      setError(err.message);
+      const errorMsg = err.message || 'Failed to fetch elections';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -56,29 +46,17 @@ export default function ElectionsPage() {
 
   const handleVote = async (electionId: string, candidateId: string) => {
     try {
-      const response = await fetch(`/api/elections/${electionId}/vote`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ candidateId }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to vote');
-      }
-
+      const result = await castVote(electionId, { candidateId });
+      
       // Mark as voted
       setVotedElections(new Set([...votedElections, electionId]));
 
       // Refresh elections to update vote counts
       await fetchElections();
 
-      alert('Голос принят!');
+      toast.success(`Vote recorded! Candidate now has ${result.voteCount} votes`);
     } catch (err: any) {
-      alert('Ошибка: ' + err.message);
+      toast.error(err.message || 'Failed to vote');
     }
   };
 

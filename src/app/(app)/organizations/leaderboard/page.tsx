@@ -24,6 +24,8 @@ import {
 } from '@mui/material';
 import { Trophy, TrendingUp, TrendingDown, Minus, Award } from 'lucide-react';
 import { RateOrganizationDialog, RatingData } from '@/components/organizations/RateOrganizationDialog';
+import { getLeaderboard, rateOrganization } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface LeaderboardOrganization {
   id: string;
@@ -57,19 +59,14 @@ export default function LeaderboardPage() {
 
   const fetchLeaderboard = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/organizations/leaderboard', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch leaderboard');
-
-      const data = await response.json();
+      const data = await getLeaderboard();
       setOrganizations(data);
     } catch (err: any) {
-      setError(err.message);
+      const errorMsg = err.message || 'Failed to fetch leaderboard';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -84,20 +81,15 @@ export default function LeaderboardPage() {
     if (!selectedOrg) return;
 
     try {
-      const response = await fetch(`/api/organizations/${selectedOrg.id}/rate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(ratings),
-      });
-
-      if (!response.ok) throw new Error('Failed to submit rating');
-
+      await rateOrganization(selectedOrg.id, ratings);
+      toast.success(`Successfully rated ${selectedOrg.name}!`);
+      setRatingDialogOpen(false);
+      
       // Refresh leaderboard
       await fetchLeaderboard();
     } catch (err: any) {
+      const errorMsg = err.message || 'Failed to submit rating';
+      toast.error(errorMsg);
       throw err;
     }
   };

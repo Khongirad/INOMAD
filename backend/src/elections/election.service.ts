@@ -47,7 +47,7 @@ export class ElectionService {
       where: {
         organizationId,
         userId: creatorId,
-        role: { in: ['LEADER', 'DEPUTY'] },
+        role: 'LEADER',
       },
     });
 
@@ -141,8 +141,7 @@ export class ElectionService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },
@@ -355,8 +354,7 @@ export class ElectionService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
         candidates: {
@@ -365,8 +363,7 @@ export class ElectionService {
               select: {
                 id: true,
                 username: true,
-                firstName: true,
-                lastName: true,
+                
               },
             },
           },
@@ -389,8 +386,7 @@ export class ElectionService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
         candidates: {
@@ -399,8 +395,7 @@ export class ElectionService {
               select: {
                 id: true,
                 username: true,
-                firstName: true,
-                lastName: true,
+                
               },
             },
           },
@@ -428,8 +423,7 @@ export class ElectionService {
               select: {
                 id: true,
                 username: true,
-                firstName: true,
-                lastName: true,
+                
               },
             },
           },
@@ -457,8 +451,7 @@ export class ElectionService {
               select: {
                 id: true,
                 username: true,
-                firstName: true,
-                lastName: true,
+                
               },
             },
           },

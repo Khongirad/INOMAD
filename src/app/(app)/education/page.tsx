@@ -6,6 +6,8 @@ import { SubmitEducationForm, EducationFormData } from '@/components/education/S
 import { EducationList } from '@/components/education/EducationList';
 import { PendingVerificationCard } from '@/components/education/PendingVerificationCard';
 import { Plus } from 'lucide-react';
+import { getMyEducations, getPendingEducations, submitEducation, verifyEducation, rejectEducation } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function EducationPage() {
   const [currentTab, setCurrentTab] = useState(0);
@@ -27,18 +29,12 @@ export default function EducationPage() {
 
   const fetchMyEducations = async () => {
     try {
-      const response = await fetch('/api/education/my', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch educations');
-
-      const data = await response.json();
+      const data = await getMyEducations();
       setMyEducations(data);
     } catch (err: any) {
-      setError(err.message);
+      const errorMsg = err.message || 'Failed to fetch educations';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -46,80 +42,49 @@ export default function EducationPage() {
 
   const fetchPendingVerifications = async () => {
     try {
-      const response = await fetch('/api/education/pending', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch pending verifications');
-
-      const data = await response.json();
+      const data = await getPendingEducations();
       setPendingVerifications(data);
     } catch (err: any) {
       console.error('Failed to fetch pending:', err);
+      toast.error('Failed to load pending verifications');
     }
   };
 
   const handleSubmitEducation = async (data: EducationFormData) => {
     try {
-      const response = await fetch('/api/education/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to submit');
-      }
-
+      await submitEducation(data as any);
+      toast.success('Education submitted for verification!');
+      
       // Refresh list
       await fetchMyEducations();
       setShowSubmitForm(false);
     } catch (err: any) {
+      toast.error(err.message || 'Failed to submit education');
       throw err;
     }
   };
 
   const handleApproveVerification = async (id: string, validForGuilds?: string[]) => {
     try {
-      const response = await fetch(`/api/education/verify/${id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ validForGuilds }),
-      });
-
-      if (!response.ok) throw new Error('Failed to approve');
-
+      await verifyEducation(id);
+      toast.success('Education approved!');
+      
       // Refresh list
       await fetchPendingVerifications();
     } catch (err: any) {
-      alert('Ошибка: ' + err.message);
+      toast.error(err.message || 'Failed to approve verification');
     }
   };
 
   const handleRejectVerification = async (id: string) => {
     try {
-      const response = await fetch(`/api/education/reject/${id}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to reject');
-
+      await rejectEducation(id, 'Rejected by admin');
+      toast.warning('Education rejected');
+      
       // Refresh list
       await fetchPendingVerifications();
     } catch (err: any) {
-      alert('Ошибка: ' + err.message);
+      toast.error(err.message || 'Failed to reject verification');
     }
   };
 

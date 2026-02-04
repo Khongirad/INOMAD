@@ -8,9 +8,10 @@ import { TimelineModule } from '../timeline/timeline.module';
 import { ReputationModule } from '../reputation/reputation.module';
 
 @Module({
-  imports: [AuthModule, DocumentModule, TimelineModule, ReputationModule],
+  imports: [DocumentModule, TimelineModule, ReputationModule],
   controllers: [QuestController],
   providers: [QuestService, PrismaService],
+import { AuthModule } from '../auth/auth.module';
   exports: [QuestService],
 })
 export class QuestModule {}

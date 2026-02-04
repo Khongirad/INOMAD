@@ -137,35 +137,36 @@ export class VerificationService {
     return { status: 'SUPER_VERIFIED', targetSeat: target.seatId, mandateUsed: fondantSeatId };
   }
 
-
   async getVerificationStatus(identifier: string) {
     const user = await this.prisma.user.findFirst({
-      where: {
         OR: [
           { id: identifier },
           { seatId: identifier }
         ]
       },
       include: {
+        // verificationsReceived relation doesn't exist in User model
+        // Query separately instead
         khuralSeats: {
-          include: { group: true }
+            include: { group: true }
         }
       }
     });
 
     if (!user) return null;
 
-    // Get verifications count separately since verificationsReceived doesn't exist
+    // Get verifications count separately
     const verificationsCount = await this.prisma.verification.count({
       where: { targetUserId: user.id }
     });
 
+    // Return current progress and details
     return {
-      ...user,
-      progress: verificationsCount,
-      required: 3,
-      canBeSuperVerified: !user.isSuperVerified,
-      isFounderMandateHolder: this.FOUNDER_MANDATES.includes(user.seatId || '')
+        ...user,
+        progress: verificationsCount,
+        required: 3,
+        canBeSuperVerified: !user.isSuperVerified,
+        isFounderMandateHolder: this.FOUNDER_MANDATES.includes(user.seatId || '')
     };
   }
 }

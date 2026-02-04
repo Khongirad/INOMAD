@@ -183,8 +183,7 @@ export class EducationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },
@@ -207,8 +206,7 @@ export class EducationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
             email: true,
           },
         },
@@ -216,8 +214,7 @@ export class EducationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },
@@ -240,8 +237,7 @@ export class EducationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },
@@ -265,8 +261,7 @@ export class EducationService {
           select: {
             id: true,
             username: true,
-            firstName: true,
-            lastName: true,
+            
           },
         },
       },

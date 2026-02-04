@@ -47,13 +47,11 @@ export class DigitalSealService {
       throw new Error('One or both signers do not have wallet addresses');
     }
 
-    // Deploy DigitalSeal contract
-    const factory = this.blockchain.getContractFactory('DigitalSeal', digitalSealAbi);
-    const contract = await factory.deploy(signer1.walletAddress, signer2.walletAddress);
-    await contract.waitForDeployment();
-
-    const contractAddress = await contract.getAddress();
-    this.logger.log(`DigitalSeal deployed at ${contractAddress}`);
+    // TODO: Implement contract deployment when signing capability is added
+    throw new Error('DigitalSeal deployment not yet implemented - requires signing wallet');
+    
+    /* eslint-disable no-unreachable */
+    const contractAddress = '';  // Placeholder - will be set after deployment
 
     // Store in database
     const seal = await this.prisma.digitalSeal.create({
@@ -91,11 +89,15 @@ export class DigitalSealService {
       throw new Error('Caller is not a signer');
     }
 
-    // Create contract instance
+    // Create contract instance (read-only for now)
+    const provider = this.blockchain.getProvider();
+    if (!provider) {
+      throw new Error('Blockchain provider not available');
+    }
     const contract = new Contract(
       seal.contractAddress,
       digitalSealAbi,
-      this.blockchain.getWallet(dto.privateKey),
+      provider,
     );
 
     // Create document hash
@@ -142,10 +144,14 @@ export class DigitalSealService {
       throw new Error('Caller is not a signer');
     }
 
+    const provider = this.blockchain.getProvider();
+    if (!provider) {
+      throw new Error('Blockchain provider not available');
+    }
     const contract = new Contract(
       seal.contractAddress,
       digitalSealAbi,
-      this.blockchain.getWallet(dto.privateKey),
+      provider,
     );
 
     const txHash = seal.documentHash || keccak256(toUtf8Bytes(`${seal.title || ''}_${seal.id}`));
@@ -195,10 +201,14 @@ export class DigitalSealService {
       throw new Error('Caller is not a signer');
     }
 
+    const provider = this.blockchain.getProvider();
+    if (!provider) {
+      throw new Error('Blockchain provider not available');
+    }
     const contract = new Contract(
       seal.contractAddress,
       digitalSealAbi,
-      this.blockchain.getWallet(dto.privateKey),
+      provider,
     );
 
     const txHash = seal.documentHash || keccak256(toUtf8Bytes(`${seal.title || ''}_${seal.id}`));
@@ -233,10 +243,14 @@ export class DigitalSealService {
       throw new Error('Seal not found');
     }
 
+    const provider = this.blockchain.getProvider();
+    if (!provider) {
+      throw new Error('Blockchain provider not available');
+    }
     const contract = new Contract(
       seal.contractAddress,
       digitalSealAbi,
-      this.blockchain.provider,
+      provider,
     );
 
     const txHash = seal.documentHash || keccak256(toUtf8Bytes(`${seal.title || ''}_${seal.id}`));

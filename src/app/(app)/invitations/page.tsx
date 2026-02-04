@@ -14,6 +14,8 @@ import {
 import { ReceivedInvitationCard } from '@/components/invitations/ReceivedInvitationCard';
 import { SentInvitationCard } from '@/components/invitations/SentInvitationCard';
 import { Mail, Send } from 'lucide-react';
+import { getReceivedInvitations, getSentInvitations, acceptInvitation, rejectInvitation, cancelInvitation } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function InvitationsPage() {
   const [currentTab, setCurrentTab] = useState(0);
@@ -28,31 +30,20 @@ export default function InvitationsPage() {
 
   const fetchInvitations = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Fetch received invitations
-      const receivedRes = await fetch('/api/invitations/received', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!receivedRes.ok) throw new Error('Failed to fetch received invitations');
-      const receivedData = await receivedRes.json();
-
-      // Fetch sent invitations
-      const sentRes = await fetch('/api/invitations/sent', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!sentRes.ok) throw new Error('Failed to fetch sent invitations');
-      const sentData = await sentRes.json();
+      // Fetch both in parallel
+      const [receivedData, sentData] = await Promise.all([
+        getReceivedInvitations(),
+        getSentInvitations(),
+      ]);
 
       setReceivedInvitations(receivedData);
       setSentInvitations(sentData);
     } catch (err: any) {
-      setError(err.message);
+      const errorMsg = err.message || 'Failed to fetch invitations';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -60,55 +51,37 @@ export default function InvitationsPage() {
 
   const handleAcceptInvitation = async (id: string) => {
     try {
-      const response = await fetch(`/api/invitations/${id}/accept`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to accept invitation');
-
+      await acceptInvitation(id);
+      toast.success('Invitation accepted!');
+      
       // Refresh invitations
       await fetchInvitations();
     } catch (err: any) {
-      alert('Ошибка: ' + err.message);
+      toast.error(err.message || 'Failed to accept invitation');
     }
   };
 
   const handleRejectInvitation = async (id: string) => {
     try {
-      const response = await fetch(`/api/invitations/${id}/reject`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to reject invitation');
-
+      await rejectInvitation(id);
+      toast.warning('Invitation rejected');
+      
       // Refresh invitations
       await fetchInvitations();
     } catch (err: any) {
-      alert('Ошибка: ' + err.message);
+      toast.error(err.message || 'Failed to reject invitation');
     }
   };
 
-  const handleCancelInvitation = async (id: string) => {
+  const handleCancelInvitation = async (id: string) =>{ 
     try {
-      const response = await fetch(`/api/invitations/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to cancel invitation');
-
+      await cancelInvitation(id);
+      toast.info('Invitation cancelled');
+      
       // Refresh invitations
       await fetchInvitations();
     } catch (err: any) {
-      alert('Ошибка: ' + err.message);
+      toast.error(err.message || 'Failed to cancel invitation');
     }
   };
 

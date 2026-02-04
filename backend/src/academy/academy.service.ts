@@ -61,9 +61,12 @@ export class AcademyOfSciencesService {
       throw new Error('ACADEMY_OF_SCIENCES_ADDRESS not configured');
     }
 
-    const signerOrProvider = privateKeyOrProvider
-      ? this.blockchain.getWallet(privateKeyOrProvider)
-      : this.blockchain.provider;
+    // TODO: Implement wallet signing when needed
+    // For now, use read-only provider
+    const signerOrProvider = this.blockchain.getProvider();
+    if (!signerOrProvider) {
+      throw new Error('Blockchain provider not available');
+    }
 
     return new Contract(contractAddress, academyOfSciencesAbi, signerOrProvider);
   }

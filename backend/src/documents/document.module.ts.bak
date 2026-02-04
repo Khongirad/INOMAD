@@ -6,9 +6,10 @@ import { AuthModule } from '../auth/auth.module';
 import { TimelineModule } from '../timeline/timeline.module';
 
 @Module({
-  imports: [AuthModule, TimelineModule],
+  imports: [TimelineModule],
   controllers: [DocumentController],
   providers: [DocumentService, PrismaService],
+import { AuthModule } from '../auth/auth.module';
   exports: [DocumentService],
 })
 export class DocumentModule {}

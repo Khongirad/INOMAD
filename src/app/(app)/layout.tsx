@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { AuthSession } from "@/lib/auth/session";
+import { Toaster } from "sonner";
+
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -39,6 +41,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+      <Toaster 
+        position="top-right" 
+        richColors
+        closeButton
+        expand={false}
+        duration={4000}
+      />
     </div>
   );
 }

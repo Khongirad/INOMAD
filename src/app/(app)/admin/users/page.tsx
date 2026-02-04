@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { api } from '@/lib/api';
+import { VerificationManagement } from '@/components/admin/VerificationManagement';
 
 interface User {
   id: string;
@@ -39,9 +40,9 @@ export default function UsersListPage() {
       if (statusFilter) params.append('status', statusFilter);
       if (roleFilter) params.append('role', roleFilter);
       
-      const response = await api.get(`/admin/users?${params.toString()}`);
-      setUsers(response.data.users);
-      setTotal(response.data.total);
+      const response = await api.get<{ users: User[]; total: number }>(`/admin/users?${params.toString()}`);
+      setUsers(response.users);
+      setTotal(response.total);
     } catch (error) {
       console.error('Failed to load users:', error);
     } finally {
@@ -158,6 +159,9 @@ export default function UsersListPage() {
               <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-300">
                 Registered
               </th>
+              <th className="px-4 py-3 text-center text-sm font-semibold text-zinc-300">
+                Verification
+              </th>
               <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-300">
                 Actions
               </th>
@@ -197,6 +201,13 @@ export default function UsersListPage() {
                 </td>
                 <td className="px-4 py-3 text-zinc-400 text-sm">
                   {new Date(u.createdAt).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <VerificationManagement
+                    userId={u.id}
+                    seatId={u.seatId}
+                    verificationStatus={u.verificationStatus}
+                  />
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
