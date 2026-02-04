@@ -1,0 +1,2 @@
+// This file is required by Prisma to generate the client
+// It will be populated when you run: npx prisma generate --schema=./src/migration-service/prisma/schema.prisma

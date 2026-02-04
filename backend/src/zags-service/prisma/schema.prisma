@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/@prisma/client-zags"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("ZAGS_SERVICE_DATABASE_URL")
+}
+
+// ============== ZAGS (CIVIL REGISTRY) MODELS ==============
+
+enum CivilStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum MarriageStatus {
+  PENDING_CONSENT      // Waiting for partner's consent
+  PENDING_REVIEW       // Both consented, awaiting officer review
+  APPROVED             // Approved, ceremony can proceed
+  REGISTERED           // Marriage officially registered
+  REJECTED             // Application rejected
+  CANCELLED            // Cancelled by applicants
+}
+
+enum DivorceStatus {
+  FILED
+  UNDER_REVIEW
+  FINALIZED
+  REJECTED
+}
+
+enum ConsentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Marriage Record
+model Marriage {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Certificate
+  certificateNumber String @unique
+  
+  // Parties (references to main DB users)
+  spouse1Id String
+  spouse2Id String
+  
+  // Personal details (snapshot at time of marriage)
+  spouse1FullName String
+  spouse2FullName String
+  spouse1DateOfBirth DateTime
+  spouse2DateOfBirth DateTime
+
+  // Marriage details
+  marriageDate DateTime
+  ceremonyLocation String?
+  ceremonyType String? // "Civil", "Religious", "Traditional"
+  
+  // Witnesses
+  witness1Name String?
+  witness2Name String?
+  witness1Id   String? // userId if registered citizen
+  witness2Id   String? // userId if registered citizen
+
+  // Property regime (optional)
+  propertyRegime String? // "SEPARATE", "JOINT", "CUSTOM"
+  propertyAgreement String? @db.Text // Custom agreement text
+
+  // Status
+  status MarriageStatus @default(PENDING_CONSENT)
+
+  // ZAGS Officer who registered
+  registeredBy String? // Officer userId
+  registeredAt DateTime?
+
+  // Privacy flags
+  isPublic Boolean @default(true) // Can public see marriage status?
+  
+  // Relations
+  consents MarriageConsent[]
+  divorce  Divorce?
+
+  @@index([spouse1Id])
+  @@index([spouse2Id])
+  @@index([certificateNumber])
+  @@index([marriageDate])
+  @@index([status])
+  @@unique([spouse1Id, spouse2Id]) // Prevent duplicate applications
+}
+
+// Digital Consent for Marriage
+model MarriageConsent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  marriageId String
+  marriage   Marriage @relation(fields: [marriageId], references: [id], onDelete: Cascade)
+
+  // Who consented
+  userId String
+  
+  // Consent details
+  status ConsentStatus @default(PENDING)
+  consentedAt DateTime?
+  
+  // Digital signature
+  signature String? // Cryptographic signature from wallet
+  ipAddress String?
+  userAgent String?
+
+  @@index([marriageId])
+  @@index([userId])
+  @@unique([marriageId, userId])
+}
+
+// Divorce Record
+model Divorce {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Original marriage
+  marriageId String  @unique
+  marriage   Marriage @relation(fields: [marriageId], references: [id])
+
+  // Certificate
+  divorceCertificateNumber String @unique
+
+  // Initiated by
+  initiatedBy String // userId of person who filed
+  
+  // Reason
+  reason String @db.Text
+  
+  // Status
+  status DivorceStatus @default(FILED)
+
+  // Finalization
+  finalizedDate DateTime?
+  finalizedBy   String? // ZAGS Officer userId
+  
+  // Property division (optional)
+  propertyDivision String? @db.Text
+
+  @@index([marriageId])
+  @@index([initiatedBy])
+  @@index([status])
+}
+
+// Name Change Record
+model NameChange {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Applicant
+  userId String
+
+  // Name change
+  oldName String
+  newName String
+  reason  String
+
+  // Status
+  status String @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  // Review
+  reviewedBy String? // ZAGS Officer userId
+  reviewedAt DateTime?
+
+  // Certificate
+  certificateNumber String? @unique
+  effectiveDate     DateTime?
+
+  @@index([userId])
+  @@index([certificateNumber])
+}
+
+// Public Registry for Certificate Verification
+model PublicRegistry {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Certificate info
+  certificateNumber String @unique
+  certificateType   String // "MARRIAGE", "DIVORCE", "NAME_CHANGE"
+  
+  // Public data only
+  issuedDate DateTime
+  isValid    Boolean @default(true)
+  
+  // NO private details (names, addresses) stored here
+  // This is only for certificate number verification
+
+  @@index([certificateNumber])
+  @@index([certificateType])
+}
