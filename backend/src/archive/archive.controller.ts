@@ -9,7 +9,7 @@ import {
   Request,
   Logger,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DocumentTemplateService } from './document-template.service';
 import { DocumentContractService } from './document-contract.service';
 import { NotaryService } from './notary.service';

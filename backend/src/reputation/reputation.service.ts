@@ -127,7 +127,10 @@ export class ReputationService {
   /**
    * Get transaction history for authorized viewers
    * (visible when signing cooperation agreements)
+   * 
+   * DISABLED: Uses old Document table - needs update to use DocumentContract
    */
+  /*
   async getTransactionHistory(
     userId: string,
     requesterId: string,
@@ -205,6 +208,7 @@ export class ReputationService {
 
     return transactions.slice(0, options?.limit || 10);
   }
+  */
 
   /**
    * Calculate success rate percentage

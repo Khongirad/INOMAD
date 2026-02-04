@@ -1434,6 +1434,9 @@ enum UserRole {
   LEADER
   ADMIN
   CREATOR // Supreme admin - can manage all admins and users
+  NOTARY // State Archive notary
+  STATE_LAWYER // State Archive legal officer
+  CB_GOVERNOR // Central Bank Governor
 }
 
 enum WalletStatus {

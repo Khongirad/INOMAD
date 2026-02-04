@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { DocumentService } from '../documents/document.service';
+// import { DocumentService } from '../documents/document.service'; // DISABLED - old Document table
 import { TimelineService } from '../timeline/timeline.service';
 import { ReputationService } from '../reputation/reputation.service';
 import { QuestStatus } from '@prisma/client';
@@ -9,7 +9,7 @@ import { QuestStatus } from '@prisma/client';
 export class QuestService {
   constructor(
     private prisma: PrismaService,
-    private documents: DocumentService,
+    // private documents: DocumentService, // DISABLED - old Document table
     private timeline: TimelineService,
     private reputation: ReputationService,
   ) {}

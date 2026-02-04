@@ -27,7 +27,7 @@ import { TimelineModule } from './timeline/timeline.module';
 import { HistoryModule } from './history/history.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { ReputationModule } from './reputation/reputation.module';
-import { DocumentModule } from './documents/document.module';
+// import { DocumentModule } from './documents/document.module'; // Disabled - replaced by State Archive
 import { QuestModule } from './quests/quest.module';
 import { OrganizationModule } from './organizations/organization.module';
 import { EducationModule } from './education/education.module';
@@ -74,7 +74,7 @@ import { AdminModule } from './admin/admin.module';
     HistoryModule,
     CalendarModule,
     ReputationModule,  // Reputation & Trust system
-    DocumentModule,    // Document management & signing
+    // DocumentModule,    // Document management & signing - DISABLED (replaced by ArchiveModule)
     QuestModule,       // Quest/Task assignment system
     OrganizationModule, // Guild & Organization Rating System
     EducationModule,    // Education verification for guilds

@@ -28,6 +28,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "src/**/*.disabled"
+    "src/**/*.disabled",
+    "src/documents.disabled"
   ]
 }

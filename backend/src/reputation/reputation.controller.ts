@@ -19,7 +19,10 @@ export class ReputationController {
   /**
    * Get transaction history for a user
    * GET /reputation/:userId/history
+   * 
+   * DISABLED: getTransactionHistory service method uses old Document table
    */
+  /*
   @Get(':userId/history')
   async getHistory(@Param('userId') userId: string) {
     // For now, allow anyone to see public history
@@ -29,4 +32,5 @@ export class ReputationController {
       includeDetails: false, // Only show public info
     });
   }
+  */
 }
