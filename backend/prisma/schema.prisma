@@ -43,16 +43,16 @@ model User {
   verificationsGiven    UserVerification[] @relation("Verifier")
   verificationCount     Int                @default(0)
   maxVerifications      Int                @default(5)
-  
+
   // Tiered Verification System (NEW)
-  verificationLevel      VerificationLevel            @default(UNVERIFIED)
+  verificationLevel      VerificationLevel @default(UNVERIFIED)
   verificationLevelSetAt DateTime?
   verificationLevelSetBy String? // Admin userId who set the level
-  totalEmitted           Decimal                      @default(0) @db.Decimal(18, 2)
+  totalEmitted           Decimal           @default(0) @db.Decimal(18, 2)
   arbanVerifiedAt        DateTime?
   zunVerifiedAt          DateTime?
   fullyVerifiedAt        DateTime?
-  
+
   // Timeline
   eventsAsActor  TimelineEvent[] @relation("EventActor")
   eventsAsTarget TimelineEvent[] @relation("EventTarget")
@@ -126,12 +126,15 @@ model User {
   // Calendar
   calendarEvents CalendarEvent[]
   calendarNotes  CalendarNote[]
-  
+
   // Tiered Verification Relations
-  verificationRequests         VerificationRequest[] @relation("Requester")
-  verificationRequestsReviewed VerificationRequest[] @relation("Reviewer")
+  verificationRequests         VerificationRequest[]     @relation("Requester")
+  verificationRequestsReviewed VerificationRequest[]     @relation("Reviewer")
   arbanVerificationsGiven      ArbanMutualVerification[] @relation("ArbanVerifier")
   arbanVerificationsReceived   ArbanMutualVerification[] @relation("ArbanVerified")
+
+  // Initial ALTAN Distribution
+  distribution UserDistribution?
 
   @@index([seatId])
   @@index([organizationId])
@@ -239,11 +242,11 @@ model VerificationRequest {
   supportingDocuments Json? // Array of document URLs/references
 
   // Status
-  status        String    @default("PENDING") // PENDING, APPROVED, REJECTED
-  reviewedById  String?
-  reviewedBy    User?     @relation("Reviewer", fields: [reviewedById], references: [id])
-  reviewNotes   String?   @db.Text
-  reviewedAt    DateTime?
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedById String?
+  reviewedBy   User?     @relation("Reviewer", fields: [reviewedById], references: [id])
+  reviewNotes  String?   @db.Text
+  reviewedAt   DateTime?
 
   @@index([requesterId])
   @@index([status])
@@ -268,14 +271,80 @@ model ArbanMutualVerification {
   verified   User   @relation("ArbanVerified", fields: [verifiedId], references: [id])
 
   // Verification details
-  isVerified Boolean @default(true)
-  notes      String? @db.Text
+  isVerified Boolean  @default(true)
+  notes      String?  @db.Text
   verifiedAt DateTime @default(now())
 
   @@unique([arbanId, verifierId, verifiedId])
   @@index([arbanId])
   @@index([verifierId])
   @@index([verifiedId])
+}
+
+// ============================
+// INITIAL ALTAN DISTRIBUTION SYSTEM
+// ============================
+
+/// Distribution Pool for tracking the 2.1 trillion ALTAN initial emission
+/// This pool is created once when Central Bank performs the initial emission
+/// and tracks how the ALTAN is allocated across different purposes
+model DistributionPool {
+  id String @id @default(uuid())
+
+  // Total amounts from initial emission
+  totalEmission Decimal @db.Decimal(20, 2) // 2.1 trillion ALTAN
+  citizenPool   Decimal @db.Decimal(20, 2) // e.g., 60% for citizens
+  stateTreasury Decimal @db.Decimal(20, 2) // e.g., 30% for state
+  peoplesFund   Decimal @db.Decimal(20, 2) // e.g., 10% for people's fund
+
+  // Tracking
+  totalDistributed Decimal @default(0) @db.Decimal(20, 2) // Total distributed so far
+  totalCitizens    Int     @default(0) // Number of registered citizens
+  perCitizenShare  Decimal @db.Decimal(18, 2) // Calculated: citizenPool / estimatedCitizens
+
+  // Status
+  status         String   @default("ACTIVE") // ACTIVE, DEPLETED, SUSPENDED
+  emissionDate   DateTime // When CB performed the emission
+  emissionTxHash String? // Blockchain transaction hash (if applicable)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+/// Per-user distribution tracking
+/// Tracks how much of their allocation each citizen has received
+/// based on their verification level progression
+model UserDistribution {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Citizen's total allocation from pool
+  totalAllocation Decimal @db.Decimal(18, 2) // Their full share (~8,690 ALTAN example)
+
+  // Received amounts by verification level
+  unverifiedReceived    Decimal @default(0) @db.Decimal(18, 2) // 100 ALTAN on registration
+  arbanVerifiedReceived Decimal @default(0) @db.Decimal(18, 2) // 900 more (total 1,000)
+  zunReceived           Decimal @default(0) @db.Decimal(18, 2) // 9,000 more (total 10,000)
+  fullyReceived         Decimal @default(0) @db.Decimal(18, 2) // Remaining allocation
+
+  // Totals
+  totalReceived    Decimal @db.Decimal(18, 2) // Sum of all received
+  remainingBalance Decimal @db.Decimal(18, 2) // totalAllocation - totalReceived
+
+  // Distribution events
+  firstDistributionAt DateTime? // When they first received ALTAN
+  lastDistributionAt  DateTime? // Most recent distribution
+  fullyDistributedAt  DateTime? // When they received full allocation
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([fullyDistributedAt])
 }
 
 // Timeline Event System
@@ -666,17 +735,17 @@ model KhuralSeat {
 }
 
 model Guild {
-  id                  String        @id @default(uuid())
+  id                  String                    @id @default(uuid())
   type                GuildType
   name                String
   description         String?
   professionId        String?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  profession          Profession?   @relation(fields: [professionId], references: [id])
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  profession          Profession?               @relation(fields: [professionId], references: [id])
   members             GuildMember[]
   tasks               Task[]
-  organizationMembers User[]        @relation("OrganizationMembers")
+  organizationMembers User[]                    @relation("OrganizationMembers")
   arbanVerifications  ArbanMutualVerification[] @relation("ArbanVerifications")
 
   @@index([type])
@@ -1128,12 +1197,11 @@ enum VerificationStatus {
 }
 
 enum VerificationLevel {
-  UNVERIFIED       // Default: new users, 100 ALTAN limit
-  ARBAN_VERIFIED   // Arban member with mutual verification, 1000 ALTAN shared
-  ZUN_VERIFIED     // Admin approved, 10,000 ALTAN limit
-  FULLY_VERIFIED   // Citizen status, unlimited, can own land
+  UNVERIFIED // Default: new users, 100 ALTAN limit
+  ARBAN_VERIFIED // Arban member with mutual verification, 1000 ALTAN shared
+  ZUN_VERIFIED // Admin approved, 10,000 ALTAN limit
+  FULLY_VERIFIED // Citizen status, unlimited, can own land
 }
-
 
 enum KhuralLevel {
   ARBAN
@@ -2191,10 +2259,10 @@ model Organization {
   // Geographic/ethnic scope
   republicId String?
   republic   String? // "Russian", "Buryad-Mongol", etc.
-  
+
   // Guild-specific education requirements
-  requiresEducation Boolean  @default(false)
-  fieldOfStudy      String?  // "Engineering", "Medicine", etc.
+  requiresEducation Boolean @default(false)
+  fieldOfStudy      String? // "Engineering", "Medicine", etc.
 
   // Leadership
   leaderId String

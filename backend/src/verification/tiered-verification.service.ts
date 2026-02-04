@@ -1,7 +1,8 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { VerificationLevel, UserRole } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { DistributionService } from '../distribution/distribution.service';
 
 export interface EmissionLimitInfo {
   level: VerificationLevel;
@@ -13,7 +14,11 @@ export interface EmissionLimitInfo {
 
 @Injectable()
 export class TieredVerificationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => DistributionService))
+    private distributionService: DistributionService,
+  ) {}
 
   /**
    * Get emission limit for a user based on verification level
@@ -267,6 +272,17 @@ export class TieredVerificationService {
         where: { id: request.requesterId },
         data: updateData,
       });
+
+      // Trigger ALTAN distribution for new level
+      try {
+        await this.distributionService.distributeByLevel(
+          request.requesterId,
+          request.requestedLevel,
+        );
+      } catch (error) {
+        // Log but don't fail the upgrade if distribution fails
+        console.error('Distribution failed:', error.message);
+      }
     }
 
     return updatedRequest;
@@ -346,9 +362,19 @@ export class TieredVerificationService {
       updateData.verifiedAt = new Date();
     }
 
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id: userId },
       data: updateData,
     });
+
+    // Trigger ALTAN distribution for new level
+    try {
+      await this.distributionService.distributeByLevel(userId, level);
+    } catch (error) {
+      // Log but don't fail the upgrade if distribution fails
+      console.error('Distribution failed:', error.message);
+    }
+
+    return user;
   }
 }
