@@ -34,6 +34,12 @@ CREATE TYPE "SignerRole" AS ENUM ('CREATOR', 'CB_GOVERNOR', 'NOTARY', 'STATE_LAW
 -- CreateEnum
 CREATE TYPE "AccessAction" AS ENUM ('VIEW', 'DOWNLOAD', 'PRINT', 'MODIFY', 'SIGN', 'ARCHIVE');
 
+-- CreateEnum
+CREATE TYPE "BankLicenseStatus" AS ENUM ('PENDING', 'APPROVED', 'ISSUED', 'SUSPENDED', 'REVOKED');
+
+-- CreateEnum
+CREATE TYPE "BankStatus" AS ENUM ('PENDING_LICENSE', 'LICENSED', 'OPERATIONAL', 'SUSPENDED', 'DISSOLVED');
+
 -- AlterEnum
 BEGIN;
 CREATE TYPE "DocumentStatus_new" AS ENUM ('ACTIVE', 'SUSPENDED', 'REVOKED', 'EXPIRED', 'ARCHIVED');
@@ -198,6 +204,27 @@ CREATE TABLE "DocumentAccessLog" (
     CONSTRAINT "DocumentAccessLog_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Bank" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "nameRu" TEXT,
+    "legalAddress" TEXT NOT NULL,
+    "taxId" TEXT NOT NULL,
+    "licenseNumber" TEXT,
+    "licenseDocumentId" TEXT,
+    "licenseStatus" "BankLicenseStatus" NOT NULL DEFAULT 'PENDING',
+    "licenseIssuedAt" TIMESTAMP(3),
+    "correspondentAccountNumber" TEXT,
+    "correspondentAgreementId" TEXT,
+    "directorId" TEXT,
+    "operationalStatus" "BankStatus" NOT NULL DEFAULT 'PENDING_LICENSE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Bank_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "DocumentContract_documentNumber_key" ON "DocumentContract"("documentNumber");
 
@@ -239,6 +266,30 @@ CREATE INDEX "DocumentAccessLog_documentId_timestamp_idx" ON "DocumentAccessLog"
 
 -- CreateIndex
 CREATE INDEX "DocumentAccessLog_userId_idx" ON "DocumentAccessLog"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Bank_taxId_key" ON "Bank"("taxId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Bank_licenseNumber_key" ON "Bank"("licenseNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Bank_licenseDocumentId_key" ON "Bank"("licenseDocumentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Bank_correspondentAccountNumber_key" ON "Bank"("correspondentAccountNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Bank_correspondentAgreementId_key" ON "Bank"("correspondentAgreementId");
+
+-- CreateIndex
+CREATE INDEX "Bank_licenseStatus_idx" ON "Bank"("licenseStatus");
+
+-- CreateIndex
+CREATE INDEX "Bank_operationalStatus_idx" ON "Bank"("operationalStatus");
+
+-- CreateIndex
+CREATE INDEX "Bank_taxId_idx" ON "Bank"("taxId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "DocumentTemplate_code_key" ON "DocumentTemplate"("code");
@@ -290,3 +341,12 @@ ALTER TABLE "DocumentAccessLog" ADD CONSTRAINT "DocumentAccessLog_documentId_fke
 
 -- AddForeignKey
 ALTER TABLE "DocumentAccessLog" ADD CONSTRAINT "DocumentAccessLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Bank" ADD CONSTRAINT "Bank_licenseDocumentId_fkey" FOREIGN KEY ("licenseDocumentId") REFERENCES "DocumentContract"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Bank" ADD CONSTRAINT "Bank_correspondentAgreementId_fkey" FOREIGN KEY ("correspondentAgreementId") REFERENCES "DocumentContract"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Bank" ADD CONSTRAINT "Bank_directorId_fkey" FOREIGN KEY ("directorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
