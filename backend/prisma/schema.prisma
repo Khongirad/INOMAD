@@ -100,12 +100,12 @@ model User {
   votesCast        Vote[]           @relation("VoteCaster")
   khuralDelegates  KhuralDelegate[] @relation("KhuralDelegate")
 
-  // Chancellery & Archive Relations
-  documentsCreated  Document[]          @relation("DocumentCreator")
-  documentsSigned   DocumentSignature[] @relation("DocumentSigner")
-  questsGiven       Quest[]             @relation("QuestGiver")
-  questsTaken       Quest[]             @relation("QuestTaker")
-  reputationProfile ReputationProfile?  @relation("UserReputation")
+  // Chancellery & Archive Relations (NOTE: Old Document models removed)
+  // documentsCreated  Document[]          @relation("DocumentCreator") // REMOVED - see State Archive system
+  // documentsSigned   DocumentSignature[] @relation("DocumentSigner")  // REMOVED - see State Archive system
+  questsGiven       Quest[]            @relation("QuestGiver")
+  questsTaken       Quest[]            @relation("QuestTaker")
+  reputationProfile ReputationProfile? @relation("UserReputation")
 
   // Guild & Organization Relations
   organizationsLed        Organization[]       @relation("OrganizationLeader")
@@ -135,6 +135,17 @@ model User {
 
   // Initial ALTAN Distribution
   distribution UserDistribution?
+
+  // State Archive & Document System
+  templatesCreated     DocumentTemplate[]     @relation("TemplateCreator")
+  documentsIssued      DocumentContract[]     @relation("DocumentIssuer")
+  documentsReceived    DocumentContract[]     @relation("DocumentRecipient")
+  documentsArchived    DocumentContract[]     @relation("DocumentArchivist")
+  documentStageChanges DocumentStageHistory[] @relation("StageChanger")
+  documentSignatures   DocumentSignature[]    @relation("DocumentSigner")
+  notaryRecords        NotarizationRecord[]   @relation("NotaryRecords")
+  legalCertifications  LegalCertification[]   @relation("LegalCertifications")
+  documentAccess       DocumentAccessLog[]    @relation("DocumentAccess")
 
   @@index([seatId])
   @@index([organizationId])
@@ -347,6 +358,287 @@ model UserDistribution {
   @@index([fullyDistributedAt])
 }
 
+// ============================
+// STATE ARCHIVE & DOCUMENT SYSTEM
+// ============================
+
+/// Document templates managed by State Archive
+/// Universal constructor for all official documents
+model DocumentTemplate {
+  id String @id @default(uuid())
+
+  // Template identification
+  code     String  @unique // "BANKING_LICENSE_001", "EMISSION_PROTOCOL_001"
+  name     String // "Banking License"
+  nameRu   String? // "Лицензия на банковскую деятельность"
+  category String // "Banking", "Emission", "Legal"
+  version  String  @default("1.0")
+
+  // Template structure (JSON schema)
+  templateSchema  Json // Field definitions with types
+  requiredFields  String[] // ["bank_name", "address", "tax_id"]
+  optionalFields  String[]
+  validationRules Json? // Custom validation logic
+
+  // Template content (English)
+  contentTemplate String  @db.Text // Mustache/Handlebars template
+  headerTemplate  String? @db.Text
+  footerTemplate  String? @db.Text
+
+  // Workflow configuration
+  requiredSignatures String[] // ["CB_GOVERNOR", "NOTARY", "LAWYER"]
+  stagesRequired     String[] // ["DRAFT", "SIGNED", "NOTARIZED", "CERTIFIED", "ARCHIVED"]
+
+  // Blockchain config
+  blockchainEnabled Boolean @default(true)
+  contractTemplate  String? @db.Text // Smart contract code template
+
+  // Archive management
+  status      String   @default("ACTIVE") // ACTIVE, DEPRECATED, ARCHIVED
+  createdById String
+  createdBy   User     @relation("TemplateCreator", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Generated documents
+  documents DocumentContract[]
+
+  @@index([category, status])
+  @@index([code])
+}
+
+/// Document smart contracts - each official document is a blockchain contract
+/// Tracks document stages in real-time
+model DocumentContract {
+  id String @id @default(uuid())
+
+  // Document identification
+  documentNumber String  @unique // "BL-001/2026", "EP-001/2026"
+  registryNumber String? @unique // State registry number
+  archiveNumber  String? @unique // Archive catalog number
+
+  // Template reference
+  templateId String
+  template   DocumentTemplate @relation(fields: [templateId], references: [id])
+
+  // Document data
+  title            String
+  titleRu          String?
+  variables        Json // Template variables filled in
+  generatedContent String  @db.Text // Final rendered document (English)
+  attachments      Json? // Additional files/images
+
+  // Parties involved
+  issuerId    String // CB Governor, etc.
+  issuer      User    @relation("DocumentIssuer", fields: [issuerId], references: [id])
+  recipientId String? // Bank, etc.
+  recipient   User?   @relation("DocumentRecipient", fields: [recipientId], references: [id])
+
+  // Current state
+  currentStage DocumentStage  @default(DRAFT)
+  status       DocumentStatus @default(ACTIVE)
+
+  // Stage history
+  stages DocumentStageHistory[]
+
+  // Signatures (multi-sig)
+  signatures DocumentSignature[]
+
+  // Notarization
+  notarization NotarizationRecord?
+
+  // Legal certification
+  legalCert LegalCertification?
+
+  // Blockchain smart contract
+  blockchainTxHash String? // Contract deployment TX
+  contractAddress  String? // Smart contract address
+  blockchainData   Json? // Additional blockchain metadata
+
+  // Integrity verification
+  documentHash  String // SHA-256 of content
+  hashTimestamp DateTime @default(now())
+
+  // Archiving
+  archivedAt   DateTime?
+  archivedById String?
+  archivedBy   User?     @relation("DocumentArchivist", fields: [archivedById], references: [id])
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Access control
+  accessLog DocumentAccessLog[]
+
+  @@index([currentStage, status])
+  @@index([documentNumber])
+  @@index([templateId])
+}
+
+/// Document stages - real-time tracking
+/// Each stage change creates a new history record
+model DocumentStageHistory {
+  id String @id @default(uuid())
+
+  documentId String
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  fromStage DocumentStage?
+  toStage   DocumentStage
+
+  triggeredById String
+  triggeredBy   User   @relation("StageChanger", fields: [triggeredById], references: [id])
+
+  notes     String?  @db.Text
+  timestamp DateTime @default(now())
+
+  // Blockchain event
+  blockchainTx String? // TX hash for stage change
+
+  @@index([documentId, timestamp])
+}
+
+/// Digital signatures on documents
+/// GOST-compliant ECDSA signatures
+model DocumentSignature {
+  id String @id @default(uuid())
+
+  documentId String
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  signerId   String
+  signer     User       @relation("DocumentSigner", fields: [signerId], references: [id])
+  signerRole SignerRole
+
+  // Digital signature data
+  signature String // ECDSA signature (hex)
+  publicKey String // Signer's public key
+  algorithm String @default("ECDSA-secp256k1")
+
+  // Verification
+  verified   Boolean   @default(false)
+  verifiedAt DateTime?
+
+  // Context
+  signedAt  DateTime @default(now())
+  ipAddress String
+  userAgent String?
+
+  @@index([documentId])
+  @@index([signerId])
+}
+
+/// Notarization records - managed by State Archive notaries
+model NotarizationRecord {
+  id String @id @default(uuid())
+
+  documentId String           @unique
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  notaryId String
+  notary   User   @relation("NotaryRecords", fields: [notaryId], references: [id])
+
+  // Notarial data
+  registryNumber String  @unique // Notarial registry number
+  notes          String? @db.Text
+  sealImage      String? // Digital seal/stamp
+
+  // Signature
+  signature String
+  publicKey String
+
+  notarizedAt DateTime @default(now())
+
+  @@index([notaryId])
+}
+
+/// Legal certification - managed by State Archive lawyers
+model LegalCertification {
+  id String @id @default(uuid())
+
+  documentId String           @unique
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  lawyerId String
+  lawyer   User   @relation("LegalCertifications", fields: [lawyerId], references: [id])
+
+  // Legal opinion
+  opinion   String  @db.Text // Legal analysis (English)
+  opinionRu String? @db.Text // Russian version if needed
+  compliant Boolean // Meets legal requirements
+  notes     String? @db.Text
+
+  // Signature
+  signature String
+  publicKey String
+
+  certifiedAt DateTime @default(now())
+
+  @@index([lawyerId])
+}
+
+/// Document access log - audit trail
+model DocumentAccessLog {
+  id String @id @default(uuid())
+
+  documentId String
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("DocumentAccess", fields: [userId], references: [id])
+
+  action AccessAction // VIEW, DOWNLOAD, PRINT, MODIFY
+  reason String? // Why accessed
+
+  timestamp DateTime @default(now())
+  ipAddress String
+  userAgent String?
+
+  @@index([documentId, timestamp])
+  @@index([userId])
+}
+
+// Enums for document system
+enum DocumentStage {
+  DRAFT // Being prepared
+  PENDING_REVIEW // Submitted for review
+  SIGNED // Signed by issuer
+  PENDING_NOTARIZATION
+  NOTARIZED // Notary approved
+  PENDING_LEGAL
+  CERTIFIED // Lawyer certified
+  ARCHIVED // In State Archive
+  PUBLISHED // Public access
+}
+
+enum DocumentStatus {
+  ACTIVE
+  SUSPENDED
+  REVOKED
+  EXPIRED
+  ARCHIVED
+}
+
+enum SignerRole {
+  CREATOR
+  CB_GOVERNOR
+  NOTARY
+  STATE_LAWYER
+  BANK_DIRECTOR
+  WITNESS
+  OFFICER
+}
+
+enum AccessAction {
+  VIEW
+  DOWNLOAD
+  PRINT
+  MODIFY
+  SIGN
+  ARCHIVE
+}
+
 // Timeline Event System
 model TimelineEvent {
   id        String   @id @default(uuid())
@@ -390,7 +682,7 @@ model TimelineEvent {
   // Relations
   verification UserVerification?
   taskId       String?
-  Document     Document?
+  // Document     Document?  // REMOVED - old Chancellery model removed
 
   @@index([actorId, createdAt])
   @@index([targetId, createdAt])
@@ -502,111 +794,8 @@ model CalendarNote {
 }
 
 // ============== CHANCELLERY & ARCHIVE SYSTEM ==============
-
-// Document Templates (GOST standards)
-model DocumentTemplate {
-  id String @id @default(uuid())
-
-  // Type and naming
-  type     DocumentType
-  name     String // "Трудовой Договор"
-  nameEn   String // "Employment Contract"
-  govtCode String? // "ГОСТ Р 7.0.97-2016"
-  category String // "CONTRACT", "QUEST", "PETITION"
-
-  // Template content
-  template String @db.Text // Markdown with {{variables}}
-  fields   Json // Field definitions: {name, type, required}
-
-  // Requirements
-  minSignatures     Int        @default(2)
-  requiresWitnesses Int        @default(0)
-  scope             EventScope @default(INDIVIDUAL)
-
-  // Lifecycle
-  version   Int      @default(1)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-
-  // Relations
-  documents Document[]
-
-  @@index([type])
-  @@index([isActive])
-}
-
-// Document Instances
-model Document {
-  id String @id @default(uuid())
-
-  // Template reference
-  templateId String
-  template   DocumentTemplate @relation(fields: [templateId], references: [id])
-
-  // Status
-  status DocumentStatus @default(DRAFT)
-
-  // Parties
-  creatorId    String
-  creator      User     @relation("DocumentCreator", fields: [creatorId], references: [id])
-  recipientIds String[] // Multiple recipients possible
-  witnessIds   String[] // Witness user IDs
-
-  // Content
-  title    String
-  content  String @db.Text // Filled template (Markdown)
-  metadata Json // Parsed field values
-
-  // Signatures
-  signatures DocumentSignature[]
-
-  // Attachments
-  attachments String[] // File URLs/hashes
-
-  // Integration
-  timelineEventId String?        @unique
-  timelineEvent   TimelineEvent? @relation(fields: [timelineEventId], references: [id])
-
-  questId String? @unique
-  quest   Quest?
-
-  // Archive
-  archivedAt  DateTime?
-  archiveHash String? // IPFS CID or blockchain hash
-
-  // Lifecycle
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([creatorId])
-  @@index([status])
-  @@index([templateId])
-  @@index([createdAt])
-}
-
-// Digital Signatures
-model DocumentSignature {
-  id String @id @default(uuid())
-
-  documentId String
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-
-  signerId String
-  signer   User   @relation("DocumentSigner", fields: [signerId], references: [id])
-
-  role      SignatureRole
-  signature String // Cryptographic signature from wallet
-  signedAt  DateTime      @default(now())
-
-  // Audit trail
-  ipAddress String?
-  userAgent String?
-  location  String?
-
-  @@index([documentId])
-  @@index([signerId])
-  @@index([signedAt])
-}
+// NOTE: Old Document models removed - replaced by State Archive DocumentContract system
+// (See "STATE ARCHIVE & DOCUMENT SYSTEM" section above)
 
 // Quest/Task System (WoW-style)
 model Quest {
@@ -649,9 +838,9 @@ model Quest {
   giverFeedback String?
   takerFeedback String?
 
-  // Related documents
-  assignmentDocId String?   @unique
-  assignmentDoc   Document? @relation(fields: [assignmentDocId], references: [id])
+  // Optional integration with formal docs
+  assignmentDocId String? @unique
+  // assignmentDoc   Document? @relation(fields: [assignmentDocId], references: [id])  // REMOVED - old Document model
   completionDocId String?
 
   // Lifecycle timestamps
@@ -2206,16 +2395,7 @@ enum DocumentType {
   CUSTOM
 }
 
-enum DocumentStatus {
-  DRAFT
-  PENDING_SIGNATURES
-  PARTIALLY_SIGNED
-  FULLY_SIGNED
-  ACTIVE
-  COMPLETED
-  CANCELLED
-  ARCHIVED
-}
+// NOTE: Old DocumentStatus enum removed - see State Archive system DocumentStatus (line ~615)
 
 enum SignatureRole {
   CREATOR
