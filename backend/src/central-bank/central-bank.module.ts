@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
+import { VerificationModule } from '../verification/verification.module';
 import { CentralBankController } from './central-bank.controller';
 import { CentralBankService } from './central-bank.service';
 import { CentralBankAuthService } from './central-bank-auth.service';
@@ -18,12 +19,13 @@ import { CentralBankAuthGuard } from './central-bank-auth.guard';
  * 5. NOTHING is exported — complete isolation
  * 6. Compromise of bank or political layer does NOT compromise central bank
  *
- * Allowed imports: ConfigModule, PrismaModule (for CB tables only), JwtModule
+ * Allowed imports: ConfigModule, PrismaModule (for CB tables only), JwtModule, VerificationModule (for emission limits)
  */
 @Module({
   imports: [
     ConfigModule,
     PrismaModule,
+    VerificationModule, // For tiered verification emission limits
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
