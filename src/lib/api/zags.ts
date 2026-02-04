@@ -40,6 +40,12 @@ export interface Marriage {
   propertyRegime?: 'SEPARATE' | 'JOINT' | 'CUSTOM';
   propertyAgreement?: string;
   
+  // Consent tracking
+  spouse1ConsentGranted?: boolean;
+  spouse2ConsentGranted?: boolean;
+  spouse1ConsentedAt?: Date;
+  spouse2ConsentedAt?: Date;
+  
   // Status
   status: MarriageStatus;
   
@@ -224,13 +230,47 @@ export const publicCertificateLookup = async (
   return response;
 };
 
-// ============ Officer Functions (Admin) ============
+/**
+ * Get all marriages (Officer only)
+ */
+export const getAllMarriages = async (): Promise<Marriage[]> => {
+  const response = await api.get<Marriage[]>('/zags/officer/marriages');
+  return response;
+};
 
 /**
  * Get all pending marriages (Officer only)
  */
 export const getPendingMarriages = async (): Promise<Marriage[]> => {
   const response = await api.get<Marriage[]>('/zags/marriages/pending/all');
+  return response;
+};
+
+/**
+ * Approve marriage application (Officer only)
+ */
+export const approveMarriage = async (
+  marriageId: string,
+  certificateNumber: string
+): Promise<Marriage> => {
+  const response = await api.post<Marriage>(
+    `/zags/marriages/${marriageId}/approve`,
+    { certificateNumber }
+  );
+  return response;
+};
+
+/**
+ * Reject marriage application (Officer only)
+ */
+export const rejectMarriage = async (
+  marriageId: string,
+  notes: string
+): Promise<Marriage> => {
+  const response = await api.post<Marriage>(
+    `/zags/marriages/${marriageId}/reject`,
+    { notes }
+  );
   return response;
 };
 

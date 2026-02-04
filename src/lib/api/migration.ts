@@ -177,6 +177,16 @@ export const lookupPassport = async (
 // ============ Officer Functions (Admin) ============
 
 /**
+ * Get all passport applications (Officer only)
+ */
+export const getAllPassportApplications = async (): Promise<PassportApplication[]> => {
+  const response = await api.get<PassportApplication[]>(
+    '/migration-service/officer/applications'
+  );
+  return response;
+};
+
+/**
  * Get all pending passport applications (Officer only)
  */
 export const getPendingApplications = async (): Promise<PassportApplication[]> => {
@@ -191,12 +201,13 @@ export const getPendingApplications = async (): Promise<PassportApplication[]> =
  */
 export const reviewPassportApplication = async (
   applicationId: string,
-  decision: 'APPROVED' | 'REJECTED',
-  notes?: string
+  decision: 'APPROVE' | 'REJECT',
+  notes?: string,
+  passportNumber?: string
 ): Promise<PassportApplication> => {
   const response = await api.put<PassportApplication>(
     `/migration-service/applications/${applicationId}/review`,
-    { decision, notes }
+    { decision, notes, passportNumber }
   );
   return response;
 };

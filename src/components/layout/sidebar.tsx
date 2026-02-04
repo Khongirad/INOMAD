@@ -59,7 +59,15 @@ const NAV_ITEMS = [
     items: [
       { name: "Resolution", href: "/courts", icon: Scale },
     ],
-  }
+  },
+  {
+    category: "Government Services",
+    items: [
+      { name: "Migration", href: "/services/migration", icon: ScrollText },
+      { name: "ZAGS (Civil Registry)", href: "/services/zags", icon: Users },
+      { name: "Land Registry", href: "/services/land-registry", icon: Building2 },
+    ],
+  },
 ];
 
 export function Sidebar() {
