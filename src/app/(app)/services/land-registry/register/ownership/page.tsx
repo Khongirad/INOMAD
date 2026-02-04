@@ -47,7 +47,7 @@ export default function PropertyOwnershipRegistrationPage() {
   // Form data
   const [landPlotId, setLandPlotId] = useState('');
   const [ownershipType, setOwnershipType] = useState('FULL');
-  const [Share, setOwnershipShare] = useState('100');
+  const [ownershipShare, setOwnershipShare] = useState('100');
   const [acquisitionDate, setAcquisitionDate] = useState('');
   const [acquisitionMethod, setAcquisitionMethod] = useState('');
   const [purchasePrice, setPurchasePrice] = useState('');
