@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
-import { register, acceptConstitution } from '@/lib/api';
+import { register, acceptConstitution } from '@/lib/api/identity';
 import { toast } from 'sonner';
 
 const STEPS = {

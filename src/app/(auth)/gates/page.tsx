@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { login } from '@/lib/api';
+import { login } from '@/lib/api/identity';
 import { toast } from 'sonner';
 
 export default function GatesOfKhuralPage() {
@@ -71,11 +71,11 @@ export default function GatesOfKhuralPage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md px-6">
+      <div className="relative z-10 w-full max-w-2xl px-6">
         {/* Title */}
         <div className="text-center mb-12 animate-fadeIn">
-          <h1 className="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-gold-primary to-amber-600 drop-shadow-[0_0_30px_rgba(245,158,11,0.5)] font-serif tracking-wider">
-            ВРАТА ХУРАЛА
+          <h1 className="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-gold-primary to-amber-600 drop-shadow-[0_0_30px_rgba(245,158,11,0.5)] font-serif tracking-wide">
+            SIBERIAN CONFEDERATION
           </h1>
           <h2 className="text-2xl font-light text-amber-400/80 tracking-[0.3em] uppercase">
             Gates of Khural
