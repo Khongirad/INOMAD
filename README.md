@@ -5,6 +5,8 @@
 [![Stage](https://img.shields.io/badge/stage-production--ready-green)]()
 [![L1](https://img.shields.io/badge/ALTAN%20L1-integrated-blue)]()
 
+> **Latest Update (Feb 4, 2026):** ✅ 10 commits pushed | 🏪 Marketplace system added | 🏛️ 3 Government Services complete | 📊 Full architecture documented
+
 ---
 
 ## 🎯 Executive Summary
@@ -38,6 +40,10 @@
 ## 🚀 Quick Start
 
 ### For Investors & Stakeholders
+- **[📊 Project Status](PROJECT_STATUS.md)** - Current development phase, completed systems ⭐
+- **[🏗️ System Architecture](SYSTEM_ARCHITECTURE.md)** - Complete platform architecture with Marketplace ⭐
+- **[📝 February 2026 Changelog](CHANGELOG_FEB_2026.md)** - Latest features and changes ⭐
+- **[🔄 GitHub Sync Status](GITHUB_SYNC_SUMMARY.md)** - Latest synchronization summary
 - [Executive Summary](docs/README.md) - Project overview
 - [Technical Architecture](docs/architecture/altan_l1_enterprise_architecture.md) - System design
 - [**IP Proof of Authorship**](docs/blockchain/PROOF_OF_AUTHORSHIP.md) - Legal documentation (Critical)
@@ -51,7 +57,7 @@
 - [Testing Guide](docs/getting-started/INTEGRATION_TESTING_GUIDE.md) - QA procedures
 
 ### For New Team Members
-- [Project Status](docs/management/PROJECT_STATUS.md) - Current phase and priorities
+- [Project Status](PROJECT_STATUS.md) - Current phase and priorities
 - [Core Invariants](docs/architecture/CORE_INVARIANTS.md) - Critical system rules
 - [Arban System Guide](docs/architecture/ARBAN_SYSTEM_GUIDE.md) - Governance model
 - [Critical Priorities](docs/management/critical_priorities.md) - Focus areas
@@ -60,26 +66,21 @@
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   INOMAD KHURAL Platform                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Frontend (Next.js)                                         │
-│  └─ Citizen Portal, Governance UI, Banking Interface        │
-│                          ↓                                  │
-│  Backend (NestJS)                                           │
-│  └─ Authentication, Business Logic, API Layer               │
-│                          ↓                                  │
-│  ┌──────────────────┬──────────────────┬─────────────────┐ │
-│  │  PostgreSQL DB   │  Smart Contracts │  ALTAN L1       │ │
-│  │  Citizen Data    │  Governance      │  x/corelaw      │ │
-│  │  Banking Records │  Arban System    │  37 Articles    │ │
-│  └──────────────────┴──────────────────┴─────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
+![System Architecture](docs/architecture_with_market_1770189429526.png)
 
-See: [Enterprise Architecture](docs/architecture/altan_l1_enterprise_architecture.md)
+**Platform Layers:**
+1. **Client Layer** - Next.js 14 web app, mobile app (planned)
+2. **Application Layer** - 5 core systems:
+   - 🔐 Authentication & Identity (Web3Auth MPC, JWT, Citizen Registry)
+   - 🏛️ Government Services (Migration, ZAGS, Land Registry, State Archive)
+   - ⚔️ Guild Platform (Arban, Credit/Lending, Digital Seal, Education, Election)
+   - 🏪 **Marketplace & Economy** (Products, Orders, Escrow, Reputation) - NEW
+   - 🌙 Cultural Systems (Dual Calendar, Timeline, Temple of Heaven)
+3. **Service Layer** - NestJS API (67 services, 43 controllers), Blockchain Integration
+4. **Data Layer** - 6 PostgreSQL databases (privacy-isolated)
+5. **Blockchain Layer** - Smart Contracts on Base Sepolia
+
+📖 **See Complete Documentation**: [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md)
 
 ---
 
