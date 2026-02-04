@@ -37,6 +37,7 @@ import { MigrationServiceModule } from './migration-service/migration-service.mo
 import { ZagsServiceModule } from './zags-service/zags-service.module';
 import { LandRegistryServiceModule } from './land-registry-service/land-registry-service.module';
 import { DistributionModule } from './distribution/distribution.module';
+import { ArchiveModule } from './archive/archive.module';
 // import { LegislativeModule } from './legislative/legislative.module';
 // import { TaxModule } from './tax/tax.module';
 // import { MarketplaceModule } from './marketplace/marketplace.module';
@@ -83,6 +84,7 @@ import { AdminModule } from './admin/admin.module';
     ZagsServiceModule,      // Civil Registry Office (ZAGS)
     LandRegistryServiceModule, // Land and Property Registry
     DistributionModule,  // Initial ALTAN Distribution System
+    ArchiveModule,       // State Archive & Document Constructor System
     // LegislativeModule,  // Disabled - TS errors
     // TaxModule,  // Disabled - TS errors
     // MarketplaceModule,  // Disabled - TS errors
