@@ -4,11 +4,14 @@ import {
   Post,
   Body,
   Query,
+  Param,
   UseGuards,
   Req,
 } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CentralBankService } from './central-bank.service';
 import { CentralBankAuthService } from './central-bank-auth.service';
+import { CBWorkflowService } from './cb-workflow.service';
 import {
   CentralBankAuthGuard,
   CentralBankRoles,
@@ -28,8 +31,10 @@ import { UpdatePolicyDto } from './dto/policy.dto';
 @Controller('cb')
 export class CentralBankController {
   constructor(
+    private readonly prisma: PrismaService,
     private readonly cbService: CentralBankService,
     private readonly cbAuthService: CentralBankAuthService,
+    private readonly workflowService: CBWorkflowService,
   ) {}
 
   // ============================
@@ -205,5 +210,91 @@ export class CentralBankController {
       limit ? parseInt(limit) : 50,
     );
     return { ok: true, changes };
+  }
+
+  // ============================
+  // FORMAL CB WORKFLOWS (State Archive Integration)
+  // ============================
+
+  /**
+   * Issue banking license (formal workflow)
+   * Uses State Archive document system
+   */
+  @Post('workflow/issue-license')
+  @UseGuards(CentralBankAuthGuard)
+  @CentralBankRoles('GOVERNOR')
+  async issueBankingLicense(
+    @Body() body: {
+      name: string;
+      nameRu?: string;
+      legalAddress: string;
+      taxId: string;
+      directorId?: string;
+    },
+    @Req() req: CBAuthenticatedRequest,
+  ) {
+    const result = await this.workflowService.issueBankingLicense(
+      req.cbUser.officerId,
+      body,
+    );
+    return { ok: true, ...result };
+  }
+
+  /**
+   * Open correspondent account (formal workflow)
+   */
+  @Post('workflow/open-account')
+  @UseGuards(CentralBankAuthGuard)
+  @CentralBankRoles('GOVERNOR')
+  async openCorrespondentAccount(
+    @Body() body: { bankId: string; accountNumber: string },
+    @Req() req: CBAuthenticatedRequest,
+  ) {
+    const result = await this.workflowService.openCorrespondentAccount(
+      req.cbUser.officerId,
+      body.bankId,
+      body.accountNumber,
+    );
+    return { ok: true, ...result };
+  }
+
+  /**
+   * Execute ALTAN emission protocol (formal workflow)
+   */
+  @Post('workflow/emission-protocol')
+  @UseGuards(CentralBankAuthGuard)
+  @CentralBankRoles('GOVERNOR')
+  async executeEmission(
+    @Body() body: {
+      amount: string;
+      recipientBankId: string;
+      purpose: string;
+      legalBasis?: string;
+    },
+    @Req() req: CBAuthenticatedRequest,
+  ) {
+    const result = await this.workflowService.executeEmission(
+      req.cbUser.officerId,
+      body,
+    );
+    return { ok: true, ...result };
+  }
+
+  /**
+   * List all banks
+   */
+  @Get('banks')
+  async listBanks() {
+    // Note: Bank model not in Prisma yet due to migration issue
+    // Will return empty for now
+    return { ok: true, banks: [] };
+  }
+
+  /**
+   * Get bank details
+   */
+  @Get('banks/:id')
+  async getBank(@Param('id') id: string) {
+    return { ok: false, error: 'Bank model not available yet - migration pending' };
   }
 }
