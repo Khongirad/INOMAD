@@ -95,7 +95,7 @@ export class HistoryService {
 
     // Check if user has permission (admin or specialist role)
     // For now, admins can publish
-    if (![UserRole.ADMIN, UserRole.CREATOR].includes(reviewer.role)) {
+    if (!([UserRole.ADMIN, UserRole.CREATOR] as const).includes(reviewer.role as any)) {
       throw new ForbiddenException('Only admins can publish historical records');
     }
 
@@ -170,7 +170,7 @@ export class HistoryService {
     });
 
     // Can delete if: 1) author and unpublished, or 2) admin
-    const isAdmin = user && [UserRole.ADMIN, UserRole.CREATOR].includes(user.role);
+    const isAdmin = user && ([UserRole.ADMIN, UserRole.CREATOR] as const).includes(user.role as any);
     const isAuthorUnpublished = record.authorId === userId && !record.isPublished;
 
     if (!isAdmin && !isAuthorUnpublished) {

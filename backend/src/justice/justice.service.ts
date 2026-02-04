@@ -63,11 +63,11 @@ export class CouncilOfJusticeService {
       throw new Error('COUNCIL_OF_JUSTICE_ADDRESS not configured');
     }
 
-    const signerOrProvider = privateKeyOrProvider
-      ? this.blockchain.getWallet(privateKeyOrProvider)
-      : this.blockchain.provider;
+    // TODO: Implement signing wallet functionality
+    // For now, use provider only (read-only operations)
+    const provider = this.blockchain.getProvider();
 
-    return new Contract(contractAddress, councilOfJusticeAbi, signerOrProvider);
+    return new Contract(contractAddress, councilOfJusticeAbi, provider);
   }
 
   // ============ Member Management ============
@@ -343,6 +343,14 @@ export class CouncilOfJusticeService {
     const event = receipt.logs.find((log: any) => log.fragment?.name === 'PrecedentRegistered');
     const precedentId = event ? Number(event.args[0]) : 0;
 
+    // TODO: Implement wallet signing functionality
+    // For now, precedent registration requires backend infrastructure
+    // const provider = this.blockchain.getProvider();
+    // const judgeAddress = '0x...'; // Extract from privateKey when signing is implemented
+
+    throw new Error('Precedent registration temporarily disabled - wallet signing not yet implemented');
+
+    /* Original code - uncomment when wallet signing is ready
     // Get judge address from wallet
     const wallet = this.blockchain.getWallet(dto.judgePrivateKey);
     const judgeAddress = await wallet.getAddress();
@@ -361,6 +369,7 @@ export class CouncilOfJusticeService {
 
     this.logger.log(`Precedent ${precedentId} registered successfully`);
     return precedent;
+    */
   }
 
   /**

@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
-// import { CouncilOfJusticeService, NominateMemberDto, ApproveMemberDto, FileCaseDto, AssignCaseDto, RuleOnCaseDto, RegisterPrecedentDto } from './justice.service';
+import { CouncilOfJusticeService, NominateMemberDto, ApproveMemberDto, FileCaseDto, AssignCaseDto, RuleOnCaseDto, RegisterPrecedentDto } from './justice.service';
 
 @Controller('justice')
 export class JusticeController {

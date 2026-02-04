@@ -24,7 +24,7 @@ import { MPCWalletModule } from './mpc-wallet/mpc-wallet.module';
 import { WalletProtectionModule } from './wallet-protection/wallet-protection.module';
 import { VerificationModule } from './verification/verification.module';
 import { TimelineModule } from './timeline/timeline.module';
-// import { HistoryModule } from './history/history.module';
+import { HistoryModule } from './history/history.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { ReputationModule } from './reputation/reputation.module';
 import { DocumentModule } from './documents/document.module';
@@ -60,13 +60,13 @@ import { AdminModule } from './admin/admin.module';
     ArbanModule,
     DigitalSealModule,
     AcademyModule,
-    // JusticeModule,  // Temporarily disabled - TS compilation errors
+    JusticeModule,
     // TempleModule,  // Disabled - TS errors
     MPCWalletModule,
     WalletProtectionModule,
-    // VerificationModule,  // Temporarily disabled - TS compilation errors
+    VerificationModule,
     TimelineModule,
-    // HistoryModule,  // Temporarily disabled - TS compilation errors
+    HistoryModule,
     CalendarModule,
     ReputationModule,  // Reputation & Trust system
     DocumentModule,    // Document management & signing

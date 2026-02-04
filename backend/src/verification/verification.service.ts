@@ -56,7 +56,7 @@ export class VerificationService {
     }
 
     // Check if verifier has permission
-    const isAdmin = [UserRole.ADMIN, UserRole.CREATOR].includes(verifier.role);
+    const isAdmin = ([UserRole.ADMIN, UserRole.CREATOR] as const).includes(verifier.role as any);
     
     if (!isAdmin &&!verifier.isVerified) {
       throw new ForbiddenException('You must be verified to verify others');
@@ -283,7 +283,7 @@ export class VerificationService {
       throw new NotFoundException('User not found');
     }
 
-    const isAdmin = [UserRole.ADMIN, UserRole.CREATOR].includes(user.role);
+    const isAdmin = ([UserRole.ADMIN, UserRole.CREATOR] as const).includes(user.role as any);
 
     return {
       verificationCount: user.verificationCount,
@@ -302,7 +302,7 @@ export class VerificationService {
       where: { id: revokedBy },
     });
 
-    if (!admin || ![UserRole.ADMIN, UserRole.CREATOR].includes(admin.role)) {
+    if (!admin || !([UserRole.ADMIN, UserRole.CREATOR] as const).includes(admin.role as any)) {
       throw new ForbiddenException('Only admins can revoke verifications');
     }
 
