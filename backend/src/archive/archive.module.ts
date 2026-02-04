@@ -4,6 +4,7 @@ import { DocumentTemplateService } from './document-template.service';
 import { DocumentContractService } from './document-contract.service';
 import { NotaryService } from './notary.service';
 import { LegalService } from './legal.service';
+import { TemplateSeederService } from './template-seeder.service';
 import { ArchiveController } from './archive.controller';
 
 /**
@@ -25,6 +26,7 @@ import { ArchiveController } from './archive.controller';
     DocumentContractService,
     NotaryService,
     LegalService,
+    TemplateSeederService,
   ],
   controllers: [ArchiveController],
   exports: [
@@ -32,6 +34,7 @@ import { ArchiveController } from './archive.controller';
     DocumentContractService,
     NotaryService,
     LegalService,
+    TemplateSeederService,
   ],
 })
 export class ArchiveModule {}

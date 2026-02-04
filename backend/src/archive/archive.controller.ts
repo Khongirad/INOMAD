@@ -14,6 +14,7 @@ import { DocumentTemplateService } from './document-template.service';
 import { DocumentContractService } from './document-contract.service';
 import { NotaryService } from './notary.service';
 import { LegalService } from './legal.service';
+import { TemplateSeederService } from './template-seeder.service';
 import { DocumentStage, DocumentStatus, SignerRole } from '@prisma/client';
 
 /**
@@ -30,11 +31,26 @@ export class ArchiveController {
     private documentService: DocumentContractService,
     private notaryService: NotaryService,
     private legalService: LegalService,
+    private seederService: TemplateSeederService,
   ) {}
 
   // ==================
   // TEMPLATE ENDPOINTS
   // ==================
+
+  /**
+   * Seed initial document templates
+   * @access CREATOR only
+   */
+  @Post('templates/seed')
+  @UseGuards(JwtAuthGuard)
+  async seedTemplates(@Request() req) {
+    await this.seederService.seedTemplates(req.user.userId);
+    return {
+      message: 'Templates seeded successfully',
+      templates: await this.templateService.listTemplates(),
+    };
+  }
 
   /**
    * Create a new document template
