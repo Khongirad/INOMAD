@@ -91,7 +91,7 @@ export default function LandRegistryPage() {
         <Grid item xs={12} md={3}>
           <Card 
             sx={{ cursor: isCitizen ? 'pointer' : 'not-allowed', opacity: isCitizen ? 1 : 0.6, '&:hover': isCitizen ? { boxShadow: 3 } : {} }}
-            onClick={() => isCitizen && router.push('/services/land-registry/register/land-plot')}
+            onClick={() => isCitizen && router.push('/services/land-registry/register/land')}
           >
             <CardContent sx={{ textAlign: 'center' }}>
               <LocationIcon sx={{ fontSize: 48, color: 'success.main', mb: 1 }} />
