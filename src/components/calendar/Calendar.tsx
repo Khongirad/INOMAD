@@ -8,6 +8,8 @@ import {
   getLunarEventsForMonth 
 } from '@/lib/lunar-calendar';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { getCalendarEvents } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface CalendarEvent {
   id: string;
@@ -44,21 +46,12 @@ export function Calendar() {
       const startDate = new Date(year, month, 1);
       const endDate = new Date(year, month + 1, 0);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/calendar/events?start=${startDate.toISOString()}&end=${endDate.toISOString()}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        setEvents(data);
-      }
+      const data = await getCalendarEvents(startDate.toISOString(), endDate.toISOString());
+      setEvents(data);
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch events';
       console.error('Failed to fetch events:', err);
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setLoading(false);
     }
