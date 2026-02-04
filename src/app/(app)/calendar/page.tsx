@@ -6,6 +6,8 @@ import { NoteForm } from '@/components/calendar/NoteForm';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useState, useEffect } from 'react';
 import { formatDualDate } from '@/lib/lunar-calendar';
+import { getUpcomingEvents, createCalendarEvent, createCalendarNote } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface UpcomingEvent {
   id: string;
@@ -30,61 +32,37 @@ export default function CalendarPage() {
 
   const fetchUpcomingEvents = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calendar/upcoming?days=7`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setUpcomingEvents(data);
-      }
-    } catch (err) {
+      const data = await getUpcomingEvents(7);
+      setUpcomingEvents(data);
+    } catch (err: any) {
+      const errorMsg = err.message || 'Failed to fetch upcoming events';
       console.error('Failed to fetch upcoming events:', err);
+      toast.error(errorMsg);
     }
   };
 
   const handleCreateEvent = async (data: any) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calendar/events`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) throw new Error('Failed to create event');
-
-      alert('✅ Event created successfully!');
+      await createCalendarEvent(data);
+      toast.success('✅ Event created successfully!');
       setShowEventForm(false);
       setRefreshKey(k => k + 1);
       fetchUpcomingEvents();
-    } catch (err) {
-      alert(`❌ ${err instanceof Error ? err.message : 'Failed to create event'}`);
+    } catch (err: any) {
+      const errorMsg = err.message || 'Failed to create event';
+      toast.error(`❌ ${errorMsg}`);
     }
   };
 
   const handleCreateNote = async (data: any) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/calendar/notes`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) throw new Error('Failed to create note');
-
-      alert('✅ Note created successfully!');
+      await createCalendarNote(data);
+      toast.success('✅ Note created successfully!');
       setShowNoteForm(false);
       setRefreshKey(k => k + 1);
-    } catch (err) {
-      alert(`❌ ${err instanceof Error ? err.message : 'Failed to create note'}`);
+    } catch (err: any) {
+      const errorMsg = err.message || 'Failed to create note';
+      toast.error(`❌ ${errorMsg}`);
     }
   };
 

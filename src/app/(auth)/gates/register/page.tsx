@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
+import { register, acceptConstitution } from '@/lib/api';
+import { toast } from 'sonner';
 
 const STEPS = {
   ACCOUNT: 1,
@@ -84,47 +86,19 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      // Step 1: Register account
-      const registerResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, email: email || undefined }),
-      });
-
-      if (!registerResponse.ok) {
-        const data = await registerResponse.json();
-        throw new Error(data.message || 'Registration failed');
-      }
-
-      const registerData = await registerResponse.json();
-
-      // Store tokens
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', registerData.accessToken);
-        localStorage.setItem('refresh_token', registerData.refreshToken);
-      }
-
-      // Step 2: Accept TOS
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/accept-tos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${registerData.accessToken}`,
-        },
-      });
+      // Step 1 & 2: Register account (TOS acceptance handled internally)
+      await register({ username, password, familyName: username });
+     toast.success('✅ Account registered successfully!');
 
       // Step 3: Accept Constitution (grants legal subject status!)
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/accept-constitution`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${registerData.accessToken}`,
-        },
-      });
+      await acceptConstitution();
+      toast.success('✅ Constitution accepted! You are now a legal subject!');
 
       setCurrentStep(STEPS.COMPLETE);
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      const errorMsg = err.message || 'Registration failed';
+      setError(errorMsg);
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setLoading(false);
     }

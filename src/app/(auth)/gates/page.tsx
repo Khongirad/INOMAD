@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { login } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function GatesOfKhuralPage() {
   const router = useRouter();
@@ -17,23 +19,8 @@ export default function GatesOfKhuralPage() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/login-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      // Store tokens
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', data.accessToken);
-        localStorage.setItem('refresh_token', data.refreshToken);
-      }
+      const data = await login({ username, password });
+      toast.success('✅ Successfully entered the Khural!');
 
       // Redirect based on role
       if (data.user.role === 'CREATOR') {
@@ -44,7 +31,9 @@ export default function GatesOfKhuralPage() {
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to enter the Khural');
+      const errorMsg = err.message || 'Failed to enter the Khural';
+      setError(errorMsg);
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setLoading(false);
     }

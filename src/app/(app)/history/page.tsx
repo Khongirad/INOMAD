@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { HistoricalRecordForm } from '@/components/history/HistoricalRecordForm';
 import { useRouter } from 'next/navigation';
+import { getUserNarratives, createHistoricalRecord } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface HistoricalRecord {
   id: string;
@@ -34,21 +36,12 @@ export default function HistoryPage() {
   const fetchMyRecords = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/history/narratives/${user?.sub}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!res.ok) throw new Error('Failed to fetch records');
-
-      const data = await res.json();
+      const data = await getUserNarratives();
       setMyRecords(data);
-    } catch (err) {
+    } catch (err: any) {
+      const errorMsg = err.message || 'Failed to fetch records';
       console.error('Failed to fetch records:', err);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -56,22 +49,13 @@ export default function HistoryPage() {
 
   const handleCreateRecord = async (data: any) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/history/record`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) throw new Error('Failed to create record');
-
-      alert('✅ Historical record created successfully!');
+      await createHistoricalRecord(data);
+      toast.success('✅ Historical record created successfully!');
       setShowForm(false);
       fetchMyRecords();
-    } catch (err) {
-      alert(`❌ ${err instanceof Error ? err.message : 'Failed to create record'}`);
+    } catch (err: any) {
+      const errorMsg = err.message || 'Failed to create record';
+      toast.error(`❌ ${errorMsg}`);
     }
   };
 

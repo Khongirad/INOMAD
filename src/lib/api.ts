@@ -72,4 +72,33 @@ export const api = {
 
     return res.json();
   },
+
+  put: async <T>(endpoint: string, body?: any): Promise<T> => {
+    const res = await fetch(`${API_BASE_URL}${normalizePath(endpoint)}`, {
+      method: "PUT",
+      headers: api.getHeaders(),
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || `API Error: ${res.status}`);
+    }
+
+    return res.json();
+  },
+
+  delete: async <T>(endpoint: string): Promise<T> => {
+    const res = await fetch(`${API_BASE_URL}${normalizePath(endpoint)}`, {
+      method: "DELETE",
+      headers: api.getHeaders(),
+    });
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || `API Error: ${res.status}`);
+    }
+
+    return res.json();
+  },
 };
