@@ -231,7 +231,7 @@ See [PROOF_OF_AUTHORSHIP.md](docs/blockchain/PROOF_OF_AUTHORSHIP.md) for:
 ### Setup
 ```bash
 # Clone repository
-git clone https://github.com/Khongirad/Buryad-Mongol.git
+git clone https://github.com/Khongirad/INOMAD.git
 cd Buryad-Mongol
 
 # Install dependencies
@@ -287,7 +287,7 @@ See: [Integration Testing Guide](docs/getting-started/INTEGRATION_TESTING_GUIDE.
 
 - **Website**: [altan.life](https://altan.life) _(coming soon)_
 - **Documentation**: [docs/](docs/)
-- **GitHub**: [Khongirad/Buryad-Mongol](https://github.com/Khongirad/Buryad-Mongol)
+- **GitHub**: [Khongirad/INOMAD](https://github.com/Khongirad/INOMAD)
 - **License**: Proprietary - All rights reserved
 - **Contact**: dev@inomad.life
 - **Legal**: legal@inomad.life

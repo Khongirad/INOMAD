@@ -43,7 +43,16 @@ model User {
   verificationsGiven    UserVerification[] @relation("Verifier")
   verificationCount     Int                @default(0)
   maxVerifications      Int                @default(5)
-
+  
+  // Tiered Verification System (NEW)
+  verificationLevel      VerificationLevel            @default(UNVERIFIED)
+  verificationLevelSetAt DateTime?
+  verificationLevelSetBy String? // Admin userId who set the level
+  totalEmitted           Decimal                      @default(0) @db.Decimal(18, 2)
+  arbanVerifiedAt        DateTime?
+  zunVerifiedAt          DateTime?
+  fullyVerifiedAt        DateTime?
+  
   // Timeline
   eventsAsActor  TimelineEvent[] @relation("EventActor")
   eventsAsTarget TimelineEvent[] @relation("EventTarget")
@@ -117,6 +126,12 @@ model User {
   // Calendar
   calendarEvents CalendarEvent[]
   calendarNotes  CalendarNote[]
+  
+  // Tiered Verification Relations
+  verificationRequests         VerificationRequest[] @relation("Requester")
+  verificationRequestsReviewed VerificationRequest[] @relation("Reviewer")
+  arbanVerificationsGiven      ArbanMutualVerification[] @relation("ArbanVerifier")
+  arbanVerificationsReceived   ArbanMutualVerification[] @relation("ArbanVerified")
 
   @@index([seatId])
   @@index([organizationId])
@@ -206,6 +221,61 @@ model UserVerification {
   @@index([verifierId])
   @@index([verifiedUserId])
   @@index([createdAt])
+}
+
+// Verification Request for Zun/Full upgrades
+model VerificationRequest {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Requester
+  requesterId String
+  requester   User   @relation("Requester", fields: [requesterId], references: [id])
+
+  // Request details
+  requestedLevel      VerificationLevel
+  justification       String            @db.Text
+  supportingDocuments Json? // Array of document URLs/references
+
+  // Status
+  status        String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedById  String?
+  reviewedBy    User?     @relation("Reviewer", fields: [reviewedById], references: [id])
+  reviewNotes   String?   @db.Text
+  reviewedAt    DateTime?
+
+  @@index([requesterId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Arban Mutual Verification (each member verifies others)
+model ArbanMutualVerification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Arban context
+  arbanId String
+  arban   Guild  @relation("ArbanVerifications", fields: [arbanId], references: [id])
+
+  // Verifier (member doing the verification)
+  verifierId String
+  verifier   User   @relation("ArbanVerifier", fields: [verifierId], references: [id])
+
+  // Verified (member being verified)
+  verifiedId String
+  verified   User   @relation("ArbanVerified", fields: [verifiedId], references: [id])
+
+  // Verification details
+  isVerified Boolean @default(true)
+  notes      String? @db.Text
+  verifiedAt DateTime @default(now())
+
+  @@unique([arbanId, verifierId, verifiedId])
+  @@index([arbanId])
+  @@index([verifierId])
+  @@index([verifiedId])
 }
 
 // Timeline Event System
@@ -607,6 +677,7 @@ model Guild {
   members             GuildMember[]
   tasks               Task[]
   organizationMembers User[]        @relation("OrganizationMembers")
+  arbanVerifications  ArbanMutualVerification[] @relation("ArbanVerifications")
 
   @@index([type])
   @@index([professionId])
@@ -1055,6 +1126,14 @@ enum VerificationStatus {
   VERIFIED
   REJECTED
 }
+
+enum VerificationLevel {
+  UNVERIFIED       // Default: new users, 100 ALTAN limit
+  ARBAN_VERIFIED   // Arban member with mutual verification, 1000 ALTAN shared
+  ZUN_VERIFIED     // Admin approved, 10,000 ALTAN limit
+  FULLY_VERIFIED   // Citizen status, unlimited, can own land
+}
+
 
 enum KhuralLevel {
   ARBAN

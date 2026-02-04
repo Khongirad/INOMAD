@@ -122,7 +122,7 @@ This is proprietary software. Unauthorized copying, distribution, or use is stri
 ## Links
 
 - **Documentation**: https://github.com/Khongirad/altan-documentation
-- **Main Project**: https://github.com/Khongirad/Buryad-Mongol
+- **Main Project**: https://github.com/Khongirad/INOMAD
 - **Author**: INOMAD INC (dev@inomad.life)
 
 ## Contact
