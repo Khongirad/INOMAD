@@ -37,7 +37,7 @@ import CivilStatusBadge from '@/components/zags/CivilStatusBadge';
 export default function ZAGSPage() {
   const router = useRouter();
   const [marriages, setMarriages] = useState<Marriage[]>([]);
-  const [pendingConsents, setPendingConsent] = useState<MarriageConsent[]>([]);
+  const [pendingConsents, setPendingConsents] = useState<MarriageConsent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -235,7 +235,7 @@ export default function ZAGSPage() {
                             <Button
                               size="small"
                               variant="outlined"
-                              onClick={() => router.push(`/services/zags/certificates?cert=${marriage.certificateNumber}`)}
+                              onClick={() => router.push(`/services/zags/certificate/${marriage.id}`)}
                             >
                               View Certificate
                             </Button>
