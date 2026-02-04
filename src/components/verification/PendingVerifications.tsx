@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { getPendingUsers, verifyUser } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface PendingUser {
   id: string;
@@ -38,18 +40,12 @@ export function PendingVerifications() {
   const fetchPendingUsers = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/verification/pending`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) throw new Error('Failed to fetch pending users');
-
-      const data = await res.json();
+      const data = await getPendingUsers();
       setPendingUsers(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMsg);
+      toast.error(`❌ Failed to fetch pending users: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -60,34 +56,20 @@ export function PendingVerifications() {
       setVerifying(userId);
       setError(null);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/verification/verify/${userId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          notes,
-          location: 'Web Dashboard',
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Verification failed');
-      }
-
-      const result: VerificationResult = await res.json();
+      const result = await verifyUser(userId, notes, 'Web Dashboard');
 
       // Remove verified user from pending list
       setPendingUsers(prev => prev.filter(u => u.id !== userId));
 
       // Show success message
-      alert(`✅ User verified! Chain level: ${result.chainLevel}. Remaining quota: ${result.remainingQuota === -1 ? '∞' : result.remainingQuota}`);
+      toast.success(
+        `✅ User verified! Chain level: ${result.chainLevel}. Remaining quota: ${result.remainingQuota === -1 ? '∞' : result.remainingQuota}`
+      );
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Verification failed');
-      alert(`❌ ${err instanceof Error ? err.message : 'Verification failed'}`);
+      const errorMsg = err instanceof Error ? err.message : 'Verification failed';
+      setError(errorMsg);
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setVerifying(null);
     }

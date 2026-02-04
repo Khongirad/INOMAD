@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { getMyVerifierStats } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface VerificationStats {
   verificationCount: number;
@@ -32,18 +34,12 @@ export function VerificationStats() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/verification/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) throw new Error('Failed to fetch stats');
-
-      const data = await res.json();
+      const data = await getMyVerifierStats();
       setStats(data);
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch stats';
       console.error('Failed to fetch verification stats:', err);
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setLoading(false);
     }

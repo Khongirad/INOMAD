@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { getVerificationChain } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface ChainNode {
   username: string;
@@ -29,18 +31,12 @@ export function VerificationChain({ userId, username }: VerificationChainProps) 
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/verification/chain/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) throw new Error('Failed to fetch verification chain');
-
-      const data = await res.json();
+      const data = await getVerificationChain(userId);
       setChain(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load chain');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load chain';
+      setError(errorMsg);
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { getUserTimeline } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface TimelineEvent {
   id: string;
@@ -69,21 +71,12 @@ export function UserTimeline({ userId }: UserTimelineProps) {
   const fetchTimeline = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/timeline/user/${targetUserId}?limit=50`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!res.ok) throw new Error('Failed to fetch timeline');
-
-      const data = await res.json();
+      const data = await getUserTimeline(targetUserId!, { limit: 50 });
       setEvents(data);
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch timeline';
       console.error('Failed to fetch timeline:', err);
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setLoading(false);
     }
