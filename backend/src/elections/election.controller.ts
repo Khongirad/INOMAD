@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ElectionService } from './election.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('elections')
 @UseGuards(JwtAuthGuard)
@@ -67,8 +68,8 @@ export class ElectionController {
    * Complete election (admin/auto)
    */
   @Post(':id/complete')
+  @UseGuards(AdminGuard)
   async completeElection(@Request() req, @Param('id') electionId: string) {
-    // TODO: Add admin check
     return this.electionService.completeElection(electionId, req.user.id);
   }
 
@@ -76,8 +77,8 @@ export class ElectionController {
    * Cancel election (admin)
    */
   @Post(':id/cancel')
+  @UseGuards(AdminGuard)
   async cancelElection(@Request() req, @Param('id') electionId: string) {
-    // TODO: Add admin check
     return this.electionService.cancelElection(electionId, req.user.id);
   }
 
@@ -117,8 +118,8 @@ export class ElectionController {
    * Cron: activate upcoming elections
    */
   @Post('cron/activate')
+  @UseGuards(AdminGuard)
   async activateElections() {
-    // TODO: Add admin/system check
     const count = await this.electionService.activateUpcomingElections();
     return { activated: count };
   }
@@ -127,8 +128,8 @@ export class ElectionController {
    * Cron: auto-complete elections
    */
   @Post('cron/complete')
+  @UseGuards(AdminGuard)
   async autoCompleteElections() {
-    // TODO: Add admin/system check
     const count = await this.electionService.autoCompleteElections();
     return { completed: count };
   }

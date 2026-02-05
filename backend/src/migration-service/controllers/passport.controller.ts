@@ -16,6 +16,8 @@ import { PassportApplicationService } from '../services/passport-application.ser
 import { DocumentStorageService } from '../services/document-storage.service';
 import { WarrantService } from '../services/warrant.service';
 import { AccessControlService } from '../services/access-control.service';
+import { AdminGuard } from '../../auth/guards/admin.guard';
+import { MigrationOfficerGuard } from '../guards/migration-officer.guard';
 import { AccessRole, DocumentType } from '@prisma/client-migration';
 
 @Controller('api/migration-service')
@@ -118,8 +120,8 @@ export class PassportController {
    * Get pending applications (migration officer only)
    */
   @Get('applications')
+  @UseGuards(MigrationOfficerGuard)
   async getPendingApplications() {
-    // TODO: Add role check for migration officer
     return this.passportService.getPendingApplications();
   }
 
@@ -127,12 +129,12 @@ export class PassportController {
    * Review application (migration officer only)
    */
   @Put('applications/:id/review')
+  @UseGuards(MigrationOfficerGuard)
   async reviewApplication(
     @Param('id') id: string,
     @Body() data: { decision: 'approve' | 'reject'; rejectionReason?: string },
     @Request() req: any,
   ) {
-    // TODO: Add role check for migration officer
     return this.passportService.reviewApplication(
       id,
       req.user.id,
@@ -173,8 +175,8 @@ export class PassportController {
    * Get pending warrants (admin only)
    */
   @Get('warrants/pending')
+  @UseGuards(AdminGuard)
   async getPendingWarrants() {
-    // TODO: Add admin role check
     return this.warrantService.getPendingWarrants();
   }
 
@@ -182,12 +184,12 @@ export class PassportController {
    * Approve warrant (admin only)
    */
   @Put('warrants/:id/approve')
+  @UseGuards(AdminGuard)
   async approveWarrant(
     @Param('id') id: string,
     @Body('validityDays') validityDays: number,
     @Request() req: any,
   ) {
-    // TODO: Add admin role check
     return this.warrantService.approveWarrant(id, req.user.id, validityDays);
   }
 
@@ -195,8 +197,8 @@ export class PassportController {
    * Reject warrant (admin only)
    */
   @Put('warrants/:id/reject')
+  @UseGuards(AdminGuard)
   async rejectWarrant(@Param('id') id: string, @Request() req: any) {
-    // TODO: Add admin role check
     return this.warrantService.rejectWarrant(id, req.user.id);
   }
 }

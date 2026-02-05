@@ -3,6 +3,22 @@ import { PrismaClient } from '@prisma/client-land';
 
 @Injectable()
 export class CadastralMapService {
+  // Region code mapping (Siberian Confederation regions)
+  private readonly REGION_CODES: Record<string, string> = {
+    'Yakutia': 'YK',
+    'Buryatia': 'BR',
+    'Tuva': 'TV',
+    'Altai': 'AL',
+    'Khakassia': 'KH',
+    'Krasnoyarsk': 'KR',
+    'Irkutsk': 'IR',
+    'Transbaikal': 'TB',
+    'Amur': 'AM',
+  };
+
+  // District code generation: First letter of each word
+  private readonly DISTRICT_CODES: Map<string, string> = new Map();
+
   constructor(
     @Inject('LAND_PRISMA') private prisma: PrismaClient,
   ) {}
@@ -132,8 +148,13 @@ export class CadastralMapService {
    * Get region code (2 characters)
    */
   private getRegionCode(region: string): string {
-    // TODO: Map region names to codes
-    // For now, use first 2 chars uppercase
+    // Look up in predefined mapping
+    const code = this.REGION_CODES[region];
+    if (code) {
+      return code;
+    }
+    
+    // Fallback: use first 2 chars uppercase
     return region.substring(0, 2).toUpperCase();
   }
 
@@ -141,8 +162,29 @@ export class CadastralMapService {
    * Get district code (2 characters)
    */
   private getDistrictCode(district: string): string {
-    // TODO: Map district names to codes
-    return district.substring(0, 2).toUpperCase();
+    // Check cache first
+    if (this.DISTRICT_CODES.has(district)) {
+      return this.DISTRICT_CODES.get(district)!;
+    }
+    
+    // Generate code from district name: first letter of each word
+    const words = district.split(' ');
+    let code = '';
+    
+    if (words.length === 1) {
+      // Single word: take first 2 chars
+      code = district.substring(0, 2).toUpperCase();
+    } else {
+      // Multiple words: take first letter of each
+      code = words
+        .slice(0, 2)
+        .map(word => word[0]?.toUpperCase() || '')
+        .join('');
+    }
+    
+    // Cache for future use
+    this.DISTRICT_CODES.set(district, code);
+    return code;
   }
 
   /**

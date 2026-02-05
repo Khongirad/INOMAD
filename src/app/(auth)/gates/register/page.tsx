@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { register, acceptConstitution } from '@/lib/api/identity';
 import { toast } from 'sonner';
@@ -149,6 +150,17 @@ export default function RegisterPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
+          {/* Tengri Flag */}
+          <div className="mb-6 flex justify-center">
+            <Image
+              src="/images/tengri-flag.png"
+              alt="Tengri Flag"
+              width={150}
+              height={150}
+              className="drop-shadow-[0_0_30px_rgba(254,252,232,0.4)]"
+            />
+          </div>
+          
           <h1 className="text-4xl font-bold text-gold-primary mb-2">
             РЕГИСТРАЦИЯ / REGISTRATION
           </h1>

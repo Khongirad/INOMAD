@@ -1,17 +1,20 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client-zags';
+import { BlockchainService } from '../../blockchain/blockchain.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class CertificateService {
   constructor(
-    @Inject('ZAGS_PRISMA') private prisma: PrismaClient,
+    @Inject('ZAGS_PRISMA') private zagsPrisma: PrismaClient,
+    private blockchainService: BlockchainService,
   ) {}
 
   /**
    * Generate marriage certificate (PDF, blockchain-backed)
    */
   async generateMarriageCertificate(certificateNumber: string) {
-    const marriage = await this.prisma.marriage.findUnique({
+    const marriage = await this.zagsPrisma.marriage.findUnique({
       where: { certificateNumber },
     });
 
@@ -23,8 +26,22 @@ export class CertificateService {
       throw new Error('Marriage must be registered to generate certificate');
     }
 
-    // TODO: Generate PDF certificate
-    // TODO: Store hash on blockchain for verification
+    // Generate certificate metadata hash for blockchain anchoring
+    const certificateData = {
+      certificateNumber: marriage.certificateNumber,
+      spouse1: marriage.spouse1FullName,
+      spouse2: marriage.spouse2FullName,
+     marriageDate: marriage.marriageDate?.toISOString(),
+      registeredAt: marriage.registeredAt?.toISOString(),
+    };
+    
+    const certDataString = JSON.stringify(certificateData);
+    const certHash = crypto.createHash('sha256').update(certDataString).digest('hex');
+    
+    // For MVP: Log the blockchain anchoring intent
+    // In production: Store hash on actual blockchain
+    const blockchainHash = `0x${certHash}`;
+    // await this.blockchainService.anchorCertificate(blockchainHash);
     
     return {
       certificateNumber: marriage.certificateNumber,
@@ -32,8 +49,8 @@ export class CertificateService {
       spouse2: marriage.spouse2FullName,
       marriageDate: marriage.marriageDate,
       registeredAt: marriage.registeredAt,
-      // pdfUrl: 'https://...',
-      // blockchainHash: '0x...',
+      blockchainHash, // Certificate hash for verification
+      // pdfUrl: 'https://...',  // TODO: Generate PDF certificate in Sprint 3
     };
   }
 
@@ -41,7 +58,7 @@ export class CertificateService {
    * Verify certificate authenticity
    */
   async verifyCertificate(certificateNumber: string) {
-    const marriage = await this.prisma.marriage.findUnique({
+    const marriage = await this.zagsPrisma.marriage.findUnique({
       where: { certificateNumber },
     });
 
@@ -72,7 +89,7 @@ export class CertificateService {
    */
   async getPublicRegistry(certificateNumber: string) {
     // This is public info only - no names or private details
-    const marriage = await this.prisma.marriage.findUnique({
+    const marriage = await this.zagsPrisma.marriage.findUnique({
       where: { certificateNumber },
       select: {
         certificateNumber: true,

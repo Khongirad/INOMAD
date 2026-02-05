@@ -1,10 +1,12 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client-zags';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class EligibilityService {
   constructor(
-    @Inject('ZAGS_PRISMA') private prisma: PrismaClient,
+    @Inject('ZAGS_PRISMA') private zagsPrisma: PrismaClient,
+    private mainPrisma: PrismaService, // Main DB for user DOB lookup
   ) {}
 
   /**
@@ -15,7 +17,7 @@ export class EligibilityService {
     reason?: string;
   }> {
     // Check if already married
-    const existingMarriage = await this.prisma.marriage.findFirst({
+    const existingMarriage = await this.zagsPrisma.marriage.findFirst({
       where: {
         OR: [
           { spouse1Id: userId },
@@ -33,7 +35,7 @@ export class EligibilityService {
     }
 
     // Check if pending marriage application
-    const pendingMarriage = await this.prisma.marriage.findFirst({
+    const pendingMarriage = await this.zagsPrisma.marriage.findFirst({
       where: {
         OR: [
           { spouse1Id: userId },
@@ -52,17 +54,39 @@ export class EligibilityService {
       };
     }
 
-    // TODO: Check age requirement (integrate with main DB)
-    // const user = await mainPrisma.user.findUnique({ where: { id: userId } });
-    // const age = calculateAge(user.dateOfBirth);
-    // if (age < 18) {
-    //   return {
-    //     isEligible: false,
-    //     reason: 'Must be at least 18 years old to marry.',
-    //   };
-    // }
+    // Check age requirement (integrated with main DB)
+    const user = await this.mainPrisma.user.findUnique({
+      where: { id: userId },
+      select: { dateOfBirth: true },
+    });
+    
+    if (user?.dateOfBirth) {
+      const age = this.calculateAge(user.dateOfBirth);
+      if (age < 18) {
+        return {
+          isEligible: false,
+          reason: 'Must be at least 18 years old to marry.',
+        };
+      }
+    }
 
     return { isEligible: true };
+  }
+
+  /**
+   * Calculate age from date of birth
+   */
+  private calculateAge(dateOfBirth: Date): number {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
   }
 
   /**

@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from './notification.service';
 import { 
   RecoveryMethod, 
   GuardianType, 
@@ -21,7 +22,10 @@ export class RecoveryService {
   // Recovery session timeout
   private readonly SESSION_TIMEOUT_HOURS = 24;
   
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   /**
    * Add a recovery guardian
@@ -234,8 +238,64 @@ export class RecoveryService {
       data: { status: MPCWalletStatus.RECOVERY_MODE }
     });
     
-    // TODO: Send verification code via email/SMS
-    // TODO: Notify guardians for social recovery
+    // Send verification code or notify guardians
+    if (method === RecoveryMethod.EMAIL && verificationCode) {
+      // Get user email from wallet
+      const user = await this.prisma.user.findUnique({
+        where: { id: wallet.userId },
+        select: { email: true }
+      });
+      
+      if (user?.email) {
+        await this.notificationService.sendVerificationEmail(
+          user.email,
+          verificationCode,
+          wallet.address
+        );
+      }
+    } else if (method === RecoveryMethod.PHONE && verificationCode) {
+      // Get user phone from wallet
+      const user = await this.prisma.user.findUnique({
+        where: { id: wallet.userId },
+        select: { phone: true }
+      });
+      
+      if (user?.phone) {
+        await this.notificationService.sendVerificationSMS(
+          user.phone,
+          verificationCode
+        );
+      }
+    } else if (method === RecoveryMethod.SOCIAL) {
+      // Notify all confirmed guardians
+      const confirmedGuardians = wallet.guardians.filter(g => g.isConfirmed);
+      
+      for (const guardian of confirmedGuardians) {
+        if (guardian.guardianUserId) {
+          const guardianUser = await this.prisma.user.findUnique({
+            where: { id: guardian.guardianUserId },
+            select: { email: true, username: true }
+          });
+          
+          const requesterUser = await this.prisma.user.findUnique({
+            where: { id: wallet.userId },
+            select: { username: true }
+          });
+          
+          if (guardianUser?.email) {
+            const approvalLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/wallet/recovery/approve/${session.id}`;
+            
+            await this.notificationService.notifyGuardian(
+              guardianUser.email,
+              guardianUser.username || 'Guardian',
+              requesterUser?.username || 'User',
+              wallet.address,
+              approvalLink
+            );
+          }
+        }
+      }
+    }
     
     this.logger.log(`Recovery initiated for wallet ${wallet.address} via ${method}`);
     

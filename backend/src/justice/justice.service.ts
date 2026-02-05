@@ -57,17 +57,26 @@ export class CouncilOfJusticeService {
   /**
    * Get Council contract instance
    */
-  private getCouncilContract(privateKeyOrProvider?: string): Contract {
+  private getCouncilContract(privateKey?: string): Contract {
     const contractAddress = process.env.COUNCIL_OF_JUSTICE_ADDRESS;
     if (!contractAddress) {
       throw new Error('COUNCIL_OF_JUSTICE_ADDRESS not configured');
     }
 
-    // TODO: Implement signing wallet functionality
-    // For now, use provider only (read-only operations)
-    const provider = this.blockchain.getProvider();
-
-    return new Contract(contractAddress, councilOfJusticeAbi, provider);
+    // Use signer if private key provided, otherwise read-only provider
+    if (privateKey) {
+      return this.blockchain.getContractWithSigner(
+        contractAddress,
+        councilOfJusticeAbi,
+        privateKey,
+      );
+    } else {
+      const provider = this.blockchain.getProvider();
+      if (!provider) {
+        throw new Error('Blockchain provider not available');
+      }
+      return new Contract(contractAddress, councilOfJusticeAbi, provider);
+    }
   }
 
   // ============ Member Management ============
@@ -343,14 +352,6 @@ export class CouncilOfJusticeService {
     const event = receipt.logs.find((log: any) => log.fragment?.name === 'PrecedentRegistered');
     const precedentId = event ? Number(event.args[0]) : 0;
 
-    // TODO: Implement wallet signing functionality
-    // For now, precedent registration requires backend infrastructure
-    // const provider = this.blockchain.getProvider();
-    // const judgeAddress = '0x...'; // Extract from privateKey when signing is implemented
-
-    throw new Error('Precedent registration temporarily disabled - wallet signing not yet implemented');
-
-    /* Original code - uncomment when wallet signing is ready
     // Get judge address from wallet
     const wallet = this.blockchain.getWallet(dto.judgePrivateKey);
     const judgeAddress = await wallet.getAddress();
@@ -369,7 +370,6 @@ export class CouncilOfJusticeService {
 
     this.logger.log(`Precedent ${precedentId} registered successfully`);
     return precedent;
-    */
   }
 
   /**

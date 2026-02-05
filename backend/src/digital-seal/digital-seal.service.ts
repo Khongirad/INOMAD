@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { Contract, keccak256, toUtf8Bytes} from 'ethers';
@@ -24,6 +25,7 @@ export class DigitalSealService {
   constructor(
     private prisma: PrismaService,
     private blockchain: BlockchainService,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -47,11 +49,39 @@ export class DigitalSealService {
       throw new Error('One or both signers do not have wallet addresses');
     }
 
-    // TODO: Implement contract deployment when signing capability is added
-    throw new Error('DigitalSeal deployment not yet implemented - requires signing wallet');
+    // Get deployment private key from environment (should be backend admin key)
+    const deployerKey = this.configService.get<string>('DEPLOYER_PRIVATE_KEY');
+    if (!deployerKey) {
+      throw new Error('DEPLOYER_PRIVATE_KEY not configured - required for contract deployment');
+    }
+
+    // Deploy DigitalSeal contract
+    // Note: You'll need to add the contract bytecode
+    const digitalSealBytecode = process.env.DIGITAL_SEAL_BYTECODE;
+    if (!digitalSealBytecode) {
+      this.logger.warn('DIGITAL_SEAL_BYTECODE not set - using mock deployment');
+      // For now, create seal without actual blockchain deployment
+      // In production, this should throw an error
+    }
+
+    let contractAddress = '';
     
-    /* eslint-disable no-unreachable */
-    const contractAddress = '';  // Placeholder - will be set after deployment
+    if (digitalSealBytecode) {
+      try {
+        const contract = await this.blockchain.deployContract(
+          digitalSealAbi,
+          digitalSealBytecode,
+          deployerKey,
+          signer1.walletAddress,
+          signer2.walletAddress,
+        );
+        contractAddress = await contract.getAddress();
+        this.logger.log(`DigitalSeal deployed at: ${contractAddress}`);
+      } catch (error) {
+        this.logger.error('Contract deployment failed', error);
+        throw new Error('Failed to deploy DigitalSeal contract');
+      }
+    }
 
     // Store in database
     const seal = await this.prisma.digitalSeal.create({

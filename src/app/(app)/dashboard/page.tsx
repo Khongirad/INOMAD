@@ -6,12 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { CircularCouncil, type Member } from "@/components/governance";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   
   // DEMO OVERRIDE: If user has a wallet, consider them verified to show the full dashboard functions
   const isVerified = user?.status === 'VERIFIED' || user?.walletStatus === 'ACTIVE' || true; // Force true for demo flow as requested
+
+  // DEMO: Mock Arban members (replace with real API call)
+  const mockMembers: Member[] = [
+    { id: 1, name: "Temujin", isActive: true, hasSigned: true, isLeader: true },
+    { id: 2, name: "Borte", isActive: true, hasSigned: true },
+    { id: 3, name: "Jochi", isActive: false, hasSigned: true },
+    { id: 4, name: "Chagatai", isActive: true, hasSigned: false },
+    { id: 5, name: "Ogedei", isActive: true, hasSigned: false },
+    { id: 6, name: "Tolui", isActive: false, hasSigned: false },
+    { id: 7, name: "Kublai", isActive: true, hasSigned: true },
+    { id: 8, name: "Hulagu", isActive: false, hasSigned: false },
+    { id: 9, name: "Mongke", isActive: true, hasSigned: false },
+    { id: 10, name: "Batu", isActive: true, hasSigned: true },
+  ];
+
+  const handleMemberClick = (member: Member) => {
+    console.log('Member clicked:', member);
+  };
 
   return (
     <div className="container py-8 space-y-8 animate-in fade-in">
@@ -26,6 +45,17 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* Circular Council */}
+      <div className="flex justify-center">
+        <CircularCouncil
+          level="ARBAN"
+          members={mockMembers}
+          onMemberClick={handleMemberClick}
+          showLeaderPanel={mockMembers[0]?.isLeader}
+        />
+      </div>
+
+      {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Wallet Card - Always Accessible */}
         <Link href="/wallet">

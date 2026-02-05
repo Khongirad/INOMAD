@@ -5,9 +5,11 @@ import {
   Body,
   Param,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { OwnershipService } from '../services/ownership.service';
 import { TransferService } from '../services/transfer.service';
+import { RegistryOfficerGuard } from '../guards/registry-officer.guard';
 import { ValuationService } from '../services/valuation.service';
 
 @Controller('api/land-registry/property')
@@ -68,12 +70,12 @@ export class PropertyController {
    * Complete transfer (registry officer only)
    */
   @Post('transfer/:id/complete')
+  @UseGuards(RegistryOfficerGuard)
   async completeTransfer(
     @Param('id') transactionId: string,
     @Body() data: { blockchainTxHash?: string },
     @Request() req: any,
   ) {
-    // TODO: Add registry officer role check
     return this.transferService.completeTransfer({
       transactionId,
       officerId: req.user.id,

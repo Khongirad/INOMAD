@@ -76,9 +76,48 @@ export class QuestService {
       throw new Error('Quest not available');
     }
 
-    // TODO: Check requirements (skills, reputation)
+    // Validate quest requirements
     if (quest.requirements) {
-      // await this.validateRequirements(takerId, quest.requirements);
+      const requirements = quest.requirements as any;
+      
+      // Check minimum reputation requirement
+      if (requirements.minReputation !== undefined) {
+        const userProfile = await this.prisma.reputationProfile.findUnique({
+          where: { userId: takerId },
+          select: { averageRating: true, totalDeals: true },
+        });
+        
+        // Use average rating as reputation score (0-5 scale)
+        const currentReputation = userProfile?.averageRating ? Number(userProfile.averageRating) : 0;
+        if (currentReputation < requirements.minReputation) {
+          throw new Error(
+            `Insufficient reputation. Required: ${requirements.minReputation}, Current: ${currentReputation.toFixed(2)}`
+          );
+        }
+      }
+      
+      // Check required verification level
+      if (requirements.verificationLevel) {
+        const user = await this.prisma.user.findUnique({
+          where: { id: takerId },
+          select: { verificationLevel: true },
+        });
+        
+        const levelOrder = ['UNVERIFIED', 'ARBAN_VERIFIED', 'ZUN_VERIFIED', 'FULLY_VERIFIED'];
+        const requiredIndex = levelOrder.indexOf(requirements.verificationLevel);
+        const currentIndex = levelOrder.indexOf(user?.verificationLevel || 'UNVERIFIED');
+        
+        if (currentIndex < requiredIndex) {
+          throw new Error(
+            `Insufficient verification level. Required: ${requirements.verificationLevel}`
+          );
+        }
+      }
+      
+      // Future: Check required skills when skill system is implemented
+      if (requirements.skills && requirements.skills.length > 0) {
+        // Skill checking placeholder for future enhancement
+      }
     }
 
     // Update quest

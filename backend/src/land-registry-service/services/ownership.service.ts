@@ -1,10 +1,15 @@
-import { Injectable, Inject, ForbiddenException, NotFoundException } from'@nestjs/common';
+import { Injectable, Inject, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaClient, OwnershipType } from '@prisma/client-land';
+import { PrismaService } from '../../prisma/prisma.service'; // Main DB for User data
+import { VerificationLevel } from '@prisma/client'; // For citizenship checks
 
 @Injectable()
 export class OwnershipService {
+  private readonly logger = new Logger(OwnershipService.name);
+
   constructor(
     @Inject('LAND_PRISMA') private prisma: PrismaClient,
+    private mainPrisma: PrismaService, // Main DB for User queries
   ) {}
 
   /**
@@ -113,22 +118,32 @@ export class OwnershipService {
   }
 
   /**
-   * Verify if user is a citizen
-   * TODO: Integrate with main DB User table
+   * Verify citizenship for land ownership
+   * Only Siberian Confederation citizens can own land
    */
   private async verifyCitizenship(userId: string): Promise<boolean> {
-    // TODO: Query main database User table
-    // For now, return true for testing
-    // In production, check: User.nationality === "Siberian Confederation"
+    const user = await this.mainPrisma.user.findUnique({
+      where: { id: userId },
+      select: { 
+        nationality: true, 
+        verificationLevel: true 
+      },
+    });
     
-    // Example integration:
-    // const user = await this.mainPrisma.user.findUnique({ 
-    //   where: { id: userId },
-    //   select: { nationality: true }
-    // });
-    // return user?.nationality === "Siberian Confederation";
+    if (!user) {
+      this.logger.warn(`User ${userId} not found during citizenship check`);
+      return false;
+    }
     
-    return true; // PLACEHOLDER - IMPLEMENT ACTUAL CHECK
+    // Must be Siberian Confederation citizen AND fully verified
+    const isCitizen = user.nationality === 'Siberian Confederation';
+    const isFullyVerified = user.verificationLevel === VerificationLevel.FULLY_VERIFIED;
+    
+    if (!isCitizen) {
+      this.logger.log(`User ${userId} is not a Siberian Confederation citizen`);
+    }
+    
+    return isCitizen && isFullyVerified;
   }
 
   /**

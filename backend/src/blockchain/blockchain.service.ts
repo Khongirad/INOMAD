@@ -393,4 +393,144 @@ export class BlockchainService implements OnModuleInit {
       return 0;
     }
   }
+
+  /**
+   * Get block timestamp
+   */
+  async getBlockTimestamp(blockNumber: number): Promise<number> {
+    if (!this.isAvailable()) {
+      return 0;
+    }
+
+    try {
+      const block = await this.provider.getBlock(blockNumber);
+      return block ? block.timestamp : 0;
+    } catch (error) {
+      this.logger.error(`Failed to get timestamp for block ${blockNumber}`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Create a wallet from private key for signing transactions
+   * WARNING: This should only be used for backend signing operations
+   * Private keys should be stored securely in environment variables
+   */
+  getWallet(privateKey: string): ethers.Wallet {
+    if (!this.isAvailable()) {
+      throw new Error('Blockchain not available');
+    }
+
+    try {
+      return new ethers.Wallet(privateKey, this.provider);
+    } catch (error) {
+      this.logger.error('Failed to create wallet', error);
+      throw new Error('Invalid private key');
+    }
+  }
+
+  /**
+   * Sign a transaction with a private key
+   * Returns the signed transaction ready for broadcast
+   */
+  async signTransaction(
+    tx: ethers.TransactionRequest,
+    privateKey: string,
+  ): Promise<string> {
+    if (!this.isAvailable()) {
+      throw new Error('Blockchain not available');
+    }
+
+    try {
+      const wallet = this.getWallet(privateKey);
+      const signedTx = await wallet.signTransaction(tx);
+      return signedTx;
+    } catch (error) {
+      this.logger.error('Failed to sign transaction', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deploy a contract using a private key
+   * Returns the deployed contract instance
+   */
+  async deployContract(
+    abi: ethers.InterfaceAbi,
+    bytecode: string,
+    privateKey: string,
+    ...constructorArgs: any[]
+  ): Promise<ethers.Contract> {
+    if (!this.isAvailable()) {
+      throw new Error('Blockchain not available');  }
+
+    try {
+      const wallet = this.getWallet(privateKey);
+      const factory = new ethers.ContractFactory(abi, bytecode, wallet);
+      
+      this.logger.log('Deploying contract...');
+      const contract = await factory.deploy(...constructorArgs);
+      
+      this.logger.log(`Contract deployment transaction: ${contract.deploymentTransaction()?.hash}`);
+      await contract.waitForDeployment();
+      
+      const address = await contract.getAddress();
+      this.logger.log(`Contract deployed at: ${address}`);
+      
+      return contract;
+    } catch (error) {
+      this.logger.error('Failed to deploy contract', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Estimate gas for a transaction
+   */
+  async estimateGas(tx: ethers.TransactionRequest): Promise<bigint> {
+    if (!this.isAvailable()) {
+      throw new Error('Blockchain not available');
+    }
+
+    try {
+      return await this.provider.estimateGas(tx);
+    } catch (error) {
+      this.logger.error('Failed to estimate gas', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get a contract instance with a signer for write operations
+   * Use this when you need to send transactions to a contract
+   */
+  getContractWithSigner(
+    address: string,
+    abi: ethers.InterfaceAbi,
+    privateKey: string,
+  ): ethers.Contract {
+    if (!this.isAvailable()) {
+      throw new Error('Blockchain not available');
+    }
+
+    const wallet = this.getWallet(privateKey);
+    return new ethers.Contract(address, abi, wallet);
+  }
+
+  /**
+   * Get current gas price
+   */
+  async getGasPrice(): Promise<bigint> {
+    if (!this.isAvailable()) {
+      return BigInt(0);
+    }
+
+    try {
+      const feeData = await this.provider.getFeeData();
+      return feeData.gasPrice || BigInt(0);
+    } catch (error) {
+      this.logger.error('Failed to get gas price', error);
+      return BigInt(0);
+    }
+  }
 }

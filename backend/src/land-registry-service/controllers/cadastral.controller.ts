@@ -6,9 +6,11 @@ import {
   Param,
   Query,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { CadastralMapService } from '../services/cadastral-map.service';
 import { OwnershipService } from '../services/ownership.service';
+import { RegistryOfficerGuard } from '../guards/registry-officer.guard';
 import { TransferService } from '../services/transfer.service';
 
 @Controller('api/land-registry/cadastral')
@@ -23,8 +25,8 @@ export class CadastralController {
    * Register new land plot
    */
   @Post('land-plots')
+  @UseGuards(RegistryOfficerGuard)
   async registerLandPlot(@Body() data: any, @Request() req: any) {
-    // TODO: Add registry officer role check
     return this.cadastralService.registerLandPlot({
       ...data,
       registeredBy: req.user.id,

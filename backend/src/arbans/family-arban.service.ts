@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ContractAddressesService } from '../blockchain/contract-addresses.service';
+import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
 import { ArbanCompletion_ABI } from '../blockchain/abis/arbanCompletion.abi';
 import { ArbanCompletion__factory } from '../typechain-types/factories/ArbanCompletion__factory';
@@ -22,12 +24,19 @@ export class FamilyArbanService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly contractAddresses: ContractAddressesService,
+    private readonly config: ConfigService,
   ) {
-    // Initialize contract connection
-    // TODO: Get provider and contract address from config
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-    const contractAddress = process.env.ARBAN_COMPLETION_ADDRESS || '';
+    // Initialize contract connection with centralized configuration
+    const rpcUrl = this.config.get<string>('ALTAN_RPC_URL') || this.contractAddresses.getRpcUrl();
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    
+    // Get contract address from ContractAddressesService
+    const guildContracts = this.contractAddresses.getGuildContracts();
+    const contractAddress = guildContracts.arbanCompletion;
+    
     this.contract = ArbanCompletion__factory.connect(contractAddress, provider);
+    this.logger.log(`✅ ArbanCompletion initialized at ${contractAddress}`);
   }
 
   /**

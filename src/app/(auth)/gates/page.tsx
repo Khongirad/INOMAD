@@ -41,13 +41,14 @@ export default function GatesOfKhuralPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
-      {/* Background Image */}
+      {/* Background Image - 13 Serge Pillars */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/baikal-gates.png"
-          alt="Gates of Khural"
+          src="/images/serge-gates.png"
+          alt="Gates of Khural - 13 Sacred Serge"
           fill
           className="object-cover opacity-60"
+          style={{ objectPosition: 'center bottom' }}
           priority
         />
         {/* Gradient overlay */}
@@ -74,6 +75,17 @@ export default function GatesOfKhuralPage() {
       <div className="relative z-10 w-full max-w-2xl px-6">
         {/* Title */}
         <div className="text-center mb-12 animate-fadeIn">
+          {/* Tengri Flag */}
+          <div className="mb-8 flex justify-center">
+            <Image
+              src="/images/tengri-flag.png"
+              alt="Tengri Flag"
+              width={200}
+              height={200}
+              className="drop-shadow-[0_0_30px_rgba(254,252,232,0.4)]"
+            />
+          </div>
+          
           <h1 className="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-gold-primary to-amber-600 drop-shadow-[0_0_30px_rgba(245,158,11,0.5)] font-serif tracking-wide">
             SIBERIAN CONFEDERATION
           </h1>
@@ -141,7 +153,11 @@ export default function GatesOfKhuralPage() {
                 Entering...
               </span>
             ) : (
-              '⚔️ ENTER THE KHURAL ⚔️'
+              <span className="flex items-center justify-center gap-3">
+                <Image src="/icons/mongol-swords.png" alt="" width={24} height={24} className="opacity-90" />
+                ENTER THE KHURAL
+                <Image src="/icons/mongol-swords.png" alt="" width={24} height={24} className="opacity-90" />
+              </span>
             )}
           </button>
 

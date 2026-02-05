@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { InvitationService } from './invitation.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { InvitationStatus } from '@prisma/client';
 
 @Controller('invitations')
@@ -94,8 +95,8 @@ export class InvitationController {
    * Expire old invitations (admin cron)
    */
   @Post('expire')
+  @UseGuards(AdminGuard)
   async expireOldInvitations(@Query('days') days?: number) {
-    // TODO: Add admin role check
     const count = await this.invitationService.expireOldInvitations(
       days ? parseInt(days.toString()) : 30
     );

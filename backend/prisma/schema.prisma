@@ -36,6 +36,13 @@ model User {
   frozenAt           DateTime?
   frozenBy           String? // Creator userId who froze this account
 
+  // Identity Information (Sprint 3 - Government Services Integration)
+  dateOfBirth        DateTime? // Required for ZAGS marriage eligibility (18+)
+  nationality        String?   @default("Siberian Confederation") // For Land Registry citizenship checks
+  passportNumber     String?   @unique // Links to Migration Service passport applications
+  passportIssueDate  DateTime? // Passport validity tracking
+  passportExpiryDate DateTime? // Passport expiry for renewals
+
   // Verification Chain
   isVerified            Boolean            @default(false)
   verifiedAt            DateTime?
@@ -141,6 +148,7 @@ model User {
   documentsIssued      DocumentContract[]     @relation("DocumentIssuer")
   documentsReceived    DocumentContract[]     @relation("DocumentRecipient")
   documentsArchived    DocumentContract[]     @relation("DocumentArchivist")
+  documentsIntermediate DocumentContract[]    @relation("DocumentIntermediary") // Broker/intermediary role
   documentStageChanges DocumentStageHistory[] @relation("StageChanger")
   documentSignatures   DocumentSignature[]    @relation("DocumentSigner")
   notaryRecords        NotarizationRecord[]   @relation("NotaryRecords")

@@ -55,20 +55,26 @@ export class AcademyOfSciencesService {
   /**
    * Get Academy contract instance
    */
-  private getAcademyContract(privateKeyOrProvider?: string): Contract {
+  private getAcademyContract(privateKey?: string): Contract {
     const contractAddress = process.env.ACADEMY_OF_SCIENCES_ADDRESS;
     if (!contractAddress) {
       throw new Error('ACADEMY_OF_SCIENCES_ADDRESS not configured');
     }
 
-    // TODO: Implement wallet signing when needed
-    // For now, use read-only provider
-    const signerOrProvider = this.blockchain.getProvider();
-    if (!signerOrProvider) {
-      throw new Error('Blockchain provider not available');
+    // Use signer if private key provided, otherwise read-only provider
+    if (privateKey) {
+      return this.blockchain.getContractWithSigner(
+        contractAddress,
+        academyOfSciencesAbi,
+        privateKey,
+      );
+    } else {
+      const provider = this.blockchain.getProvider();
+      if (!provider) {
+        throw new Error('Blockchain provider not available');
+      }
+      return new Contract(contractAddress, academyOfSciencesAbi, provider);
     }
-
-    return new Contract(contractAddress, academyOfSciencesAbi, signerOrProvider);
   }
 
   // ============ Patent Management ============

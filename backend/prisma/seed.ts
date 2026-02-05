@@ -344,6 +344,79 @@ async function main() {
     console.log('✅ Initial emission already exists');
   }
 
+  // ============================
+  // GUILD PLATFORM SEED DATA (Education, Elections, Invitations)
+  // ============================
+
+  // Create sample Education Certification
+  try {
+    await prisma.educationRecord.create({
+      data: {
+        guildId: architectGuild.id,
+        userId: user3.id,
+        programName: 'Master Architect Certification',
+        creditsEarned: 120,
+        certificateIssued: true,
+        completedAt: new Date(),
+      },
+    });
+    console.log('✅ Created education records');
+  } catch (error) {
+    console.log('⚠️  EducationRecord model not yet available, skipping');
+  }
+
+  // Create sample Election
+  try {
+    const guildElection = await prisma.election.create({
+      data: {
+        guildId: architectGuild.id,
+        electionType: 'LEADER',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        status: 'ACTIVE',
+        description: 'Annual guild leader election',
+      },
+    });
+
+    await prisma.electionCandidate.create({
+      data: {
+        electionId: guildElection.id,
+        userId: user1.id,
+        statement: 'Leading with innovation and integrity',
+        voteCount: 0,
+      },
+    });
+
+    await prisma.electionCandidate.create({
+      data: {
+        electionId: guildElection.id,
+        userId: user2.id,
+        statement: 'Building stronger communities together',
+        voteCount: 0,
+      },
+    });
+
+    console.log('✅ Created sample guild election with candidates');
+  } catch (error) {
+    console.log('⚠️  Election models not properly set up, skipping');
+  }
+
+  // Create sample Guild Invitations
+  try {
+    await prisma.invitation.create({
+      data: {
+        guildId: buildersGuild.id,
+        invitedUserId: user3.id,
+        invitedByUserId: user2.id,
+        status: 'PENDING',
+        message: 'We would love to have you join our guild!',
+      },
+    });
+    console.log('✅ Created guild invitations');
+  } catch (error) {
+    console.log('⚠️  Invitation model not yet available, skipping');
+  }
+
   console.log('🎉 Seeding complete!');
 }
 

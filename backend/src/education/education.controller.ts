@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { EducationService } from './education.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { EducationType } from '@prisma/client';
 
 @Controller('education')
@@ -34,12 +35,12 @@ export class EducationController {
    * Admin: Verify education
    */
   @Post('verify/:id')
+  @UseGuards(AdminGuard)
   async verifyEducation(
     @Request() req,
     @Param('id') verificationId: string,
     @Body() body: { validForGuilds?: string[] }
   ) {
-    // TODO: Add admin role check
     return this.educationService.verifyEducation({
       verificationId,
       adminId: req.user.id,
@@ -51,8 +52,8 @@ export class EducationController {
    * Admin: Reject education verification
    */
   @Post('reject/:id')
+  @UseGuards(AdminGuard)
   async rejectEducation(@Request() req, @Param('id') verificationId: string) {
-    // TODO: Add admin role check
     return this.educationService.rejectEducation(verificationId, req.user.id);
   }
 
@@ -76,8 +77,8 @@ export class EducationController {
    * Get pending verifications (admin only)
    */
   @Get('pending')
+  @UseGuards(AdminGuard)
   async getPending() {
-    // TODO: Add admin role check
     return this.educationService.getPendingVerifications();
   }
 

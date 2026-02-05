@@ -7,10 +7,12 @@ import {
   Param,
   Query,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { MarriageRegistrationService } from '../services/marriage-registration.service';
 import { ConsentService } from '../services/consent.service';
 import { EligibilityService } from '../services/eligibility.service';
+import { ZagsOfficerGuard } from '../guards/zags-officer.guard';
 import { CertificateService } from '../services/certificate.service';
 
 @Controller('api/zags')
@@ -94,8 +96,8 @@ export class MarriageController {
    * Register marriage (ZAGS officer only)
    */
   @Post('marriages/:id/register')
+  @UseGuards(ZagsOfficerGuard)
   async registerMarriage(@Param('id') marriageId: string, @Request() req: any) {
-    // TODO: Add ZAGS officer role check
     return this.marriageService.registerMarriage({
       marriageId,
       officerId: req.user.id,
@@ -106,8 +108,8 @@ export class MarriageController {
    * Get pending marriages (ZAGS officer only)
    */
   @Get('marriages/pending/all')
+  @UseGuards(ZagsOfficerGuard)
   async getPendingMarriages() {
-    // TODO: Add ZAGS officer role check
     return this.marriageService.getPendingMarriages();
   }
 
@@ -126,8 +128,8 @@ export class MarriageController {
    * Finalize divorce (ZAGS officer only)
    */
   @Post('divorces/:id/finalize')
+  @UseGuards(ZagsOfficerGuard)
   async finalizeDivorce(@Param('id') divorceId: string, @Request() req: any) {
-    // TODO: Add ZAGS officer role check
     return this.marriageService.finalizeDivorce({
       divorceId,
       officerId: req.user.id,

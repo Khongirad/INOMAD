@@ -120,8 +120,88 @@ export class DocumentTemplateService {
       }
     }
 
-    // TODO: Validate against templateSchema (JSON schema validation)
-    // TODO: Apply validationRules if present
+    // Validate templateSchema structure and field definitions
+    const schema = template.templateSchema as any;
+    if (schema && typeof schema === 'object') {
+      for (const [fieldName, variable] of Object.entries(variables)) {
+        const fieldDef = schema[fieldName];
+        
+        if (!fieldDef) {
+          // Variable not in schema - warn but don't fail
+          continue;
+        }
+        
+        // Validate field type
+        if (fieldDef.type) {
+          const expectedType = fieldDef.type.toLowerCase();
+          const actualType = typeof variable;
+          
+          if (expectedType === 'number' && actualType !== 'number') {
+            errors.push(`Field '${fieldName}' must be a number`);
+          } else if (expectedType === 'string' && actualType !== 'string') {
+            errors.push(`Field '${fieldName}' must be a string`);
+          } else if (expectedType === 'boolean' && actualType !== 'boolean') {
+            errors.push(`Field '${fieldName}' must be a boolean`);
+          } else if (expectedType === 'date') {
+            // Check if it's a valid date string or Date object
+            const isValidDate = variable instanceof Date || 
+                               (typeof variable === 'string' && !isNaN(Date.parse(variable)));
+            if (!isValidDate) {
+              errors.push(`Field '${fieldName}' must be a valid date`);
+            }
+          }
+        }
+        
+        // Validate enum/select options
+        if (fieldDef.enum && Array.isArray(fieldDef.enum)) {
+          if (!fieldDef.enum.includes(variable)) {
+            errors.push(
+              `Field '${fieldName}' must be one of: ${fieldDef.enum.join(', ')}`
+            );
+          }
+        }
+        
+        // Validate string length constraints
+        if (typeof variable === 'string') {
+          if (fieldDef.minLength && variable.length < fieldDef.minLength) {
+            errors.push(
+              `Field '${fieldName}' must be at least ${fieldDef.minLength} characters`
+            );
+          }
+          if (fieldDef.maxLength && variable.length > fieldDef.maxLength) {
+            errors.push(
+              `Field '${fieldName}' must be at most ${fieldDef.maxLength} characters`
+            );
+          }
+        }
+        
+        // Validate number range constraints
+        if (typeof variable === 'number') {
+          if (fieldDef.minimum !== undefined && variable < fieldDef.minimum) {
+            errors.push(`Field '${fieldName}' must be >= ${fieldDef.minimum}`);
+          }
+          if (fieldDef.maximum !== undefined && variable > fieldDef.maximum) {
+            errors.push(`Field '${fieldName}' must be <= ${fieldDef.maximum}`);
+          }
+        }
+      }
+    }
+
+    // Apply custom validation rules if present
+    if (template.validationRules) {
+      const rules = template.validationRules as any;
+      
+      // Example: Cross-field validation
+      if (rules.conditionalRequired) {
+        for (const rule of rules.conditionalRequired) {
+          if (variables[rule.ifField] === rule.ifValue && !variables[rule.thenRequire]) {
+            errors.push(
+              `Field '${rule.thenRequire}' is required when ${rule.ifField} is ${rule.ifValue}`
+            );
+          }
+        }
+      }
+    }
 
     return {
       valid: errors.length === 0,

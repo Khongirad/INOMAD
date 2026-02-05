@@ -15,6 +15,7 @@ interface ContractAddresses {
   // Citizen domain
   CitizenActivation?: string;
   ArbanRegistry?: string;
+  ArbanCompletion?: string; // Family Arban completion contract
   ZunRegistry?: string;
   ElectionRegistry?: string;
   BranchRegistry?: string;
@@ -174,6 +175,19 @@ export class ContractAddressesService {
       altanWalletRegistry: this.addresses.AltanWalletRegistry,
       taxEngine: this.addresses.TaxEngine,
       taxAuthority: this.addresses.TaxAuthority,
+    };
+  }
+
+  /**
+   * Get guild/arban contracts
+   */
+  getGuildContracts() {
+    return {
+      arbanRegistry: this.addresses.ArbanRegistry,
+      arbanCompletion: this.addresses.ArbanCompletion,
+      zunRegistry: this.addresses.ZunRegistry,
+      electionRegistry: this.addresses.ElectionRegistry,
+      branchRegistry: this.addresses.BranchRegistry,
     };
   }
 }

@@ -1,12 +1,47 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaClient, DocumentType } from '@prisma/client-migration';
 import * as crypto from 'crypto';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 @Injectable()
 export class DocumentStorageService {
+  private readonly storagePath: string;
+  private readonly masterKey: Buffer;
+
   constructor(
     @Inject('MIGRATION_PRISMA') private prisma: PrismaClient,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    // Get storage path from env, default to ./storage/encrypted_documents
+    this.storagePath = this.configService.get('DOCUMENT_STORAGE_PATH') || './storage/encrypted_documents';
+    
+    // Get master key from env - MUST be set, no default for security
+    const masterKeyBase64 = this.configService.get('MIGRATION_MASTER_KEY');
+    if (!masterKeyBase64 || masterKeyBase64 === 'CHANGE_ME_32_BYTE_BASE64_ENCODED_KEY') {
+      throw new Error(
+        'MIGRATION_MASTER_KEY must be set in environment variables. ' +
+        'Generate with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"'
+      );
+    }
+    
+    this.masterKey = Buffer.from(masterKeyBase64, 'base64');
+    
+    // Ensure storage directory exists
+    this.ensureStorageDirectory();
+  }
+
+  /**
+   * Ensure storage directory exists
+   */
+  private async ensureStorageDirectory() {
+    try {
+      await fs.mkdir(this.storagePath, { recursive: true });
+    } catch (error) {
+      console.error('Failed to create storage directory:', error);
+    }
+  }
 
   /**
    * Upload and encrypt document
@@ -124,21 +159,26 @@ export class DocumentStorageService {
    * Encrypt the encryption key itself (using master key from env)
    */
   private encryptKey(key: string): string {
-    // TODO: Use a master key from environment variables
-    const masterKey = process.env.MIGRATION_MASTER_KEY || 'default-insecure-key-change-me';
-    const cipher = crypto.createCipher('aes-256-cbc', masterKey);
+    // Use master key from environment (already validated in constructor)
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', this.masterKey, iv);
     let encrypted = cipher.update(key, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    return encrypted;
+    
+    // Prepend IV to encrypted key
+    return iv.toString('hex') + ':' + encrypted;
   }
 
   /**
    * Decrypt the encryption key
    */
   private decryptKey(encryptedKey: string): string {
-    const masterKey = process.env.MIGRATION_MASTER_KEY || 'default-insecure-key-change-me';
-    const decipher = crypto.createDecipher('aes-256-cbc', masterKey);
-    let decrypted = decipher.update(encryptedKey, 'hex', 'utf8');
+    // Extract IV and encrypted data
+    const [ivHex, encrypted] = encryptedKey.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    
+    const decipher = crypto.createDecipheriv('aes-256-cbc', this.masterKey, iv);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
   }
@@ -152,24 +192,40 @@ export class DocumentStorageService {
     encryptedData: Buffer,
     iv: string,
   ): Promise<string> {
-    // TODO: Implement actual file storage (S3, local encrypted folder, etc.)
-    // For now, return a placeholder path
-    const path = `encrypted/${applicationId}/${Date.now()}-${fileName}`;
+    // Create application-specific directory
+    const appDir = path.join(this.storagePath, applicationId);
+    await fs.mkdir(appDir, { recursive: true });
     
-    // Store metadata about storage location
-    return JSON.stringify({ path, iv });
+    // Generate unique filename with timestamp
+    const timestamp = Date.now();
+    const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filePath = path.join(appDir, `${timestamp}-${safeFileName}.enc`);
+    
+    // Write encrypted data to file
+    await fs.writeFile(filePath, encryptedData);
+    
+    // Return metadata as JSON (relative path + IV)
+    return JSON.stringify({
+      path: path.relative(this.storagePath, filePath),
+      iv,
+      timestamp,
+    });
   }
 
   /**
    * Load encrypted file from storage
    */
   private async loadEncryptedFile(encryptedPath: string): Promise<{ encryptedData: Buffer; iv: string }> {
-    // TODO: Implement actual file loading
     const metadata = JSON.parse(encryptedPath);
     
-    // Placeholder - return empty buffer and IV from metadata
+    // Construct full file path
+    const filePath = path.join(this.storagePath, metadata.path);
+    
+    // Read encrypted data from file
+    const encryptedData = await fs.readFile(filePath);
+    
     return {
-      encryptedData: Buffer.from(''),
+      encryptedData,
       iv: metadata.iv,
     };
   }

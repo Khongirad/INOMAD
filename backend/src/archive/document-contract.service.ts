@@ -314,7 +314,7 @@ export class DocumentContractService {
         publicKey,
         algorithm: 'ECDSA-secp256k1',
         verified: false, // Will be verified separately
-        ipAddress: '0.0.0.0', // TODO: Get from request
+        ipAddress: '0.0.0.0', // Placeholder - should be passed from controller via Request object
        },
       include: {
         signer: {
