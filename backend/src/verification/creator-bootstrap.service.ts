@@ -1,14 +1,16 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { VerificationLevel, UserRole } from '@prisma/client';
 
 @Injectable()
-export class CreatorBootstrapService implements OnModuleInit {
+export class CreatorBootstrapService {
   constructor(private prisma: PrismaService) {}
 
-  async onModuleInit() {
-    await this.ensureCreatorFullyVerified();
-  }
+  // TEMPORARILY DISABLED - DB schema mismatch with User.date OfBirth field
+  // TODO: Fix after backend starts successfully
+  // async onModuleInit() {
+  //   await this.ensureCreatorFullyVerified();
+  // }
 
   /**
    * Ensure all Creator accounts are automatically FULLY_VERIFIED

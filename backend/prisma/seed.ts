@@ -348,7 +348,10 @@ async function main() {
   // GUILD PLATFORM SEED DATA (Education, Elections, Invitations)
   // ============================
 
+
   // Create sample Education Certification
+  // Disabled: EducationRecord model not in schema
+  /*
   try {
     await prisma.educationRecord.create({
       data: {
@@ -360,12 +363,15 @@ async function main() {
         completedAt: new Date(),
       },
     });
-    console.log('✅ Created education records');
+    console.log('✅ Education records seeded');
   } catch (error) {
-    console.log('⚠️  EducationRecord model not yet available, skipping');
+    console.log('⚠️  Education model not in schema, skipping');
   }
+  */
 
   // Create sample Election
+  // Disabled: Election schema doesn't have guildId field, ElectionCandidate doesn't have userId
+  /*
   try {
     const guildElection = await prisma.election.create({
       data: {
@@ -400,22 +406,26 @@ async function main() {
   } catch (error) {
     console.log('⚠️  Election models not properly set up, skipping');
   }
+  */
 
   // Create sample Guild Invitations
+  // Disabled: Invitation model not in schema
+  /*
   try {
     await prisma.invitation.create({
       data: {
         guildId: buildersGuild.id,
         invitedUserId: user3.id,
         invitedByUserId: user2.id,
-        status: 'PENDING',
-        message: 'We would love to have you join our guild!',
+        message: 'Join our guild and help build the future!',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       },
     });
-    console.log('✅ Created guild invitations');
+    console.log('✅ Guild invitations seeded');
   } catch (error) {
-    console.log('⚠️  Invitation model not yet available, skipping');
+    console.log('⚠️  Invitation model not properly set up, skipping');
   }
+  */
 
   console.log('🎉 Seeding complete!');
 }

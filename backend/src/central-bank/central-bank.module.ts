@@ -45,6 +45,6 @@ import { CBWorkflowService } from './cb-workflow.service';
     CentralBankAuthGuard,
     CBWorkflowService,
   ],
-  exports: [], // NOTHING exported — complete isolation
+  exports: [CentralBankAuthService], // Export auth service for Distribution guards only
 })
 export class CentralBankModule {}

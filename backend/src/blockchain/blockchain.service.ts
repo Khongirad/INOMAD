@@ -473,11 +473,12 @@ export class BlockchainService implements OnModuleInit {
       
       this.logger.log(`Contract deployment transaction: ${contract.deploymentTransaction()?.hash}`);
       await contract.waitForDeployment();
-      
+     
       const address = await contract.getAddress();
       this.logger.log(`Contract deployed at: ${address}`);
       
-      return contract;
+      // Type cast to fix ethers v6 compatibility
+      return contract as any;
     } catch (error) {
       this.logger.error('Failed to deploy contract', error);
       throw error;

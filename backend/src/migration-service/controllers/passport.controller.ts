@@ -82,7 +82,7 @@ export class PassportController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadDocument(
     @Param('id') applicationId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,  // Multer.File type causing issues - using any temporarily
     @Body('documentType') documentType: DocumentType,
     @Request() req: any,
   ) {

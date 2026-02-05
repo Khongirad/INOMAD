@@ -255,6 +255,9 @@ export class RecoveryService {
       }
     } else if (method === RecoveryMethod.PHONE && verificationCode) {
       // Get user phone from wallet
+      // SMS notification disabled - phone field not in User model
+      // TODO: Add phone field to User schema if SMS recovery needed
+      /*
       const user = await this.prisma.user.findUnique({
         where: { id: wallet.userId },
         select: { phone: true }
@@ -266,6 +269,7 @@ export class RecoveryService {
           verificationCode
         );
       }
+      */
     } else if (method === RecoveryMethod.SOCIAL) {
       // Notify all confirmed guardians
       const confirmedGuardians = wallet.guardians.filter(g => g.isConfirmed);

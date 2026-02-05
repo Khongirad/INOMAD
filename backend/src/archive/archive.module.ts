@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
 import { DocumentTemplateService } from './document-template.service';
 import { DocumentContractService } from './document-contract.service';
@@ -20,7 +21,13 @@ import { ArchiveController } from './archive.controller';
  * - Document archiving
  */
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      signOptions: { expiresIn: '7d' },
+    }),
+  ],
   providers: [
     DocumentTemplateService,
     DocumentContractService,

@@ -63,7 +63,7 @@ export class PassportApplicationService {
     const application = await this.prisma.passportApplication.findUnique({
       where: { id: applicationId },
       include: {
-        documents: requesterRole === AccessRole.MIGRATION_OFFICER || warrantId,
+        documents: (requesterRole === AccessRole.MIGRATION_OFFICER || !!warrantId) ? true : false,
       },
     });
 

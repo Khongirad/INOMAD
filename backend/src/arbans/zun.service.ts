@@ -11,9 +11,17 @@ export class ZunService {
   private contract: ReturnType<typeof ArbanCompletion__factory.connect>;
 
   constructor(private readonly prisma: PrismaService) {
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
     const contractAddress = process.env.ARBAN_COMPLETION_ADDRESS || '';
-    this.contract = ArbanCompletion__factory.connect(contractAddress, provider);
+    
+    if (contractAddress && contractAddress !== '') {
+      const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
+      this.contract = ArbanCompletion__factory.connect(contractAddress, provider);
+      this.logger.log(`✅ ZunService connected to contract at ${contractAddress}`);
+    } else {
+      this.logger.warn('⚠️  ARBAN_COMPLETION_ADDRESS not configured - Zun blockchain features disabled');
+      // @ts-ignore - contract will be undefined, methods will throw appropriate errors
+      this.contract = null;
+    }
   }
 
   /**

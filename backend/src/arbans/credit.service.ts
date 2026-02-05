@@ -19,9 +19,17 @@ export class CreditService {
   private contract: ReturnType<typeof ArbanCreditLine__factory.connect>;
 
   constructor(private readonly prisma: PrismaService) {
-    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
     const contractAddress = process.env.ARBAN_CREDIT_LINE_ADDRESS || '';
-    this.contract = ArbanCreditLine__factory.connect(contractAddress, provider);
+    
+    if (contractAddress && contractAddress !== '') {
+      const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
+      this.contract = ArbanCreditLine__factory.connect(contractAddress, provider);  
+      this.logger.log(`✅ CreditService connected to contract`);
+    } else {
+      this.logger.warn('⚠️  ARBAN_CREDIT_LINE_ADDRESS not configured - Credit line blockchain features disabled');
+      // @ts-ignore
+      this.contract = null;
+    }
   }
 
   // ==================== FAMILY CREDIT ====================
