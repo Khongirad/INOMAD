@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException, ConflictExcepti
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthPasswordService {
@@ -219,12 +220,24 @@ export class AuthPasswordService {
    * Generate JWT access and refresh tokens
    */
   private async generateTokens(userId: string, seatId: string, role: string) {
-    const payload = { sub: userId, seatId, role };
+    const jti = randomUUID();
+    const refreshToken = randomUUID();
+    const expiresIn = 3600; // 1 hour in seconds
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { expiresIn: '1h' }),
-      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
-    ]);
+    const payload = { sub: userId, seatId, role, jti };
+
+    const accessToken = await this.jwtService.signAsync(payload, { expiresIn: '1h' });
+
+    // Create session record in database (required for AuthGuard.validateSession)
+    await this.prisma.authSession.create({
+      data: {
+        userId,
+        jti,
+        refreshToken,
+        expiresAt,
+      },
+    });
 
     return { accessToken, refreshToken };
   }

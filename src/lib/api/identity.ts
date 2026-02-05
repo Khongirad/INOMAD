@@ -1,4 +1,5 @@
 import { api } from '../api';
+import { AuthSession } from '../auth/session';
 
 // Types
 export interface RegisterDto {
@@ -15,21 +16,26 @@ export interface LoginDto {
 }
 
 export interface AuthResponse {
-  access_token: string;
+  accessToken: string;
+  refreshToken?: string;
   user: {
-    id: string;
+    userId: string;
     seatId: string;
     username: string;
     role: string;
     isLegalSubject: boolean;
-    isVerified: boolean;
+    status?: string;
+    walletStatus?: string;
     walletAddress?: string;
   };
 }
 
 export interface ConstitutionResponse {
-  accepted: boolean;
-  acceptedAt?: Date;
+  ok: boolean;
+  hasAcceptedConstitution?: boolean;
+  constitutionAcceptedAt?: Date;
+  isLegalSubject?: boolean;
+  message?: string;
 }
 
 // API Functions
@@ -40,9 +46,9 @@ export interface ConstitutionResponse {
 export async function register(data: RegisterDto): Promise<AuthResponse> {
   const response: AuthResponse = await api.post('/auth/register', data);
   
-  // Store token in localStorage
-  if (response.access_token) {
-    localStorage.setItem('token', response.access_token);
+  // Store tokens using AuthSession
+  if (response.accessToken) {
+    AuthSession.setTokens(response.accessToken, response.refreshToken || '');
   }
   
   return response;
@@ -52,11 +58,11 @@ export async function register(data: RegisterDto): Promise<AuthResponse> {
  * Login with username and password
  */
 export async function login(data: LoginDto): Promise<AuthResponse> {
-  const response: AuthResponse = await api.post('/auth/login', data);
+  const response: AuthResponse = await api.post('/auth/login-password', data);
   
-  // Store token in localStorage
-  if (response.access_token) {
-    localStorage.setItem('token', response.access_token);
+  // Store tokens using AuthSession
+  if (response.accessToken) {
+    AuthSession.setTokens(response.accessToken, response.refreshToken || '');
   }
   
   return response;
@@ -66,7 +72,7 @@ export async function login(data: LoginDto): Promise<AuthResponse> {
  * Accept the Constitution
  */
 export async function acceptConstitution(): Promise<ConstitutionResponse> {
-  return api.post('/identity/accept-constitution', {});
+  return api.post('/auth/accept-constitution', {});
 }
 
 /**
