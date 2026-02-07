@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CitizenAllocationService } from '../identity/citizen-allocation.service';
 import { ethers } from 'ethers';
 import { ArbanCompletion_ABI, OrganizationType } from '../blockchain/abis/arbanCompletion.abi';
 import { ArbanCompletion__factory } from '../typechain-types/factories/ArbanCompletion__factory';
@@ -18,7 +19,10 @@ export class OrganizationalArbanService {
   private readonly logger = new Logger(OrganizationalArbanService.name);
   private contract: ReturnType<typeof ArbanCompletion__factory.connect>;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly citizenAllocation: CitizenAllocationService,
+  ) {
     const contractAddress = process.env.ARBAN_COMPLETION_ADDRESS || '';
     
     if (contractAddress && contractAddress !== '') {
@@ -163,7 +167,10 @@ export class OrganizationalArbanService {
         },
       });
 
-      this.logger.log(`Member added successfully`);
+      this.logger.log(`Member added to Org Arban successfully`);
+
+      // Trigger Level 2 allocation for the new member
+      await this.allocateLevel2ToMember(request.arbanId.toString(), request.seatId);
     } catch (error) {
       this.logger.error(`Failed to add member: ${error.message}`, error.stack);
       throw error;
@@ -363,5 +370,55 @@ export class OrganizationalArbanService {
       BANKING: 4,
     };
     return map[branch] || 0;
+  }
+
+  /**
+   * Allocate Level 2 funds to member who joined Org Arban
+   * Called automatically after member addition
+   */
+  private async allocateLevel2ToMember(
+    arbanId: string,
+    seatId: string,
+  ): Promise<void> {
+    this.logger.log(
+      `Attempting Level 2 allocation for ${seatId} in Org Arban ${arbanId}`,
+    );
+
+    try {
+      // Resolve seatId to userId
+      const user = await this.prisma.user.findUnique({
+        where: { seatId },
+        select: { id: true, seatId: true },
+      });
+
+      if (!user) {
+        this.logger.warn(
+          `User with seatId ${seatId} not found. Skipping Level 2 allocation.`,
+        );
+        return;
+      }
+
+      // Attempt allocation
+      const result = await this.citizenAllocation.allocateLevel2Funds(
+        user.id,
+        arbanId,
+      );
+
+      if (result.allocated) {
+        this.logger.log(
+          `✅ Allocated ${result.amount} ALTAN to ${seatId} for Org Arban membership`,
+        );
+      } else {
+        this.logger.log(
+          `ℹ️  User ${seatId} already received Level 2 allocation`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to allocate Level 2 funds to ${seatId}:`,
+        error,
+      );
+      // Don't throw - member addition should still succeed
+    }
   }
 }

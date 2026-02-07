@@ -6,11 +6,11 @@ import { VerificationLevel, UserRole } from '@prisma/client';
 export class CreatorBootstrapService {
   constructor(private prisma: PrismaService) {}
 
-  // TEMPORARILY DISABLED - DB schema mismatch with User.date OfBirth field
-  // TODO: Fix after backend starts successfully
-  // async onModuleInit() {
-  //   await this.ensureCreatorFullyVerified();
-  // }
+  // Auto-verify all Creator accounts on module initialization
+  async onModuleInit() {
+    await this.ensureCreatorFullyVerified();
+  }
+
 
   /**
    * Ensure all Creator accounts are automatically FULLY_VERIFIED

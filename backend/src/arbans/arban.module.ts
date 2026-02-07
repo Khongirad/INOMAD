@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { VerificationModule } from '../verification/verification.module';
+import { IdentityModule } from '../identity/identity.module';
 // import { FamilyArbanService } from './family-arban.service';  // Disabled: requires blockchain
 import { ZunService } from './zun.service';
 import { OrganizationalArbanService } from './organizational-arban.service';
@@ -16,7 +17,7 @@ import { BankHierarchyController } from './bank-hierarchy.controller';
 import { ArbanVerificationController } from './arban-verification.controller';
 
 @Module({
-  imports: [PrismaModule, AuthModule, VerificationModule],
+  imports: [PrismaModule, AuthModule, VerificationModule, IdentityModule],
   controllers: [
     // FamilyArbanController,  // Disabled
     ZunController,

@@ -2,6 +2,8 @@ import { Injectable, BadRequestException, ForbiddenException, Logger } from '@ne
 import { PrismaService } from '../prisma/prisma.service';
 import { VerificationStatus } from '@prisma/client';
 import { BlockchainService } from '../blockchain/blockchain.service';
+import { CitizenAllocationService } from './citizen-allocation.service';
+
 
 @Injectable()
 export class VerificationService {
@@ -24,6 +26,7 @@ export class VerificationService {
   constructor(
     private prisma: PrismaService,
     private blockchain: BlockchainService,
+    private allocationService: CitizenAllocationService,
   ) {}
 
   /**
@@ -105,9 +108,6 @@ export class VerificationService {
     return { count, threshold: 3, verified: count >= 3 };
   }
 
-  /**
-   * Super-Verification: One mandate holder verifies instantly.
-   */
   async superVerify(fondantSeatId: string, targetUserId: string, justification: string) {
     if (!this.FOUNDER_MANDATES.includes(fondantSeatId)) {
       throw new ForbiddenException('Invalid Mandate ID. Access denied.');
@@ -124,6 +124,7 @@ export class VerificationService {
       throw new BadRequestException('Target user not found.');
     }
 
+    // Update verification status
     const target = await this.prisma.user.update({
       where: { id: targetUser.id },
       data: {
@@ -134,7 +135,53 @@ export class VerificationService {
       }
     });
 
-    return { status: 'SUPER_VERIFIED', targetSeat: target.seatId, mandateUsed: fondantSeatId };
+    // ✅ NEW: Automatic bank account creation and fund allocation
+    try {
+      // Step 1: Create bank account if doesn't exist
+      const accountResult = await this.allocationService.createCitizenBankAccount(target.id);
+      
+      this.logger.log(
+        `Bank account for ${target.seatId}: ${accountResult.alreadyExists ? 'already exists' : 'created'} (${accountResult.bankRef})`
+      );
+
+      // Step 2: Allocate Level 1 funds (100 ALTAN)
+      const allocationResult = await this.allocationService.allocateLevel1Funds(
+        target.id,
+        target.seatId || 'unknown',
+      );
+
+      this.logger.log(
+        `✅ Allocated ${allocationResult.amount} ALTAN to citizen ${target.seatId}`
+      );
+
+      return {
+        status: 'SUPER_VERIFIED',
+        targetSeat: target.seatId,
+        mandateUsed: fondantSeatId,
+        banking: {
+          accountCreated: accountResult.accountCreated,
+          bankRef: accountResult.bankRef,
+          fundsAllocated: allocationResult.allocated,
+          amount: allocationResult.amount,
+        },
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to create bank account or allocate funds for ${target.seatId}:`,
+        error,
+      );
+
+      // Return success for verification but note banking failure
+      return {
+        status: 'SUPER_VERIFIED',
+        targetSeat: target.seatId,
+        mandateUsed: fondantSeatId,
+        banking: {
+          error: 'Failed to create bank account or allocate funds',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
+    }
   }
 
 

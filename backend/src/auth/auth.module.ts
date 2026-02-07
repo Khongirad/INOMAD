@@ -69,6 +69,9 @@ export class AuthModule {
         { path: 'bank/(.*)', method: RequestMethod.ALL },
         // Exclude E2E test endpoints (public for testing)
         { path: 'e2e/(.*)', method: RequestMethod.ALL },
+        // Exclude transparency endpoints (PUBLIC - no auth required for transparency)
+        { path: 'api/transparency/(.*)', method: RequestMethod.ALL },
+        { path: 'api/activities/templates', method: RequestMethod.GET },
       )
       .forRoutes('*');
   }

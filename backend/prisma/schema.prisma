@@ -94,8 +94,11 @@ model User {
   khuralSeats             KhuralSeat[]
   tasksAssigned           Task[]               @relation("TaskAssignee")
   tasksCreated            Task[]               @relation("TaskCreator")
+  // Transparency: Activities performed by this user
+  activitiesPerformed     ActivityEntry[]      @relation("UserActivities")
   approvalsGiven          UnlockApproval[]
   unlockRequest           UnlockRequest?
+  ubiPayments             UbiPayment[]         // UBI payment history
   organization            Guild?               @relation("OrganizationMembers", fields: [organizationId], references: [id])
 
   // Legacy verification support
@@ -144,16 +147,16 @@ model User {
   distribution UserDistribution?
 
   // State Archive & Document System
-  templatesCreated     DocumentTemplate[]     @relation("TemplateCreator")
-  documentsIssued      DocumentContract[]     @relation("DocumentIssuer")
-  documentsReceived    DocumentContract[]     @relation("DocumentRecipient")
-  documentsArchived    DocumentContract[]     @relation("DocumentArchivist")
-  documentsIntermediate DocumentContract[]    @relation("DocumentIntermediary") // Broker/intermediary role
-  documentStageChanges DocumentStageHistory[] @relation("StageChanger")
-  documentSignatures   DocumentSignature[]    @relation("DocumentSigner")
-  notaryRecords        NotarizationRecord[]   @relation("NotaryRecords")
-  legalCertifications  LegalCertification[]   @relation("LegalCertifications")
-  documentAccess       DocumentAccessLog[]    @relation("DocumentAccess")
+  templatesCreated      DocumentTemplate[]     @relation("TemplateCreator")
+  documentsIssued       DocumentContract[]     @relation("DocumentIssuer")
+  documentsReceived     DocumentContract[]     @relation("DocumentRecipient")
+  documentsArchived     DocumentContract[]     @relation("DocumentArchivist")
+  documentsIntermediate DocumentContract[]     @relation("DocumentIntermediary") // Broker/intermediary role
+  documentStageChanges  DocumentStageHistory[] @relation("StageChanger")
+  documentSignatures    DocumentSignature[]    @relation("DocumentSigner")
+  notaryRecords         NotarizationRecord[]   @relation("NotaryRecords")
+  legalCertifications   LegalCertification[]   @relation("LegalCertifications")
+  documentAccess        DocumentAccessLog[]    @relation("DocumentAccess")
 
   // Banking System
   banksDirected Bank[] @relation("BankDirector")
@@ -447,10 +450,9 @@ model DocumentContract {
 
   // Intermediary/Broker (optional)
   intermediaryId         String? // Broker facilitating the agreement
-  intermediary           User?   @relation("DocumentIntermediary", fields: [intermediaryId], references: [id])
+  intermediary           User?    @relation("DocumentIntermediary", fields: [intermediaryId], references: [id])
   intermediaryCommission Decimal? @db.Decimal(5, 4) // Commission percentage (0.0001 to 0.0100 = 0.01% to 1%)
   transactionAmount      Decimal? @db.Decimal(18, 6) // Deal amount (if monetary transaction)
-
 
   // Current state
   currentStage DocumentStage  @default(DRAFT)
@@ -644,15 +646,15 @@ enum DocumentStatus {
 
 enum SignerRole {
   CREATOR
-  PARTY_A          // First party in bilateral agreement
-  PARTY_B          // Second party in bilateral agreement
+  PARTY_A // First party in bilateral agreement
+  PARTY_B // Second party in bilateral agreement
   CB_GOVERNOR
   NOTARY
   STATE_LAWYER
   BANK_DIRECTOR
   WITNESS
   OFFICER
-  INTERMEDIARY     // Broker/intermediary with commission (0.1-1%)
+  INTERMEDIARY // Broker/intermediary with commission (0.1-1%)
 }
 
 enum AccessAction {
@@ -1105,12 +1107,37 @@ model AltanTransaction {
   memo        String?
   fromUser    User?             @relation("SentTransactions", fields: [fromUserId], references: [id])
   toUser      User?             @relation("ReceivedTransactions", fields: [toUserId], references: [id])
+  ubiPayments UbiPayment[]      // Link to UBI payment records
 
   @@index([fromUserId])
   @@index([toUserId])
   @@index([fromBankRef])
   @@index([toBankRef])
   @@index([type])
+}
+
+model UbiPayment {
+  id              String           @id @default(uuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  
+  weekStartDate   DateTime         // Monday of the week (e.g., 2026-02-03 00:00:00)
+  weekEndDate     DateTime         // Sunday of the week (e.g., 2026-02-09 23:59:59)
+  amount          Int              @default(400)
+  
+  transactionId   String?          @unique
+  transaction     AltanTransaction? @relation(fields: [transactionId], references: [id])
+  
+  status          UbiPaymentStatus @default(PENDING)
+  failureReason   String?
+  
+  createdAt       DateTime         @default(now())
+  processedAt     DateTime?
+  
+  @@unique([userId, weekStartDate]) // Prevent duplicate payments for same week
+  @@index([weekStartDate])
+  @@index([status])
+  @@index([userId])
 }
 
 model AuditLog {
@@ -1348,6 +1375,10 @@ model OrganizationalArban {
   parent       OrganizationalArban?  @relation("OrgHierarchy", fields: [parentOrgId], references: [arbanId])
   departments  OrganizationalArban[] @relation("OrgHierarchy")
 
+  // Transparency: Activity and Report tracking
+  activities      ActivityEntry[]        @relation("OrgActivities")
+  activityReports BranchActivityReport[] @relation("OrgReports")
+
   @@index([orgType])
   @@index([powerBranch])
   @@index([parentOrgId])
@@ -1516,6 +1547,13 @@ enum TransactionStatus {
   PENDING
   COMPLETED
   FAILED
+}
+
+enum UbiPaymentStatus {
+  PENDING    // Scheduled but not yet processed
+  COMPLETED  // Successfully transferred
+  FAILED     // Transfer failed
+  SKIPPED    // User not eligible
 }
 
 enum KhuralEventType {
@@ -2795,3 +2833,148 @@ model ElectionCandidate {
 
 // ============== UPDATE ORGANIZATION MEMBER ==============
 // Add invitedBy field tracking (will update in separate step)
+
+// ============== TRANSPARENCY & ACCOUNTABILITY SYSTEM ==============
+// GOST-standardized activity logging with minute-level precision
+
+// Universal Activity Entry - logged at minute precision for all 4 branches
+model ActivityEntry {
+  id String @id @default(uuid())
+
+  // GOST Standard Fields (Стандарт ГОСТ от Канцелярии)
+  actionName        String // Название действия
+  actionDescription String @db.Text // Описание
+  actionParameters  Json // Параметры (flexible structure)
+
+  // Timing (down to the minute)
+  performedAt     DateTime @default(now()) @db.Timestamptz(0) // Minute precision
+  durationMinutes Int? // How long action took
+
+  // Actor
+  performedByUserId String
+  performedBy       User   @relation("UserActivities", fields: [performedByUserId], references: [id], onDelete: Cascade)
+
+  // Organizational Context
+  orgArbanId     String?
+  orgArban       OrganizationalArban? @relation("OrgActivities", fields: [orgArbanId], references: [id], onDelete: SetNull)
+  hierarchyLevel HierarchyLevel? // 1, 10, 100, 1000, 10000, REPUBLIC, CONFEDERATION
+
+  // Power Branch
+  powerBranch PowerBranchType // LEGISLATIVE, EXECUTIVE, JUDICIAL, BANKING
+
+  // Template reference
+  templateId String?
+  template   ActivityTemplate? @relation("TemplateActivities", fields: [templateId], references: [id], onDelete: SetNull)
+
+  // Blockchain integration
+  txHash          String?
+  blockNumber     BigInt?
+  contractAddress String?
+
+  // Aggregation
+  reportId String?
+  report   BranchActivityReport? @relation("ReportActivities", fields: [reportId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([performedAt])
+  @@index([powerBranch])
+  @@index([hierarchyLevel])
+  @@index([orgArbanId])
+  @@index([performedByUserId])
+  @@index([templateId])
+  @@index([reportId])
+}
+
+// GOST-standardized templates (from Chancellery)
+model ActivityTemplate {
+  id          String          @id @default(uuid())
+  code        String          @unique // e.g., "GOST-ORG-001", "GOST-LEG-002"
+  name        String // Template name
+  description String          @db.Text
+  powerBranch PowerBranchType
+
+  // Template parameters schema (JSON Schema)
+  parametersSchema Json // Defines required/optional fields
+
+  // Template content
+  actionNameTemplate  String // Template for action name
+  descriptionTemplate String @db.Text // Template for description
+
+  // Hierarchy applicability
+  applicableLevels HierarchyLevel[] // Which levels can use this template
+
+  // Versioning
+  version  String  @default("1.0")
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activities ActivityEntry[] @relation("TemplateActivities")
+
+  @@index([code])
+  @@index([powerBranch])
+  @@index([isActive])
+}
+
+// Aggregated reports (hourly, daily, weekly summaries)
+model BranchActivityReport {
+  id             String          @id @default(uuid())
+  powerBranch    PowerBranchType
+  hierarchyLevel HierarchyLevel?
+
+  // Time period
+  periodStart DateTime         @db.Timestamptz(0)
+  periodEnd   DateTime         @db.Timestamptz(0)
+  periodType  ReportPeriodType // REALTIME, HOURLY, DAILY, WEEKLY, MONTHLY
+
+  // Summary
+  title           String
+  summary         String @db.Text // Auto-generated summary
+  totalActivities Int    @default(0)
+
+  // Organizational context
+  orgArbanId String?
+  orgArban   OrganizationalArban? @relation("OrgReports", fields: [orgArbanId], references: [id], onDelete: SetNull)
+
+  // Linked activities
+  activities ActivityEntry[] @relation("ReportActivities")
+
+  // Metadata
+  metadata Json?
+  isPublic Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([powerBranch])
+  @@index([hierarchyLevel])
+  @@index([periodStart])
+  @@index([periodType])
+  @@index([orgArbanId])
+  @@index([isPublic])
+}
+
+// Hierarchy levels in organizational system
+enum HierarchyLevel {
+  LEVEL_1 // Individual/Family
+  LEVEL_10 // Arban
+  LEVEL_100 // Zun
+  LEVEL_1000 // Myangan
+  LEVEL_10000 // Tumen
+  REPUBLIC // Republican Khural
+  CONFEDERATION // Confederative Khural
+}
+
+// Report period types for aggregation
+enum ReportPeriodType {
+  REALTIME // Live activity feed
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}

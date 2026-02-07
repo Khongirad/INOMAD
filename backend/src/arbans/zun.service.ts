@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CitizenAllocationService } from '../identity/citizen-allocation.service';
 import { ethers } from 'ethers';
 import { ArbanCompletion_ABI } from '../blockchain/abis/arbanCompletion.abi';
 import { ArbanCompletion__factory } from '../typechain-types/factories/ArbanCompletion__factory';
@@ -10,7 +11,10 @@ export class ZunService {
   private readonly logger = new Logger(ZunService.name);
   private contract: ReturnType<typeof ArbanCompletion__factory.connect>;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly citizenAllocation: CitizenAllocationService,
+  ) {
     const contractAddress = process.env.ARBAN_COMPLETION_ADDRESS || '';
     
     if (contractAddress && contractAddress !== '') {
@@ -93,6 +97,9 @@ export class ZunService {
       });
 
       this.logger.log(`Zun formed successfully. Zun ID: ${zunId}`);
+
+      // Trigger Level 3 allocation for all Arban members
+      await this.allocateLevel3ToAllMembers(zun.id);
 
       return {
         zunId: Number(zunId),
@@ -237,6 +244,86 @@ export class ZunService {
     } catch (error) {
       this.logger.error(`Failed to sync Zun: ${error.message}`, error.stack);
       throw error;
+    }
+  }
+
+  /**
+   * Allocate Level 3 funds to all members of the Zun
+   * Called automatically after Zun formation
+   */
+  private async allocateLevel3ToAllMembers(zunId: string): Promise<void> {
+    this.logger.log(`Starting Level 3 allocation for all members of Zun ${zunId}`);
+
+    try {
+      // Get all member Arbans with their members
+      const zun = await this.prisma.zun.findUnique({
+        where: { id: zunId },
+        include: {
+          memberArbans: {
+            include: { children: true },
+          },
+        },
+      });
+
+      if (!zun || !zun.memberArbans) {
+        this.logger.warn(`Zun ${zunId} has no member Arbans`);
+        return;
+      }
+
+      const allSeatIds = new Set<string>();
+
+      // Collect all unique seatIds from member Arbans
+      for (const arban of zun.memberArbans) {
+        allSeatIds.add(arban.husbandSeatId);
+        allSeatIds.add(arban.wifeSeatId);
+        arban.children.forEach((child) => allSeatIds.add(child.childSeatId));
+      }
+
+      // Resolve seatIds to userIds
+      const users = await this.prisma.user.findMany({
+        where: { seatId: { in: Array.from(allSeatIds) } },
+        select: { id: true, seatId: true },
+      });
+
+      this.logger.log(
+        `Found ${users.length} users to allocate Level 3 funds. Zun has ${zun.memberArbans.length} Arbans.`,
+      );
+
+      // Allocate to each user
+      for (const user of users) {
+        try {
+          const result = await this.citizenAllocation.allocateLevel3Funds(
+            user.id,
+            zunId,
+          );
+
+          if (result.allocated) {
+            this.logger.log(
+              `✅ Allocated ${result.amount} ALTAN to ${user.seatId} for Zun formation`,
+            );
+          } else {
+            this.logger.log(
+              `ℹ️  User ${user.seatId} already received Level 3 allocation`,
+            );
+          }
+        } catch (error) {
+          this.logger.error(
+            `Failed to allocate Level 3 funds to user ${user.seatId}:`,
+            error,
+          );
+          // Continue with other users even if one fails
+        }
+      }
+
+      this.logger.log(
+        `Completed Level 3 allocation for Zun ${zunId}. Processed ${users.length} users.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to allocate Level 3 funds for Zun ${zunId}:`,
+        error,
+      );
+      // Don't throw - Zun formation should still succeed even if allocation fails
     }
   }
 }
