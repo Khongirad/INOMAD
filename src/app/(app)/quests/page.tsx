@@ -45,17 +45,17 @@ export default function QuestsPage() {
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
             <Scroll className="text-purple-400 w-8 h-8" />
-            Доска Заданий
+            Quest Board
           </h1>
           <p className="text-zinc-400 mt-2">
-            Публикуйте и выполняйте задания в стиле RPG-квестов
+            Post and complete quests in RPG style
           </p>
         </div>
         <Link
           href="/quests/create"
           className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition"
         >
-          + Создать Задание
+          + Create Quest
         </Link>
       </div>
 
@@ -69,7 +69,7 @@ export default function QuestsPage() {
               : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
           }`}
         >
-          Доступные
+          Available
         </button>
         <button
           onClick={() => setFilter('my')}
@@ -79,7 +79,7 @@ export default function QuestsPage() {
               : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
           }`}
         >
-          Мои Задания
+          My Quests
         </button>
         <button
           onClick={() => setFilter('all')}
@@ -89,7 +89,7 @@ export default function QuestsPage() {
               : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
           }`}
         >
-          Все
+          All
         </button>
       </div>
 
@@ -97,16 +97,16 @@ export default function QuestsPage() {
       {loading ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
-          <p className="text-zinc-400 mt-4">Загрузка заданий...</p>
+          <p className="text-zinc-400 mt-4">Loading quests...</p>
         </div>
       ) : quests.length === 0 ? (
         <div className="text-center py-12 bg-zinc-800/50 rounded-lg border border-zinc-700">
           <Scroll className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
-            Нет доступных заданий
+            No Available Quests
           </h3>
           <p className="text-zinc-400">
-            Создайте первое задание или проверьте позже
+            Create the first quest or check back later
           </p>
         </div>
       ) : (
@@ -157,7 +157,7 @@ export default function QuestsPage() {
                 ))}
                 {quest.objectives.length > 3 && (
                   <p className="text-xs text-zinc-500 ml-6">
-                    +{quest.objectives.length - 3} больше...
+                    +{quest.objectives.length - 3} more...
                   </p>
                 )}
               </div>
@@ -179,7 +179,7 @@ export default function QuestsPage() {
                 {quest.deadline && (
                   <div className="flex items-center gap-1 text-zinc-400">
                     <Clock className="w-4 h-4" />
-                    <span>{new Date(quest.deadline).toLocaleDateString('ru-RU')}</span>
+                    <span>{new Date(quest.deadline).toLocaleDateString('en-US')}</span>
                   </div>
                 )}
               </div>
@@ -188,7 +188,7 @@ export default function QuestsPage() {
               {quest.progress > 0 && (
                 <div className="mt-4">
                   <div className="flex justify-between text-xs text-zinc-400 mb-1">
-                    <span>Прогресс</span>
+                    <span>Progress</span>
                     <span>{quest.progress}%</span>
                   </div>
                   <div className="w-full bg-zinc-700 rounded-full h-2">

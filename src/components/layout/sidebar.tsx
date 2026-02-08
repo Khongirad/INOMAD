@@ -42,7 +42,7 @@ const NAV_ITEMS = [
   {
     category: "Executive (Guilds)",
     items: [
-      { name: "Quest Board", href: "/board", icon: Briefcase },
+      { name: "Quest Board", href: "/quests", icon: Briefcase },
       { name: "Cooperatives", href: "/cooperatives", icon: Users },
     ],
   },
