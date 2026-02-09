@@ -25,6 +25,19 @@ export class AuthPasswordService {
       throw new BadRequestException('Username must be at least 3 characters long');
     }
 
+    // Validate password policy
+    if (!dto.password || dto.password.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters long');
+    }
+
+    // Check password complexity: must contain letters and numbers
+    const hasLetters = /[a-zA-Z]/.test(dto.password);
+    const hasNumbers = /[0-9]/.test(dto.password);
+    
+    if (!hasLetters || !hasNumbers) {
+      throw new BadRequestException('Password must contain both letters and numbers');
+    }
+
     // Check if username already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { username: dto.username },
@@ -200,6 +213,18 @@ export class AuthPasswordService {
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid current password');
+    }
+
+    // Validate new password policy
+    if (!newPassword || newPassword.length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters long');
+    }
+
+    const hasLetters = /[a-zA-Z]/.test(newPassword);
+    const hasNumbers = /[0-9]/.test(newPassword);
+    
+    if (!hasLetters || !hasNumbers) {
+      throw new BadRequestException('New password must contain both letters and numbers');
     }
 
     // Hash new password

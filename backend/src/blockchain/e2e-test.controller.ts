@@ -1,12 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
 import { E2ETestService } from './e2e-test.service';
 import { BlockchainService } from './blockchain.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 /**
  * E2E Test Controller
  * Exposes PUBLIC endpoints for running integration tests
  * NO AUTH required - for testing purposes only
  */
+@Public()
 @Controller('e2e')
 export class E2ETestController {
   constructor(

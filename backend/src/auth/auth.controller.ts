@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 import { AuthPasswordService } from './auth-password.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthGuard, AuthenticatedRequest } from './auth.guard';
+import { Public } from './decorators/public.decorator';
 import { RequestNonceDto, VerifySignatureDto, RefreshTokenDto } from './dto/auth.dto';
 import { Request } from 'express';
 
@@ -27,6 +28,7 @@ export class AuthController {
    * Generate a nonce challenge for wallet signature.
    * Public endpoint — no auth required.
    */
+  @Public()
   @Post('nonce')
   @HttpCode(HttpStatus.OK)
   async requestNonce(@Body() dto: RequestNonceDto) {
@@ -39,6 +41,7 @@ export class AuthController {
    * Verify wallet signature, check SeatSBT ownership, issue JWT.
    * Public endpoint — no auth required.
    */
+  @Public()
   @Post('verify')
   @HttpCode(HttpStatus.OK)
   async verify(@Body() dto: VerifySignatureDto, @Req() req: Request) {
@@ -69,6 +72,7 @@ export class AuthController {
    * Rotate access + refresh tokens.
    * Public endpoint (uses refresh token in body).
    */
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
@@ -122,6 +126,7 @@ export class AuthController {
    * Register new user with username and password
    * Gates of Khural entrance - step 1
    */
+  @Public()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() dto: { username: string; password: string; email?: string }) {
@@ -133,6 +138,7 @@ export class AuthController {
    * Login with username and password
    * Gates of Khural entrance
    */
+  @Public()
   @Post('login-password')
   @HttpCode(HttpStatus.OK)
   async loginPassword(@Body() dto: { username: string; password: string }) {

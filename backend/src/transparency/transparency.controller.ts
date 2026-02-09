@@ -2,11 +2,13 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ActivityLogService } from './activity-log.service';
 import { TransparencyService } from './transparency.service';
 import { PowerBranchType, HierarchyLevel } from '@prisma/client';
+import { Public } from '../auth/decorators/public.decorator';
 
 /**
  * PUBLIC Transparency Controller - No authentication required
  * All endpoints accessible to any arban member
  */
+@Public()
 @Controller('transparency')
 export class TransparencyController {
   constructor(

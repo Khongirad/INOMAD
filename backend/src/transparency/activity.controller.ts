@@ -8,6 +8,7 @@ import {
 import { ActivityLogService } from './activity-log.service';
 import { TemplateService } from './template.service';
 import { PowerBranchType, HierarchyLevel } from '@prisma/client';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('activities')
 export class ActivityController {
@@ -40,6 +41,7 @@ export class ActivityController {
   /**
    * Get GOST templates (public - no auth)
    */
+  @Public()
   @Get('templates')
   async getTemplates(@Query('powerBranch') powerBranch?: PowerBranchType) {
     return this.templateService.getTemplates(powerBranch);

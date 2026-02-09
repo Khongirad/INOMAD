@@ -14,13 +14,19 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.AUTH_JWT_SECRET || process.env.JWT_SECRET || 'your-secret-key',
-      });
+      const secret = process.env.AUTH_JWT_SECRET || process.env.JWT_SECRET;
+      if (!secret) {
+        throw new Error('AUTH_JWT_SECRET or JWT_SECRET environment variable is required');
+      }
+
+      const payload = await this.jwtService.verifyAsync(token, { secret });
 
       // Attach user payload to request
       request.user = payload;
     } catch (error) {
+      if (error.message?.includes('environment variable')) {
+        throw error; // Re-throw configuration errors
+      }
       throw new UnauthorizedException('Invalid token');
     }
 

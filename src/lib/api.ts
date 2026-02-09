@@ -1,54 +1,103 @@
 import { AuthSession } from '@/lib/auth/session';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
-const STORAGE_KEY_SEAT_ID = "inomad.seatId";
 
 // Ensure endpoint has leading slash
 const normalizePath = (endpoint: string) => endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
+/**
+ * Refresh the access token using the refresh token
+ */
+async function refreshAccessToken(): Promise<boolean> {
+  try {
+    const refreshToken = AuthSession.getRefreshToken();
+    if (!refreshToken) {
+      return false;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json();
+    if (data.accessToken && data.refreshToken) {
+      AuthSession.setTokens(data.accessToken, data.refreshToken);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Make a fetch request with automatic token refresh on 401
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retryOnAuth = true
+): Promise<Response> {
+  const response = await fetch(url, options);
+
+  // If 401 and we haven't retried yet, attempt token refresh
+  if (response.status === 401 && retryOnAuth) {
+    const refreshed = await refreshAccessToken();
+    
+    if (refreshed) {
+      // Retry with new token
+      const newHeaders = api.getHeaders();
+      const retryOptions = {
+        ...options,
+        headers: { ...options.headers, ...newHeaders },
+      };
+      return fetch(url, retryOptions); // Don't retry again
+    } else {
+      // Refresh failed, clear auth and redirect to login
+      if (typeof window !== 'undefined') {
+        AuthSession.clear();
+        window.location.href = '/login';
+      }
+    }
+  }
+
+  return response;
+}
+
 export const api = {
-  /** Legacy: get seat ID from localStorage */
-  getSeatId: () => {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(STORAGE_KEY_SEAT_ID);
-  },
-
-  /** Legacy: set seat ID in localStorage */
-  setSeatId: (seatId: string) => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY_SEAT_ID, seatId);
-  },
-
   /**
-   * Get request headers.
-   * Uses JWT Bearer if authenticated, falls back to x-seat-id for legacy endpoints.
+   * Get request headers with JWT Bearer token.
+   * Legacy x-seat-id header removed - JWT-only authentication.
    */
   getHeaders: (): Record<string, string> => {
     const token = AuthSession.getAccessToken();
-
-    if (token && !AuthSession.isExpired(token)) {
-      return {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      };
-    }
-
-    // Legacy fallback: x-seat-id header
-    const seatId = api.getSeatId();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (seatId) {
-      headers["x-seat-id"] = seatId;
+
+    if (token && !AuthSession.isExpired(token)) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
+
     return headers;
   },
 
   get: async <T>(endpoint: string): Promise<T> => {
-    const res = await fetch(`${API_BASE_URL}${normalizePath(endpoint)}`, {
-      method: "GET",
-      headers: api.getHeaders(),
-    });
+    const res = await fetchWithRetry(
+      `${API_BASE_URL}${normalizePath(endpoint)}`,
+      {
+        method: "GET",
+        headers: api.getHeaders(),
+      }
+    );
 
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
@@ -59,11 +108,14 @@ export const api = {
   },
 
   post: async <T>(endpoint: string, body?: any): Promise<T> => {
-    const res = await fetch(`${API_BASE_URL}${normalizePath(endpoint)}`, {
-      method: "POST",
-      headers: api.getHeaders(),
-      body: JSON.stringify(body),
-    });
+    const res = await fetchWithRetry(
+      `${API_BASE_URL}${normalizePath(endpoint)}`,
+      {
+        method: "POST",
+        headers: api.getHeaders(),
+        body: JSON.stringify(body),
+      }
+    );
 
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
@@ -74,11 +126,14 @@ export const api = {
   },
 
   put: async <T>(endpoint: string, body?: any): Promise<T> => {
-    const res = await fetch(`${API_BASE_URL}${normalizePath(endpoint)}`, {
-      method: "PUT",
-      headers: api.getHeaders(),
-      body: JSON.stringify(body),
-    });
+    const res = await fetchWithRetry(
+      `${API_BASE_URL}${normalizePath(endpoint)}`,
+      {
+        method: "PUT",
+        headers: api.getHeaders(),
+        body: JSON.stringify(body),
+      }
+    );
 
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
@@ -89,10 +144,13 @@ export const api = {
   },
 
   delete: async <T>(endpoint: string): Promise<T> => {
-    const res = await fetch(`${API_BASE_URL}${normalizePath(endpoint)}`, {
-      method: "DELETE",
-      headers: api.getHeaders(),
-    });
+    const res = await fetchWithRetry(
+      `${API_BASE_URL}${normalizePath(endpoint)}`,
+      {
+        method: "DELETE",
+        headers: api.getHeaders(),
+      }
+    );
 
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
