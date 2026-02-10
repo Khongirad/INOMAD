@@ -1,0 +1,15 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { GuildsController } from './guilds.controller';
+import { GuildsService } from './guilds.service';
+
+describe('GuildsController', () => {
+  let controller: GuildsController;
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [GuildsController],
+      providers: [{ provide: GuildsService, useValue: { getAllGuilds: jest.fn().mockResolvedValue([]) } }],
+    }).compile();
+    controller = module.get<GuildsController>(GuildsController);
+  });
+  it('should be defined', () => { expect(controller).toBeDefined(); });
+});
