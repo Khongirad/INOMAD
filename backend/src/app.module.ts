@@ -18,8 +18,10 @@ import { ArbanModule } from './arbans/arban.module';
 import { DigitalSealModule } from './digital-seal/digital-seal.module';
 import { AcademyModule } from './academy/academy.module';
 import { JusticeModule } from './justice/justice.module';
-// Temporarily disabled due to TS errors - not needed for Gates of Khural
-// import { TempleModule } from './temple/temple.module';
+import { TempleModule } from './temple/temple.module';
+import { LegislativeModule } from './legislative/legislative.module';
+import { TaxModule } from './tax/tax.module';
+import { MarketplaceModule } from './marketplace/marketplace.module';
 import { MPCWalletModule } from './mpc-wallet/mpc-wallet.module';
 import { WalletProtectionModule } from './wallet-protection/wallet-protection.module';
 import { VerificationModule } from './verification/verification.module';
@@ -39,9 +41,7 @@ import { ElectionModule } from './elections/election.module';
 import { DistributionModule } from './distribution/distribution.module';
 import { ArchiveModule } from './archive/archive.module';
 import { TransparencyModule } from './transparency/transparency.module';
-// import { LegislativeModule } from './legislative/legislative.module';
-// import { TaxModule } from './tax/tax.module';
-// import { MarketplaceModule } from './marketplace/marketplace.module';
+// Note: LegislativeModule, TaxModule, MarketplaceModule imported above
 import { AdminModule } from './admin/admin.module';
 
 @Module({
@@ -67,7 +67,7 @@ import { AdminModule } from './admin/admin.module';
     DigitalSealModule,
     AcademyModule,
     JusticeModule,
-    // TempleModule,  // Disabled - TS errors
+    TempleModule,
     MPCWalletModule,
     WalletProtectionModule,
     VerificationModule,
@@ -87,9 +87,9 @@ import { AdminModule } from './admin/admin.module';
     DistributionModule,  // Initial ALTAN Distribution System
     ArchiveModule,       // State Archive & Document Constructor System
     TransparencyModule,   // Transparency & Accountability System (GOST)
-    // LegislativeModule,  // Disabled - TS errors
-    // TaxModule,  // Disabled - TS errors
-    // MarketplaceModule,  // Disabled - TS errors
+    LegislativeModule,
+    TaxModule,
+    MarketplaceModule,
     AdminModule,  // Admin and Creator management
   ],
 })

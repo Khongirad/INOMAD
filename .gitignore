@@ -1,7 +1,9 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ============================================
+# INOMAD KHURAL — .gitignore
+# ============================================
 
-# dependencies
-/node_modules
+# --- Dependencies ---
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,52 +12,58 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
 # --- Next.js ---
 .next/
 out/
-node_modules/
+/build
+
+# --- Testing ---
+/coverage
+
+# --- Environment & Secrets ---
+.env
+.env.*
+*.env
+*.env.*
+*.local.env
+!.env.example
+!backend/.env.example
+
+# --- Logs ---
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-.DS_Store
 
-# --- Local env / secrets ---
-*.env
-*.env.*
-*.local.env
-org.local.env
-chain/*.local.env
+# --- Backup & Temp files ---
+*.bak
+*.bak.*
+*.bak2
+*.bak3
+*.bak4
+*.bak5
+*.deprecated
+temp_*
+*.tar.gz
+
+# --- OS & Editor ---
+.DS_Store
+*.pem
+.vscode/
+.idea/
+
+# --- TypeScript ---
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Vercel ---
+.vercel
+
+# --- Backend ---
+backend/dist/
+backend/storage/
+backend/prisma/*.bak*
 
 # --- Hardhat / Foundry / Solidity build ---
 chain/artifacts/
@@ -68,15 +76,10 @@ chain/coverage.json
 chain/typechain/
 chain/typechain-types/
 chain/foundry.lock
-
-# --- Editor ---
-.vscode/
-.idea/
 chain/addresses.json
-*.bak.*
+chain/script/
 
 # --- Local junk ---
 The
 To
 cache/
-chain/script/
