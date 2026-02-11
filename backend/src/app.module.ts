@@ -45,6 +45,8 @@ import { ArchiveModule } from './archive/archive.module';
 import { TransparencyModule } from './transparency/transparency.module';
 // Note: LegislativeModule, TaxModule, MarketplaceModule imported above
 import { AdminModule } from './admin/admin.module';
+import { UnifiedOrgModule } from './unified-org/unified-org.module';
+import { NotificationModule } from './notifications/notification.module';
 
 @Module({
   imports: [
@@ -97,6 +99,8 @@ import { AdminModule } from './admin/admin.module';
     TaxModule,
     MarketplaceModule,
     AdminModule,  // Admin and Creator management
+    UnifiedOrgModule,  // Unified Organization Management System
+    NotificationModule, // In-app Notification System
   ],
   providers: [
     {

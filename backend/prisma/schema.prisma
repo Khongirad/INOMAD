@@ -177,6 +177,9 @@ model User {
   landSales           LandTransaction[] @relation("LandSeller")
   landPurchases       LandTransaction[] @relation("LandBuyer")
 
+  // Notifications
+  notifications Notification[] @relation("UserNotifications")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -1367,6 +1370,8 @@ model Zun {
   name           String
   founderArbanId BigInt
   elderSeatId    String? // Changed from BigInt to String
+  myanganId      String? // Parent Myangan
+  myangan        Myangan?      @relation("MyanganZuns", fields: [myanganId], references: [id])
   isActive       Boolean       @default(true)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -1374,6 +1379,7 @@ model Zun {
 
   @@index([founderArbanId])
   @@index([elderSeatId])
+  @@index([myanganId])
 }
 
 model OrganizationalArban {
@@ -1539,9 +1545,13 @@ enum GuildType {
 }
 
 enum MemberRole {
-  MEMBER
-  OFFICER
-  LEADER
+  APPRENTICE // Стажёр/Ученик
+  MEMBER // Рядовой участник
+  SECRETARY // Секретарь (ведёт протоколы)
+  TREASURER // Казначей
+  OFFICER // Должностное лицо
+  DEPUTY // Заместитель главы
+  LEADER // Глава организации (избираемый)
 }
 
 enum TaskStatus {
@@ -3458,4 +3468,251 @@ model LandTransaction {
   @@index([landPlotId])
   @@index([propertyId])
   @@index([status])
+}
+
+// ==============================================================================
+// HIERARCHICAL GOVERNANCE — Myangan (1000) → Tumen (10000) → Republic → Confederation
+// ==============================================================================
+
+/// Myangan (Тысяча) — 10 Zuns form a Myangan
+/// Military: Battalion | Governance: District council
+model Myangan {
+  id           String  @id @default(uuid())
+  name         String
+  region       String // Geographic region
+  description  String?
+
+  // Leadership
+  leaderSeatId String? // Elected leader's seat
+  leaderUserId String? // Elected leader
+
+  // Parent Tumen
+  tumenId String?
+  tumen   Tumen?  @relation("TumenMyangans", fields: [tumenId], references: [id])
+
+  // Member Zuns (should be 10)
+  memberZuns Zun[] @relation("MyanganZuns")
+
+  // Statistics
+  totalMembers Int @default(0) // Cached count of all members across Zuns
+  totalArbans  Int @default(0) // Cached count of all Arbans
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([region])
+  @@index([tumenId])
+  @@index([leaderSeatId])
+  @@index([isActive])
+}
+
+/// Tumen (Десять тысяч) — 10 Myangans form a Tumen
+/// Military: Division | Governance: Regional parliament
+model Tumen {
+  id           String  @id @default(uuid())
+  name         String
+  region       String // Geographic region
+  description  String?
+
+  // Leadership
+  leaderSeatId String? // Elected chairman's seat
+  leaderUserId String? // Elected chairman
+
+  // Parent Republic
+  republicId String?
+  republic   RepublicanKhural? @relation("RepublicTumens", fields: [republicId], references: [id])
+
+  // Member Myangans (should be 10)
+  memberMyangans Myangan[] @relation("TumenMyangans")
+
+  // Statistics
+  totalMembers Int @default(0)
+  totalArbans  Int @default(0)
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([region])
+  @@index([republicId])
+  @@index([leaderSeatId])
+  @@index([isActive])
+}
+
+/// Republican Khural — Regional parliament (one per republic)
+/// Example: Buryad Republic Khural, Russian Republic Khural, etc.
+model RepublicanKhural {
+  id          String  @id @default(uuid())
+  name        String // "Buryad-Mongol Republican Khural"
+  republicKey String  @unique // "buryad", "russian", "tuvan", etc.
+  description String?
+
+  // Leadership
+  chairmanSeatId String? // Elected chairman
+  chairmanUserId String?
+
+  // Parent Confederation
+  confederationId String?
+  confederation   ConfederativeKhural? @relation("ConfederationRepublics", fields: [confederationId], references: [id])
+
+  // Member Tumens
+  memberTumens Tumen[] @relation("RepublicTumens")
+
+  // Statistics
+  totalMembers Int @default(0)
+  totalTumens  Int @default(0)
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([republicKey])
+  @@index([confederationId])
+  @@index([isActive])
+}
+
+/// Confederative Khural — Supreme federal parliament
+/// The highest governing body of the Siberian Confederation
+model ConfederativeKhural {
+  id          String  @id @default(uuid())
+  name        String  @default("Confederative Khural of the Siberian Confederation")
+  description String?
+
+  // Leadership
+  speakerSeatId String? // Elected speaker
+  speakerUserId String?
+
+  // Member Republics
+  memberRepublics RepublicanKhural[] @relation("ConfederationRepublics")
+
+  // Statistics
+  totalMembers   Int @default(0)
+  totalRepublics Int @default(0)
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==============================================================================
+// ORGANIZATION PERMISSIONS — Role-based access within any organization
+// ==============================================================================
+
+/// Defines what each MemberRole can do within an organization
+/// Each organization can customize permissions for its roles
+model OrgPermission {
+  id String @id @default(uuid())
+
+  organizationId String // Links to Organization.id
+  role           MemberRole
+
+  // Permissions (each is a boolean flag)
+  canInviteMembers  Boolean @default(false)
+  canRemoveMembers  Boolean @default(false)
+  canCreateTasks    Boolean @default(false)
+  canAssignTasks    Boolean @default(false)
+  canVote           Boolean @default(true) // All members vote by default
+  canCreateProposal Boolean @default(false)
+  canManageTreasury Boolean @default(false)
+  canSignDocuments  Boolean @default(false)
+  canCallElection   Boolean @default(false)
+  canEditOrgInfo    Boolean @default(false)
+  canViewReports    Boolean @default(true) // Transparency by default
+  canCreateReports  Boolean @default(false)
+  canManageRoles    Boolean @default(false)
+  canArchive        Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, role])
+  @@index([organizationId])
+  @@index([role])
+}
+
+// ==============================================================================
+// NOTIFICATION SYSTEM
+// ==============================================================================
+
+enum NotificationType {
+  // Organization
+  ORG_INVITATION
+  ORG_ROLE_CHANGED
+  ORG_MEMBER_JOINED
+  ORG_MEMBER_LEFT
+  ORG_ELECTION_STARTED
+  ORG_ELECTION_RESULT
+
+  // Tasks & Quests
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  QUEST_AVAILABLE
+  QUEST_COMPLETED
+
+  // Governance
+  PROPOSAL_CREATED
+  VOTE_REQUIRED
+  PROPOSAL_PASSED
+  PROPOSAL_REJECTED
+  LAW_ENACTED
+
+  // Justice
+  CASE_FILED
+  CASE_ASSIGNED
+  CASE_RULING
+
+  // Finance
+  PAYMENT_RECEIVED
+  UBI_DISTRIBUTED
+  LOAN_DUE
+  CREDIT_APPROVED
+
+  // Documents
+  DOCUMENT_REQUIRES_SIGNATURE
+  DOCUMENT_SIGNED
+  DOCUMENT_NOTARIZED
+
+  // System
+  VERIFICATION_APPROVED
+  VERIFICATION_REJECTED
+  SYSTEM_ANNOUNCEMENT
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  // Recipient
+  userId String
+  user   User   @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Content
+  type    NotificationType
+  title   String
+  body    String
+  icon    String? // Emoji or icon identifier
+  linkUrl String? // Deep link to relevant page
+
+  // Context
+  sourceOrgId  String? // Organization that generated this
+  sourceUserId String? // User who triggered this
+  resourceId   String? // ID of related resource (quest, proposal, etc.)
+  resourceType String? // "Quest", "Proposal", "Document", etc.
+
+  // Status
+  isRead       Boolean   @default(false)
+  readAt       DateTime?
+  isDismissed  Boolean   @default(false)
+  dismissedAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@index([sourceOrgId])
 }
