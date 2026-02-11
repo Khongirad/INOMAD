@@ -201,6 +201,10 @@ model User {
   // Escalation Records
   escalationsInitiated   EscalationRecord[]  @relation("EscalationInitiator")
 
+  // Khural Parliament
+  khuralSessionsConvened KhuralSession[]     @relation("KhuralConvener")
+  khuralVotesCast        KhuralVote[]        @relation("KhuralVoter")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -3548,6 +3552,13 @@ model Tumen {
   // Member Myangans (should be 10)
   memberMyangans Myangan[] @relation("TumenMyangans")
 
+  // Cooperations (Tumens cooperate, never merge)
+  cooperationsAsA TumenCooperation[] @relation("TumenCoopA")
+  cooperationsAsB TumenCooperation[] @relation("TumenCoopB")
+
+  // Parliament votes by this Tumen's leader
+  khuralVotes KhuralVote[] @relation("TumenVotes")
+
   // Statistics
   totalMembers Int @default(0)
   totalArbans  Int @default(0)
@@ -4111,4 +4122,125 @@ model EscalationRecord {
 
   @@index([complaintId, createdAt])
   @@index([escalatedById])
+}
+
+// ============================================================
+// TUMEN COOPERATION — Tumens cooperate, never merge
+// ============================================================
+
+enum CooperationStatus {
+  PROPOSED
+  ACTIVE
+  DISSOLVED
+}
+
+/// TumenCooperation — treaty between two Tumens
+/// Tumens are sovereign entities — they COOPERATE, never merge.
+model TumenCooperation {
+  id String @id @default(uuid())
+
+  tumenAId String
+  tumenA   Tumen @relation("TumenCoopA", fields: [tumenAId], references: [id])
+
+  tumenBId String
+  tumenB   Tumen @relation("TumenCoopB", fields: [tumenBId], references: [id])
+
+  title       String  // Treaty title
+  description String? @db.Text // Full treaty text
+  treaty      String? @db.Text // Formal agreement document
+
+  status   CooperationStatus @default(PROPOSED)
+  signedAt DateTime?
+
+  proposedById String // Who proposed it (Tumen leader)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tumenAId, tumenBId]) // Only one active cooperation per pair
+  @@index([tumenAId])
+  @@index([tumenBId])
+  @@index([status])
+}
+
+// ============================================================
+// KHURAL PARLIAMENT — Sessions and Voting
+// ============================================================
+
+enum ParliamentLevel {
+  REPUBLICAN
+  CONFEDERATIVE
+}
+
+enum KhuralSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum VoteChoice {
+  FOR
+  AGAINST
+  ABSTAIN
+}
+
+/// KhuralSession — a parliament session at Republic or Confederation level
+/// Only Tumen leaders participate and vote.
+model KhuralSession {
+  id String @id @default(uuid())
+
+  level       ParliamentLevel    // REPUBLICAN or CONFEDERATIVE
+  entityId    String             // republicId or confederationId
+  title       String
+  description String?  @db.Text
+  agenda      String?  @db.Text  // Session agenda
+
+  sessionDate DateTime
+  status      KhuralSessionStatus @default(SCHEDULED)
+
+  // Quorum
+  quorumRequired Int @default(0) // Minimum Tumen leaders needed
+  quorumMet      Boolean @default(false)
+
+  // Results
+  resolution String? @db.Text // Final resolution text
+
+  // Who convened the session
+  convenedById String?
+  convenedBy   User? @relation("KhuralConvener", fields: [convenedById], references: [id])
+
+  votes KhuralVote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([level, entityId])
+  @@index([status])
+  @@index([sessionDate])
+  @@index([convenedById])
+}
+
+/// KhuralVote — vote cast by a Tumen leader in a Khural session
+model KhuralVote {
+  id String @id @default(uuid())
+
+  sessionId String
+  session   KhuralSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  voterUserId String
+  voter       User @relation("KhuralVoter", fields: [voterUserId], references: [id])
+
+  tumenId String // Which Tumen they represent
+  tumen   Tumen @relation("TumenVotes", fields: [tumenId], references: [id])
+
+  vote    VoteChoice
+  comment String? // Optional reasoning
+
+  castedAt DateTime @default(now())
+
+  @@unique([sessionId, voterUserId]) // One vote per session per leader
+  @@index([sessionId])
+  @@index([voterUserId])
+  @@index([tumenId])
 }

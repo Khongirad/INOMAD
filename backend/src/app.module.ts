@@ -52,6 +52,8 @@ import { ComplaintModule } from './complaints/complaint.module';
 import { WorkActModule } from './work-acts/work-act.module';
 import { DisputeModule } from './disputes/dispute.module';
 import { ChancelleryModule } from './chancellery/chancellery.module';
+import { HierarchyModule } from './hierarchy/hierarchy.module';
+import { ParliamentModule } from './parliament/parliament.module';
 
 @Module({
   imports: [
@@ -111,6 +113,8 @@ import { ChancelleryModule } from './chancellery/chancellery.module';
     WorkActModule,      // Universal Work-Act Completion System
     DisputeModule,      // Pre-complaint negotiation (bound to contracts/quests/work-acts)
     ChancelleryModule,  // Contract registry for lawyers and notaries
+    HierarchyModule,    // Zun→Myangan→Tumen hierarchy + cooperation
+    ParliamentModule,   // Khural sessions and voting (Tumen leaders only)
   ],
   providers: [
     {

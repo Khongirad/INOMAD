@@ -22,6 +22,8 @@ import {
   AlertTriangle,
   FileCheck,
   Handshake,
+  TreePine,
+  Vote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,7 +40,9 @@ const NAV_ITEMS = [
   {
     category: "Legislative (Khural)",
     items: [
-      { name: "State Map", href: "/khural", icon: Building2 }, // Tumen/Myangan/Zuun/Arban
+      { name: "State Map", href: "/khural", icon: Building2 },
+      { name: "Hierarchy", href: "/hierarchy", icon: TreePine },
+      { name: "Parliament", href: "/parliament", icon: Vote },
       { name: "Territory", href: "/territory", icon: Globe },
       { name: "Archives", href: "/registries/history", icon: ScrollText },
     ],
