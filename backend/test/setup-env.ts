@@ -24,11 +24,11 @@ if (!process.env.AUTH_JWT_SECRET && process.env.JWT_SECRET) {
 
 // Fallback for tests
 if (!process.env.AUTH_JWT_SECRET) {
-  process.env.AUTH_JWT_SECRET = 'e2e-test-secret-key';
+  process.env.AUTH_JWT_SECRET = 'test-only-not-a-real-secret';  // nosecret: test-only fallback
 }
 
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/inomad_khural';
+  process.env.DATABASE_URL = `postgresql://postgres:${process.env.PGPASSWORD || 'postgres'}@localhost:5432/inomad_khural`;  // nosecret: local dev only
 }
 
 // Blockchain fallbacks for services like VotingCenterService
