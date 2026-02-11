@@ -18,30 +18,40 @@ export class ChancelleryService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Check if user has legal access (NOTARY or STATE_LAWYER role)
+   * Check if user has legal access (NOTARY, STATE_LAWYER, or JUDGE)
+   * Судья имеет доступ ко ВСЕМ договорам.
    */
   private async verifyLegalAccess(userId: string) {
-    // Check if user has signed documents as NOTARY or STATE_LAWYER
+    // 1. Check if user has signed documents as NOTARY or STATE_LAWYER
     const legalRole = await this.prisma.documentSignature.findFirst({
       where: {
         signerId: userId,
         signerRole: { in: ['NOTARY', 'STATE_LAWYER'] },
       },
     });
+    if (legalRole) return;
 
-    // Also check if user has notarization or legal certification records
+    // 2. Check if user has notarization records
     const notaryRecord = await this.prisma.notarizationRecord.findFirst({
       where: { notaryId: userId },
     });
+    if (notaryRecord) return;
+
+    // 3. Check if user has legal certification records
     const legalCert = await this.prisma.legalCertification.findFirst({
       where: { lawyerId: userId },
     });
+    if (legalCert) return;
 
-    if (!legalRole && !notaryRecord && !legalCert) {
-      throw new ForbiddenException(
-        'Доступ к канцелярии только для нотариусов и юристов',
-      );
-    }
+    // 4. Check if user is a judge (assigned to any court case)
+    const judgeRecord = await this.prisma.judicialCase.findFirst({
+      where: { assignedJudge: userId },
+    });
+    if (judgeRecord) return;
+
+    throw new ForbiddenException(
+      'Доступ к канцелярии только для нотариусов, юристов и судей',
+    );
   }
 
   /**
