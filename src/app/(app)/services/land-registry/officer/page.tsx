@@ -98,7 +98,7 @@ export default function LandRegistryOfficerPage() {
         </Card>
 
         <Card>
-          <CardContent">
+          <CardContent>
             <Stack spacing={2}>
               <TransferIcon sx={{ fontSize: 40, color: 'error.main' }} />
               <Typography variant="h6">Pending Transfers</Typography>
