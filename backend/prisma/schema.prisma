@@ -2525,14 +2525,41 @@ enum EventScope {
 
 // Guild & Organization Rating System
 enum OrganizationType {
-  GUILD // Craftsmen, merchants
-  COMMITTEE // Temporary working groups
-  SERVICE // Public services
-  ARBAN // 10-person unit
-  HUNDRED // 100-person unit
-  THOUSAND // 1000-person unit
-  REPUBLIC // Republic-level
-  CONFEDERATION // Confederation-level
+  // Universal (any branch)
+  COMMITTEE        // Temporary working groups
+  AGENCY           // Standing agencies
+  COMMISSION       // Regulatory commissions
+  SERVICE          // Public services
+
+  // Hierarchy levels
+  ARBAN            // 10-person unit
+  HUNDRED          // 100-person unit
+  THOUSAND         // 1000-person unit
+  REPUBLIC         // Republic-level
+  CONFEDERATION    // Confederation-level
+
+  // Executive branch
+  GOVERNMENT       // Administration
+  MINISTRY         // Ministry
+  GUILD            // Professional guild
+  PRIVATE_COMPANY  // Private company
+  CORPORATION      // Corporation
+  MUNICIPAL        // Municipal organization
+
+  // Judicial branch
+  COURT            // Court
+  JUSTICE_MINISTRY // Ministry of Justice
+  ATTORNEY_OFFICE  // Attorney / Prosecutor office
+  LAW_AGENCY       // Law firm / Legal agency
+  NOTARY_AGENCY    // Notary agency
+  BAR_ASSOCIATION  // Bar association
+  ARBITRATION      // Arbitration body
+
+  // Banking branch
+  BANK             // Bank
+  CREDIT_UNION     // Credit union / cooperative
+  PENSION_FUND     // Pension fund
+  INSURANCE_FUND   // Insurance fund
 }
 
 enum BranchType {
@@ -2602,13 +2629,14 @@ model Organization {
   name        String
   type        OrganizationType
   branch      BranchType?
+  powerBranch PowerBranchType? // LEGISLATIVE, EXECUTIVE, JUDICIAL, BANKING
   description String?
 
   // Hierarchical structure
   parentId String?
   parent   Organization?  @relation("SubOrganizations", fields: [parentId], references: [id])
   children Organization[] @relation("SubOrganizations")
-  level    Int // 1=Arban, 10=Hundred, 100=Thousand, etc.
+  level    Int // 1=Arban(10), 10=Hundred(100), 100=Thousand(1000), 1000=Tumen(10000)
 
   // Geographic/ethnic scope
   republicId String?
@@ -2653,9 +2681,16 @@ model Organization {
   invitations  GuildInvitation[]         @relation("GuildInvitations")
   elections    Election[]                @relation("Elections")
 
+  // Banking — org accounts, wallets, shared vaults
+  bankAccounts OrgBankAccount[]
+
+  // Smart contracts created by this organization
+  orgContracts OrgContract[]
+
   @@index([type, overallRating])
   @@index([republicId])
   @@index([currentRank])
+  @@index([powerBranch])
 }
 
 model OrganizationMember {
@@ -4244,3 +4279,78 @@ model KhuralVote {
   @@index([voterUserId])
   @@index([tumenId])
 }
+
+// ============== ORGANIZATION BANKING ==============
+
+enum OrgAccountType {
+  OPERATING     // Day-to-day operating account
+  TREASURY      // Treasury / reserve
+  SHARED_VAULT  // Shared vault (multi-sig)
+}
+
+model OrgBankAccount {
+  id String @id @default(uuid())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  accountName   String  // "Operating Account", "Reserve Fund", etc.
+  accountNumber String  @unique // Generated account number
+  accountType   OrgAccountType @default(OPERATING)
+
+  balance  Decimal @default(0) @db.Decimal(18, 6)
+  currency String  @default("ALTAN")
+
+  // Blockchain wallet
+  walletAddress String? // On-chain wallet for this account
+  walletType    String? // "MPC", "MULTISIG", etc.
+
+  // Access control
+  signaturesRequired Int @default(1) // For multi-sig vaults
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([accountType])
+  @@index([isActive])
+}
+
+// ============== ORGANIZATION CONTRACTS ==============
+
+model OrgContract {
+  id String @id @default(uuid())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Link to the DocumentContract system
+  documentContractId String?
+  // Not a direct relation to avoid circular deps — resolved via query
+
+  // Contract metadata at org level
+  title       String
+  description String? @db.Text
+  powerBranch PowerBranchType // Which branch context
+
+  // Smart contract on-chain
+  contractAddress String? // Deployed smart contract address
+  txHash          String? // Deployment TX
+  contractABI     Json?   // ABI for calling the contract
+
+  // Parties
+  counterpartyOrgId String? // Other organization (if inter-org contract)
+
+  // Status
+  status    String @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CANCELLED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([powerBranch])
+  @@index([status])
+  @@index([counterpartyOrgId])
+}
+

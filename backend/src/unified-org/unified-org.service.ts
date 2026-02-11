@@ -11,6 +11,7 @@ import {
   BranchType,
   MemberRole,
   RatingCategory,
+  PowerBranchType,
 } from '@prisma/client';
 import {
   CreateOrganizationDto,
@@ -825,6 +826,180 @@ export class UnifiedOrgService {
     await this.prisma.organization.update({
       where: { id: orgId },
       data: { trustScore, qualityScore, financialScore, overallRating },
+    });
+  }
+
+  // ===========================================================================
+  // BRANCH MEMBERSHIP VALIDATION
+  // ===========================================================================
+
+  /**
+   * Validate whether a user can join an organization in a specific power branch.
+   *
+   * LEGISLATIVE:  Only family representatives (one spouse from a FamilyArban).
+   * EXECUTIVE:    One family member OR any single adult (18+).
+   * JUDICIAL:     One family member OR any single adult (18+).
+   * BANKING:      One family member OR any single adult (18+).
+   */
+  async validateBranchMembership(userId: string, powerBranch: PowerBranchType) {
+    if (powerBranch === 'NONE') return; // No restriction for NONE
+
+    // Get user to check age
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, dateOfBirth: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (powerBranch === 'LEGISLATIVE') {
+      // LEGISLATIVE: must be a spouse in a FamilyArban
+      const familyArban = await this.prisma.familyArban.findFirst({
+        where: {
+          OR: [
+            { husbandSeatId: userId },
+            { wifeSeatId: userId },
+          ],
+        },
+      });
+      if (!familyArban) {
+        throw new ForbiddenException(
+          'В Законодательной ветви могут быть только представители Семьи (один из супругов)',
+        );
+      }
+    } else {
+      // EXECUTIVE / JUDICIAL / BANKING:
+      // One family member OR any single adult (18+)
+      const familyArban = await this.prisma.familyArban.findFirst({
+        where: {
+          OR: [
+            { husbandSeatId: userId },
+            { wifeSeatId: userId },
+          ],
+        },
+      });
+
+      if (!familyArban) {
+        // Not a family member — must be a single adult 18+
+        if (!user.dateOfBirth) {
+          throw new ForbiddenException(
+            'Для вступления необходимо указать дату рождения (возраст 18+)',
+          );
+        }
+        const age = Math.floor(
+          (Date.now() - new Date(user.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
+        );
+        if (age < 18) {
+          throw new ForbiddenException(
+            'В Исполнительной/Судебной/Банковской ветви могут участвовать только совершеннолетние (18+)',
+          );
+        }
+      }
+      // If they are a family member, they can join — no age restriction needed
+    }
+
+    this.logger.log(`Branch membership validated: user ${userId} → ${powerBranch}`);
+  }
+
+  // ===========================================================================
+  // ORGANIZATION BANKING
+  // ===========================================================================
+
+  /**
+   * Create a bank account for an organization (operating, treasury, or shared vault)
+   */
+  async createOrgBankAccount(
+    orgId: string,
+    requestingUserId: string,
+    data: { accountName: string; accountType?: 'OPERATING' | 'TREASURY' | 'SHARED_VAULT'; currency?: string },
+  ) {
+    await this.requirePermission(orgId, requestingUserId, 'canManageTreasury');
+
+    const org = await this.prisma.organization.findUnique({ where: { id: orgId } });
+    if (!org) throw new NotFoundException('Organization not found');
+
+    // Generate account number: ORG-{branch}-{short-uuid}
+    const branchPrefix = org.powerBranch?.substring(0, 3)?.toUpperCase() || 'GEN';
+    const accountNumber = `ORG-${branchPrefix}-${orgId.substring(0, 8).toUpperCase()}`;
+
+    // Check if account already exists with this type
+    const existing = await this.prisma.orgBankAccount.findFirst({
+      where: { organizationId: orgId, accountType: data.accountType || 'OPERATING' },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        `Organization already has a ${data.accountType || 'OPERATING'} account`,
+      );
+    }
+
+    const account = await this.prisma.orgBankAccount.create({
+      data: {
+        organizationId: orgId,
+        accountName: data.accountName,
+        accountNumber: `${accountNumber}-${Date.now()}`,
+        accountType: data.accountType || 'OPERATING',
+        currency: data.currency || 'ALTAN',
+        signaturesRequired: data.accountType === 'SHARED_VAULT' ? 2 : 1,
+      },
+    });
+
+    this.logger.log(`Org bank account created: ${account.id} (${account.accountType}) for org ${orgId}`);
+    return account;
+  }
+
+  /**
+   * List bank accounts for an organization
+   */
+  async listOrgBankAccounts(orgId: string) {
+    return this.prisma.orgBankAccount.findMany({
+      where: { organizationId: orgId, isActive: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  // ===========================================================================
+  // ORGANIZATION CONTRACTS (Smart Contracts)
+  // ===========================================================================
+
+  /**
+   * Create a smart contract entry for an organization
+   */
+  async createOrgContract(
+    orgId: string,
+    requestingUserId: string,
+    data: {
+      title: string;
+      description?: string;
+      counterpartyOrgId?: string;
+      documentContractId?: string;
+    },
+  ) {
+    await this.requirePermission(orgId, requestingUserId, 'canSignDocuments');
+
+    const org = await this.prisma.organization.findUnique({ where: { id: orgId } });
+    if (!org) throw new NotFoundException('Organization not found');
+
+    const contract = await this.prisma.orgContract.create({
+      data: {
+        organizationId: orgId,
+        title: data.title,
+        description: data.description,
+        powerBranch: org.powerBranch || 'NONE',
+        documentContractId: data.documentContractId,
+        counterpartyOrgId: data.counterpartyOrgId,
+      },
+    });
+
+    this.logger.log(`Org contract created: ${contract.id} for org ${orgId}`);
+    return contract;
+  }
+
+  /**
+   * List contracts for an organization
+   */
+  async listOrgContracts(orgId: string, status?: string) {
+    return this.prisma.orgContract.findMany({
+      where: { organizationId: orgId, ...(status ? { status } : {}) },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
