@@ -13,7 +13,13 @@ import { PrismaService } from '../prisma/prisma.service';
  * Republican Khural: лидеры Тумэнов голосуют на уровне Республики.
  * Confederative Khural: лидеры Тумэнов всех Республик голосуют на уровне Конфедерации.
  *
- * Только лидеры Тумэнов имеют право голоса.
+ * BRANCH MEMBERSHIP RULES:
+ * ─────────────────────────
+ * LEGISLATIVE:  Only family representatives (one spouse from a FamilyArban).
+ *               Only legislative-branch Tumens (with republicId) can vote.
+ * EXECUTIVE:    One family member OR any single adult (18+).
+ * JUDICIAL:     One family member OR any single adult (18+).
+ * BANKING:      One family member OR any single adult (18+).
  */
 @Injectable()
 export class ParliamentService {
@@ -149,7 +155,9 @@ export class ParliamentService {
   }
 
   // ────────────────────────────────────
-  // VOTING — only Tumen leaders
+  // VOTING — only Tumen leaders from LEGISLATIVE branch
+  // Rule 1: Only Tumens in the legislative hierarchy can vote in Khural
+  // Rule 2: Legislative branch = family representatives (one spouse per family)
   // ────────────────────────────────────
 
   async castVote(
@@ -171,6 +179,34 @@ export class ParliamentService {
     });
     if (!tumen) {
       throw new ForbiddenException('Только лидеры Тумэнов имеют право голоса в Хурале');
+    }
+
+    // ── RULE 1: Only LEGISLATIVE Tumens (part of a Republic) can vote ──
+    // The family hierarchy (FamilyArban→Zun→Myangan→Tumen→Republic) IS the
+    // legislative branch. A Tumen without republicId is NOT legislative.
+    if (!tumen.republicId) {
+      throw new ForbiddenException(
+        'Только Тумэны из Законодательной ветви (входящие в Республику) могут голосовать в Хурале',
+      );
+    }
+
+    // ── RULE 2: Voter must be a family representative (spouse) ──
+    // In the Legislative branch, only family representatives participate.
+    // FamilyArban has husbandSeatId, wifeSeatId, khuralRepSeatId.
+    // The voter must be one of the spouses or the designated Khural representative.
+    const familyArban = await this.prisma.familyArban.findFirst({
+      where: {
+        OR: [
+          { husbandSeatId: userId },
+          { wifeSeatId: userId },
+          { khuralRepSeatId: userId },
+        ],
+      },
+    });
+    if (!familyArban) {
+      throw new ForbiddenException(
+        'В Законодательной ветви могут быть только представители Семьи (один из супругов)',
+      );
     }
 
     // For Republican level, verify this Tumen belongs to the republic
