@@ -18,6 +18,9 @@ import {
   Shield,
   UserCog,
   Crown,
+  MessageSquare,
+  AlertTriangle,
+  FileCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -58,6 +61,20 @@ const NAV_ITEMS = [
     category: "Judicial (Courts)",
     items: [
       { name: "Resolution", href: "/courts", icon: Scale },
+      { name: "Complaints", href: "/complaints", icon: AlertTriangle },
+    ],
+  },
+  {
+    category: "Communication",
+    items: [
+      { name: "Messages", href: "/messages", icon: MessageSquare },
+    ],
+  },
+  {
+    category: "Organizations",
+    items: [
+      { name: "Leaderboard", href: "/organizations/leaderboard", icon: Crown },
+      { name: "Work Acts", href: "/work-acts", icon: FileCheck },
     ],
   },
   {

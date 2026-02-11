@@ -47,6 +47,9 @@ import { TransparencyModule } from './transparency/transparency.module';
 import { AdminModule } from './admin/admin.module';
 import { UnifiedOrgModule } from './unified-org/unified-org.module';
 import { NotificationModule } from './notifications/notification.module';
+import { MessagingModule } from './messaging/messaging.module';
+import { ComplaintModule } from './complaints/complaint.module';
+import { WorkActModule } from './work-acts/work-act.module';
 
 @Module({
   imports: [
@@ -101,6 +104,9 @@ import { NotificationModule } from './notifications/notification.module';
     AdminModule,  // Admin and Creator management
     UnifiedOrgModule,  // Unified Organization Management System
     NotificationModule, // In-app Notification System
+    MessagingModule,    // Universal Messaging (DM, Group, Org, Case threads)
+    ComplaintModule,    // Universal Complaint/Grievance System
+    WorkActModule,      // Universal Work-Act Completion System
   ],
   providers: [
     {

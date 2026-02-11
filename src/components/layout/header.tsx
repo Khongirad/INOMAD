@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { SeatStatus } from "@/components/identity/seat-status";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export function Header() {
   const pathname = usePathname();
@@ -38,10 +39,7 @@ export function Header() {
            </div>
         </div>
 
-        <button className="relative rounded-full p-2 text-zinc-400 hover:bg-white/5 hover:text-zinc-100 transition-colors">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold-primary"></span>
-        </button>
+        <NotificationBell />
 
         <div className="h-8 w-[1px] bg-white/10 mx-1"></div>
 

@@ -180,6 +180,20 @@ model User {
   // Notifications
   notifications Notification[] @relation("UserNotifications")
 
+  // Messaging
+  conversationParticipants ConversationParticipant[] @relation("UserConversations")
+  messagesSent             Message[]                 @relation("MessageSender")
+
+  // Complaints
+  complaintsFiled        Complaint[]         @relation("ComplaintFiler")
+  complaintsAgainst      Complaint[]         @relation("ComplaintTarget")
+  complaintsAssigned     Complaint[]         @relation("ComplaintAssignee")
+  complaintResponses     ComplaintResponse[]  @relation("ComplaintResponder")
+
+  // Work Acts
+  workActsAsContractor   WorkAct[]           @relation("WorkActContractor")
+  workActsAsClient       WorkAct[]           @relation("WorkActClient")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -3681,6 +3695,21 @@ enum NotificationType {
   VERIFICATION_APPROVED
   VERIFICATION_REJECTED
   SYSTEM_ANNOUNCEMENT
+
+  // Messaging
+  NEW_MESSAGE
+  CONVERSATION_INVITE
+
+  // Complaints
+  COMPLAINT_FILED
+  COMPLAINT_RESPONSE
+  COMPLAINT_ESCALATED
+  COMPLAINT_RESOLVED
+
+  // Work Acts
+  WORK_ACT_CREATED
+  WORK_ACT_SIGNED
+  WORK_ACT_COMPLETED
 }
 
 model Notification {
@@ -3715,4 +3744,250 @@ model Notification {
   @@index([userId, createdAt])
   @@index([type])
   @@index([sourceOrgId])
+}
+
+// ============================================================
+// UNIVERSAL PRIMITIVES — Cross-Branch Foundation
+// ============================================================
+
+/// ConversationType — what kind of conversation
+enum ConversationType {
+  DIRECT_MESSAGE    // 1:1 between two users
+  GROUP_CHAT        // Multiple participants
+  ORG_CHANNEL       // Bound to an organization
+  CASE_THREAD       // Bound to a court case
+  QUEST_THREAD      // Bound to a quest
+  CONTRACT_THREAD   // Bound to a document contract
+}
+
+/// Conversation — a thread of messages (universal across all branches)
+model Conversation {
+  id   String @id @default(uuid())
+  name String? // Display name (optional for DMs)
+
+  type ConversationType @default(DIRECT_MESSAGE)
+
+  // Optional binding to context (one of these links the chat to something)
+  organizationId String? // Org channel
+  questId        String? // Quest thread
+  contractId     String? // Contract thread
+  caseId         String? // Court case thread
+
+  // Metadata
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([organizationId])
+  @@index([questId])
+  @@index([contractId])
+  @@index([caseId])
+  @@index([type])
+}
+
+/// ConversationParticipant — who is in the conversation
+model ConversationParticipant {
+  id String @id @default(uuid())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("UserConversations", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Participant state
+  role       String   @default("MEMBER") // ADMIN, MEMBER, OBSERVER
+  joinedAt   DateTime @default(now())
+  lastReadAt DateTime? // For unread tracking
+  isMuted    Boolean  @default(false)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+/// Message — a single message in a conversation
+model Message {
+  id String @id @default(uuid())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Content
+  body        String    // Message text (supports markdown)
+  replyToId   String?   // Reply to another message
+  attachments String[]  // URLs to attached files/images
+
+  // Status
+  isEdited  Boolean   @default(false)
+  editedAt  DateTime?
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+// ============================================================
+// COMPLAINTS — Universal Grievance System
+// ============================================================
+
+/// ComplaintStatus — lifecycle of a complaint
+enum ComplaintStatus {
+  FILED          // Submitted by citizen
+  UNDER_REVIEW   // Being reviewed by assigned officer
+  RESPONDED      // Organization/person responded
+  ESCALATED      // Escalated to court (auto-creates CouncilOfJustice case)
+  RESOLVED       // Settled satisfactorily
+  DISMISSED      // Dismissed with reason
+}
+
+/// ComplaintCategory — what the complaint is about
+enum ComplaintCategory {
+  SERVICE_QUALITY     // Bad service from an org
+  CORRUPTION          // Corruption allegation
+  RIGHTS_VIOLATION    // Violation of citizen rights
+  FINANCIAL_DISPUTE   // Money-related dispute
+  WORKPLACE           // Workplace issue within an org
+  GOVERNANCE          // Governance/decision-making dispute
+  OTHER               // Catch-all
+}
+
+/// Complaint — a formal grievance filed by any citizen
+model Complaint {
+  id String @id @default(uuid())
+
+  // Who filed it
+  filerId String
+  filer   User   @relation("ComplaintFiler", fields: [filerId], references: [id])
+
+  // Against whom (org or person, or both)
+  targetUserId String?
+  targetUser   User?   @relation("ComplaintTarget", fields: [targetUserId], references: [id])
+  targetOrgId  String? // Organization ID
+
+  // Assigned reviewer
+  assigneeId String?
+  assignee   User?   @relation("ComplaintAssignee", fields: [assigneeId], references: [id])
+
+  // Content
+  category    ComplaintCategory
+  title       String
+  description String             // Detailed description of grievance
+  evidence    String[]           // URLs to evidence files
+
+  // Resolution
+  status       ComplaintStatus @default(FILED)
+  resolution   String?         // Resolution text when resolved
+  escalatedCaseId String?      // Links to CouncilOfJustice case if escalated
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+
+  // Relations
+  responses ComplaintResponse[]
+
+  @@index([filerId])
+  @@index([targetUserId])
+  @@index([targetOrgId])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+}
+
+/// ComplaintResponse — a response to a complaint (by assignee, target, or filer)
+model ComplaintResponse {
+  id String @id @default(uuid())
+
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  responderId String
+  responder   User   @relation("ComplaintResponder", fields: [responderId], references: [id])
+
+  body        String    // Response text
+  attachments String[]  // Supporting documents
+  isOfficial  Boolean   @default(false) // Official response from org
+
+  createdAt DateTime @default(now())
+
+  @@index([complaintId, createdAt])
+  @@index([responderId])
+}
+
+// ============================================================
+// WORK ACTS — Universal Completion Certificate
+// ============================================================
+
+/// WorkActStatus — lifecycle of a work act
+enum WorkActStatus {
+  DRAFTED                 // Created, not yet submitted
+  SUBMITTED               // Submitted for review
+  REVIEWED                // Client reviewed
+  SIGNED_BY_CONTRACTOR    // Contractor signed
+  SIGNED_BY_CLIENT        // Client signed (both parties agreed)
+  COMPLETED               // Payment released, work accepted
+  DISPUTED                // One party disputes
+  CANCELLED               // Cancelled
+}
+
+/// WorkAct — universal act of completed work
+/// Links to Quest, DocumentContract, or standalone.
+/// Payment is released only after both parties sign.
+model WorkAct {
+  id String @id @default(uuid())
+
+  // Parties
+  contractorId String
+  contractor   User   @relation("WorkActContractor", fields: [contractorId], references: [id])
+  clientId     String
+  client       User   @relation("WorkActClient", fields: [clientId], references: [id])
+
+  // Context (optional links to existing systems)
+  questId        String? // Linked quest
+  contractId     String? // Linked document contract
+  organizationId String? // Organization context
+
+  // Content
+  title           String
+  description     String      // What work was done
+  deliverables    String[]    // List of delivered items/results
+  amount          Float       // Payment amount (ALTN)
+  currency        String      @default("ALTN")
+
+  // Signatures
+  contractorSignature String?    // Digital signature
+  contractorSignedAt  DateTime?
+  clientSignature     String?    // Digital signature
+  clientSignedAt      DateTime?
+
+  // Status
+  status     WorkActStatus @default(DRAFTED)
+  disputeReason String?    // If disputed, why
+
+  // Payment
+  paymentTxHash String?    // Blockchain transaction hash when paid
+  paidAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contractorId])
+  @@index([clientId])
+  @@index([questId])
+  @@index([contractId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdAt])
 }
