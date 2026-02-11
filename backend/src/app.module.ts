@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { AuthModule } from './auth/auth.module';
@@ -35,9 +37,9 @@ import { OrganizationModule } from './organizations/organization.module';
 import { EducationModule } from './education/education.module';
 import { InvitationModule } from './invitations/invitation.module';
 import { ElectionModule } from './elections/election.module';
-// import { MigrationServiceModule } from './migration-service/migration-service.module';
-// import { ZagsServiceModule } from './zags-service/zags-service.module';
-// import { LandRegistryServiceModule } from './land-registry-service/land-registry-service.module';
+import { MigrationServiceModule } from './migration-service/migration-service.module';
+import { ZagsServiceModule } from './zags-service/zags-service.module';
+import { LandRegistryServiceModule } from './land-registry-service/land-registry-service.module';
 import { DistributionModule } from './distribution/distribution.module';
 import { ArchiveModule } from './archive/archive.module';
 import { TransparencyModule } from './transparency/transparency.module';
@@ -49,6 +51,10 @@ import { AdminModule } from './admin/admin.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,   // 60 seconds
+      limit: 100,   // 100 requests per IP per minute
+    }]),
     PrismaModule,
     BlockchainModule,
     AuthModule,
@@ -81,9 +87,9 @@ import { AdminModule } from './admin/admin.module';
     EducationModule,    // Education verification for guilds
     InvitationModule,    // Guild invitation system
     ElectionModule,      // Leader election system
-    // MigrationServiceModule,  // Migration Service (Passport Office) - TEMP DISABLED
-    // ZagsServiceModule,      // Civil Registry Office (ZAGS) - TEMP DISABLED
-    // LandRegistryServiceModule, // Land and Property Registry - TEMP DISABLED
+    MigrationServiceModule,  // Migration Service (Passport Office)
+    ZagsServiceModule,       // Civil Registry Office (ZAGS)
+    LandRegistryServiceModule, // Land and Property Registry
     DistributionModule,  // Initial ALTAN Distribution System
     ArchiveModule,       // State Archive & Document Constructor System
     TransparencyModule,   // Transparency & Accountability System (GOST)
@@ -91,6 +97,12 @@ import { AdminModule } from './admin/admin.module';
     TaxModule,
     MarketplaceModule,
     AdminModule,  // Admin and Creator management
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

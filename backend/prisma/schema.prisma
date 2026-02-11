@@ -161,6 +161,22 @@ model User {
   // Banking System
   banksDirected Bank[] @relation("BankDirector")
 
+  // Migration Service (Passport Office)
+  passportApplications PassportApplication[] @relation("PassportApplicant")
+
+  // ZAGS (Civil Registry)
+  marriagesAsSpouse1 Marriage[]        @relation("Spouse1Marriages")
+  marriagesAsSpouse2 Marriage[]        @relation("Spouse2Marriages")
+  marriageConsents   MarriageConsent[] @relation("MarriageConsents")
+  divorcesInitiated  ZagsDivorce[]     @relation("DivorceInitiator")
+
+  // Land Registry
+  landPlotsRegistered LandPlot[]        @relation("LandRegistrar")
+  landOwnerships      LandOwnership[]   @relation("LandOwner")
+  landLeases          LandLease[]       @relation("LandLessee")
+  landSales           LandTransaction[] @relation("LandSeller")
+  landPurchases       LandTransaction[] @relation("LandBuyer")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -2977,4 +2993,469 @@ enum ReportPeriodType {
   MONTHLY
   QUARTERLY
   ANNUAL
+}
+
+// ============== MIGRATION SERVICE (Passport Office) ==============
+
+enum PassportType {
+  STANDARD
+  DIPLOMATIC
+  SERVICE
+}
+
+enum PassportApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ISSUED
+}
+
+enum PassportDocumentType {
+  PHOTO
+  SIGNATURE
+  BIRTH_CERTIFICATE
+  OTHER
+}
+
+model PassportApplication {
+  id String @id @default(uuid())
+
+  applicantId String
+  applicant   User   @relation("PassportApplicant", fields: [applicantId], references: [id])
+
+  // Personal data
+  fullName     String
+  dateOfBirth  DateTime
+  placeOfBirth String
+  nationality  String
+  sex          String
+  height       Int?
+  eyeColor     String?
+
+  // Parents
+  fatherName String?
+  motherName String?
+
+  // Address
+  address    String
+  city       String
+  region     String
+  postalCode String?
+
+  // Passport
+  passportType           PassportType @default(STANDARD)
+  previousPassportNumber String?
+
+  // Status
+  status     PassportApplicationStatus @default(DRAFT)
+  submittedAt DateTime?
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  reviewNotes String?
+
+  // Issued passport
+  issuedPassportNumber String? @unique
+  issuedAt             DateTime?
+  expiresAt            DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  documents PassportDocument[]
+
+  @@index([applicantId])
+  @@index([status])
+  @@index([issuedPassportNumber])
+}
+
+model PassportDocument {
+  id String @id @default(uuid())
+
+  applicationId String
+  application   PassportApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  type        PassportDocumentType
+  filename    String
+  mimeType    String
+  size        Int
+  storagePath String
+  isEncrypted Boolean @default(false)
+
+  uploadedAt DateTime @default(now())
+
+  @@index([applicationId])
+}
+
+// ============== ZAGS (Civil Registry Office) ==============
+
+enum CivilStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum MarriageAppStatus {
+  PENDING_CONSENT
+  PENDING_REVIEW
+  APPROVED
+  REGISTERED
+  REJECTED
+  CANCELLED
+}
+
+enum ConsentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DivorceStatus {
+  FILED
+  UNDER_REVIEW
+  FINALIZED
+  REJECTED
+}
+
+enum CeremonyType {
+  CIVIL
+  RELIGIOUS
+  TRADITIONAL
+}
+
+enum PropertyRegime {
+  SEPARATE
+  JOINT
+  CUSTOM
+}
+
+model Marriage {
+  id                String @id @default(uuid())
+  certificateNumber String @unique @default(uuid())
+
+  // Spouses
+  spouse1Id        String
+  spouse1          User   @relation("Spouse1Marriages", fields: [spouse1Id], references: [id])
+  spouse2Id        String
+  spouse2          User   @relation("Spouse2Marriages", fields: [spouse2Id], references: [id])
+  spouse1FullName  String
+  spouse2FullName  String
+  spouse1DateOfBirth DateTime
+  spouse2DateOfBirth DateTime
+
+  // Marriage details
+  marriageDate     DateTime
+  ceremonyLocation String?
+  ceremonyType     CeremonyType?
+
+  // Witnesses
+  witness1Name String?
+  witness2Name String?
+  witness1Id   String?
+  witness2Id   String?
+
+  // Property regime
+  propertyRegime    PropertyRegime?
+  propertyAgreement String?
+
+  // Consent tracking
+  spouse1ConsentGranted Boolean @default(false)
+  spouse2ConsentGranted Boolean @default(false)
+  spouse1ConsentedAt    DateTime?
+  spouse2ConsentedAt    DateTime?
+
+  // Status
+  status MarriageAppStatus @default(PENDING_CONSENT)
+
+  // Registration
+  registeredBy String?
+  registeredAt DateTime?
+
+  isPublic Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  consents MarriageConsent[]
+  divorces ZagsDivorce[]
+
+  @@index([spouse1Id])
+  @@index([spouse2Id])
+  @@index([status])
+  @@index([certificateNumber])
+}
+
+model MarriageConsent {
+  id String @id @default(uuid())
+
+  marriageId String
+  marriage   Marriage @relation(fields: [marriageId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("MarriageConsents", fields: [userId], references: [id])
+
+  status      ConsentStatus @default(PENDING)
+  consentedAt DateTime?
+  signature   String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([marriageId, userId])
+  @@index([userId])
+}
+
+model ZagsDivorce {
+  id String @id @default(uuid())
+
+  marriageId               String
+  marriage                 Marriage @relation(fields: [marriageId], references: [id])
+  divorceCertificateNumber String   @unique @default(uuid())
+
+  initiatedById String
+  initiatedBy   User   @relation("DivorceInitiator", fields: [initiatedById], references: [id])
+
+  reason           String
+  status           DivorceStatus @default(FILED)
+  propertyDivision String?
+
+  finalizedDate DateTime?
+  finalizedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([marriageId])
+  @@index([initiatedById])
+  @@index([status])
+}
+
+// ============== LAND REGISTRY ==============
+
+enum LandType {
+  AGRICULTURAL
+  RESIDENTIAL
+  COMMERCIAL
+  INDUSTRIAL
+  FOREST
+  OTHER_LAND
+}
+
+enum LandPropertyType {
+  RESIDENTIAL_PROP
+  COMMERCIAL_PROP
+  INDUSTRIAL_PROP
+  AGRICULTURAL_PROP
+  MIXED
+  OTHER_PROP
+}
+
+enum LandOwnershipType {
+  FULL
+  SHARED
+}
+
+enum LeaseType {
+  RESIDENTIAL_LEASE
+  COMMERCIAL_LEASE
+  AGRICULTURAL_LEASE
+  INDUSTRIAL_LEASE
+}
+
+enum LandTransactionType {
+  SALE
+  TRANSFER
+  INHERITANCE
+  GIFT
+  MORTGAGE
+  LEASE_TX
+  COURT_ORDER
+  EXPROPRIATION
+  OTHER_TX
+}
+
+enum LandTransactionStatus {
+  INITIATED
+  PAYMENT_PENDING
+  PAYMENT_CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model LandPlot {
+  id              String @id @default(uuid())
+  cadastralNumber String @unique
+
+  // Location
+  region   String
+  district String
+  locality String?
+  address  String?
+
+  // Geographic data
+  latitude   Float
+  longitude  Float
+  boundaries Json?  // GeoJSON polygon
+  area       Float  // square meters
+
+  // Land details
+  landType    LandType
+  soilQuality String?
+  irrigated   Boolean @default(false)
+
+  // Registration
+  registeredById String
+  registeredBy   User     @relation("LandRegistrar", fields: [registeredById], references: [id])
+  registeredAt   DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  properties   LandProperty[]
+  ownerships   LandOwnership[]
+  transactions LandTransaction[] @relation("LandPlotTransactions")
+
+  @@index([region, district])
+  @@index([landType])
+  @@index([cadastralNumber])
+}
+
+model LandProperty {
+  id String @id @default(uuid())
+
+  landPlotId String
+  landPlot   LandPlot @relation(fields: [landPlotId], references: [id], onDelete: Cascade)
+
+  // Property details
+  propertyType LandPropertyType
+  buildingArea Float?
+  floors       Int?
+  rooms        Int?
+  yearBuilt    Int?
+
+  // Utilities
+  hasElectricity Boolean @default(false)
+  hasWater       Boolean @default(false)
+  hasGas         Boolean @default(false)
+  hasSewage      Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownerships   LandOwnership[]
+  leases       LandLease[]
+  transactions LandTransaction[] @relation("PropertyTransactions")
+
+  @@index([landPlotId])
+  @@index([propertyType])
+}
+
+model LandOwnership {
+  id String @id @default(uuid())
+
+  landPlotId String?
+  landPlot   LandPlot? @relation(fields: [landPlotId], references: [id])
+
+  propertyId String?
+  property   LandProperty? @relation(fields: [propertyId], references: [id])
+
+  // Owner
+  ownerId          String
+  owner            User            @relation("LandOwner", fields: [ownerId], references: [id])
+  ownershipType    LandOwnershipType
+  sharePercentage  Int             @default(100) // 0-100
+
+  // Citizenship verification
+  isCitizenVerified Boolean @default(false)
+
+  // Certificate
+  certificateNumber String   @unique @default(uuid())
+  issuedAt          DateTime @default(now())
+  isActive          Boolean  @default(true)
+
+  // Co-owners (if shared)
+  coOwners String[] // userIds
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([landPlotId])
+  @@index([propertyId])
+  @@index([isActive])
+}
+
+model LandLease {
+  id String @id @default(uuid())
+
+  propertyId String
+  property   LandProperty @relation(fields: [propertyId], references: [id])
+
+  // Lessee
+  lesseeId          String
+  lessee            User   @relation("LandLessee", fields: [lesseeId], references: [id])
+  lesseeName        String
+  lesseeNationality String
+
+  // Lease terms
+  leaseType  LeaseType
+  startDate  DateTime
+  endDate    DateTime
+  monthlyRent Decimal  @db.Decimal(18, 2)
+  currency    String   @default("ALTAN")
+
+  // Status
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+  @@index([lesseeId])
+  @@index([isActive])
+}
+
+model LandTransaction {
+  id String @id @default(uuid())
+
+  type LandTransactionType
+
+  // Property
+  landPlotId String?
+  landPlot   LandPlot? @relation("LandPlotTransactions", fields: [landPlotId], references: [id])
+
+  propertyId String?
+  property   LandProperty? @relation("PropertyTransactions", fields: [propertyId], references: [id])
+
+  // Parties
+  sellerId   String
+  seller     User   @relation("LandSeller", fields: [sellerId], references: [id])
+  buyerId    String
+  buyer      User   @relation("LandBuyer", fields: [buyerId], references: [id])
+  sellerName String
+  buyerName  String
+
+  // Transaction details
+  salePrice Decimal             @db.Decimal(18, 2)
+  currency  String              @default("ALTAN")
+  status    LandTransactionStatus @default(INITIATED)
+
+  // Payment
+  paymentTxHash String?   // blockchain transaction
+  paidAt        DateTime?
+
+  // Completion
+  completedById    String?
+  completedAt      DateTime?
+  blockchainTxHash String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sellerId])
+  @@index([buyerId])
+  @@index([landPlotId])
+  @@index([propertyId])
+  @@index([status])
 }

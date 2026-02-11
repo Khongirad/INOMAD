@@ -16,6 +16,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
+    "test:e2e": "jest --config ./test/jest-e2e.json --forceExit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -28,6 +29,7 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^10.3.0",
     "@nestjs/schedule": "^6.1.1",
+    "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^5.8.0",
     "@web3auth/node-sdk": "^5.0.0",
     "@web3auth/single-factor-auth": "^9.5.0",
@@ -36,6 +38,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "ethers": "^6.16.0",
+    "helmet": "^8.1.0",
     "reflect-metadata": "^0.1.13",
     "rfc4648": "^1.5.4",
     "rxjs": "^7.8.1"

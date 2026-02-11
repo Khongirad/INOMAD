@@ -1,1 +1,0 @@
-Migration: ~/blockchain/altan/altan → packages/blockchain-l1/

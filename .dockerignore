@@ -1,0 +1,14 @@
+node_modules
+.next
+dist
+.git
+.gitignore
+*.md
+docs
+chain
+packages
+legacy_backup
+disabled-modules
+website
+*.tar.gz
+*.webp
