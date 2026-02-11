@@ -194,6 +194,13 @@ model User {
   workActsAsContractor   WorkAct[]           @relation("WorkActContractor")
   workActsAsClient       WorkAct[]           @relation("WorkActClient")
 
+  // Disputes
+  disputesAsPartyA       Dispute[]           @relation("DisputePartyA")
+  disputesAsPartyB       Dispute[]           @relation("DisputePartyB")
+
+  // Escalation Records
+  escalationsInitiated   EscalationRecord[]  @relation("EscalationInitiator")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -3846,7 +3853,12 @@ enum ComplaintStatus {
   FILED          // Submitted by citizen
   UNDER_REVIEW   // Being reviewed by assigned officer
   RESPONDED      // Organization/person responded
-  ESCALATED      // Escalated to court (auto-creates CouncilOfJustice case)
+  ESCALATED_L2   // Escalated to Zun level
+  ESCALATED_L3   // Escalated to Myangan level
+  ESCALATED_L4   // Escalated to Tumen level
+  ESCALATED_L5   // Escalated to Republic level
+  ESCALATED_L6   // Escalated to Confederation level
+  IN_COURT       // Sent to CouncilOfJustice
   RESOLVED       // Settled satisfactorily
   DISMISSED      // Dismissed with reason
 }
@@ -3863,6 +3875,7 @@ enum ComplaintCategory {
 }
 
 /// Complaint — a formal grievance filed by any citizen
+/// MUST be bound to a source document (contract, quest, or work-act)
 model Complaint {
   id String @id @default(uuid())
 
@@ -3875,9 +3888,15 @@ model Complaint {
   targetUser   User?   @relation("ComplaintTarget", fields: [targetUserId], references: [id])
   targetOrgId  String? // Organization ID
 
-  // Assigned reviewer
+  // Assigned reviewer (leader at current hierarchy level)
   assigneeId String?
   assignee   User?   @relation("ComplaintAssignee", fields: [assigneeId], references: [id])
+
+  // SOURCE BINDING — what this complaint is about (mandatory)
+  sourceType DisputeSourceType          // CONTRACT | QUEST | WORK_ACT
+  sourceId   String                     // ID of the document/quest/work-act
+  disputeId  String?                    // Originating dispute (if came from Dispute)
+  dispute    Dispute? @relation("DisputeComplaints", fields: [disputeId], references: [id])
 
   // Content
   category    ComplaintCategory
@@ -3885,10 +3904,15 @@ model Complaint {
   description String             // Detailed description of grievance
   evidence    String[]           // URLs to evidence files
 
+  // HIERARCHY LEVEL — where this complaint currently sits
+  currentLevel  Int       @default(1) // 1=Arban, 2=Zun, 3=Myangan, 4=Tumen, 5=Republic, 6=Confederation, 7=Court
+  levelEntityId String?             // ID of hierarchy entity at current level
+  deadline      DateTime?           // Auto-escalate if no response by deadline
+
   // Resolution
   status       ComplaintStatus @default(FILED)
   resolution   String?         // Resolution text when resolved
-  escalatedCaseId String?      // Links to CouncilOfJustice case if escalated
+  escalatedCaseId String?      // Links to CouncilOfJustice case if escalated to court
 
   // Timestamps
   createdAt  DateTime  @default(now())
@@ -3896,14 +3920,19 @@ model Complaint {
   resolvedAt DateTime?
 
   // Relations
-  responses ComplaintResponse[]
+  responses          ComplaintResponse[]
+  escalationHistory  EscalationRecord[]
 
   @@index([filerId])
   @@index([targetUserId])
   @@index([targetOrgId])
+  @@index([sourceType, sourceId])
+  @@index([disputeId])
+  @@index([currentLevel])
   @@index([status])
   @@index([category])
   @@index([createdAt])
+  @@index([deadline])
 }
 
 /// ComplaintResponse — a response to a complaint (by assignee, target, or filer)
@@ -3990,4 +4019,96 @@ model WorkAct {
   @@index([organizationId])
   @@index([status])
   @@index([createdAt])
+}
+
+// ============================================================
+// DISPUTES — Pre-complaint negotiation between parties
+// ============================================================
+
+/// DisputeSourceType — what the dispute is about
+enum DisputeSourceType {
+  CONTRACT   // Linked to a DocumentContract
+  QUEST      // Linked to a Quest
+  WORK_ACT   // Linked to a WorkAct
+}
+
+/// DisputeStatus — lifecycle of a dispute (before complaint)
+enum DisputeStatus {
+  OPENED          // Dispute opened, parties notified
+  NEGOTIATING     // Parties actively discussing
+  SETTLED         // Resolved between parties
+  COMPLAINT_FILED // Escalated to formal complaint
+  COURT_FILED     // Escalated directly to court
+}
+
+/// Dispute — pre-complaint negotiation stage
+/// Always bound to a source document. Auto-creates a Conversation for parties.
+model Dispute {
+  id String @id @default(uuid())
+
+  // Parties
+  partyAId String
+  partyA   User   @relation("DisputePartyA", fields: [partyAId], references: [id])
+  partyBId String
+  partyB   User   @relation("DisputePartyB", fields: [partyBId], references: [id])
+
+  // Source binding (mandatory — no disputes from thin air)
+  sourceType DisputeSourceType
+  sourceId   String             // ID of the contract/quest/work-act
+
+  // Content
+  title       String
+  description String
+
+  // Negotiation chat (auto-created)
+  conversationId String?        // Links to Conversation for discussion
+
+  // Status
+  status     DisputeStatus @default(OPENED)
+  resolution String?       // How it was resolved (if settled)
+
+  // Escalation result
+  complaintId    String?   // If escalated to complaint
+  courtCaseId    String?   // If escalated directly to court
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  complaints Complaint[] @relation("DisputeComplaints")
+
+  @@index([partyAId])
+  @@index([partyBId])
+  @@index([sourceType, sourceId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================================
+// ESCALATION RECORDS — audit trail for complaint hierarchy
+// ============================================================
+
+/// EscalationRecord — log of each escalation step
+model EscalationRecord {
+  id String @id @default(uuid())
+
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  // Escalation details
+  fromLevel    Int        // Level before escalation (1-7)
+  toLevel      Int        // Level after escalation (2-7)
+  fromEntityId String?    // ID of entity at previous level
+  toEntityId   String?    // ID of entity at new level
+  reason       String     // Why it was escalated
+
+  // Who triggered it
+  escalatedById String?
+  escalatedBy   User?  @relation("EscalationInitiator", fields: [escalatedById], references: [id])
+  isAutomatic   Boolean @default(false) // True if auto-escalated due to deadline
+
+  createdAt DateTime @default(now())
+
+  @@index([complaintId, createdAt])
+  @@index([escalatedById])
 }

@@ -1,326 +1,381 @@
 'use client';
 
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  AlertTriangle, Plus, Search, Filter, ChevronRight,
-  Clock, CheckCircle2, XCircle, Scale, MessageSquare,
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  Chip,
+  Tabs,
+  Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Alert,
+  Stepper,
+  Step,
+  StepLabel,
+  LinearProgress,
+} from '@mui/material';
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  CheckCircle,
+  XCircle,
+  Scale,
+  FileText,
+  Clock,
+  Shield,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/hooks/use-auth';
-import { toast } from 'sonner';
 
-interface Complaint {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  filer: { id: string; username: string };
-  targetUser?: { id: string; username: string };
-  targetOrgId?: string;
-  assignee?: { id: string; username: string };
-  _count?: { responses: number };
-}
+const LEVEL_NAMES = ['', 'Арбан', 'Цзун', 'Мянган', 'Тумен', 'Республика', 'Конфедерация', 'Суд'];
 
-interface ComplaintStats {
-  total: number;
-  filed: number;
-  underReview: number;
-  responded: number;
-  escalated: number;
-  resolved: number;
-  dismissed: number;
-}
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
-  FILED: { label: 'Подана', color: 'text-amber-500 bg-amber-500/10', icon: Clock },
-  UNDER_REVIEW: { label: 'На рассмотрении', color: 'text-blue-500 bg-blue-500/10', icon: Search },
-  RESPONDED: { label: 'Ответ получен', color: 'text-purple-500 bg-purple-500/10', icon: MessageSquare },
-  ESCALATED: { label: 'Передано в суд', color: 'text-red-500 bg-red-500/10', icon: Scale },
-  RESOLVED: { label: 'Решено', color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
-  DISMISSED: { label: 'Отклонено', color: 'text-zinc-500 bg-zinc-500/10', icon: XCircle },
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  FILED: { label: 'Подана', color: '#2196f3' },
+  UNDER_REVIEW: { label: 'На рассмотрении', color: '#ff9800' },
+  RESPONDED: { label: 'Ответ получен', color: '#00bcd4' },
+  ESCALATED_L2: { label: 'Эскалация → Цзун', color: '#e91e63' },
+  ESCALATED_L3: { label: 'Эскалация → Мянган', color: '#e91e63' },
+  ESCALATED_L4: { label: 'Эскалация → Тумен', color: '#9c27b0' },
+  ESCALATED_L5: { label: 'Эскалация → Республика', color: '#9c27b0' },
+  ESCALATED_L6: { label: 'Эскалация → Конфедерация', color: '#673ab7' },
+  IN_COURT: { label: 'В суде', color: '#f44336' },
+  RESOLVED: { label: 'Решена', color: '#4caf50' },
+  DISMISSED: { label: 'Отклонена', color: '#9e9e9e' },
 };
 
-const categoryLabels: Record<string, string> = {
-  SERVICE_QUALITY: 'Качество услуг',
-  CORRUPTION: 'Коррупция',
-  RIGHTS_VIOLATION: 'Нарушение прав',
-  FINANCIAL_DISPUTE: 'Финансовый спор',
-  WORKPLACE: 'Рабочие отношения',
-  GOVERNANCE: 'Управление',
-  OTHER: 'Другое',
+const SOURCE_LABELS: Record<string, string> = {
+  CONTRACT: 'Договор',
+  QUEST: 'Задание',
+  WORK_ACT: 'Акт работ',
 };
 
 export default function ComplaintsPage() {
-  const { user } = useAuth();
-  const [complaints, setComplaints] = React.useState<Complaint[]>([]);
-  const [stats, setStats] = React.useState<ComplaintStats | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [showForm, setShowForm] = React.useState(false);
-  const [filterStatus, setFilterStatus] = React.useState('all');
+  const [tab, setTab] = useState(0);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [complaints, setComplaints] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    total: 0, filed: 0, underReview: 0, inCourt: 0, resolved: 0,
+    byLevel: [] as { level: number; name: string; count: number }[],
+  });
 
-  // Form state
-  const [formTitle, setFormTitle] = React.useState('');
-  const [formDescription, setFormDescription] = React.useState('');
-  const [formCategory, setFormCategory] = React.useState('SERVICE_QUALITY');
-  const [formTargetOrgId, setFormTargetOrgId] = React.useState('');
+  useEffect(() => {
+    // Mock data
+    setStats({
+      total: 8,
+      filed: 2,
+      underReview: 3,
+      inCourt: 1,
+      resolved: 2,
+      byLevel: [
+        { level: 1, name: 'Арбан', count: 2 },
+        { level: 2, name: 'Цзун', count: 1 },
+        { level: 3, name: 'Мянган', count: 1 },
+        { level: 4, name: 'Тумен', count: 0 },
+        { level: 5, name: 'Республика', count: 0 },
+        { level: 6, name: 'Конфедерация', count: 0 },
+        { level: 7, name: 'Суд', count: 1 },
+      ],
+    });
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-
-  React.useEffect(() => {
-    fetchData();
+    setComplaints([
+      {
+        id: '1',
+        title: 'Нарушение сроков поставки по договору DC-2026/001',
+        category: 'FINANCIAL_DISPUTE',
+        sourceType: 'CONTRACT',
+        sourceId: 'c-001',
+        currentLevel: 2,
+        status: 'ESCALATED_L2',
+        filer: { username: 'Иванов А.' },
+        targetUser: { username: 'Петров Б.' },
+        deadline: '2026-02-17T10:00:00Z',
+        createdAt: '2026-02-03T10:00:00Z',
+        _count: { responses: 2, escalationHistory: 1 },
+      },
+      {
+        id: '2',
+        title: 'Качество выполнения задания Q-042',
+        category: 'SERVICE_QUALITY',
+        sourceType: 'QUEST',
+        sourceId: 'q-042',
+        currentLevel: 1,
+        status: 'FILED',
+        filer: { username: 'Сидоров В.' },
+        targetUser: { username: 'Козлова Г.' },
+        deadline: '2026-02-18T14:30:00Z',
+        createdAt: '2026-02-11T14:30:00Z',
+        _count: { responses: 0, escalationHistory: 0 },
+      },
+      {
+        id: '3',
+        title: 'Отказ в приёмке акта работ WA-007',
+        category: 'WORKPLACE',
+        sourceType: 'WORK_ACT',
+        sourceId: 'wa-007',
+        currentLevel: 7,
+        status: 'IN_COURT',
+        filer: { username: 'Николаев Д.' },
+        targetUser: { username: 'Фёдорова Е.' },
+        deadline: null,
+        createdAt: '2026-01-20T09:15:00Z',
+        _count: { responses: 5, escalationHistory: 6 },
+      },
+    ]);
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const [complaintsRes, statsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/complaints/my`, { headers }),
-        fetch(`${API_BASE}/api/complaints/stats`, { headers }),
-      ]);
-
-      if (complaintsRes.ok) {
-        const data = await complaintsRes.json();
-        setComplaints(data.complaints || []);
-      }
-      if (statsRes.ok) {
-        setStats(await statsRes.json());
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const submitComplaint = async () => {
-    if (!formTitle.trim() || !formDescription.trim()) {
-      toast.error('Заполните все поля');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/api/complaints`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          title: formTitle,
-          description: formDescription,
-          category: formCategory,
-          targetOrgId: formTargetOrgId || undefined,
-        }),
-      });
-
-      if (res.ok) {
-        toast.success('Жалоба подана');
-        setShowForm(false);
-        setFormTitle('');
-        setFormDescription('');
-        fetchData();
-      } else {
-        const err = await res.json();
-        toast.error(err.message || 'Ошибка');
-      }
-    } catch (e) {
-      toast.error('Ошибка сети');
-    }
-  };
-
-  const filtered = filterStatus === 'all'
-    ? complaints
-    : complaints.filter((c) => c.status === filterStatus);
-
   return (
-    <div className="p-6 lg:p-8 space-y-8 animate-in">
+    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
-            <AlertTriangle className="text-amber-500 w-8 h-8" />
-            Жалобы и обращения
-          </h2>
-          <p className="text-zinc-400 mt-1">
-            Подайте жалобу на организацию или гражданина. Если не решено — эскалация в суд.
-          </p>
-        </div>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-amber-600 hover:bg-amber-700"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Подать жалобу
-        </Button>
-      </div>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <AlertTriangle size={32} />
+          Жалобы
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Система жалоб с иерархической эскалацией. Каждая жалоба привязана к договору, заданию или акту работ.
+        </Typography>
+      </Box>
+
+      {/* Hierarchy Progress */}
+      <Card sx={{ mb: 4, border: '1px solid #e3f2fd' }}>
+        <CardContent>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
+            📊 Жалобы по уровням иерархии
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {stats.byLevel.map((level) => (
+              <Chip
+                key={level.level}
+                label={`${level.name}: ${level.count}`}
+                size="small"
+                sx={{
+                  bgcolor: level.count > 0 ? '#ff980020' : '#f5f5f5',
+                  color: level.count > 0 ? '#e65100' : '#999',
+                  fontWeight: 600,
+                  border: level.count > 0 ? '1px solid #ff9800' : '1px solid #e0e0e0',
+                }}
+              />
+            ))}
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            Арбан → Цзун → Мянган → Тумен → Республика → Конфедерация → Суд
+          </Typography>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          {Object.entries(statusConfig).map(([key, cfg]) => {
-            const Icon = cfg.icon;
-            const count = stats[key.toLowerCase().replace(/_/g, '') as keyof ComplaintStats] || 0;
-            return (
-              <Card key={key} className="border-white/5">
-                <CardContent className="p-3 text-center">
-                  <Icon className={cn("h-5 w-5 mx-auto mb-1", cfg.color.split(' ')[0])} />
-                  <div className="text-lg font-mono font-bold text-white">{count as number}</div>
-                  <div className="text-[10px] text-zinc-500 uppercase">{cfg.label}</div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* New Complaint Form */}
-      {showForm && (
-        <Card className="border-amber-500/30 bg-amber-950/10">
-          <CardHeader>
-            <CardTitle className="text-base text-amber-400">Новая жалоба</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="Заголовок жалобы"
-              value={formTitle}
-              onChange={(e) => setFormTitle(e.target.value)}
-              className="bg-zinc-900 border-white/10"
-            />
-            <textarea
-              placeholder="Подробное описание проблемы..."
-              value={formDescription}
-              onChange={(e) => setFormDescription(e.target.value)}
-              rows={4}
-              className="w-full rounded-lg bg-zinc-900 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-amber-500/50 focus:outline-none"
-            />
-            <div className="flex gap-4">
-              <select
-                value={formCategory}
-                onChange={(e) => setFormCategory(e.target.value)}
-                className="px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white text-sm"
-              >
-                {Object.entries(categoryLabels).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
-              <Input
-                placeholder="ID организации (опционально)"
-                value={formTargetOrgId}
-                onChange={(e) => setFormTargetOrgId(e.target.value)}
-                className="bg-zinc-900 border-white/10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={submitComplaint} className="bg-amber-600 hover:bg-amber-700">
-                Подать
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowForm(false)}
-                className="border-white/10 text-zinc-400"
-              >
-                Отмена
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filter */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <button
-          onClick={() => setFilterStatus('all')}
-          className={cn(
-            "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-            filterStatus === 'all'
-              ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-              : "text-zinc-500 hover:text-zinc-300 border border-white/5"
-          )}
-        >
-          Все ({complaints.length})
-        </button>
-        {Object.entries(statusConfig).map(([key, cfg]) => (
-          <button
-            key={key}
-            onClick={() => setFilterStatus(key)}
-            className={cn(
-              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-              filterStatus === key
-                ? `${cfg.color} border border-current/30`
-                : "text-zinc-500 hover:text-zinc-300 border border-white/5"
-            )}
-          >
-            {cfg.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Complaints List */}
-      <div className="space-y-3">
-        {loading ? (
-          <div className="text-center py-8 text-zinc-500">Загрузка...</div>
-        ) : filtered.length === 0 ? (
-          <Card className="border-white/5 bg-zinc-900/30">
-            <CardContent className="p-8 text-center">
-              <AlertTriangle className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
-              <h3 className="text-white font-semibold mb-1">Нет жалоб</h3>
-              <p className="text-zinc-500 text-sm">У вас пока нет поданных жалоб</p>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 2, mb: 4 }}>
+        {[
+          { label: 'Всего', value: stats.total, color: '#2196f3', icon: <FileText size={18} /> },
+          { label: 'Подано', value: stats.filed, color: '#ff9800', icon: <Clock size={18} /> },
+          { label: 'Рассматривается', value: stats.underReview, color: '#00bcd4', icon: <Shield size={18} /> },
+          { label: 'В суде', value: stats.inCourt, color: '#f44336', icon: <Scale size={18} /> },
+          { label: 'Решено', value: stats.resolved, color: '#4caf50', icon: <CheckCircle size={18} /> },
+        ].map((stat) => (
+          <Card key={stat.label} sx={{ border: `1px solid ${stat.color}20` }}>
+            <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2 }}>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: stat.color }}>{stat.value}</Typography>
+                <Typography variant="caption" color="text.secondary">{stat.label}</Typography>
+              </Box>
+              <Box sx={{ color: stat.color, opacity: 0.4 }}>{stat.icon}</Box>
             </CardContent>
           </Card>
-        ) : (
-          filtered.map((complaint) => {
-            const cfg = statusConfig[complaint.status] || statusConfig.FILED;
-            const Icon = cfg.icon;
+        ))}
+      </Box>
 
-            return (
-              <Card
-                key={complaint.id}
-                className="border-white/5 bg-zinc-900/30 hover:border-amber-500/20 transition-all cursor-pointer"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <div className={cn("mt-1 p-1.5 rounded", cfg.color)}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-white">{complaint.title}</h4>
-                        <p className="text-sm text-zinc-400 mt-1 line-clamp-2">
-                          {complaint.description}
-                        </p>
-                        <div className="flex items-center gap-3 mt-2 text-xs text-zinc-500">
-                          <span className={cn(
-                            "px-2 py-0.5 rounded text-[10px] font-bold uppercase border",
-                            cfg.color
-                          )}>
-                            {cfg.label}
-                          </span>
-                          <span>{categoryLabels[complaint.category] || complaint.category}</span>
-                          <span>
-                            {new Date(complaint.createdAt).toLocaleDateString('ru-RU')}
-                          </span>
-                          {complaint._count?.responses ? (
-                            <span className="flex items-center gap-1">
-                              <MessageSquare className="h-3 w-3" />
-                              {complaint._count.responses}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-zinc-600 mt-1 shrink-0" />
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
-    </div>
+      {/* Actions */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+        <Button variant="contained" color="warning" startIcon={<AlertTriangle size={18} />} onClick={() => setOpenDialog(true)}>
+          Подать жалобу
+        </Button>
+      </Box>
+
+      <Alert severity="warning" sx={{ mb: 3 }}>
+        ⚠️ Жалоба должна быть привязана к конкретному договору, заданию или акту работ. «Из воздуха» жаловаться нельзя.
+        Если вопрос можно решить переговорами — сначала откройте <strong>спор</strong>.
+      </Alert>
+
+      {/* Tabs */}
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
+        <Tab label="Все жалобы" />
+        <Tab label="Мои жалобы" />
+        <Tab label="Жалобная книга" />
+      </Tabs>
+
+      {/* Complaint List */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {complaints.map((complaint) => {
+          const statusInfo = STATUS_LABELS[complaint.status] || { label: complaint.status, color: '#999' };
+          const daysLeft = complaint.deadline
+            ? Math.ceil((new Date(complaint.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            : null;
+
+          return (
+            <Card
+              key={complaint.id}
+              sx={{ border: '1px solid #e0e0e0', '&:hover': { borderColor: '#1976d2', boxShadow: 2 }, transition: 'all 0.2s' }}
+            >
+              <CardContent>
+                {/* Title row */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{complaint.title}</Typography>
+                  <Chip
+                    label={statusInfo.label}
+                    size="small"
+                    sx={{ bgcolor: `${statusInfo.color}15`, color: statusInfo.color, fontWeight: 600 }}
+                  />
+                </Box>
+
+                {/* Source + Hierarchy */}
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center', mb: 2 }}>
+                  <Chip
+                    label={SOURCE_LABELS[complaint.sourceType]}
+                    size="small"
+                    variant="outlined"
+                    icon={<FileText size={14} />}
+                  />
+                  <Chip
+                    label={`Уровень ${complaint.currentLevel}: ${LEVEL_NAMES[complaint.currentLevel]}`}
+                    size="small"
+                    sx={{ bgcolor: '#e3f2fd', fontWeight: 600 }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {complaint.filer.username} → {complaint.targetUser?.username}
+                  </Typography>
+                  {complaint._count.escalationHistory > 0 && (
+                    <Chip
+                      label={`${complaint._count.escalationHistory} эскалаций`}
+                      size="small"
+                      color="warning"
+                      variant="outlined"
+                    />
+                  )}
+                </Box>
+
+                {/* Hierarchy progress bar */}
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                    <Typography variant="caption" color="text.secondary">Прогресс эскалации</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {complaint.currentLevel} / 7
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={(complaint.currentLevel / 7) * 100}
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      bgcolor: '#e0e0e0',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor:
+                          complaint.currentLevel >= 7
+                            ? '#f44336'
+                            : complaint.currentLevel >= 4
+                              ? '#ff9800'
+                              : '#2196f3',
+                        borderRadius: 4,
+                      },
+                    }}
+                  />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+                    {LEVEL_NAMES.slice(1).map((name, i) => (
+                      <Typography
+                        key={name}
+                        variant="caption"
+                        sx={{
+                          fontSize: '0.6rem',
+                          color: i + 1 <= complaint.currentLevel ? '#1976d2' : '#bbb',
+                          fontWeight: i + 1 === complaint.currentLevel ? 700 : 400,
+                        }}
+                      >
+                        {name}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
+
+                {/* Deadline + Actions */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    {daysLeft !== null && daysLeft > 0 && (
+                      <Chip
+                        label={`⏰ ${daysLeft} дн. до авто-эскалации`}
+                        size="small"
+                        color={daysLeft <= 2 ? 'error' : 'default'}
+                        variant="outlined"
+                      />
+                    )}
+                    <Typography variant="caption" color="text.secondary">
+                      Ответов: {complaint._count.responses}
+                    </Typography>
+                  </Box>
+
+                  {!['RESOLVED', 'DISMISSED', 'IN_COURT'].includes(complaint.status) && (
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button size="small" variant="outlined" startIcon={<ArrowUpRight size={14} />}>
+                        Эскалировать
+                      </Button>
+                      <Button size="small" variant="outlined" color="error" startIcon={<Scale size={14} />}>
+                        В суд
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </Box>
+
+      {/* File Complaint Dialog */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700 }}>Подать жалобу</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Жалоба должна быть привязана к конкретному договору, заданию или акту работ.
+          </Alert>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel>Тип источника</InputLabel>
+              <Select defaultValue="CONTRACT" label="Тип источника">
+                <MenuItem value="CONTRACT">Договор</MenuItem>
+                <MenuItem value="QUEST">Задание</MenuItem>
+                <MenuItem value="WORK_ACT">Акт работ</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField label="ID документа" fullWidth />
+            <FormControl fullWidth>
+              <InputLabel>Категория</InputLabel>
+              <Select defaultValue="FINANCIAL_DISPUTE" label="Категория">
+                <MenuItem value="SERVICE_QUALITY">Качество услуг</MenuItem>
+                <MenuItem value="CORRUPTION">Коррупция</MenuItem>
+                <MenuItem value="RIGHTS_VIOLATION">Нарушение прав</MenuItem>
+                <MenuItem value="FINANCIAL_DISPUTE">Финансовый спор</MenuItem>
+                <MenuItem value="WORKPLACE">Рабочий вопрос</MenuItem>
+                <MenuItem value="GOVERNANCE">Управление</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField label="ID ответчика" fullWidth />
+            <TextField label="Заголовок" fullWidth />
+            <TextField label="Описание" multiline rows={3} fullWidth />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Отмена</Button>
+          <Button variant="contained" color="warning" onClick={() => setOpenDialog(false)}>Подать жалобу</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }

@@ -50,6 +50,8 @@ import { NotificationModule } from './notifications/notification.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { ComplaintModule } from './complaints/complaint.module';
 import { WorkActModule } from './work-acts/work-act.module';
+import { DisputeModule } from './disputes/dispute.module';
+import { ChancelleryModule } from './chancellery/chancellery.module';
 
 @Module({
   imports: [
@@ -105,8 +107,10 @@ import { WorkActModule } from './work-acts/work-act.module';
     UnifiedOrgModule,  // Unified Organization Management System
     NotificationModule, // In-app Notification System
     MessagingModule,    // Universal Messaging (DM, Group, Org, Case threads)
-    ComplaintModule,    // Universal Complaint/Grievance System
+    ComplaintModule,    // Universal Complaint/Grievance System (hierarchical escalation)
     WorkActModule,      // Universal Work-Act Completion System
+    DisputeModule,      // Pre-complaint negotiation (bound to contracts/quests/work-acts)
+    ChancelleryModule,  // Contract registry for lawyers and notaries
   ],
   providers: [
     {

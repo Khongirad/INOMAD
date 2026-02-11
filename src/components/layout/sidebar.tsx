@@ -21,6 +21,7 @@ import {
   MessageSquare,
   AlertTriangle,
   FileCheck,
+  Handshake,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,8 @@ const NAV_ITEMS = [
     items: [
       { name: "Resolution", href: "/courts", icon: Scale },
       { name: "Complaints", href: "/complaints", icon: AlertTriangle },
+      { name: "Disputes", href: "/disputes", icon: Handshake },
+      { name: "Chancellery", href: "/chancellery", icon: Building2 },
     ],
   },
   {
