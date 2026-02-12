@@ -115,6 +115,8 @@ model User {
   // documentsSigned   DocumentSignature[] @relation("DocumentSigner")  // REMOVED - see State Archive system
   questsGiven       Quest[]            @relation("QuestGiver")
   questsTaken       Quest[]            @relation("QuestTaker")
+  orgQuestsCreated  OrgQuest[]         @relation("OrgQuestCreator")
+  orgQuestsAssigned OrgQuest[]         @relation("OrgQuestAssignee")
   reputationProfile ReputationProfile? @relation("UserReputation")
 
   // Guild & Organization Relations
@@ -984,6 +986,90 @@ model Quest {
   @@index([giverId])
   @@index([takerId])
   @@index([status])
+  @@index([deadline])
+}
+
+/// OrgQuest — Organization-bound task/quest.
+/// Like WoW quests or Eve Online missions: every org has a task board.
+/// Tasks are specialized per org type and can link to smart contracts.
+enum QuestVisibility {
+  ORG_ONLY  // Only org members can see/accept
+  BRANCH    // All orgs in same power branch can see
+  PUBLIC    // Anyone can see and accept
+}
+
+model OrgQuest {
+  id String @id @default(uuid())
+
+  // Which organization posted this task
+  organizationId String
+  organization   Organization @relation("OrgQuests", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Who created the task (must be org member with canCreateTasks)
+  creatorId String
+  creator   User @relation("OrgQuestCreator", fields: [creatorId], references: [id])
+
+  // Who accepted the task
+  assigneeId String?
+  assignee   User? @relation("OrgQuestAssignee", fields: [assigneeId], references: [id])
+
+  // Task details
+  title       String
+  description String @db.Text
+  objectives  Json[] // [{description: string, completed: boolean, evidence?: string}]
+  category    String // Specialization: "CHEMISTRY", "LAW", "ADMINISTRATION", "FINANCE", etc.
+
+  // Visibility & access
+  visibility QuestVisibility @default(ORG_ONLY)
+
+  // Requirements
+  requiredRole    String? // Minimum role needed (MEMBER, OFFICER, etc.)
+  requiredSkills  Json?   // {skills: ["react", "solidity"]}
+  minReputation   Int?
+
+  // Rewards
+  rewardAltan     Decimal? @db.Decimal(18, 4)
+  rewardItems     Json?    // NFTs, badges, certificates
+  reputationGain  Int?
+
+  // Timing
+  deadline          DateTime?
+  estimatedDuration Int?     // minutes
+
+  // Progress
+  status   QuestStatus @default(OPEN)
+  progress Int         @default(0) // 0-100%
+
+  // Evidence / submissions
+  submissions Json[] // [{url, description, timestamp}]
+
+  // Ratings
+  creatorRating   Int?    // 1-5
+  assigneeRating  Int?
+  creatorFeedback String?
+  assigneeFeedback String?
+
+  // Smart contract link (task executed via contract)
+  contractId String? // Links to OrgContract
+  contractAddress String? // On-chain smart contract
+  txHash          String? // Transaction hash
+
+  // Lifecycle timestamps
+  acceptedAt  DateTime?
+  startedAt   DateTime?
+  submittedAt DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([creatorId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([category])
+  @@index([visibility])
   @@index([deadline])
 }
 
@@ -2686,6 +2772,9 @@ model Organization {
 
   // Smart contracts created by this organization
   orgContracts OrgContract[]
+
+  // Quests/Tasks posted by this organization
+  quests OrgQuest[] @relation("OrgQuests")
 
   @@index([type, overallRating])
   @@index([republicId])
