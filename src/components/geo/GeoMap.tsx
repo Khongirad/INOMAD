@@ -12,11 +12,8 @@ import {
   type GeoCoordinates,
 } from "@/app/(app)/identity/create/_core/geography";
 
-// Mapbox access token (public, rate-limited)
-// В продакшене заменить на переменную окружения NEXT_PUBLIC_MAPBOX_TOKEN
-const MAPBOX_TOKEN =
-  process.env.NEXT_PUBLIC_MAPBOX_TOKEN ||
-  "";
+// Mapbox access token — set NEXT_PUBLIC_MAPBOX_TOKEN in .env.local
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
 
