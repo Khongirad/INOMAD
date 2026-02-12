@@ -1,6 +1,6 @@
-# INOMAD KHURAL — Digital Nation Infrastructure
+# INOMAD KHURAL — Operating System for Sovereign Governance
 
-## Siberian Confederation Sovereign Blockchain Platform
+## Like Mac for a computer. But for a nation.
 
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 [![Stage](https://img.shields.io/badge/stage-post--MVP-green)]()
@@ -16,9 +16,11 @@
 
 ## 🎯 Executive Summary
 
-**INOMAD KHURAL** is a full-stack digital nation infrastructure for the **Siberian Confederation** — a sovereign digital state with constitutional governance, economic systems, citizen services, and blockchain-enforced law.
+**INOMAD KHURAL** is an **operating system for sovereign governance** — a complete software stack that runs a digital nation the same way Mac runs a computer. Every function of a modern state — identity, law, economy, parliament, courts, services — is a module in this OS.
 
-**ALTAN** is the native sovereign currency of the Siberian Confederation — technically built as a stablecoin but legally a new independent currency.
+Built for the **Siberian Confederation**, a sovereign digital state with constitutional governance, blockchain-enforced law, and a full economic system.
+
+**ALTAN** is the native sovereign currency — technically a stablecoin, legally an independent currency with constitutional mandate.
 
 ### Key Numbers (verified from codebase)
 
