@@ -84,11 +84,10 @@ jobs:
 
       - name: Build
         run: npm run build
-        continue-on-error: true  # Pre-existing export issues in some pages
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3001/api
 
-  # Docker build validation (backend only — frontend has pre-existing build issues)
+  # Docker build validation (backend only)
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
