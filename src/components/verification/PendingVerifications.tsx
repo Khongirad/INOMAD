@@ -2,16 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { getPendingUsers, verifyUser } from '@/lib/api';
+import { getPendingUsers, verifyUser, type PendingUser } from '@/lib/api';
 import { toast } from 'sonner';
-
-interface PendingUser {
-  id: string;
-  seatId: string;
-  username: string;
-  createdAt: string;
-  constitutionAcceptedAt: string;
-}
 
 interface VerificationResult {
   verification: {
@@ -41,7 +33,7 @@ export function PendingVerifications() {
     try {
       setLoading(true);
       const data = await getPendingUsers();
-      setPendingUsers(data as any);
+      setPendingUsers(data);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMsg);

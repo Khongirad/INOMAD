@@ -37,8 +37,8 @@ export default function AdminManagementPage() {
   const loadAdmins = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/creator/admins') as any;
-      setAdmins(response.data);
+      const response = await api.get<Admin[]>('/creator/admins');
+      setAdmins(response);
     } catch (error) {
       console.error('Failed to load admins:', error);
     } finally {

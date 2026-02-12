@@ -8,12 +8,12 @@ export interface TimelineEvent {
   scopeId?: string;
   title: string;
   description?: string;
-  occurredAt: Date;
+  occurredAt: string;
   actorId?: string;
   targetId?: string;
   location?: string;
   metadata?: any;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface CreateTimelineEventDto {
@@ -31,6 +31,7 @@ export interface TimelineFilters {
   type?: string;
   startDate?: Date;
   endDate?: Date;
+  limit?: number;
 }
 
 // API Functions

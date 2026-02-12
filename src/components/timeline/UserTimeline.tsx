@@ -2,18 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { getUserTimeline } from '@/lib/api';
+import { getUserTimeline, type TimelineEvent as ApiTimelineEvent } from '@/lib/api';
 import { toast } from 'sonner';
 
-interface TimelineEvent {
-  id: string;
-  createdAt: string;
-  type: string;
-  scope: string;
-  title: string;
-  description?: string;
-  location?: string;
-  isLegalContract: boolean;
+interface TimelineEvent extends ApiTimelineEvent {
+  isLegalContract?: boolean;
   actor?: {
     id: string;
     username: string;
@@ -23,7 +16,6 @@ interface TimelineEvent {
     id: string;
     username: string;
   };
-  metadata?: any;
 }
 
 interface UserTimelineProps {
@@ -71,8 +63,8 @@ export function UserTimeline({ userId }: UserTimelineProps) {
   const fetchTimeline = async () => {
     try {
       setLoading(true);
-      const data = await getUserTimeline(targetUserId!, { limit: 50 } as any);
-      setEvents(data as any);
+      const data = await getUserTimeline(targetUserId!, { limit: 50 });
+      setEvents(data as TimelineEvent[]);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to fetch timeline';
       console.error('Failed to fetch timeline:', err);

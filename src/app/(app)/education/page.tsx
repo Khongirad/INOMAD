@@ -52,7 +52,7 @@ export default function EducationPage() {
 
   const handleSubmitEducation = async (data: EducationFormData) => {
     try {
-      await submitEducation(data as any);
+      await submitEducation(data as unknown as Parameters<typeof submitEducation>[0]);
       toast.success('Education submitted for verification!');
       
       // Refresh list

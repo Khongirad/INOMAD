@@ -8,18 +8,8 @@ import {
   getLunarEventsForMonth 
 } from '@/lib/lunar-calendar';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { getCalendarEvents } from '@/lib/api';
+import { getCalendarEvents, type CalendarEvent } from '@/lib/api';
 import { toast } from 'sonner';
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  startDate: string;
-  endDate?: string;
-  allDay: boolean;
-  category?: string;
-  color?: string;
-}
 
 type CalendarType = 'gregorian' | 'lunar';
 
@@ -47,7 +37,7 @@ export function Calendar() {
       const endDate = new Date(year, month + 1, 0);
 
       const data = await getCalendarEvents(startDate, endDate);
-      setEvents(data as any);
+      setEvents(data);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to fetch events';
       console.error('Failed to fetch events:', err);
@@ -71,7 +61,7 @@ export function Calendar() {
 
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
-      const eventDate = new Date(event.startDate);
+      const eventDate = new Date(event.date);
       return (
         eventDate.getDate() === date.getDate() &&
         eventDate.getMonth() === date.getMonth() &&
@@ -134,7 +124,7 @@ export function Calendar() {
               <div
                 key={event.id}
                 className="text-xs px-1 py-0.5 rounded truncate"
-                style={{ backgroundColor: event.color + '20', color: event.color || '#3B82F6' }}
+                style={{ backgroundColor: '#3B82F620', color: '#3B82F6' }}
               >
                 {event.title}
               </div>

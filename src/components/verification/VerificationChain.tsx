@@ -2,14 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { getVerificationChain } from '@/lib/api';
+import { getVerificationChain, type VerificationChainNode } from '@/lib/api';
 import { toast } from 'sonner';
-
-interface ChainNode {
-  username: string;
-  role: string;
-  verifiedAt: string;
-}
 
 interface VerificationChainProps {
   userId: string;
@@ -18,7 +12,7 @@ interface VerificationChainProps {
 
 export function VerificationChain({ userId, username }: VerificationChainProps) {
   const { token } = useAuth();
-  const [chain, setChain] = useState<ChainNode[]>([]);
+  const [chain, setChain] = useState<VerificationChainNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +26,7 @@ export function VerificationChain({ userId, username }: VerificationChainProps) 
       setError(null);
 
       const data = await getVerificationChain(userId);
-      setChain(data as any);
+      setChain(data);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to load chain';
       setError(errorMsg);

@@ -4,7 +4,7 @@ import { api } from './client';
 export interface VerificationChainNode {
   username: string;
   role: string;
-  verifiedAt: Date;
+  verifiedAt: string;
 }
 
 export interface VerifierStats {
@@ -17,9 +17,9 @@ export interface VerifierStats {
     verifiedUser: {
       id: string;
       username: string;
-      verifiedAt: Date;
+      verifiedAt: string;
     };
-    createdAt: Date;
+    createdAt: string;
   }>;
 }
 
@@ -27,8 +27,8 @@ export interface PendingUser {
   id: string;
   seatId: string;
   username: string;
-  createdAt: Date;
-  constitutionAcceptedAt: Date;
+  createdAt: string;
+  constitutionAcceptedAt: string;
 }
 
 // API Functions

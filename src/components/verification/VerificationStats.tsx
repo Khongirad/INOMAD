@@ -2,29 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { getMyVerifierStats } from '@/lib/api';
+import { getMyVerifierStats, type VerifierStats } from '@/lib/api';
 import { toast } from 'sonner';
-
-interface VerificationStats {
-  verificationCount: number;
-  maxVerifications: number;
-  remainingQuota: number;
-  isUnlimited: boolean;
-  verificationsGiven: Array<{
-    id: string;
-    verifiedUserId: string;
-    createdAt: string;
-    verifiedUser: {
-      id: string;
-      username: string;
-      verifiedAt: string;
-    };
-  }>;
-}
 
 export function VerificationStats() {
   const { token } = useAuth();
-  const [stats, setStats] = useState<VerificationStats | null>(null);
+  const [stats, setStats] = useState<VerifierStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +18,7 @@ export function VerificationStats() {
     try {
       setLoading(true);
       const data = await getMyVerifierStats();
-      setStats(data as any);
+      setStats(data);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to fetch stats';
       console.error('Failed to fetch verification stats:', err);

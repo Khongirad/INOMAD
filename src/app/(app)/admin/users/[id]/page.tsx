@@ -45,8 +45,8 @@ export default function UserDetailPage() {
   const loadUser = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/admin/users/${userId}`) as any;
-      setUser(response.data);
+      const response = await api.get<UserDetail>(`/admin/users/${userId}`);
+      setUser(response);
     } catch (error) {
       console.error('Failed to load user:', error);
     } finally {

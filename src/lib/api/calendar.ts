@@ -5,12 +5,12 @@ export interface CalendarEvent {
   id: string;
   title: string;
   description?: string;
-  date: Date;
+  date: string;
   calendarType: 'GREGORIAN' | 'MONGOLIAN';
   eventType: 'HOLIDAY' | 'SEASON' | 'RITUAL' | 'CUSTOM';
   isRecurring: boolean;
   createdBy?: string;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface CreateCalendarEventDto {
@@ -23,7 +23,7 @@ export interface CreateCalendarEventDto {
 }
 
 export interface DateConversionResult {
-  converted: Date;
+  converted: string;
   formatted: string;
 }
 
