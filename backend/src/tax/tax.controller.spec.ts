@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TaxController } from './tax.controller';
 import { TaxService } from './tax.service';
 import { CentralBankGuard } from '../auth/guards/central-bank.guard';
+import { AuthGuard } from '../auth/auth.guard';
 
 describe('TaxController', () => {
   let controller: TaxController;
@@ -12,6 +13,7 @@ describe('TaxController', () => {
         { provide: TaxService, useValue: { getTaxQuote: jest.fn(), collectTax: jest.fn(), getStats: jest.fn().mockResolvedValue({}) } },
       ],
     })
+    .overrideGuard(AuthGuard).useValue({ canActivate: () => true })
     .overrideGuard(CentralBankGuard).useValue({ canActivate: () => true })
     .compile();
     controller = module.get<TaxController>(TaxController);
