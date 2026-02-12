@@ -59,7 +59,7 @@ export default function PassportApplicationForm({
   if (step === 0) {
     return (
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography variant="h6" gutterBottom>
             Personal Information
           </Typography>
@@ -68,7 +68,7 @@ export default function PassportApplicationForm({
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             required
@@ -79,7 +79,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             required
@@ -91,7 +91,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             required
@@ -106,7 +106,7 @@ export default function PassportApplicationForm({
           </TextField>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label="Nationality"
@@ -117,7 +117,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             fullWidth
             type="number"
@@ -127,7 +127,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             fullWidth
             label="Eye Color"
@@ -136,7 +136,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             fullWidth
             label="Previous Passport Number"
@@ -153,7 +153,7 @@ export default function PassportApplicationForm({
   if (step === 1) {
     return (
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography variant="h6" gutterBottom>
             Biographical Data
           </Typography>
@@ -162,7 +162,7 @@ export default function PassportApplicationForm({
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             required
@@ -173,7 +173,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label="Father's Name"
@@ -182,7 +182,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label="Mother's Name"
@@ -191,7 +191,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <TextField
             fullWidth
             required
@@ -203,7 +203,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             fullWidth
             required
@@ -213,7 +213,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             fullWidth
             required
@@ -223,7 +223,7 @@ export default function PassportApplicationForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             fullWidth
             label="Postal Code"
@@ -252,7 +252,7 @@ export default function PassportApplicationForm({
 
         <Grid container spacing={3}>
           {/* Photo */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle1" gutterBottom>
@@ -285,7 +285,7 @@ export default function PassportApplicationForm({
           </Grid>
 
           {/* Signature */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle1" gutterBottom>
@@ -318,7 +318,7 @@ export default function PassportApplicationForm({
           </Grid>
 
           {/* Birth Certificate */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle1" gutterBottom>
@@ -376,7 +376,7 @@ export default function PassportApplicationForm({
         </Typography>
 
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -387,7 +387,7 @@ export default function PassportApplicationForm({
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -398,7 +398,7 @@ export default function PassportApplicationForm({
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -409,7 +409,7 @@ export default function PassportApplicationForm({
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -420,7 +420,7 @@ export default function PassportApplicationForm({
             </Card>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -433,7 +433,7 @@ export default function PassportApplicationForm({
             </Card>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>

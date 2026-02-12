@@ -35,10 +35,13 @@ interface Election {
     id: string;
     name: string;
     type: string;
+    ownershipType?: string;
   };
   status: 'UPCOMING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   startDate: Date;
   endDate: Date;
+  termMonths?: number;
+  isAnonymous?: boolean;
   totalVotes: number;
   turnoutRate?: number;
   winner?: {
@@ -135,8 +138,8 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
           <Chip label={getStatusLabel()} color={getStatusColor()} />
         </Box>
 
-        {/* Dates */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        {/* Dates + Term */}
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
           <Typography variant="caption" color="text.secondary">
             <Calendar size={14} style={{ display: 'inline', marginRight: 4 }} />
             Начало: {new Date(election.startDate).toLocaleDateString('ru-RU')}
@@ -144,6 +147,12 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
           <Typography variant="caption" color="text.secondary">
             Конец: {new Date(election.endDate).toLocaleDateString('ru-RU')}
           </Typography>
+          {election.termMonths && (
+            <Chip label={`Срок: ${election.termMonths} мес.`} size="small" variant="outlined" />
+          )}
+          {election.isAnonymous && (
+            <Chip label="Тайное голосование" size="small" color="info" variant="outlined" />
+          )}
         </Box>
 
         {/* Winner (if completed) */}
@@ -209,34 +218,45 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
             ))}
           </RadioGroup>
         ) : (
-          // Results Mode
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {election.candidates
-              .sort((a, b) => b.votes - a.votes)
-              .map((candidate) => {
-                const percentage = getCandidatePercentage(candidate.votes);
-                const isWinner = isCompleted && candidate.candidate.id === election.winner?.id;
+          // Results Mode — respect anonymous voting
+          election.isAnonymous && isActive ? (
+            <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 2 }}>
+              <Typography variant="body2" color="info.dark">
+                🔒 Тайное голосование — результаты будут доступны после завершения
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Кандидатов: {election.candidates.length}
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {election.candidates
+                .sort((a, b) => b.votes - a.votes)
+                .map((candidate) => {
+                  const percentage = getCandidatePercentage(candidate.votes);
+                  const isWinner = isCompleted && candidate.candidate.id === election.winner?.id;
 
-                return (
-                  <Box key={candidate.id}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2" fontWeight={isWinner ? 'bold' : 'normal'}>
-                        {candidate.candidate.firstName} {candidate.candidate.lastName}
-                        {isWinner && ' 👑'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {candidate.votes} ({percentage.toFixed(1)}%)
-                      </Typography>
+                  return (
+                    <Box key={candidate.id}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Typography variant="body2" fontWeight={isWinner ? 'bold' : 'normal'}>
+                          {candidate.candidate.firstName} {candidate.candidate.lastName}
+                          {isWinner && ' 👑'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {candidate.votes} ({percentage.toFixed(1)}%)
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={percentage}
+                        color={isWinner ? 'success' : 'primary'}
+                      />
                     </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={percentage}
-                      color={isWinner ? 'success' : 'primary'}
-                    />
-                  </Box>
-                );
-              })}
-          </Box>
+                  );
+                })}
+            </Box>
+          )
         )}
 
         {/* Stats */}

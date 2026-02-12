@@ -126,12 +126,12 @@ export default function MarriageApplicationPage() {
         {/* Step Content */}
         {activeStep === 0 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography variant="h6" gutterBottom>
                 Partner Information
               </Typography>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 required
@@ -141,7 +141,7 @@ export default function MarriageApplicationPage() {
                 helperText="Enter your partner's username or user ID"
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 required
@@ -150,7 +150,7 @@ export default function MarriageApplicationPage() {
                 onChange={(e) => handleChange('spouse1FullName', e.target.value)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 required
@@ -159,7 +159,7 @@ export default function MarriageApplicationPage() {
                 onChange={(e) => handleChange('spouse2FullName', e.target.value)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 required
@@ -170,7 +170,7 @@ export default function MarriageApplicationPage() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 required
@@ -186,12 +186,12 @@ export default function MarriageApplicationPage() {
 
         {activeStep === 1 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography variant="h6" gutterBottom>
                 Marriage Details
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 required
@@ -203,7 +203,7 @@ export default function MarriageApplicationPage() {
                 helperText="Must be at least 30 days from today"
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 select
@@ -216,7 +216,7 @@ export default function MarriageApplicationPage() {
                 <MenuItem value="Traditional">Traditional</MenuItem>
               </TextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Ceremony Location"
@@ -224,7 +224,7 @@ export default function MarriageApplicationPage() {
                 onChange={(e) => handleChange('ceremonyLocation', e.target.value)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Witness 1 Name"
@@ -232,7 +232,7 @@ export default function MarriageApplicationPage() {
                 onChange={(e) => handleChange('witness1Name', e.target.value)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Witness 2 Name"
@@ -245,7 +245,7 @@ export default function MarriageApplicationPage() {
 
         {activeStep === 2 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography variant="h6" gutterBottom>
                 Property Regime
               </Typography>
@@ -253,7 +253,7 @@ export default function MarriageApplicationPage() {
                 Choose how property will be managed during marriage
               </Typography>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 select
@@ -267,7 +267,7 @@ export default function MarriageApplicationPage() {
               </TextField>
             </Grid>
             {formData.propertyRegime === 'CUSTOM' && (
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <TextField
                   fullWidth
                   multiline
@@ -288,7 +288,7 @@ export default function MarriageApplicationPage() {
               Review & Submit
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Card variant="outlined">
                   <CardContent>
                     <Typography variant="subtitle2" color="text.secondary">
@@ -300,7 +300,7 @@ export default function MarriageApplicationPage() {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Card variant="outlined">
                   <CardContent>
                     <Typography variant="subtitle2" color="text.secondary">
@@ -310,7 +310,7 @@ export default function MarriageApplicationPage() {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Card variant="outlined">
                   <CardContent>
                     <Typography variant="subtitle2" color="text.secondary">

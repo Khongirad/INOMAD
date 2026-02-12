@@ -228,7 +228,7 @@ export default function WorkActsPage() {
           activeActs.map((act) => {
             const cfg = statusConfig[act.status] || statusConfig.DRAFTED;
             const Icon = cfg.icon;
-            const isContractor = act.contractor.id === user?.id;
+            const isContractor = act.contractor.id === user?.userId;
 
             return (
               <Card
@@ -291,7 +291,7 @@ export default function WorkActsPage() {
                       {['REVIEWED', 'SIGNED_BY_CONTRACTOR', 'SIGNED_BY_CLIENT'].includes(act.status) && (
                         <Button
                           size="sm"
-                          onClick={() => handleAction(act.id, 'sign', { signature: `SIG-${user?.id}` })}
+                          onClick={() => handleAction(act.id, 'sign', { signature: `SIG-${user?.userId}` })}
                           className="bg-emerald-600 hover:bg-emerald-700 h-7 text-xs"
                         >
                           Подписать

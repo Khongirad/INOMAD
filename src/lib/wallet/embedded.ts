@@ -84,7 +84,7 @@ export const EmbeddedWallet = {
    * Falls back to localStorage if API is unavailable.
    */
   checkActivation: async (): Promise<'PENDING' | 'ACTIVE'> => {
-    const seatId = api.getSeatId();
+    const seatId = typeof window !== 'undefined' ? localStorage.getItem('seatId') : null;
     if (seatId) {
       try {
         const data = await api.get<{ walletStatus: string }>(`identity/status/${seatId}`);

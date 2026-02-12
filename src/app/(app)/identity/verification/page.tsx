@@ -19,9 +19,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/hooks/use-auth";
 
 export default function VerificationHallPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [peerSeatId, setPeerSeatId] = useState("");
@@ -30,7 +32,7 @@ export default function VerificationHallPage() {
 
   const fetchStatus = async () => {
     try {
-      const seatId = api.getSeatId();
+      const seatId = user?.seatId;
       if (!seatId) {
         router.push("/register");
         return;
@@ -48,7 +50,7 @@ export default function VerificationHallPage() {
     fetchStatus();
     const interval = setInterval(fetchStatus, 8000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   const verifications = status?.verificationsReceived || [];
   const required = 3;

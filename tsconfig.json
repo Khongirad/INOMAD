@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "backend", "chain", "legacy_backup"]
+  "exclude": ["node_modules", "backend", "chain", "legacy_backup", "disabled-modules"]
 }

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { Search } from "lucide-react";
 import { SeatStatus } from "@/components/identity/seat-status";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export function Header() {
   const pathname = usePathname();

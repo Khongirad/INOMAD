@@ -938,7 +938,7 @@ export class UnifiedOrgService {
         accountNumber: `${accountNumber}-${Date.now()}`,
         accountType: data.accountType || 'OPERATING',
         currency: data.currency || 'ALTAN',
-        signaturesRequired: data.accountType === 'SHARED_VAULT' ? 2 : 1,
+        clientSignaturesRequired: data.accountType === 'SHARED_VAULT' ? 2 : 1,
       },
     });
 

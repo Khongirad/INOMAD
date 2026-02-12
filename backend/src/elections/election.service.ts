@@ -7,6 +7,8 @@ interface CreateElectionDto {
   startDate: Date;
   endDate: Date;
   creatorId: string;
+  termMonths?: number;
+  isAnonymous?: boolean;
 }
 
 interface VoteDto {
@@ -76,6 +78,8 @@ export class ElectionService {
         startDate,
         endDate,
         status,
+        termMonths: data.termMonths ?? 12,
+        isAnonymous: data.isAnonymous ?? true,
       },
       include: {
         organization: true,
@@ -200,13 +204,34 @@ export class ElectionService {
       throw new NotFoundException('Candidate not found');
     }
 
-    // 5. Check if already voted (using a simple table - you might want a Vote model)
-    // For now, we'll just increment vote count
+    // 5. Determine vote weight based on organization ownership type
+    let voteWeight = 1;
+
+    if (election.organization.ownershipType === 'PRIVATE') {
+      // PRIVATE org: vote weight = shareholder ownership %
+      const shareholding = await this.prisma.orgShareholder.findUnique({
+        where: {
+          organizationId_userId: {
+            organizationId: election.organizationId,
+            userId: voterId,
+          },
+        },
+      });
+      if (!shareholding) {
+        throw new ForbiddenException(
+          'Only shareholders can vote in a private organization',
+        );
+      }
+      voteWeight = Number(shareholding.voteWeight);
+    }
+    // PUBLIC / MUNICIPAL: 1 member = 1 vote (default voteWeight = 1)
+
+    // 6. Increment vote count with weight
     await this.prisma.electionCandidate.update({
       where: { id: candidate.id },
       data: {
         votes: {
-          increment: 1,
+          increment: Math.round(voteWeight),
         },
       },
     });
@@ -346,7 +371,7 @@ export class ElectionService {
    * Get election details
    */
   async getElection(electionId: string) {
-    return this.prisma.election.findUnique({
+    const election = await this.prisma.election.findUnique({
       where: { id: electionId },
       include: {
         organization: true,
@@ -373,6 +398,19 @@ export class ElectionService {
         },
       },
     });
+
+    // If anonymous + still active, hide individual vote counts
+    if (election?.isAnonymous && election.status === 'ACTIVE') {
+      return {
+        ...election,
+        candidates: election.candidates.map((c) => ({
+          ...c,
+          votes: undefined, // Hide until election completes
+        })),
+      };
+    }
+
+    return election;
   }
 
   /**

@@ -136,7 +136,7 @@ export default function ApplicationReviewPage() {
 
       <Grid container spacing={3}>
         {/* Personal Information */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -194,7 +194,7 @@ export default function ApplicationReviewPage() {
         </Grid>
 
         {/* Biographical Data */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -240,7 +240,7 @@ export default function ApplicationReviewPage() {
         </Grid>
 
         {/* Documents */}
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -252,14 +252,14 @@ export default function ApplicationReviewPage() {
               </Alert>
               <Grid container spacing={2}>
                 {documents.length === 0 ? (
-                  <Grid item xs={12}>
+                  <Grid size={12}>
                     <Typography variant="body2" color="text.secondary">
                       No documents uploaded yet
                     </Typography>
                   </Grid>
                 ) : (
                   documents.map((doc) => (
-                    <Grid item xs={12} sm={6} md={4} key={doc.id}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={doc.id}>
                       <Card variant="outlined">
                         <CardContent>
                           <Typography variant="subtitle2" gutterBottom>
@@ -289,7 +289,7 @@ export default function ApplicationReviewPage() {
 
         {/* Officer Notes (if any) */}
         {application.reviewNotes && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -304,7 +304,7 @@ export default function ApplicationReviewPage() {
 
         {/* Action Buttons */}
         {application.status !== 'APPROVED' && application.status !== 'REJECTED' && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>

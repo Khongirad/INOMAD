@@ -4,21 +4,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { HistoricalRecordForm } from '@/components/history/HistoricalRecordForm';
 import { useRouter } from 'next/navigation';
-import { getUserNarratives, createHistoricalRecord } from '@/lib/api';
+import { getUserNarratives, createHistoricalRecord, HistoricalRecord } from '@/lib/api';
 import { toast } from 'sonner';
-
-interface HistoricalRecord {
-  id: string;
-  createdAt: string;
-  title: string;
-  periodStart: string;
-  periodEnd?: string;
-  scope: string;
-  isPublished: boolean;
-  author: {
-    username: string;
-  };
-}
 
 export default function HistoryPage() {
   const { token, user } = useAuth();

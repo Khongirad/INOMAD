@@ -1,224 +1,232 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BlockchainService } from '../blockchain/blockchain.service';
-import { ethers } from 'ethers';
-
-export interface TaxQuote {
-  totalTax: string;
-  republicTax: string;
-  confederationTax: string;
-  taxRate: number; // 10%
-}
-
-export interface TaxStats {
-  taxRate: number;
-  republicShare: number; // 7%
-  confederationShare: number; // 3%
-}
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { TaxRecordStatus } from '@prisma/client';
 
 /**
- * Tax Service
- * Integrates with TaxEngine.sol contract
+ * TaxService — Annual tax filing.
+ *
+ * Tax is collected ONCE A YEAR during the tax period (January).
+ * Rate: 10% total (7% → Republic, 3% → Confederation).
+ *
+ * Lifecycle: DRAFT → FILED → PAID
  */
 @Injectable()
 export class TaxService {
   private readonly logger = new Logger(TaxService.name);
 
-  constructor(private readonly blockchain: BlockchainService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Quote tax for an amount
-   * @param amount Amount in ALTAN (as string)
-   * @returns Tax breakdown
+   * Generate annual tax record for a user.
+   * Aggregates all completed Quest rewards for the given year.
    */
-  async quoteTax(amount: string): Promise<TaxQuote> {
-    try {
-      const taxEngine = this.blockchain.getTaxEngineContract();
+  async generateTaxRecord(userId: string, taxYear: number) {
+    // Find user's republic
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        regionalReputations: {
+          include: { republic: true },
+          take: 1,
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
 
-      // Convert amount to wei
-      const amountWei = ethers.parseEther(amount);
+    const republicRep = user.regionalReputations[0];
+    if (!republicRep)
+      throw new BadRequestException(
+        'User has no republic affiliation for tax purposes',
+      );
 
-      // Call quoteTax
-      const [republicTax, confedTax] = await taxEngine.quoteTax(amountWei);
+    // Check for existing record
+    const existing = await this.prisma.taxRecord.findUnique({
+      where: {
+        userId_taxYear_republicId: {
+          userId,
+          taxYear,
+          republicId: republicRep.republicId,
+        },
+      },
+    });
+    if (existing)
+      throw new BadRequestException(
+        `Tax record for ${taxYear} already exists (status: ${existing.status})`,
+      );
 
-      const totalTax = republicTax + confedTax;
+    // Aggregate all completed quests for the year
+    const periodStart = new Date(taxYear, 0, 1); // Jan 1
+    const periodEnd = new Date(taxYear + 1, 0, 1); // Jan 1 next year
 
-      return {
-        totalTax: ethers.formatEther(totalTax),
-        republicTax: ethers.formatEther(republicTax),
-        confederationTax: ethers.formatEther(confedTax),
-        taxRate: 10, // 10% constant
-      };
-    } catch (error) {
-      this.logger.error('Failed to quote tax:', error);
-      throw error;
-    }
+    const completedQuests = await this.prisma.quest.findMany({
+      where: {
+        takerId: userId,
+        status: 'COMPLETED',
+        completedAt: {
+          gte: periodStart,
+          lt: periodEnd,
+        },
+      },
+    });
+
+    const totalIncome = completedQuests.reduce(
+      (sum, q) => sum + Number(q.rewardAltan),
+      0,
+    );
+
+    // Calculate tax
+    const taxRate = 0.1;
+    const republicRate = 0.07;
+    const confedRate = 0.03;
+    const totalTaxDue = totalIncome * taxRate;
+    const republicTaxDue = totalIncome * republicRate;
+    const confederationTaxDue = totalIncome * confedRate;
+
+    const record = await this.prisma.taxRecord.create({
+      data: {
+        userId,
+        republicId: republicRep.republicId,
+        taxYear,
+        taxPeriodStart: periodStart,
+        taxPeriodEnd: periodEnd,
+        totalIncome,
+        totalQuestsCompleted: completedQuests.length,
+        taxRate,
+        republicTaxRate: republicRate,
+        confederationTaxRate: confedRate,
+        totalTaxDue,
+        republicTaxDue,
+        confederationTaxDue,
+        status: 'DRAFT',
+      },
+    });
+
+    this.logger.log(
+      `Tax record created for user ${userId}, year ${taxYear}: income=${totalIncome}, tax=${totalTaxDue}`,
+    );
+    return record;
   }
 
   /**
-   * Collect tax from payer account
-   * @param payerAccountId Payer's account ID (bytes32)
-   * @param republicKey Republic key (bytes32)
-   * @param asset Asset address (ALTAN token)
-   * @param amount Amount to tax
-   * @param privateKey Private key of collector
-   * @returns Transaction hash
+   * File tax return (DRAFT → FILED).
    */
-  async collectTax(
-    payerAccountId: string,
-    republicKey: string,
-    asset: string,
-    amount: string,
-    privateKey: string,
-  ): Promise<string> {
-    try {
-      const taxEngine = this.blockchain.getTaxEngineContract();
-      const wallet = new ethers.Wallet(
-        privateKey,
-        this.blockchain.getProvider(),
-      );
-      const contractWithSigner = taxEngine.connect(wallet) as ethers.Contract;
+  async fileTaxReturn(userId: string, taxRecordId: string) {
+    const record = await this.prisma.taxRecord.findUnique({
+      where: { id: taxRecordId },
+    });
+    if (!record) throw new NotFoundException('Tax record not found');
+    if (record.userId !== userId)
+      throw new BadRequestException('Not your tax record');
+    if (record.status !== 'DRAFT')
+      throw new BadRequestException(`Cannot file a ${record.status} record`);
 
-      const amountWei = ethers.parseEther(amount);
-      const memo = ethers.encodeBytes32String('Tax Collection');
-
-      const tx = await contractWithSigner.collectTax(
-        payerAccountId,
-        republicKey,
-        asset,
-        amountWei,
-        memo,
-      );
-
-      await tx.wait();
-
-      this.logger.log(`Tax collected: ${tx.hash}`);
-      return tx.hash;
-    } catch (error) {
-      this.logger.error('Failed to collect tax:', error);
-      throw error;
-    }
+    return this.prisma.taxRecord.update({
+      where: { id: taxRecordId },
+      data: { status: 'FILED' },
+    });
   }
 
   /**
-   * Get tax statistics
+   * Pay annual tax (FILED → PAID).
    */
-  async getTaxStats(): Promise<TaxStats> {
-    try {
-      const taxEngine = this.blockchain.getTaxEngineContract();
+  async payTax(userId: string, taxRecordId: string) {
+    const record = await this.prisma.taxRecord.findUnique({
+      where: { id: taxRecordId },
+    });
+    if (!record) throw new NotFoundException('Tax record not found');
+    if (record.userId !== userId)
+      throw new BadRequestException('Not your tax record');
+    if (record.status !== 'FILED')
+      throw new BadRequestException(`Cannot pay a ${record.status} record`);
 
-      const TAX_BPS = await taxEngine.TAX_BPS();
-      const REPUBLIC_BPS = await taxEngine.REPUBLIC_BPS();
-      const CONFED_BPS = await taxEngine.CONFED_BPS();
-
-      return {
-        taxRate: Number(TAX_BPS) / 100, // Convert bps to percentage
-        republicShare: Number(REPUBLIC_BPS) / 100,
-        confederationShare: Number(CONFED_BPS) / 100,
-      };
-    } catch (error) {
-      this.logger.error('Failed to get tax stats:', error);
-      throw error;
-    }
+    // TODO: Integrate with ALTAN ledger to debit the tax amount
+    // For now, mark as paid
+    return this.prisma.taxRecord.update({
+      where: { id: taxRecordId },
+      data: {
+        status: 'PAID',
+        isPaid: true,
+        totalTaxPaid: record.totalTaxDue,
+        paidAt: new Date(),
+        paymentTxHash: `TAX-${Date.now()}-${userId.substring(0, 8)}`,
+      },
+    });
   }
 
   /**
-   * Get confederation account ID
+   * Get user's tax history.
    */
-  async getConfederationAccountId(): Promise<string> {
-    try {
-      const taxEngine = this.blockchain.getTaxEngineContract();
-      return await taxEngine.confederationAccountId();
-    } catch (error) {
-      this.logger.error('Failed to get confederation account:', error);
-      throw error;
-    }
+  async getTaxHistory(userId: string) {
+    return this.prisma.taxRecord.findMany({
+      where: { userId },
+      orderBy: { taxYear: 'desc' },
+      include: { republic: true },
+    });
   }
 
   /**
-   * Get republic account ID by key
+   * Get a single tax record with full details.
    */
-  async getRepublicAccountId(republicKey: string): Promise<string> {
-    try {
-      const taxEngine = this.blockchain.getTaxEngineContract();
-      return await taxEngine.republicAccountIdOf(republicKey);
-    } catch (error) {
-      this.logger.error('Failed to get republic account:', error);
-      throw error;
-    }
+  async getTaxRecord(taxRecordId: string) {
+    const record = await this.prisma.taxRecord.findUnique({
+      where: { id: taxRecordId },
+      include: { republic: true, user: true },
+    });
+    if (!record) throw new NotFoundException('Tax record not found');
+    return record;
   }
 
   /**
-   * Set republic account (admin only)
+   * Auto-generate DRAFT tax records on January 1st.
+   * Runs daily but only acts on Jan 1.
    */
-  async setRepublic(
-    republicKey: string,
-    republicAccountId: string,
-    privateKey: string,
-  ): Promise<string> {
-    try {
-      const taxEngine = this.blockchain.getTaxEngineContract();
-      const wallet = new ethers.Wallet(
-        privateKey,
-        this.blockchain.getProvider(),
-      );
-      const contractWithSigner = taxEngine.connect(wallet) as ethers.Contract;
+  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  async autoGenerateTaxRecords() {
+    const now = new Date();
+    // Only run on January 1st
+    if (now.getMonth() !== 0 || now.getDate() !== 1) return;
 
-      const tx = await contractWithSigner.setRepublic(
-        republicKey,
-        republicAccountId,
-      );
-      await tx.wait();
+    const taxYear = now.getFullYear() - 1; // Tax for the previous year
+    this.logger.log(`Auto-generating tax records for year ${taxYear}`);
 
-      this.logger.log(`Republic set: ${tx.hash}`);
-      return tx.hash;
-    } catch (error) {
-      this.logger.error('Failed to set republic:', error);
-      throw error;
+    // Get all users who completed quests in that year
+    const periodStart = new Date(taxYear, 0, 1);
+    const periodEnd = new Date(taxYear + 1, 0, 1);
+
+    const usersWithQuests = await this.prisma.quest.findMany({
+      where: {
+        status: 'COMPLETED',
+        completedAt: { gte: periodStart, lt: periodEnd },
+        takerId: { not: null },
+      },
+      select: { takerId: true },
+      distinct: ['takerId'],
+    });
+
+    let generated = 0;
+    for (const { takerId } of usersWithQuests) {
+      if (!takerId) continue;
+      try {
+        await this.generateTaxRecord(takerId, taxYear);
+        generated++;
+      } catch (error) {
+        // Skip if already exists
+        if (!error.message?.includes('already exists')) {
+          this.logger.error(
+            `Failed to generate tax for user ${takerId}: ${error.message}`,
+          );
+        }
+      }
     }
-  }
 
-  /**
-   * Set collector permissions (admin only)
-   */
-  async setCollector(
-    collectorAddress: string,
-    allowed: boolean,
-    privateKey: string,
-  ): Promise<string> {
-    try {
-      const taxEngine = this.blockchain.getTaxEngineContract();
-      const wallet = new ethers.Wallet(
-        privateKey,
-        this.blockchain.getProvider(),
-      );
-      const contractWithSigner = taxEngine.connect(wallet) as ethers.Contract;
-
-      const tx = await contractWithSigner.setCollector(
-        collectorAddress,
-        allowed,
-      );
-      await tx.wait();
-
-      this.logger.log(
-        `Collector ${allowed ? 'added' : 'removed'}: ${tx.hash}`,
-      );
-      return tx.hash;
-    } catch (error) {
-      this.logger.error('Failed to set collector:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Check if address is a collector
-   */
-  async isCollector(address: string): Promise<boolean> {
-    try {
-      const taxEngine = this.blockchain.getTaxEngineContract();
-      return await taxEngine.isCollector(address);
-    } catch (error) {
-      this.logger.error('Failed to check collector:', error);
-      throw error;
-    }
+    this.logger.log(
+      `Auto-generated ${generated} tax records for ${usersWithQuests.length} users`,
+    );
   }
 }

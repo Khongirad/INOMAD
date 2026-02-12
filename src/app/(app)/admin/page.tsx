@@ -49,8 +49,8 @@ export default function AdminDashboard() {
     try {
       setLoadingData(true);
       const [statsData, pendingData] = await Promise.all([
-        api.get('/admin/stats'),
-        api.get('/admin/users/pending'),
+        api.get<{ data: Stats }>('/admin/stats'),
+        api.get<{ data: PendingUser[] }>('/admin/users/pending'),
       ]);
       setStats(statsData.data);
       setPendingUsers(pendingData.data);

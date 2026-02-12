@@ -39,7 +39,7 @@ export function useAuth() {
       const me = await getMe();
       setUser(me);
       setError(null);
-      if (me.seatId) api.setSeatId(me.seatId);
+      if (me.seatId) localStorage.setItem('seatId', me.seatId);
     } catch (e: any) {
       setUser(null);
       setError(e.message);
@@ -58,7 +58,7 @@ export function useAuth() {
     try {
       const me = await signIn(password);
       setUser(me);
-      if (me.seatId) api.setSeatId(me.seatId);
+      if (me.seatId) localStorage.setItem('seatId', me.seatId);
     } catch (e: any) {
       setError(e.message);
       throw e;

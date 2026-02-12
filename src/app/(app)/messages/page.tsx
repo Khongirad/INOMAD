@@ -103,7 +103,7 @@ export default function MessagesPage() {
   const getConvName = (conv: Conversation) => {
     if (conv.name) return conv.name;
     if (conv.type === 'DIRECT_MESSAGE') {
-      const other = conv.participants.find((p) => p.user.id !== user?.id);
+      const other = conv.participants.find((p) => p.user.id !== user?.userId);
       return other?.user.username || 'Unknown';
     }
     return 'Chat';
@@ -214,7 +214,7 @@ export default function MessagesPage() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((msg) => {
-                const isMe = msg.sender.id === user?.id;
+                const isMe = msg.sender.id === user?.userId;
                 return (
                   <div
                     key={msg.id}

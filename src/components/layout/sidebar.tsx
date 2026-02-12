@@ -24,6 +24,8 @@ import {
   Handshake,
   TreePine,
   Vote,
+  Receipt,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -58,8 +60,10 @@ const NAV_ITEMS = [
     category: "Financial (Altan)",
     items: [
       { name: "Treasury", href: "/treasury", icon: Landmark },
+      { name: "Org Banking", href: "/org-banking", icon: Wallet },
       { name: "Exchange", href: "/exchange", icon: ArrowRightLeft },
       { name: "Sovereign Fund", href: "/fund", icon: Coins },
+      { name: "Tax Filing", href: "/tax", icon: Receipt },
     ],
   },
   {

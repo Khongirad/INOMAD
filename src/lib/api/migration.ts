@@ -1,4 +1,4 @@
-import { api } from '../api';
+import { api } from './client';
 
 // ============ Types ============
 
@@ -140,12 +140,7 @@ export const uploadPassportDocument = async (
   
   const response = await api.post<Document>(
     `/migration-service/applications/${applicationId}/documents`,
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
+    formData
   );
   return response;
 };

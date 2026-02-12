@@ -60,7 +60,7 @@ export function UserTimeline({ userId }: UserTimelineProps) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('');
 
-  const targetUserId = userId || user?.sub;
+  const targetUserId = userId || user?.userId;
 
   useEffect(() => {
     if (targetUserId) {
@@ -71,8 +71,8 @@ export function UserTimeline({ userId }: UserTimelineProps) {
   const fetchTimeline = async () => {
     try {
       setLoading(true);
-      const data = await getUserTimeline(targetUserId!, { limit: 50 });
-      setEvents(data);
+      const data = await getUserTimeline(targetUserId!, { limit: 50 } as any);
+      setEvents(data as any);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to fetch timeline';
       console.error('Failed to fetch timeline:', err);

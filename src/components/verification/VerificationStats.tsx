@@ -35,7 +35,7 @@ export function VerificationStats() {
     try {
       setLoading(true);
       const data = await getMyVerifierStats();
-      setStats(data);
+      setStats(data as any);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to fetch stats';
       console.error('Failed to fetch verification stats:', err);

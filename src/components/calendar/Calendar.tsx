@@ -46,8 +46,8 @@ export function Calendar() {
       const startDate = new Date(year, month, 1);
       const endDate = new Date(year, month + 1, 0);
 
-      const data = await getCalendarEvents(startDate.toISOString(), endDate.toISOString());
-      setEvents(data);
+      const data = await getCalendarEvents(startDate, endDate);
+      setEvents(data as any);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to fetch events';
       console.error('Failed to fetch events:', err);

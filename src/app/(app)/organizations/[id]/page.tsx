@@ -199,7 +199,7 @@ export default function OrganizationProfilePage() {
 
         <Grid container spacing={3}>
           {/* Stats Cards */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -290,7 +290,7 @@ export default function OrganizationProfilePage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -329,7 +329,7 @@ export default function OrganizationProfilePage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -392,7 +392,7 @@ export default function OrganizationProfilePage() {
           </Grid>
 
           {/* Members Table */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>

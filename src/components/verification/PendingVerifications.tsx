@@ -41,7 +41,7 @@ export function PendingVerifications() {
     try {
       setLoading(true);
       const data = await getPendingUsers();
-      setPendingUsers(data);
+      setPendingUsers(data as any);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMsg);
@@ -56,7 +56,7 @@ export function PendingVerifications() {
       setVerifying(userId);
       setError(null);
 
-      const result = await verifyUser(userId, notes, 'Web Dashboard');
+      const result = await verifyUser(userId, { notes, location: 'Web Dashboard' });
 
       // Remove verified user from pending list
       setPendingUsers(prev => prev.filter(u => u.id !== userId));

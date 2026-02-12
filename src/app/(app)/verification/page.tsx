@@ -34,7 +34,7 @@ export default function VerificationDashboard() {
             
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Chain</h3>
-              <VerificationChain userId={user.sub} username={user.username} />
+              <VerificationChain userId={user.userId} username={user.seatId} />
             </div>
           </div>
 

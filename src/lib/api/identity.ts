@@ -1,4 +1,4 @@
-import { api } from '../api';
+import { api } from './client';
 import { AuthSession } from '../auth/session';
 
 // Types

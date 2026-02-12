@@ -17,7 +17,7 @@ interface ApplicationStatusCardProps {
 const STATUS_CONFIG = {
   DRAFT: {
     label: 'Draft',
-    color: 'default' as const,
+    color: 'primary' as const,
     icon: <DocumentIcon />,
     progress: 20,
   },

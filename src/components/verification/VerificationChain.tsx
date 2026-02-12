@@ -32,7 +32,7 @@ export function VerificationChain({ userId, username }: VerificationChainProps) 
       setError(null);
 
       const data = await getVerificationChain(userId);
-      setChain(data);
+      setChain(data as any);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to load chain';
       setError(errorMsg);

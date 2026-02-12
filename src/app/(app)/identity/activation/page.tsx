@@ -13,18 +13,20 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 
 export default function UnlockCeremonyPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [status, setStatus] = useState<'LOCKED' | 'PENDING' | 'UNLOCKED'>('LOCKED');
   const [approvals, setApprovals] = useState<any[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Poll for status
-    const seatId = api.getSeatId();
+    // Get seat ID from auth
+    const seatId = user?.seatId || null;
     if (seatId) setUserId(seatId);
 
     const checkStatus = async () => {
@@ -43,7 +45,7 @@ export default function UnlockCeremonyPage() {
     checkStatus();
     const interval = setInterval(checkStatus, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   const handleRequest = async () => {
     if (!userId) return;

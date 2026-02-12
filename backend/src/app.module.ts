@@ -56,6 +56,7 @@ import { HierarchyModule } from './hierarchy/hierarchy.module';
 import { ParliamentModule } from './parliament/parliament.module';
 import { OrgQuestModule } from './org-quests/org-quest.module';
 import { RegionalReputationModule } from './regional-reputation/regional-reputation.module';
+import { OrgBankingModule } from './org-banking/org-banking.module';
 
 @Module({
   imports: [
@@ -119,6 +120,7 @@ import { RegionalReputationModule } from './regional-reputation/regional-reputat
     ParliamentModule,   // Khural sessions and voting (Tumen leaders only)
     OrgQuestModule,     // Organization Task Board (quests/missions for all orgs)
     RegionalReputationModule, // Territorial reputation per republic
+    OrgBankingModule,         // Org banking with dual authorization & daily reports
   ],
   providers: [
     {

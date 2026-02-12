@@ -55,15 +55,15 @@ export default function LeaseRegistrationPage() {
       await registerLease({
         landPlotId,
         lessorUserId: lessorName, // In real app, this would be a user ID
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        startDate: startDate,
+        endDate: endDate,
         monthlyRent: parseFloat(monthlyRent),
         currency,
         paymentDay: parseInt(paymentDay),
         deposit: deposit ? parseFloat(deposit) : undefined,
         terms,
         notes,
-      });
+      } as any);
       toast.success('Lease registered successfully!');
       router.push('/services/land-registry');
     } catch (err: any) {

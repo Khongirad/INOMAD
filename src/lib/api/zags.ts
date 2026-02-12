@@ -1,4 +1,4 @@
-import { api } from '../api';
+import { api } from './client';
 
 // ============ Types ============
 
@@ -202,8 +202,7 @@ export const getMarriageCertificate = async (
   certificateNumber: string
 ): Promise<any> => {
   const response = await api.get(
-    `/zags/certificates/${certificateNumber}`,
-    { responseType: 'blob' }
+    `/zags/certificates/${certificateNumber}`
   );
   return response;
 };

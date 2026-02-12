@@ -6,22 +6,14 @@ import { NoteForm } from '@/components/calendar/NoteForm';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useState, useEffect } from 'react';
 import { formatDualDate } from '@/lib/lunar-calendar';
-import { getUpcomingEvents, createCalendarEvent, createCalendarNote } from '@/lib/api';
+import { getUpcomingEvents, createCalendarEvent, createCalendarNote, CalendarEvent } from '@/lib/api';
 import { toast } from 'sonner';
-
-interface UpcomingEvent {
-  id: string;
-  title: string;
-  startDate: string;
-  category?: string;
-  color?: string;
-}
 
 export default function CalendarPage() {
   const { user, token } = useAuth();
   const [showEventForm, setShowEventForm] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
-  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<CalendarEvent[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -116,10 +108,10 @@ export default function CalendarPage() {
               ) : (
                 <div className="space-y-3">
                   {upcomingEvents.map((event) => (
-                    <div key={event.id} className="border-l-4 pl-3 py-2" style={{ borderColor: event.color || '#3B82F6' }}>
+                    <div key={event.id} className="border-l-4 pl-3 py-2" style={{ borderColor: '#3B82F6' }}>
                       <p className="text-sm font-medium text-gray-900">{event.title}</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {formatDualDate(new Date(event.startDate))}
+                        {formatDualDate(new Date(event.date))}
                       </p>
                     </div>
                   ))}

@@ -1,8 +1,7 @@
 'use client';
 
 import { MapPin, Clock, FileText } from 'lucide-react';
-import EventIcon from './EventIcon';
-import { EventType } from '@prisma/client';
+import EventIcon, { type EventType } from './EventIcon';
 
 interface TimelineItemProps {
   event: {

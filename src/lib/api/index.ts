@@ -1,3 +1,6 @@
+// Base API client (re-exported for external consumers)
+export { api } from './client';
+
 // Centralized API exports for easy imports
 export * from './organizations';
 export * from './education';
@@ -13,3 +16,5 @@ export * from './history';
 export * from './timeline';
 export * from './calendar';
 export * from './identity';
+export * from './org-banking';
+export * from './tax';

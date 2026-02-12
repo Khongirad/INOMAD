@@ -209,6 +209,12 @@ model User {
   khuralSessionsConvened KhuralSession[]     @relation("KhuralConvener")
   khuralVotesCast        KhuralVote[]        @relation("KhuralVoter")
 
+  // Shareholdings (for PRIVATE orgs)
+  shareholdings          OrgShareholder[]    @relation("Shareholdings")
+
+  // Tax Records (annual filings)
+  taxRecords             TaxRecord[]         @relation("UserTaxRecords")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -2859,6 +2865,9 @@ model Organization {
   powerBranch PowerBranchType? // LEGISLATIVE, EXECUTIVE, JUDICIAL, BANKING
   description String?
 
+  // Ownership type (affects voting rules)
+  ownershipType OwnershipType @default(PUBLIC)
+
   // Hierarchical structure
   parentId String?
   parent   Organization?  @relation("SubOrganizations", fields: [parentId], references: [id])
@@ -2907,6 +2916,7 @@ model Organization {
   networkNodes ArbanNetwork[]
   invitations  GuildInvitation[]         @relation("GuildInvitations")
   elections    Election[]                @relation("Elections")
+  shareholders OrgShareholder[]          @relation("OrgShareholders")
 
   // Banking — org accounts, wallets, shared vaults
   bankAccounts OrgBankAccount[]
@@ -2919,6 +2929,9 @@ model Organization {
 
   // Work quests — universal work system (citizen + company)
   workQuests Quest[] @relation("OrgWorkQuests")
+
+  // Tax records for org members
+  taxRecords TaxRecord[] @relation("OrgTaxRecords")
 
   @@index([type, overallRating])
   @@index([republicId])
@@ -3110,9 +3123,11 @@ model Election {
   organization   Organization @relation("Elections", fields: [organizationId], references: [id])
 
   // Election details
-  startDate DateTime
-  endDate   DateTime
-  status    ElectionStatus @default(UPCOMING)
+  startDate  DateTime
+  endDate    DateTime
+  status     ElectionStatus @default(UPCOMING)
+  termMonths Int            @default(12) // Term length (visible to voters)
+  isAnonymous Boolean       @default(true) // Secret ballot
 
   // Candidates (leaders of child organizations)
   candidates ElectionCandidate[]
@@ -3875,6 +3890,7 @@ model RepublicanKhural {
   reputationActions ReputationAction[]   @relation("RepublicReputationActions")
   orgQuests         OrgQuest[]           @relation("RepublicOrgQuests")
   quests            Quest[]              @relation("RepublicQuests")
+  taxRecords        TaxRecord[]          @relation("RepublicTaxRecords")
 
   @@index([republicKey])
   @@index([confederationId])
@@ -4527,6 +4543,42 @@ enum OrgAccountType {
   SHARED_VAULT  // Shared vault (multi-sig)
 }
 
+enum BankApprovalLevel {
+  MANAGER         // Regular transactions
+  SENIOR_MANAGER  // Large transactions
+  CHAIRMAN        // Critical / large transfers
+}
+
+enum OrgBankTxType {
+  OUTGOING
+  INCOMING
+  INTERNAL
+  TAX_PAYMENT
+}
+
+enum OrgBankTxStatus {
+  PENDING           // Awaiting client signatures
+  CLIENT_APPROVED   // Client signed, awaiting bank approval
+  BANK_APPROVED     // Bank approved, executing
+  COMPLETED         // Executed on-chain
+  REJECTED          // Bank rejected
+  CANCELLED         // Client cancelled
+}
+
+enum OwnershipType {
+  PUBLIC      // All members vote equally
+  MUNICIPAL   // All citizens of republic vote
+  PRIVATE     // Owner decides, or shareholders by ownership %
+}
+
+enum TaxRecordStatus {
+  DRAFT       // Being calculated
+  FILED       // Submitted
+  PAID        // Paid in full
+  OVERDUE     // Past deadline
+  DISPUTED    // Under review
+}
+
 model OrgBankAccount {
   id String @id @default(uuid())
 
@@ -4544,16 +4596,178 @@ model OrgBankAccount {
   walletAddress String? // On-chain wallet for this account
   walletType    String? // "MPC", "MULTISIG", etc.
 
-  // Access control
-  signaturesRequired Int @default(1) // For multi-sig vaults
+  // Client-side authorization control (chosen by org)
+  clientSignaturesRequired Int @default(1) // 1 = single-sig, 2+ = multi-sig
+
+  // Bank-side authorization level required
+  bankApprovalLevel BankApprovalLevel @default(MANAGER)
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
+  transactions OrgBankTransaction[] @relation("AccountTransactions")
+  dailyReports BankDailyReport[]    @relation("AccountDailyReports")
+
   @@index([organizationId])
   @@index([accountType])
   @@index([isActive])
+}
+
+/// OrgBankTransaction — every org account transaction with dual authorization trail.
+/// US banking practice: client initiates + signs → bank officer approves → execute.
+model OrgBankTransaction {
+  id String @id @default(uuid())
+
+  // Account
+  accountId String
+  account   OrgBankAccount @relation("AccountTransactions", fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Transaction details
+  type              OrgBankTxType
+  amount            Decimal @db.Decimal(18, 6)
+  currency          String @default("ALTAN")
+  description       String
+  recipientAccount  String? // Recipient account number (for outgoing)
+
+  // Client authorization (multi-sig)
+  initiatorId       String // Who started the transaction
+  clientSignatures  Json[] // [{userId, signedAt, signature}]
+  clientApproved    Boolean @default(false)
+
+  // Bank authorization (dual control — US practice)
+  bankApproverId    String? // Manager / Senior Manager / Chairman
+  bankApprovalLevel BankApprovalLevel? // What level approved
+  bankApproved      Boolean @default(false)
+  bankApprovalNote  String? // Officer's note
+
+  // Status & execution
+  status      OrgBankTxStatus @default(PENDING)
+  txHash      String?  // Blockchain transaction hash
+
+  // Daily report grouping
+  reportDate  DateTime // Business date for daily batch
+  reportedAt  DateTime? // When included in daily report
+  reportId    String?
+  report      BankDailyReport? @relation("ReportTransactions", fields: [reportId], references: [id])
+
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([accountId])
+  @@index([status])
+  @@index([reportDate])
+  @@index([initiatorId])
+}
+
+/// BankDailyReport — auto-generated daily summary per account.
+/// Banks must send this report every business day.
+model BankDailyReport {
+  id String @id @default(uuid())
+
+  // Account
+  accountId String
+  account   OrgBankAccount @relation("AccountDailyReports", fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Report period
+  reportDate DateTime // The business day
+
+  // Totals
+  openingBalance Decimal @db.Decimal(18, 6)
+  closingBalance Decimal @db.Decimal(18, 6)
+  totalIncoming  Decimal @default(0) @db.Decimal(18, 6)
+  totalOutgoing  Decimal @default(0) @db.Decimal(18, 6)
+  txCount        Int @default(0)
+  pendingCount   Int @default(0)
+
+  // Transactions for this day
+  transactions OrgBankTransaction[] @relation("ReportTransactions")
+
+  // Delivery
+  generatedAt    DateTime @default(now())
+  deliveredAt    DateTime?
+  deliveryMethod String @default("SYSTEM") // SYSTEM, EMAIL, etc.
+
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, reportDate]) // One report per account per day
+  @@index([accountId])
+  @@index([reportDate])
+}
+
+/// OrgShareholder — for PRIVATE ownership orgs.
+/// Vote weight = ownershipPct during elections.
+model OrgShareholder {
+  id String @id @default(uuid())
+
+  organizationId String
+  organization   Organization @relation("OrgShareholders", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User @relation("Shareholdings", fields: [userId], references: [id])
+
+  ownershipPct Decimal @db.Decimal(5, 2) // 0.01 — 100.00
+  voteWeight   Decimal @db.Decimal(10, 4) // Proportional to ownership
+
+  joinedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+/// TaxRecord — annual tax filing.
+/// Tax is paid ONCE A YEAR during tax period, not per transaction.
+model TaxRecord {
+  id String @id @default(uuid())
+
+  // Taxpayer
+  userId String
+  user   User @relation("UserTaxRecords", fields: [userId], references: [id])
+
+  // Territory
+  republicId String
+  republic   RepublicanKhural @relation("RepublicTaxRecords", fields: [republicId], references: [id])
+
+  // Organization context (optional)
+  organizationId String?
+  organization   Organization? @relation("OrgTaxRecords", fields: [organizationId], references: [id])
+
+  // Tax period
+  taxYear        Int      // e.g. 2026
+  taxPeriodStart DateTime
+  taxPeriodEnd   DateTime
+
+  // Income summary
+  totalIncome          Decimal @default(0) @db.Decimal(18, 4)
+  totalQuestsCompleted Int @default(0)
+
+  // Tax calculation (annual: 7% republic + 3% confederation)
+  taxRate              Decimal @default(0.10) @db.Decimal(5, 4)
+  republicTaxRate      Decimal @default(0.07) @db.Decimal(5, 4)
+  confederationTaxRate Decimal @default(0.03) @db.Decimal(5, 4)
+  totalTaxDue          Decimal @default(0) @db.Decimal(18, 4)
+  republicTaxDue       Decimal @default(0) @db.Decimal(18, 4)
+  confederationTaxDue  Decimal @default(0) @db.Decimal(18, 4)
+
+  // Payment
+  totalTaxPaid  Decimal @default(0) @db.Decimal(18, 4)
+  isPaid        Boolean @default(false)
+  paidAt        DateTime?
+  paymentTxHash String?
+
+  status TaxRecordStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, taxYear, republicId]) // One record per user per year per republic
+  @@index([userId])
+  @@index([republicId])
+  @@index([taxYear])
+  @@index([status])
 }
 
 // ============== ORGANIZATION CONTRACTS ==============

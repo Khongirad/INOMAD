@@ -135,7 +135,7 @@ export default function MarriageReviewPage() {
 
       <Grid container spacing={3}>
         {/* Consent Status */}
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -170,7 +170,7 @@ export default function MarriageReviewPage() {
         </Grid>
 
         {/* Marriage Details */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -206,7 +206,7 @@ export default function MarriageReviewPage() {
         </Grid>
 
         {/* Spouse Information */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -244,7 +244,7 @@ export default function MarriageReviewPage() {
 
         {/* Property Regime */}
         {marriage.propertyRegime && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -267,7 +267,7 @@ export default function MarriageReviewPage() {
 
         {/* Certificate Info */}
         {marriage.certificateNumber && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -292,7 +292,7 @@ export default function MarriageReviewPage() {
 
         {/* Action Buttons */}
         {marriage.status === 'PENDING_REVIEW' && consentComplete && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>

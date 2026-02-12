@@ -16,13 +16,8 @@ export function useSeatBinding() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStatus = useCallback(async () => {
-    const seatId = api.getSeatId();
+    const seatId = typeof window !== 'undefined' ? localStorage.getItem('seatId') : null;
     if (!seatId) {
-      // Mock for now if no auth
-      // setStatus(null);
-      // For testing purposes, let's allow fetching even without header if the API supports it, 
-      // but our API requires it.
-      // If no seat ID, we consider it "not authenticated/not bound" locally.
       return; 
     }
 

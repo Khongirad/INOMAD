@@ -76,7 +76,7 @@ export default function LandRegistryPage() {
 
       {/* Quick Actions */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 3 } }} onClick={() => router.push('/services/land-registry/map')}>
             <CardContent sx={{ textAlign: 'center' }}>
               <MapIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
@@ -88,7 +88,7 @@ export default function LandRegistryPage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card 
             sx={{ cursor: isCitizen ? 'pointer' : 'not-allowed', opacity: isCitizen ? 1 : 0.6, '&:hover': isCitizen ? { boxShadow: 3 } : {} }}
             onClick={() => isCitizen && router.push('/services/land-registry/register/land')}
@@ -103,7 +103,7 @@ export default function LandRegistryPage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card 
             sx={{ cursor: isCitizen ? 'pointer' : 'not-allowed', opacity: isCitizen ? 1 : 0.6, '&:hover': isCitizen ? { boxShadow: 3 } : {} }}
             onClick={() => isCitizen && router.push('/services/land-registry/register/ownership')}
@@ -118,7 +118,7 @@ export default function LandRegistryPage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 3 } }} onClick={() => router.push('/services/land-registry/register/lease')}>
             <CardContent sx={{ textAlign: 'center' }}>
               <DocumentIcon sx={{ fontSize: 48, color: 'info.main', mb: 1 }} />
@@ -269,7 +269,7 @@ export default function LandRegistryPage() {
 
       {/* Info Cards */}
       <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -286,7 +286,7 @@ export default function LandRegistryPage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>

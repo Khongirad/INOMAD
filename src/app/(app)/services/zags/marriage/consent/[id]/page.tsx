@@ -99,7 +99,7 @@ export default function MarriageConsentPage() {
         </Alert>
 
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -112,7 +112,7 @@ export default function MarriageConsentPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -125,7 +125,7 @@ export default function MarriageConsentPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -138,7 +138,7 @@ export default function MarriageConsentPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -152,7 +152,7 @@ export default function MarriageConsentPage() {
           </Grid>
 
           {marriage.ceremonyLocation && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Card variant="outlined">
                 <CardContent>
                   <Typography variant="subtitle2" color="text.secondary">
@@ -164,7 +164,7 @@ export default function MarriageConsentPage() {
             </Grid>
           )}
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="subtitle2" color="text.secondary">

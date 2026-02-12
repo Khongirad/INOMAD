@@ -29,7 +29,7 @@ import {
   Send as SubmitIcon,
   Home as PropertyIcon,
 } from '@mui/icons-material';
-import { registerPropertyOwnership } from '@/lib/api/land-registry';
+import { registerOwnership } from '@/lib/api/land-registry';
 import toast from 'react-hot-toast';
 
 const STEPS = ['Land Plot Selection', 'Ownership Details', 'Review & Submit'];
@@ -59,14 +59,10 @@ export default function PropertyOwnershipRegistrationPage() {
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
-      await registerPropertyOwnership({
+      await registerOwnership({
         landPlotId,
-        ownershipType,
-        ownershipShare: parseFloat(ownershipShare),
-        acquisitionDate: new Date(acquisitionDate),
-        acquisitionMethod,
-        purchasePrice: purchasePrice ? parseFloat(purchasePrice) : undefined,
-        notes,
+        ownershipType: ownershipType as any,
+        sharePercentage: parseFloat(ownershipShare),
       });
       toast.success('Property ownership registered successfully!');
       router.push('/services/land-registry');

@@ -1,4 +1,4 @@
-import { api } from '../api';
+import { api } from './client';
 
 // ==========================================
 // TYPES
@@ -14,12 +14,15 @@ export interface Election {
   status: ElectionStatus;
   startDate: Date;
   endDate: Date;
+  termMonths?: number;
+  isAnonymous?: boolean;
   winnerId?: string;
   createdBy: string;
   organization?: {
     id: string;
     name: string;
     type: string;
+    ownershipType?: string;
   };
   candidates?: ElectionCandidate[];
   totalVotes?: number;
@@ -45,6 +48,8 @@ export interface CreateElectionDto {
   description?: string;
   startDate: string;
   endDate: string;
+  termMonths?: number;
+  isAnonymous?: boolean;
 }
 
 export interface CandidateDto {

@@ -62,7 +62,7 @@ export default function LeaderboardPage() {
     setError(null);
     try {
       const data = await getLeaderboard();
-      setOrganizations(data);
+      setOrganizations(data as any);
     } catch (err: any) {
       const errorMsg = err.message || 'Failed to fetch leaderboard';
       setError(errorMsg);

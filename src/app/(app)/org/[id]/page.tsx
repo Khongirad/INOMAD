@@ -414,7 +414,7 @@ export default function UnifiedOrgDashboard() {
             { label: 'Качество', score: data.qualityScore, icon: '⭐' },
             { label: 'Финансы', score: data.financialScore, icon: '💰' },
           ].map((item) => (
-            <Grid item xs={4} key={item.label}>
+            <Grid size={{ xs: 4 }} key={item.label}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography>{item.icon}</Typography>
                 <Box sx={{ flex: 1 }}>
@@ -462,7 +462,7 @@ export default function UnifiedOrgDashboard() {
       {activeTab === 0 && (
         <Grid container spacing={3}>
           {/* Stats */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ borderRadius: 2 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -493,7 +493,7 @@ export default function UnifiedOrgDashboard() {
           </Grid>
 
           {/* Leader & Info */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ borderRadius: 2 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -529,7 +529,7 @@ export default function UnifiedOrgDashboard() {
           </Grid>
 
           {/* Recent Ratings */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ borderRadius: 2 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -568,7 +568,7 @@ export default function UnifiedOrgDashboard() {
 
           {/* Hierarchy path */}
           {data.parent && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Alert
                 severity="info"
                 icon={<GitBranch size={20} />}
@@ -744,12 +744,12 @@ export default function UnifiedOrgDashboard() {
       {activeTab === 3 && (
         <Grid container spacing={3}>
           {data.achievements.length === 0 ? (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Alert severity="info">Организация пока не получила достижений</Alert>
             </Grid>
           ) : (
             data.achievements.map((ach) => (
-              <Grid item xs={12} md={4} key={ach.id}>
+              <Grid size={{ xs: 12, md: 4 }} key={ach.id}>
                 <Card sx={{ borderRadius: 2, textAlign: 'center', py: 2 }}>
                   <CardContent>
                     <Typography variant="h3" sx={{ mb: 1 }}>
@@ -769,7 +769,7 @@ export default function UnifiedOrgDashboard() {
           )}
 
           {/* Elections */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card sx={{ borderRadius: 2 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -813,7 +813,7 @@ export default function UnifiedOrgDashboard() {
       {activeTab === 4 && (
         <Grid container spacing={3}>
           {data.parent && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Card
                 sx={{ borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
                 onClick={() => router.push(`/org/${data.parent!.id}`)}
@@ -835,7 +835,7 @@ export default function UnifiedOrgDashboard() {
             </Grid>
           )}
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Card sx={{ borderRadius: 2, border: '2px solid', borderColor: 'primary.main' }}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -853,13 +853,13 @@ export default function UnifiedOrgDashboard() {
           </Grid>
 
           {data.children.length > 0 && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography variant="h6" sx={{ mb: 1 }}>
                 ⬇️ Подразделения ({data.childCount})
               </Typography>
               <Grid container spacing={2}>
                 {data.children.map((child) => (
-                  <Grid item xs={12} md={4} key={child.id}>
+                  <Grid size={{ xs: 12, md: 4 }} key={child.id}>
                     <Card
                       sx={{ borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
                       onClick={() => router.push(`/org/${child.id}`)}
@@ -890,7 +890,7 @@ export default function UnifiedOrgDashboard() {
           )}
 
           {data.children.length === 0 && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Alert severity="info">
                 У этой организации пока нет подразделений.
               </Alert>

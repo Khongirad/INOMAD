@@ -95,7 +95,7 @@ export default function LandRegistrationPage() {
         area: parseFloat(area),
         coordinates,
         boundaries,
-      });
+      } as any);
 
       toast.success('Land plot registered successfully!');
       router.push('/services/land-registry');
