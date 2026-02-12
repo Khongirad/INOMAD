@@ -122,8 +122,8 @@ export class OrgQuestService {
     userId?: string,
     filters?: { category?: string; status?: string; page?: number; limit?: number },
   ) {
-    const page = filters?.page ?? 1;
-    const limit = filters?.limit ?? 20;
+    const page = Math.max(1, filters?.page ?? 1);
+    const limit = Math.min(50, Math.max(1, filters?.limit ?? 20));
     const skip = (page - 1) * limit;
 
     const where: any = { organizationId: orgId };
@@ -162,8 +162,8 @@ export class OrgQuestService {
       limit?: number;
     },
   ) {
-    const page = filters?.page ?? 1;
-    const limit = filters?.limit ?? 20;
+    const page = Math.max(1, filters?.page ?? 1);
+    const limit = Math.min(50, Math.max(1, filters?.limit ?? 20));
     const skip = (page - 1) * limit;
 
     // Find user's memberships to include ORG_ONLY tasks from their orgs
@@ -220,16 +220,13 @@ export class OrgQuestService {
   // ────────────────────────────────────
 
   async acceptTask(taskId: string, userId: string) {
+    // Pre-check: visibility access for ORG_ONLY tasks
     const task = await this.prisma.orgQuest.findUnique({
       where: { id: taskId },
       include: { organization: true },
     });
     if (!task) throw new NotFoundException('Задача не найдена');
-    if (task.status !== 'OPEN') throw new BadRequestException('Задача уже занята');
-    if (task.assigneeId) throw new BadRequestException('Задача уже назначена');
-    if (task.creatorId === userId) throw new BadRequestException('Нельзя взять свою задачу');
 
-    // Check visibility access
     if (task.visibility === 'ORG_ONLY') {
       const membership = await this.prisma.organizationMember.findUnique({
         where: { organizationId_userId: { organizationId: task.organizationId, userId } },
@@ -237,13 +234,29 @@ export class OrgQuestService {
       if (!membership) throw new ForbiddenException('Задача доступна только для членов организации');
     }
 
-    const updated = await this.prisma.orgQuest.update({
-      where: { id: taskId },
+    // Atomic update: only succeeds if still OPEN + no assignee
+    const result = await this.prisma.orgQuest.updateMany({
+      where: {
+        id: taskId,
+        status: 'OPEN',
+        assigneeId: null,
+        creatorId: { not: userId },
+      },
       data: {
         assigneeId: userId,
         status: 'ACCEPTED',
         acceptedAt: new Date(),
       },
+    });
+
+    if (result.count === 0) {
+      if (task.creatorId === userId) throw new BadRequestException('Нельзя взять свою задачу');
+      if (task.assigneeId) throw new BadRequestException('Задача уже назначена');
+      throw new BadRequestException('Задача уже занята');
+    }
+
+    const updated = await this.prisma.orgQuest.findUnique({
+      where: { id: taskId },
       include: {
         organization: { select: { id: true, name: true } },
         assignee: { select: { id: true, username: true } },
@@ -267,7 +280,9 @@ export class OrgQuestService {
     }
 
     const completed = objectives.filter((o: any) => o.completed).length;
-    const progress = Math.round((completed / objectives.length) * 100);
+    const progress = objectives.length > 0
+      ? Math.round((completed / objectives.length) * 100)
+      : 0;
 
     return this.prisma.orgQuest.update({
       where: { id: taskId },

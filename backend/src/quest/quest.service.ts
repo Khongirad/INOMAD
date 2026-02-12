@@ -8,6 +8,28 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { QuestCategory } from '@prisma/client';
 import { RegionalReputationService } from '../regional-reputation/regional-reputation.service';
+import { CreateQuestDto } from './quest.dto';
+
+// ── Tax constants ──
+const TAX_RATE = 0.10;
+const REPUBLIC_TAX_RATE = 0.07;
+const CONFEDERATION_TAX_RATE = 0.03;
+
+// ── Pagination limits ──
+const MAX_PAGE_SIZE = 50;
+const DEFAULT_PAGE_SIZE = 20;
+
+// ── Rating range ──
+const MIN_RATING = 1;
+const MAX_RATING = 5;
+
+// ── Shared Prisma include ──
+const QUEST_INCLUDE = {
+  giver: { select: { id: true, username: true } },
+  taker: { select: { id: true, username: true } },
+  organization: { select: { id: true, name: true, type: true } },
+  republic: { select: { id: true, name: true, republicKey: true } },
+} as const;
 
 /**
  * QuestService — Universal Work System.
@@ -32,23 +54,8 @@ export class QuestService {
   //  CREATE QUEST — citizen or organization
   // ═══════════════════════════════════════════════════
 
-  async createQuest(
-    giverId: string,
-    data: {
-      title: string;
-      description: string;
-      objectives: Array<{ description: string }>;
-      category: QuestCategory;
-      rewardAltan: number;
-      reputationGain?: number;
-      deadline?: string;
-      estimatedDuration?: number;
-      organizationId?: string;
-      requirements?: any;
-      minReputation?: number;
-    },
-  ) {
-    if (data.rewardAltan <= 0) {
+  async createQuest(giverId: string, data: CreateQuestDto) {
+    if (!data.rewardAltan || data.rewardAltan <= 0) {
       throw new BadRequestException('Оплата в АЛТАН обязательна (минимум > 0)');
     }
 
@@ -68,24 +75,14 @@ export class QuestService {
     }
 
     // ── Auto-detect republicId from giver's Tumen ──
-    let republicId: string | undefined;
-    const tumen = await this.prisma.tumen.findFirst({
-      where: { leaderUserId: giverId },
-      select: { republicId: true },
-    });
-    if (tumen?.republicId) {
-      republicId = tumen.republicId;
-    }
+    const republicId = await this.detectRepublicId(giverId);
 
-    // Calculate tax split: 10% total (7% republic + 3% confederation)
-    const taxRate = 0.10;
-    const republicTaxRate = 0.07;
-    const confederationTaxRate = 0.03;
-    const taxAmount = data.rewardAltan * taxRate;
-    const republicTaxAmount = data.rewardAltan * republicTaxRate;
-    const confederationTaxAmount = data.rewardAltan * confederationTaxRate;
+    // ── Calculate tax split ──
+    const taxAmount = data.rewardAltan * TAX_RATE;
+    const republicTaxAmount = data.rewardAltan * REPUBLIC_TAX_RATE;
+    const confederationTaxAmount = data.rewardAltan * CONFEDERATION_TAX_RATE;
 
-    const objectives = data.objectives.map((o) => ({
+    const objectives = (data.objectives || []).map((o) => ({
       description: o.description,
       completed: false,
     }));
@@ -101,9 +98,9 @@ export class QuestService {
         category: data.category,
         rewardAltan: data.rewardAltan,
         reputationGain: data.reputationGain ?? 50,
-        taxRate,
-        republicTaxRate,
-        confederationTaxRate,
+        taxRate: TAX_RATE,
+        republicTaxRate: REPUBLIC_TAX_RATE,
+        confederationTaxRate: CONFEDERATION_TAX_RATE,
         taxAmount,
         republicTaxAmount,
         confederationTaxAmount,
@@ -112,15 +109,11 @@ export class QuestService {
         deadline: data.deadline ? new Date(data.deadline) : undefined,
         estimatedDuration: data.estimatedDuration,
       },
-      include: {
-        giver: { select: { id: true, username: true } },
-        organization: { select: { id: true, name: true, type: true } },
-        republic: { select: { id: true, name: true, republicKey: true } },
-      },
+      include: QUEST_INCLUDE,
     });
 
     this.logger.log(
-      `Quest created: "${quest.title}" [${data.category}] ${data.rewardAltan} ALTAN (tax ${taxAmount}: ${republicTaxAmount} republic + ${confederationTaxAmount} confederation)`,
+      `Quest created: "${quest.title}" [${data.category}] ${data.rewardAltan} ALTAN (tax ${taxAmount.toFixed(2)}: ${republicTaxAmount.toFixed(2)} republic + ${confederationTaxAmount.toFixed(2)} confederation)`,
     );
     return quest;
   }
@@ -142,14 +135,14 @@ export class QuestService {
       limit?: number;
     },
   ) {
-    const page = filters?.page ?? 1;
-    const limit = filters?.limit ?? 20;
+    const page = Math.max(1, filters?.page ?? 1);
+    const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, filters?.limit ?? DEFAULT_PAGE_SIZE));
     const skip = (page - 1) * limit;
 
     const where: any = {
       status: 'OPEN',
       takerId: null,
-      giverId: { not: userId }, // Can't accept own quests
+      giverId: { not: userId },
     };
 
     if (filters?.category) where.category = filters.category;
@@ -177,11 +170,7 @@ export class QuestService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: {
-          giver: { select: { id: true, username: true } },
-          organization: { select: { id: true, name: true, type: true } },
-          republic: { select: { id: true, name: true, republicKey: true } },
-        },
+        include: QUEST_INCLUDE,
       }),
       this.prisma.quest.count({ where }),
     ]);
@@ -193,28 +182,37 @@ export class QuestService {
   }
 
   // ═══════════════════════════════════════════════════
-  //  ACCEPT / ASSIGN
+  //  ACCEPT / ASSIGN — race-condition safe
   // ═══════════════════════════════════════════════════
 
   async acceptQuest(questId: string, userId: string) {
-    const quest = await this.prisma.quest.findUnique({ where: { id: questId } });
-    if (!quest) throw new NotFoundException('Задание не найдено');
-    if (quest.status !== 'OPEN') throw new BadRequestException('Задание уже занято');
-    if (quest.takerId) throw new BadRequestException('Задание уже назначено');
-    if (quest.giverId === userId) throw new BadRequestException('Нельзя принять своё задание');
-
-    return this.prisma.quest.update({
-      where: { id: questId },
+    // Atomic update: only succeeds if still OPEN + no taker
+    const result = await this.prisma.quest.updateMany({
+      where: {
+        id: questId,
+        status: 'OPEN',
+        takerId: null,
+        giverId: { not: userId },
+      },
       data: {
         takerId: userId,
         status: 'ACCEPTED',
         acceptedAt: new Date(),
       },
-      include: {
-        giver: { select: { id: true, username: true } },
-        taker: { select: { id: true, username: true } },
-        republic: { select: { id: true, name: true } },
-      },
+    });
+
+    if (result.count === 0) {
+      // Determine which specific error to throw
+      const quest = await this.prisma.quest.findUnique({ where: { id: questId } });
+      if (!quest) throw new NotFoundException('Задание не найдено');
+      if (quest.giverId === userId) throw new BadRequestException('Нельзя принять своё задание');
+      if (quest.takerId) throw new BadRequestException('Задание уже назначено');
+      throw new BadRequestException('Задание уже занято');
+    }
+
+    return this.prisma.quest.findUnique({
+      where: { id: questId },
+      include: QUEST_INCLUDE,
     });
   }
 
@@ -222,7 +220,11 @@ export class QuestService {
   //  PROGRESS
   // ═══════════════════════════════════════════════════
 
-  async updateProgress(questId: string, userId: string, objectives: any[]) {
+  async updateProgress(
+    questId: string,
+    userId: string,
+    objectives: Array<{ description: string; completed: boolean }>,
+  ) {
     const quest = await this.prisma.quest.findUnique({ where: { id: questId } });
     if (!quest) throw new NotFoundException('Задание не найдено');
     if (quest.takerId !== userId) throw new ForbiddenException('Вы не исполнитель');
@@ -230,8 +232,10 @@ export class QuestService {
       throw new BadRequestException('Задание не в процессе');
     }
 
-    const completed = objectives.filter((o: any) => o.completed).length;
-    const progress = Math.round((completed / objectives.length) * 100);
+    const completed = objectives.filter((o) => o.completed).length;
+    const progress = objectives.length > 0
+      ? Math.round((completed / objectives.length) * 100)
+      : 0;
 
     return this.prisma.quest.update({
       where: { id: questId },
@@ -241,6 +245,7 @@ export class QuestService {
         status: progress > 0 && quest.status === 'ACCEPTED' ? 'IN_PROGRESS' : quest.status,
         startedAt: quest.startedAt || new Date(),
       },
+      include: QUEST_INCLUDE,
     });
   }
 
@@ -252,6 +257,9 @@ export class QuestService {
     const quest = await this.prisma.quest.findUnique({ where: { id: questId } });
     if (!quest) throw new NotFoundException('Задание не найдено');
     if (quest.takerId !== userId) throw new ForbiddenException('Вы не исполнитель');
+    if (!['ACCEPTED', 'IN_PROGRESS'].includes(quest.status)) {
+      throw new BadRequestException('Задание не в процессе');
+    }
 
     return this.prisma.quest.update({
       where: { id: questId },
@@ -261,6 +269,7 @@ export class QuestService {
         submittedAt: new Date(),
         progress: 100,
       },
+      include: QUEST_INCLUDE,
     });
   }
 
@@ -277,13 +286,14 @@ export class QuestService {
     rating: number,
     feedback?: string,
   ) {
+    // ── Validate rating ──
+    if (!Number.isInteger(rating) || rating < MIN_RATING || rating > MAX_RATING) {
+      throw new BadRequestException(`Рейтинг должен быть от ${MIN_RATING} до ${MAX_RATING}`);
+    }
+
     const quest = await this.prisma.quest.findUnique({
       where: { id: questId },
-      include: {
-        giver: { select: { id: true, username: true } },
-        taker: { select: { id: true, username: true } },
-        republic: { select: { id: true, name: true } },
-      },
+      include: QUEST_INCLUDE,
     });
     if (!quest) throw new NotFoundException('Задание не найдено');
     if (quest.giverId !== userId) throw new ForbiddenException('Только заказчик может одобрить');
@@ -293,11 +303,7 @@ export class QuestService {
     // ── Determine taker's tax republic (citizenship) ──
     let taxRepublicId = quest.taxRepublicId;
     if (!taxRepublicId) {
-      const takerTumen = await this.prisma.tumen.findFirst({
-        where: { leaderUserId: quest.takerId },
-        select: { republicId: true },
-      });
-      if (takerTumen?.republicId) taxRepublicId = takerTumen.republicId;
+      taxRepublicId = await this.detectRepublicId(quest.takerId) || undefined;
     }
 
     // ── 1. Mark completed + record tax info ──
@@ -311,11 +317,7 @@ export class QuestService {
         taxPaid: true,
         taxRepublicId: taxRepublicId || undefined,
       },
-      include: {
-        giver: { select: { id: true, username: true } },
-        taker: { select: { id: true, username: true } },
-        republic: { select: { id: true, name: true } },
-      },
+      include: QUEST_INCLUDE,
     });
 
     // ── 2. Log payment ──
@@ -361,6 +363,63 @@ export class QuestService {
     return this.prisma.quest.update({
       where: { id: questId },
       data: { status: 'REJECTED', giverFeedback: feedback },
+      include: QUEST_INCLUDE,
+    });
+  }
+
+  // ═══════════════════════════════════════════════════
+  //  CANCEL / WITHDRAW
+  // ═══════════════════════════════════════════════════
+
+  /** Giver cancels an OPEN quest (no taker yet) */
+  async cancelQuest(questId: string, userId: string) {
+    const result = await this.prisma.quest.updateMany({
+      where: {
+        id: questId,
+        giverId: userId,
+        status: 'OPEN',
+        takerId: null,
+      },
+      data: { status: 'CANCELLED' },
+    });
+
+    if (result.count === 0) {
+      const quest = await this.prisma.quest.findUnique({ where: { id: questId } });
+      if (!quest) throw new NotFoundException('Задание не найдено');
+      if (quest.giverId !== userId) throw new ForbiddenException('Только заказчик может отменить');
+      if (quest.takerId) throw new BadRequestException('Нельзя отменить — уже есть исполнитель');
+      throw new BadRequestException('Задание нельзя отменить в текущем статусе');
+    }
+
+    return this.prisma.quest.findUnique({
+      where: { id: questId },
+      include: QUEST_INCLUDE,
+    });
+  }
+
+  /** Taker withdraws from an ACCEPTED/IN_PROGRESS quest */
+  async withdrawQuest(questId: string, userId: string) {
+    const quest = await this.prisma.quest.findUnique({ where: { id: questId } });
+    if (!quest) throw new NotFoundException('Задание не найдено');
+    if (quest.takerId !== userId) throw new ForbiddenException('Вы не исполнитель');
+    if (!['ACCEPTED', 'IN_PROGRESS'].includes(quest.status)) {
+      throw new BadRequestException('Нельзя отказаться в текущем статусе');
+    }
+
+    return this.prisma.quest.update({
+      where: { id: questId },
+      data: {
+        takerId: null,
+        status: 'OPEN',
+        acceptedAt: null,
+        startedAt: null,
+        progress: 0,
+        objectives: (quest.objectives as any[]).map((o: any) => ({
+          ...o,
+          completed: false,
+        })),
+      },
+      include: QUEST_INCLUDE,
     });
   }
 
@@ -377,24 +436,15 @@ export class QuestService {
     return this.prisma.quest.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
-      include: {
-        giver: { select: { id: true, username: true } },
-        taker: { select: { id: true, username: true } },
-        organization: { select: { id: true, name: true, type: true } },
-        republic: { select: { id: true, name: true, republicKey: true } },
-      },
+      take: MAX_PAGE_SIZE,
+      include: QUEST_INCLUDE,
     });
   }
 
   async getQuest(questId: string) {
     const quest = await this.prisma.quest.findUnique({
       where: { id: questId },
-      include: {
-        giver: { select: { id: true, username: true } },
-        taker: { select: { id: true, username: true } },
-        organization: { select: { id: true, name: true, type: true } },
-        republic: { select: { id: true, name: true, republicKey: true } },
-      },
+      include: QUEST_INCLUDE,
     });
     if (!quest) throw new NotFoundException('Задание не найдено');
     return quest;
@@ -422,5 +472,18 @@ export class QuestService {
       completedQuests,
       totalVolumeAltan: totalVolume._sum.rewardAltan || 0,
     };
+  }
+
+  // ═══════════════════════════════════════════════════
+  //  HELPERS
+  // ═══════════════════════════════════════════════════
+
+  /** Detect republic from user's Tumen leadership */
+  private async detectRepublicId(userId: string): Promise<string | undefined> {
+    const tumen = await this.prisma.tumen.findFirst({
+      where: { leaderUserId: userId },
+      select: { republicId: true },
+    });
+    return tumen?.republicId || undefined;
   }
 }

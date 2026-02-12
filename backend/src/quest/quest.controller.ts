@@ -8,10 +8,18 @@ import {
   Query,
   Req,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { QuestService } from './quest.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { QuestCategory } from '@prisma/client';
+import {
+  CreateQuestDto,
+  ApproveQuestDto,
+  RejectQuestDto,
+  SubmitQuestDto,
+  UpdateProgressDto,
+} from './quest.dto';
 
 @Controller('quests')
 @UseGuards(AuthGuard)
@@ -20,20 +28,8 @@ export class QuestController {
 
   // ── Create quest ──
   @Post()
-  async create(@Req() req: any, @Body() body: any) {
-    return this.questService.createQuest(req.user.id, {
-      title: body.title,
-      description: body.description,
-      objectives: body.objectives || [],
-      category: body.category || 'OTHER',
-      rewardAltan: body.rewardAltan,
-      reputationGain: body.reputationGain,
-      deadline: body.deadline,
-      estimatedDuration: body.estimatedDuration,
-      organizationId: body.organizationId,
-      requirements: body.requirements,
-      minReputation: body.minReputation,
-    });
+  async create(@Req() req: any, @Body() dto: CreateQuestDto) {
+    return this.questService.createQuest(req.user.id, dto);
   }
 
   // ── Browse marketplace ──
@@ -75,37 +71,65 @@ export class QuestController {
 
   // ── Quest detail ──
   @Get(':id')
-  async getQuest(@Param('id') id: string) {
+  async getQuest(@Param('id', ParseUUIDPipe) id: string) {
     return this.questService.getQuest(id);
   }
 
   // ── Accept quest ──
   @Post(':id/accept')
-  async accept(@Param('id') id: string, @Req() req: any) {
+  async accept(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
     return this.questService.acceptQuest(id, req.user.id);
   }
 
   // ── Update progress ──
   @Put(':id/progress')
-  async progress(@Param('id') id: string, @Req() req: any, @Body() body: any) {
-    return this.questService.updateProgress(id, req.user.id, body.objectives);
+  async progress(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: any,
+    @Body() dto: UpdateProgressDto,
+  ) {
+    return this.questService.updateProgress(id, req.user.id, dto.objectives);
   }
 
   // ── Submit for review ──
   @Post(':id/submit')
-  async submit(@Param('id') id: string, @Req() req: any, @Body() body: any) {
-    return this.questService.submitQuest(id, req.user.id, body.evidence || []);
+  async submit(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: any,
+    @Body() dto: SubmitQuestDto,
+  ) {
+    return this.questService.submitQuest(id, req.user.id, dto.evidence || []);
   }
 
   // ── Approve (pay + reputation + tax) ──
   @Post(':id/approve')
-  async approve(@Param('id') id: string, @Req() req: any, @Body() body: any) {
-    return this.questService.approveQuest(id, req.user.id, body.rating, body.feedback);
+  async approve(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: any,
+    @Body() dto: ApproveQuestDto,
+  ) {
+    return this.questService.approveQuest(id, req.user.id, dto.rating, dto.feedback);
   }
 
   // ── Reject ──
   @Post(':id/reject')
-  async reject(@Param('id') id: string, @Req() req: any, @Body() body: any) {
-    return this.questService.rejectQuest(id, req.user.id, body.feedback);
+  async reject(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: any,
+    @Body() dto: RejectQuestDto,
+  ) {
+    return this.questService.rejectQuest(id, req.user.id, dto.feedback);
+  }
+
+  // ── Cancel (giver cancels OPEN quest) ──
+  @Post(':id/cancel')
+  async cancel(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.questService.cancelQuest(id, req.user.id);
+  }
+
+  // ── Withdraw (taker abandons) ──
+  @Post(':id/withdraw')
+  async withdraw(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.questService.withdrawQuest(id, req.user.id);
   }
 }

@@ -7,27 +7,36 @@ import {
   Body,
   UseGuards,
   Request,
+  ParseUUIDPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { RegionalReputationService } from './regional-reputation.service';
 import { ReputationActionType } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('regional-reputation')
 @UseGuards(AuthGuard)
 export class RegionalReputationController {
-  constructor(private readonly service: RegionalReputationService) {}
+  constructor(
+    private readonly service: RegionalReputationService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   // ── My reputation in a specific republic ──
   @Get('republic/:republicId/me')
-  getMyProfile(@Param('republicId') republicId: string, @Request() req: any) {
+  getMyProfile(
+    @Param('republicId', ParseUUIDPipe) republicId: string,
+    @Request() req: any,
+  ) {
     return this.service.getRegionalProfile(req.user.sub, republicId);
   }
 
   // ── Any user's reputation in a republic ──
   @Get('republic/:republicId/user/:userId')
   getUserProfile(
-    @Param('republicId') republicId: string,
-    @Param('userId') userId: string,
+    @Param('republicId', ParseUUIDPipe) republicId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
   ) {
     return this.service.getRegionalProfile(userId, republicId);
   }
@@ -41,23 +50,26 @@ export class RegionalReputationController {
   // ── Leaderboard for a republic ──
   @Get('republic/:republicId/leaderboard')
   getLeaderboard(
-    @Param('republicId') republicId: string,
+    @Param('republicId', ParseUUIDPipe) republicId: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
     return this.service.getLeaderboard(republicId, {
-      limit: limit ? parseInt(limit) : undefined,
-      offset: offset ? parseInt(offset) : undefined,
+      limit: Math.min(50, Math.max(1, limit ? parseInt(limit) : 20)),
+      offset: Math.max(0, offset ? parseInt(offset) : 0),
     });
   }
 
   // ── Recent actions feed for a republic ──
   @Get('republic/:republicId/feed')
   getRecentActions(
-    @Param('republicId') republicId: string,
+    @Param('republicId', ParseUUIDPipe) republicId: string,
     @Query('limit') limit?: string,
   ) {
-    return this.service.getRecentActions(republicId, limit ? parseInt(limit) : 20);
+    return this.service.getRecentActions(
+      republicId,
+      Math.min(50, Math.max(1, limit ? parseInt(limit) : 20)),
+    );
   }
 
   // ── All republics with stats ──
@@ -68,7 +80,8 @@ export class RegionalReputationController {
 
   // ── Admin: manually award points ──
   @Post('award')
-  awardPoints(
+  async awardPoints(
+    @Request() req: any,
     @Body()
     body: {
       userId: string;
@@ -81,6 +94,15 @@ export class RegionalReputationController {
       orgId?: string;
     },
   ) {
+    // ── Admin check: only creator (superadmin) or org leaders can award ──
+    const caller = await this.prisma.user.findUnique({
+      where: { id: req.user.sub },
+      select: { role: true },
+    });
+    if (!caller || caller.role !== 'CREATOR') {
+      throw new ForbiddenException('Только администратор может начислять очки вручную');
+    }
+
     return this.service.awardPoints(
       body.userId,
       body.republicId,
