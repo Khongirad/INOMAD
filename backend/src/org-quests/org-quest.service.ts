@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuestStatus } from '@prisma/client';
+import { RegionalReputationService } from '../regional-reputation/regional-reputation.service';
 
 /**
  * OrgQuestService — Unified task board for organizations.
@@ -21,7 +22,10 @@ import { QuestStatus } from '@prisma/client';
 export class OrgQuestService {
   private readonly logger = new Logger(OrgQuestService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly regionalReputation: RegionalReputationService,
+  ) {}
 
   // ────────────────────────────────────
   // CREATE TASK
@@ -67,10 +71,22 @@ export class OrgQuestService {
       completed: false,
     }));
 
+    // ── Auto-detect republicId from org leader's Tumen ──
+    let republicId: string | undefined;
+    if (org.leaderId) {
+      // Check if the org leader is also a Tumen leader
+      const tumen = await this.prisma.tumen.findFirst({
+        where: { leaderUserId: org.leaderId },
+        select: { republicId: true },
+      });
+      if (tumen?.republicId) republicId = tumen.republicId;
+    }
+
     const task = await this.prisma.orgQuest.create({
       data: {
         organizationId: orgId,
         creatorId,
+        republicId,
         title: data.title,
         description: data.description,
         objectives,
@@ -90,7 +106,7 @@ export class OrgQuestService {
       },
     });
 
-    this.logger.log(`OrgQuest created: "${task.title}" in ${org.name} [${data.category}]`);
+    this.logger.log(`OrgQuest created: "${task.title}" in ${org.name} [${data.category}] republic=${republicId || 'none'}`);
     return task;
   }
 
@@ -280,12 +296,15 @@ export class OrgQuestService {
   }
 
   async approveTask(taskId: string, userId: string, rating: number, feedback?: string) {
-    const task = await this.prisma.orgQuest.findUnique({ where: { id: taskId } });
+    const task = await this.prisma.orgQuest.findUnique({
+      where: { id: taskId },
+      include: { organization: { select: { id: true, name: true } } },
+    });
     if (!task) throw new NotFoundException('Задача не найдена');
     if (task.creatorId !== userId) throw new ForbiddenException('Только создатель может одобрить');
     if (task.status !== 'SUBMITTED') throw new BadRequestException('Задача не на проверке');
 
-    return this.prisma.orgQuest.update({
+    const updated = await this.prisma.orgQuest.update({
       where: { id: taskId },
       data: {
         status: 'COMPLETED',
@@ -294,6 +313,26 @@ export class OrgQuestService {
         completedAt: new Date(),
       },
     });
+
+    // ── Award regional reputation to assignee ──
+    if (task.assigneeId && task.republicId) {
+      const points = task.reputationGain || 50; // Default 50 points per quest
+      try {
+        await this.regionalReputation.awardPoints(
+          task.assigneeId,
+          task.republicId,
+          'QUEST_COMPLETED',
+          points,
+          `Квест «${task.title}» выполнен в ${task.organization.name}`,
+          { questId: task.id, orgId: task.organizationId },
+        );
+        this.logger.log(`Reputation +${points} awarded to ${task.assigneeId} in republic ${task.republicId}`);
+      } catch (err) {
+        this.logger.error(`Failed to award reputation: ${err}`);
+      }
+    }
+
+    return updated;
   }
 
   async rejectTask(taskId: string, userId: string, feedback: string) {

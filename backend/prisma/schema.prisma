@@ -1007,6 +1007,10 @@ model OrgQuest {
   organizationId String
   organization   Organization @relation("OrgQuests", fields: [organizationId], references: [id], onDelete: Cascade)
 
+  // Territory — reputation is awarded in this republic upon completion
+  republicId String?
+  republic   RepublicanKhural? @relation("RepublicOrgQuests", fields: [republicId], references: [id])
+
   // Who created the task (must be org member with canCreateTasks)
   creatorId String
   creator   User @relation("OrgQuestCreator", fields: [creatorId], references: [id])
@@ -3814,6 +3818,7 @@ model RepublicanKhural {
   // Regional Reputation
   reputations       RegionalReputation[] @relation("RepublicReputation")
   reputationActions ReputationAction[]   @relation("RepublicReputationActions")
+  orgQuests         OrgQuest[]           @relation("RepublicOrgQuests")
 
   @@index([republicKey])
   @@index([confederationId])
