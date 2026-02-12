@@ -118,6 +118,8 @@ model User {
   orgQuestsCreated  OrgQuest[]         @relation("OrgQuestCreator")
   orgQuestsAssigned OrgQuest[]         @relation("OrgQuestAssignee")
   reputationProfile ReputationProfile? @relation("UserReputation")
+  regionalReputations RegionalReputation[] @relation("UserRegionalReputation")
+  reputationActions   ReputationAction[]   @relation("UserReputationActions")
 
   // Guild & Organization Relations
   organizationsLed        Organization[]       @relation("OrganizationLeader")
@@ -1104,6 +1106,89 @@ model ReputationProfile {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+/// Enum: types of actions that affect regional reputation
+enum ReputationActionType {
+  QUEST_COMPLETED      // Completed a quest for an org in this region
+  TAX_PAID             // Paid taxes in this region
+  CONTRACT_FULFILLED   // Fulfilled a contract in this region
+  ORGANIZATION_JOINED  // Joined an org in this region
+  VOTE_CAST            // Voted in Khural session in this region
+  COMMUNITY_SERVICE    // Community service / volunteer work
+}
+
+/// RegionalReputation — Per-user reputation in a specific republic/territory.
+/// Working in Buryad-Mongolia grows reputation in Buryad-Mongolia only.
+model RegionalReputation {
+  id String @id @default(uuid())
+
+  userId     String
+  user       User             @relation("UserRegionalReputation", fields: [userId], references: [id], onDelete: Cascade)
+
+  republicId String
+  republic   RepublicanKhural @relation("RepublicReputation", fields: [republicId], references: [id], onDelete: Cascade)
+
+  // ── Point categories ──
+  questPoints    Int @default(0)  // From completing quests in this region
+  taxPoints      Int @default(0)  // From paying taxes here
+  contractPoints Int @default(0)  // From fulfilling contracts here
+  socialPoints   Int @default(0)  // Voting, community service, joining orgs
+  totalPoints    Int @default(0)  // Sum of all categories
+
+  // ── Level system (1-100) ──
+  level Int    @default(1)
+  title String @default("Новичок") // e.g. Новичок → Резидент → Гражданин → Заслуженный → Почётный
+
+  // ── Stats ──
+  questsCompleted    Int @default(0)
+  taxesPaid          Int @default(0)
+  contractsFulfilled Int @default(0)
+  votesCast          Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Actions log
+  actions ReputationAction[] @relation("RegionalReputationActions")
+
+  @@unique([userId, republicId])
+  @@index([userId])
+  @@index([republicId])
+  @@index([totalPoints])
+  @@index([level])
+}
+
+/// ReputationAction — Log of every action that changed reputation.
+/// Immutable audit trail.
+model ReputationAction {
+  id String @id @default(uuid())
+
+  userId     String
+  user       User             @relation("UserReputationActions", fields: [userId], references: [id], onDelete: Cascade)
+
+  republicId String
+  republic   RepublicanKhural @relation("RepublicReputationActions", fields: [republicId], references: [id], onDelete: Cascade)
+
+  regionalReputationId String
+  regionalReputation   RegionalReputation @relation("RegionalReputationActions", fields: [regionalReputationId], references: [id], onDelete: Cascade)
+
+  // ── Action details ──
+  actionType  ReputationActionType
+  points      Int      // Can be negative for penalties
+  description String   // Human-readable, e.g. "Квест «Анализ почвы» выполнен"
+
+  // ── Source links (optional, for tracing) ──
+  questId    String?  // If triggered by quest completion
+  contractId String?  // If triggered by contract fulfillment
+  orgId      String?  // Related organization
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([republicId])
+  @@index([actionType])
+  @@index([createdAt])
 }
 
 model KhuralGroup {
@@ -3725,6 +3810,10 @@ model RepublicanKhural {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Regional Reputation
+  reputations       RegionalReputation[] @relation("RepublicReputation")
+  reputationActions ReputationAction[]   @relation("RepublicReputationActions")
 
   @@index([republicKey])
   @@index([confederationId])

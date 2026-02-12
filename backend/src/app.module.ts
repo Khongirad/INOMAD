@@ -55,6 +55,7 @@ import { ChancelleryModule } from './chancellery/chancellery.module';
 import { HierarchyModule } from './hierarchy/hierarchy.module';
 import { ParliamentModule } from './parliament/parliament.module';
 import { OrgQuestModule } from './org-quests/org-quest.module';
+import { RegionalReputationModule } from './regional-reputation/regional-reputation.module';
 
 @Module({
   imports: [
@@ -117,6 +118,7 @@ import { OrgQuestModule } from './org-quests/org-quest.module';
     HierarchyModule,    // Zun→Myangan→Tumen hierarchy + cooperation
     ParliamentModule,   // Khural sessions and voting (Tumen leaders only)
     OrgQuestModule,     // Organization Task Board (quests/missions for all orgs)
+    RegionalReputationModule, // Territorial reputation per republic
   ],
   providers: [
     {
