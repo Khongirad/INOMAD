@@ -5,12 +5,12 @@
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 [![Stage](https://img.shields.io/badge/stage-post--MVP-green)]()
 [![L1](https://img.shields.io/badge/ALTAN%20L1-Cosmos%20SDK-blue)]()
-[![Backend](https://img.shields.io/badge/backend-44%20NestJS%20modules-blueviolet)]()
-[![Frontend](https://img.shields.io/badge/frontend-Next.js%2014-orange)]()
+[![Backend](https://img.shields.io/badge/backend-53%20NestJS%20modules-blueviolet)]()
+[![Frontend](https://img.shields.io/badge/frontend-Next.js%2016-orange)]()
 [![Contracts](https://img.shields.io/badge/contracts-133%20Solidity-yellow)]()
 [![Tests](https://img.shields.io/badge/tests-140%2B%20suites-brightgreen)]()
 
-> **Latest Update (Feb 10, 2026):** Post-MVP platform · 44 backend modules · 133 smart contracts · 3 Government Services · Docker + CI/CD · 140+ test suites · Global AuthGuard · PWA
+> **Latest Update (Feb 11, 2026):** Post-MVP platform · 53 backend modules · 133 smart contracts · 3 Government Services · Docker + CI/CD · 140+ test suites · Global AuthGuard · Universal Work System · Regional Reputation · Organization Banking · PWA
 
 ---
 
@@ -24,17 +24,17 @@
 
 | Metric | Value | Location |
 |--------|-------|----------|
-| **Backend code** | 36,693 lines (TypeScript) | `backend/src/` |
-| **Frontend code** | 33,389 lines (TypeScript/React) | `src/` |
+| **Backend code** | 38,915 lines (TypeScript) | `backend/src/` |
+| **Frontend code** | 38,265 lines (TypeScript/React) | `src/` |
 | **Smart contracts** | 39,855 lines (133 Solidity contracts) | `chain/contracts/` |
 | **ALTAN L1 blockchain** | 2,971 lines (Go/Cosmos SDK) | `packages/blockchain-l1/` |
 | **x/corelaw module** | 448 lines (constitutional law) | `packages/blockchain-l1/x/corelaw/` |
-| **Prisma schema** | 3,461 lines (100+ models) | `backend/prisma/schema.prisma` |
-| **Backend modules** | 44 NestJS modules | `backend/src/*/` |
-| **Services** | 78 injectable services | `*.service.ts` |
-| **Controllers** | 51 REST controllers | `*.controller.ts` |
+| **Prisma schema** | 4,809 lines (127 models) | `backend/prisma/schema.prisma` |
+| **Backend modules** | 53 NestJS modules | `backend/src/*/` |
+| **Services** | 91 injectable services | `*.service.ts` |
+| **Controllers** | 64 REST controllers | `*.controller.ts` |
 | **Test suites** | 135 unit + 5 E2E = 140 total | `*.spec.ts` + `test/*.e2e-spec.ts` |
-| **Total codebase** | **~113,000 lines** of source code | — |
+| **Total codebase** | **~120,000 lines** of source code | — |
 
 ---
 
@@ -43,10 +43,10 @@
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        FE["Next.js 14 Frontend<br/>33,389 LOC · React · Material UI · PWA"]
+        FE["Next.js 16 Frontend<br/>38,265 LOC · React · Material UI · PWA"]
     end
 
-    subgraph "Application Layer — 44 NestJS Modules"
+    subgraph "Application Layer — 53 NestJS Modules"
         subgraph "🔐 Auth & Identity"
             AUTH["auth/ · identity/ · users/<br/>JWT · MPC Wallet · KYC · Seat Binding"]
         end
@@ -54,18 +54,21 @@ graph TB
             GOV["migration-service/ · zags-service/<br/>land-registry-service/ · archive/"]
         end
         subgraph "🏦 Economy & Finance"
-            ECON["bank/ · central-bank/ · tax/<br/>distribution/ · marketplace/"]
+            ECON["bank/ · central-bank/ · tax/<br/>distribution/ · marketplace/ · org-banking/"]
         end
         subgraph "⚔️ Guild & Governance"
-            GUILD["khural/ · legislative/ · elections/<br/>guilds/ · arbans/ · justice/"]
+            GUILD["khural/ · legislative/ · elections/<br/>guilds/ · arbans/ · justice/<br/>parliament/ · hierarchy/ · disputes/"]
         end
         subgraph "🌙 Culture"
             CULT["calendar/ · temple/ · timeline/<br/>history/ · education/ · academy/"]
         end
+        subgraph "🔧 Systems"
+            SYS["unified-org/ · org-quests/<br/>regional-reputation/ · complaints/<br/>work-acts/ · messaging/"]
+        end
     end
 
     subgraph "Data Layer"
-        DB["PostgreSQL · Prisma ORM<br/>3,461-line schema · 100+ models"]
+        DB["PostgreSQL · Prisma ORM<br/>4,809-line schema · 127 models"]
     end
 
     subgraph "Blockchain Layer"
@@ -78,11 +81,13 @@ graph TB
     FE --> ECON
     FE --> GUILD
     FE --> CULT
+    FE --> SYS
     AUTH --> DB
     GOV --> DB
     ECON --> DB
     GUILD --> DB
     CULT --> DB
+    SYS --> DB
     ECON --> SC
     GUILD --> SC
     AUTH --> L1
@@ -104,7 +109,7 @@ graph TB
 
 ---
 
-## 📊 Platform Status — February 2026
+## 📊 Platform Status — February 11, 2026
 
 ### Core Systems — ✅ Operational
 
@@ -127,6 +132,12 @@ graph TB
 | 🌙 **Culture** | `calendar/`, `temple/`, `timeline/` | ✅ | Dual calendar, Temple of Heaven, history |
 | 🏢 **Organizations** | `organizations/`, `invitations/` | ✅ | Org management, invitations |
 | 🔍 **Transparency** | `transparency/`, `audit/` | ✅ | Public audit logs |
+| 🏦 **Org Banking** | `org-banking/` | ✅ | Branch organization finance, smart contracts |
+| 🗺️ **Regional Reputation** | `regional-reputation/` | ✅ | Territorial reputation per republic |
+| 🏛️ **Parliament** | `parliament/`, `hierarchy/` | ✅ | Full parliamentary hierarchy, unified org |
+| ⚔️ **Disputes** | `disputes/`, `complaints/` | ✅ | Hierarchical dispute resolution, complaints |
+| 📝 **Work Acts** | `work-acts/` | ✅ | Universal work system, quest-based labor |
+| 💬 **Messaging** | `messaging/` | ✅ | Platform messaging system |
 
 ### Government Services — ✅ Recently Enabled
 
@@ -203,15 +214,15 @@ graph LR
 ## 📦 Repository Structure
 
 ```
-inomad-client/  (Monorepo — ~113,000 lines)
+inomad-client/  (Monorepo — ~120,000 lines)
 │
-├── src/                          # Next.js 14 frontend (33,389 LOC)
+├── src/                          # Next.js 16 frontend (38,265 LOC)
 │   ├── app/                      # App Router pages
 │   ├── components/               # React UI components
 │   └── lib/                      # API wrappers, hooks, utilities
 │
-├── backend/                      # NestJS 10 API server (36,693 LOC)
-│   ├── src/                      # 44 modules
+├── backend/                      # NestJS 10 API server (38,915 LOC)
+│   ├── src/                      # 53 modules
 │   │   ├── auth/                 # Authentication (JWT, guards, MPC)
 │   │   ├── bank/                 # Citizen & institutional banking
 │   │   ├── central-bank/         # ALTAN monetary policy
@@ -228,8 +239,16 @@ inomad-client/  (Monorepo — ~113,000 lines)
 │   │   ├── archive/              # Document contracts & notary
 │   │   ├── digital-seal/         # Cryptographic sealing
 │   │   ├── tax/                  # Tax authority
-│   │   └── ... (28 more)         # Education, calendar, temple, etc.
-│   ├── prisma/                   # Schema (3,461 lines, 100+ models)
+│   │   ├── org-banking/          # Branch organization finance
+│   │   ├── parliament/           # Parliament system
+│   │   ├── hierarchy/            # Hierarchical governance
+│   │   ├── regional-reputation/  # Territorial reputation
+│   │   ├── disputes/             # Dispute resolution
+│   │   ├── complaints/           # Complaint system
+│   │   ├── work-acts/            # Universal work system
+│   │   ├── messaging/            # Platform messaging
+│   │   └── ... (20 more)         # Education, calendar, temple, etc.
+│   ├── prisma/                   # Schema (4,809 lines, 127 models)
 │   └── test/                     # E2E tests (5 suites)
 │
 ├── chain/                        # Smart contracts (Foundry)
@@ -255,7 +274,7 @@ inomad-client/  (Monorepo — ~113,000 lines)
 ## 🛠️ Development
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20+
 - PostgreSQL 14+
 - Go 1.24+ (for ALTAN L1)
 - Foundry (for smart contracts)
