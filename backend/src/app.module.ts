@@ -32,7 +32,7 @@ import { HistoryModule } from './history/history.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { ReputationModule } from './reputation/reputation.module';
 // import { DocumentModule } from './documents/document.module'; // Disabled - replaced by State Archive
-import { QuestModule } from './quests/quest.module';
+import { QuestModule } from './quest/quest.module';
 import { OrganizationModule } from './organizations/organization.module';
 import { EducationModule } from './education/education.module';
 import { InvitationModule } from './invitations/invitation.module';

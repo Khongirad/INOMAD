@@ -929,53 +929,102 @@ model CalendarNote {
 // NOTE: Old Document models removed - replaced by State Archive DocumentContract system
 // (See "STATE ARCHIVE & DOCUMENT SYSTEM" section above)
 
-// Quest/Task System (WoW-style)
+// ══════════════════════════════════════════════════════════════
+//  UNIVERSAL WORK SYSTEM
+//  All economic activity is structured as Quests/Tasks.
+//  Citizens, residents, and organizations create work.
+//  Payment in ALTAN is mandatory. Tax → citizenship republic.
+// ══════════════════════════════════════════════════════════════
+
+enum QuestCategory {
+  REPAIR          // Ремонт
+  CONSTRUCTION    // Строительство
+  IT              // IT / Программирование
+  EDUCATION       // Образование / Репетиторство
+  DELIVERY        // Доставка
+  LEGAL           // Юридические услуги
+  FINANCE         // Финансы / Бухгалтерия
+  HEALTHCARE      // Здравоохранение
+  AGRICULTURE     // Сельское хозяйство
+  MANUFACTURING   // Производство
+  TRADE           // Торговля
+  DESIGN          // Дизайн
+  CONSULTING      // Консалтинг
+  ADMINISTRATION  // Администрирование
+  SECURITY        // Безопасность
+  CLEANING        // Уборка / Клининг
+  TRANSPORT       // Транспорт
+  OTHER           // Другое
+}
+
+/// Quest — Universal unit of work in the ALTAN economy.
+/// Any citizen, resident, or organization can create a quest.
+/// Payment in ALTAN is mandatory. Tax flows to citizenship republic → district.
 model Quest {
   id String @id @default(uuid())
 
-  // Parties
+  // ── Parties ──
   giverId String
   giver   User    @relation("QuestGiver", fields: [giverId], references: [id])
   takerId String?
   taker   User?   @relation("QuestTaker", fields: [takerId], references: [id])
 
-  // Quest details
-  title       String
-  description String @db.Text
-  objectives  Json[] // [{description, completed, evidence?}]
+  // ── Organization (if posted by a company) ──
+  organizationId String?
+  organization   Organization? @relation("OrgWorkQuests", fields: [organizationId], references: [id])
 
-  // Requirements
+  // ── Territory binding ──
+  // Auto-detected from giver's Tumen → Republic. Reputation earned here.
+  republicId String?
+  republic   RepublicanKhural? @relation("RepublicQuests", fields: [republicId], references: [id])
+
+  // ── Work details ──
+  title       String
+  description String        @db.Text
+  objectives  Json[]        // [{description, completed, evidence?}]
+  category    QuestCategory @default(OTHER)
+
+  // ── Requirements ──
   requirements  Json? // {skills: [], minReputation: 50}
   minReputation Int?
 
-  // Rewards
-  rewardAltan    Decimal? @db.Decimal(18, 4)
-  rewardItems    Json? // NFTs, badges
-  reputationGain Int?
+  // ── Payment (MANDATORY) ──
+  rewardAltan    Decimal  @db.Decimal(18, 4) // Payment in ALTAN (required!)
+  rewardItems    Json?    // Additional: NFTs, badges, certificates
+  reputationGain Int      @default(50) // Reputation points for taker
 
-  // Timing
+  // ── Tax (10% total: 7% republic + 3% confederation) ──
+  taxRate              Decimal @default(0.10) @db.Decimal(5, 4)  // 10% total
+  republicTaxRate      Decimal @default(0.07) @db.Decimal(5, 4)  // 7% → republic
+  confederationTaxRate Decimal @default(0.03) @db.Decimal(5, 4)  // 3% → confederation
+  taxAmount            Decimal @default(0) @db.Decimal(18, 4)    // Total tax (10%)
+  republicTaxAmount    Decimal @default(0) @db.Decimal(18, 4)    // 7% portion
+  confederationTaxAmount Decimal @default(0) @db.Decimal(18, 4)  // 3% portion
+  taxRepublicId        String? // Where republic tax goes (taker's citizenship)
+  taxPaid              Boolean @default(false)
+
+  // ── Timing ──
   deadline          DateTime?
   estimatedDuration Int? // minutes
 
-  // Progress
+  // ── Progress ──
   status   QuestStatus @default(OPEN)
   progress Int         @default(0) // 0-100%
 
-  // Evidence
+  // ── Evidence / submissions ──
   submissions Json[] // [{url, description, timestamp}]
 
-  // Ratings (after completion)
+  // ── Ratings (after completion) ──
   giverRating   Int? // 1-5
   takerRating   Int?
   giverFeedback String?
   takerFeedback String?
 
-  // Optional integration with formal docs
-  assignmentDocId String? @unique
-  // assignmentDoc   Document? @relation(fields: [assignmentDocId], references: [id])  // REMOVED - old Document model
-  completionDocId String?
+  // ── Payment tracking ──
+  paymentTxHash String? // ALTAN transfer transaction hash
+  taxTxHash     String? // Tax payment transaction hash
 
-  // Lifecycle timestamps
+  // ── Lifecycle timestamps ──
   acceptedAt  DateTime?
   startedAt   DateTime?
   submittedAt DateTime?
@@ -987,7 +1036,10 @@ model Quest {
 
   @@index([giverId])
   @@index([takerId])
+  @@index([organizationId])
+  @@index([republicId])
   @@index([status])
+  @@index([category])
   @@index([deadline])
 }
 
@@ -2865,6 +2917,9 @@ model Organization {
   // Quests/Tasks posted by this organization
   quests OrgQuest[] @relation("OrgQuests")
 
+  // Work quests — universal work system (citizen + company)
+  workQuests Quest[] @relation("OrgWorkQuests")
+
   @@index([type, overallRating])
   @@index([republicId])
   @@index([currentRank])
@@ -3819,6 +3874,7 @@ model RepublicanKhural {
   reputations       RegionalReputation[] @relation("RepublicReputation")
   reputationActions ReputationAction[]   @relation("RepublicReputationActions")
   orgQuests         OrgQuest[]           @relation("RepublicOrgQuests")
+  quests            Quest[]              @relation("RepublicQuests")
 
   @@index([republicKey])
   @@index([confederationId])

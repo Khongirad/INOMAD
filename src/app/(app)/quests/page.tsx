@@ -1,74 +1,95 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Scroll, Clock, Coins, Trophy, Building2, Search, Plus, CheckCircle2, XCircle, Eye, Briefcase, Globe, Lock, Users } from 'lucide-react';
-import Link from 'next/link';
+import {
+  Scroll, Clock, Coins, Trophy, Search, Plus, CheckCircle2, XCircle,
+  Briefcase, Building2, MapPin, Filter, TrendingUp, Hammer,
+} from 'lucide-react';
 import { api } from '@/lib/api';
 
 // ─── Types ──────────────────────────────────────────
-interface OrgQuest {
+interface Quest {
   id: string;
   title: string;
   description: string;
   objectives: Array<{ description: string; completed: boolean }>;
   category: string;
-  visibility: 'ORG_ONLY' | 'BRANCH' | 'PUBLIC';
-  rewardAltan?: number;
-  reputationGain?: number;
+  rewardAltan: number;
+  reputationGain: number;
   deadline?: string;
   estimatedDuration?: number;
   status: string;
   progress: number;
-  organization: { id: string; name: string; type: string; powerBranch?: string };
-  creator: { id: string; username: string };
-  assignee?: { id: string; username: string };
+  taxAmount?: number;
+  republicTaxAmount?: number;
+  confederationTaxAmount?: number;
+  giver: { id: string; username: string };
+  taker?: { id: string; username: string };
+  organization?: { id: string; name: string; type: string };
+  republic?: { id: string; name: string; republicKey?: string };
   createdAt: string;
 }
 
-const CATEGORIES = [
-  'ALL', 'ADMINISTRATION', 'LAW', 'FINANCE', 'CHEMISTRY', 'PHYSICS',
-  'ENGINEERING', 'EDUCATION', 'HEALTHCARE', 'TECHNOLOGY', 'AGRICULTURE', 'OTHER',
-];
+interface MarketStats {
+  totalQuests: number;
+  openQuests: number;
+  completedQuests: number;
+  totalVolumeAltan: number;
+}
 
-const VISIBILITY_LABELS: Record<string, { label: string; icon: typeof Globe }> = {
-  PUBLIC: { label: 'Публичный', icon: Globe },
-  BRANCH: { label: 'Ветвь', icon: Users },
-  ORG_ONLY: { label: 'Только орг', icon: Lock },
-};
+const CATEGORIES = [
+  { value: 'ALL', label: 'Все', emoji: '📋' },
+  { value: 'REPAIR', label: 'Ремонт', emoji: '🔧' },
+  { value: 'CONSTRUCTION', label: 'Строительство', emoji: '🏗️' },
+  { value: 'IT', label: 'IT', emoji: '💻' },
+  { value: 'EDUCATION', label: 'Образование', emoji: '📚' },
+  { value: 'DELIVERY', label: 'Доставка', emoji: '📦' },
+  { value: 'LEGAL', label: 'Юридические', emoji: '⚖️' },
+  { value: 'FINANCE', label: 'Финансы', emoji: '💰' },
+  { value: 'HEALTHCARE', label: 'Здоровье', emoji: '🏥' },
+  { value: 'AGRICULTURE', label: 'Сельское хоз.', emoji: '🌾' },
+  { value: 'MANUFACTURING', label: 'Производство', emoji: '🏭' },
+  { value: 'TRADE', label: 'Торговля', emoji: '🛒' },
+  { value: 'DESIGN', label: 'Дизайн', emoji: '🎨' },
+  { value: 'CONSULTING', label: 'Консалтинг', emoji: '💼' },
+  { value: 'CLEANING', label: 'Клининг', emoji: '🧹' },
+  { value: 'TRANSPORT', label: 'Транспорт', emoji: '🚛' },
+  { value: 'OTHER', label: 'Другое', emoji: '📄' },
+];
 
 // ─── Component ──────────────────────────────────────
 export default function QuestsPage() {
-  const [tab, setTab] = useState<'browse' | 'my' | 'create'>('browse');
-  const [quests, setQuests] = useState<OrgQuest[]>([]);
-  const [myQuests, setMyQuests] = useState<OrgQuest[]>([]);
+  const [tab, setTab] = useState<'market' | 'my' | 'create'>('market');
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [myQuests, setMyQuests] = useState<Quest[]>([]);
+  const [stats, setStats] = useState<MarketStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('ALL');
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   // Create form state
-  const [orgs, setOrgs] = useState<Array<{ id: string; name: string; type: string }>>([]);
   const [form, setForm] = useState({
-    orgId: '',
     title: '',
     description: '',
     objectives: [''],
-    category: 'ADMINISTRATION',
-    visibility: 'ORG_ONLY' as 'ORG_ONLY' | 'BRANCH' | 'PUBLIC',
+    category: 'OTHER',
     rewardAltan: '',
     reputationGain: '',
     deadline: '',
     estimatedDuration: '',
+    organizationId: '',
   });
 
-  // ─── Fetch browse tasks ──────────────────────────
-  const fetchBrowse = useCallback(async () => {
+  // ─── Fetch marketplace ──────────────────────────
+  const fetchMarket = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (category !== 'ALL') params.set('category', category);
       if (search) params.set('search', search);
-      const res = await api.get<{ data: OrgQuest[] }>(`/org-quests/browse?${params}`);
+      const res = await api.get<{ data: Quest[]; pagination: any }>(`/quests?${params}`);
       setQuests(res.data || []);
     } catch {
       setQuests([]);
@@ -76,10 +97,10 @@ export default function QuestsPage() {
     setLoading(false);
   }, [category, search]);
 
-  const fetchMyTasks = useCallback(async () => {
+  const fetchMyQuests = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get<OrgQuest[]>('/org-quests/my');
+      const res = await api.get<Quest[]>('/quests/my');
       setMyQuests(Array.isArray(res) ? res : []);
     } catch {
       setMyQuests([]);
@@ -87,55 +108,61 @@ export default function QuestsPage() {
     setLoading(false);
   }, []);
 
-  const fetchOrgs = useCallback(async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const res = await api.get<{ data: Array<{ id: string; name: string; type: string }> }>(
-        '/unified-org/organizations?limit=50',
-      );
-      setOrgs(res.data || []);
-    } catch {
-      setOrgs([]);
-    }
+      const res = await api.get<MarketStats>('/quests/stats');
+      setStats(res);
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
-    if (tab === 'browse') fetchBrowse();
-    else if (tab === 'my') fetchMyTasks();
-    else if (tab === 'create') fetchOrgs();
-  }, [tab, fetchBrowse, fetchMyTasks, fetchOrgs]);
+    fetchStats();
+    if (tab === 'market') fetchMarket();
+    else if (tab === 'my') fetchMyQuests();
+  }, [tab, fetchMarket, fetchMyQuests, fetchStats]);
 
-  // ─── Accept Task ──────────────────────────────────
-  const acceptTask = async (taskId: string) => {
+  // ─── Accept Quest ──────────────────────────────────
+  const acceptQuest = async (questId: string) => {
     try {
-      await api.put(`/org-quests/${taskId}/accept`);
-      fetchBrowse();
+      await api.post(`/quests/${questId}/accept`);
+      setSuccess('Задание принято!');
+      fetchMarket();
+      setTimeout(() => setSuccess(''), 3000);
     } catch (e: any) {
       setError(e.message);
     }
   };
 
-  // ─── Create Task ──────────────────────────────────
+  // ─── Create Quest ──────────────────────────────────
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!form.orgId) { setError('Выберите организацию'); return; }
     if (!form.title.trim()) { setError('Введите название'); return; }
+    if (!form.rewardAltan || parseFloat(form.rewardAltan) <= 0) {
+      setError('Оплата в АЛТАН обязательна (минимум > 0)');
+      return;
+    }
 
     try {
-      await api.post(`/org-quests/org/${form.orgId}`, {
+      await api.post('/quests', {
         title: form.title,
         description: form.description,
         objectives: form.objectives.filter(o => o.trim()).map(o => ({ description: o })),
         category: form.category,
-        visibility: form.visibility,
-        rewardAltan: form.rewardAltan ? parseFloat(form.rewardAltan) : undefined,
+        rewardAltan: parseFloat(form.rewardAltan),
         reputationGain: form.reputationGain ? parseInt(form.reputationGain) : undefined,
         deadline: form.deadline || undefined,
         estimatedDuration: form.estimatedDuration ? parseInt(form.estimatedDuration) : undefined,
+        organizationId: form.organizationId || undefined,
       });
-      setForm({ orgId: '', title: '', description: '', objectives: [''], category: 'ADMINISTRATION',
-        visibility: 'ORG_ONLY', rewardAltan: '', reputationGain: '', deadline: '', estimatedDuration: '' });
+      setForm({
+        title: '', description: '', objectives: [''], category: 'OTHER',
+        rewardAltan: '', reputationGain: '', deadline: '', estimatedDuration: '',
+        organizationId: '',
+      });
+      setSuccess('Задание создано!');
       setTab('my');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (e: any) {
       setError(e.message);
     }
@@ -154,145 +181,159 @@ export default function QuestsPage() {
     }
   };
 
-  const getCategoryBadge = (cat: string) => {
-    const colors: Record<string, string> = {
-      ADMINISTRATION: 'bg-blue-500/20 text-blue-300',
-      LAW: 'bg-amber-500/20 text-amber-300',
-      FINANCE: 'bg-green-500/20 text-green-300',
-      CHEMISTRY: 'bg-cyan-500/20 text-cyan-300',
-      PHYSICS: 'bg-violet-500/20 text-violet-300',
-      ENGINEERING: 'bg-orange-500/20 text-orange-300',
-      EDUCATION: 'bg-pink-500/20 text-pink-300',
-      TECHNOLOGY: 'bg-indigo-500/20 text-indigo-300',
-    };
-    return colors[cat] || 'bg-zinc-500/20 text-zinc-300';
+  const getCategoryInfo = (cat: string) => CATEGORIES.find(c => c.value === cat) || CATEGORIES[CATEGORIES.length - 1];
+
+  // ─── Quest Card ────────────────────────────────────
+  const QuestCard = ({ quest, showAccept = false }: { quest: Quest; showAccept?: boolean }) => {
+    const catInfo = getCategoryInfo(quest.category);
+    return (
+      <div className="group bg-zinc-800/60 border border-zinc-700/80 rounded-xl p-5 hover:border-amber-500/40 hover:bg-zinc-800/90 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-white group-hover:text-amber-300 transition truncate">
+              {quest.title}
+            </h3>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/20 text-amber-300">
+                {catInfo.emoji} {catInfo.label}
+              </span>
+              {quest.organization && (
+                <span className="flex items-center gap-1 text-xs text-zinc-400">
+                  <Building2 className="w-3 h-3" /> {quest.organization.name}
+                </span>
+              )}
+              {quest.republic && (
+                <span className="flex items-center gap-1 text-xs text-zinc-500">
+                  <MapPin className="w-3 h-3" /> {quest.republic.name}
+                </span>
+              )}
+            </div>
+          </div>
+          <span className={`px-2.5 py-1 rounded-lg text-xs font-medium border whitespace-nowrap ${getStatusColor(quest.status)}`}>
+            {quest.status}
+          </span>
+        </div>
+
+        {/* Description */}
+        <p className="text-zinc-400 text-sm line-clamp-2 mb-3">{quest.description}</p>
+
+        {/* Objectives */}
+        {quest.objectives?.length > 0 && (
+          <div className="space-y-1 mb-4">
+            {quest.objectives.slice(0, 3).map((obj, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                {obj.completed
+                  ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+                  : <div className="w-3.5 h-3.5 rounded-full border border-zinc-600 flex-shrink-0" />
+                }
+                <span className={obj.completed ? 'text-zinc-500 line-through' : 'text-zinc-300'}>
+                  {obj.description}
+                </span>
+              </div>
+            ))}
+            {quest.objectives.length > 3 && (
+              <p className="text-xs text-zinc-500 ml-6">+{quest.objectives.length - 3} ещё...</p>
+            )}
+          </div>
+        )}
+
+        {/* Rewards & Info Bar */}
+        <div className="flex items-center justify-between pt-3 border-t border-zinc-700/60">
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-1 text-amber-400 font-semibold">
+              <Coins className="w-4 h-4" />
+              <span>{Number(quest.rewardAltan).toLocaleString()} ₳</span>
+            </div>
+            {quest.reputationGain > 0 && (
+              <div className="flex items-center gap-1 text-blue-400">
+                <Trophy className="w-3.5 h-3.5" />
+                <span>+{quest.reputationGain}</span>
+              </div>
+            )}
+            {quest.deadline && (
+              <div className="flex items-center gap-1 text-zinc-400">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{new Date(quest.deadline).toLocaleDateString('ru-RU')}</span>
+              </div>
+            )}
+          </div>
+
+          {showAccept && quest.status === 'OPEN' && !quest.taker && (
+            <button
+              onClick={(e) => { e.preventDefault(); acceptQuest(quest.id); }}
+              className="px-4 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-medium hover:bg-amber-500/30 transition"
+            >
+              Взять работу
+            </button>
+          )}
+        </div>
+
+        {/* Progress */}
+        {quest.progress > 0 && (
+          <div className="mt-3">
+            <div className="flex justify-between text-xs text-zinc-500 mb-1">
+              <span>Прогресс</span>
+              <span>{quest.progress}%</span>
+            </div>
+            <div className="w-full bg-zinc-700 rounded-full h-1.5">
+              <div
+                className="bg-gradient-to-r from-amber-500 to-green-400 h-1.5 rounded-full transition-all"
+                style={{ width: `${quest.progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
-
-  // ─── Task Card ────────────────────────────────────
-  const TaskCard = ({ quest, showAccept = false }: { quest: OrgQuest; showAccept?: boolean }) => (
-    <div className="group bg-zinc-800/60 border border-zinc-700/80 rounded-xl p-5 hover:border-purple-500/40 hover:bg-zinc-800/90 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <Link
-            href={`/quests/${quest.id}`}
-            className="text-lg font-semibold text-white group-hover:text-purple-400 transition truncate block"
-          >
-            {quest.title}
-          </Link>
-          <div className="flex items-center gap-2 mt-1">
-            <Building2 className="w-3.5 h-3.5 text-zinc-500" />
-            <span className="text-xs text-zinc-400">{quest.organization.name}</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getCategoryBadge(quest.category)}`}>
-              {quest.category}
-            </span>
-          </div>
-        </div>
-        <span className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${getStatusColor(quest.status)}`}>
-          {quest.status}
-        </span>
-      </div>
-
-      {/* Description */}
-      <p className="text-zinc-400 text-sm line-clamp-2 mb-3">{quest.description}</p>
-
-      {/* Objectives */}
-      <div className="space-y-1 mb-4">
-        {quest.objectives.slice(0, 3).map((obj, i) => (
-          <div key={i} className="flex items-center gap-2 text-xs">
-            {obj.completed
-              ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
-              : <div className="w-3.5 h-3.5 rounded-full border border-zinc-600 flex-shrink-0" />
-            }
-            <span className={obj.completed ? 'text-zinc-500 line-through' : 'text-zinc-300'}>
-              {obj.description}
-            </span>
-          </div>
-        ))}
-        {quest.objectives.length > 3 && (
-          <p className="text-xs text-zinc-500 ml-6">+{quest.objectives.length - 3} ещё...</p>
-        )}
-      </div>
-
-      {/* Rewards & Info Bar */}
-      <div className="flex items-center justify-between pt-3 border-t border-zinc-700/60">
-        <div className="flex items-center gap-3 text-sm">
-          {quest.rewardAltan && (
-            <div className="flex items-center gap-1 text-amber-400">
-              <Coins className="w-3.5 h-3.5" />
-              <span className="font-medium">{quest.rewardAltan}</span>
-            </div>
-          )}
-          {quest.reputationGain && (
-            <div className="flex items-center gap-1 text-blue-400">
-              <Trophy className="w-3.5 h-3.5" />
-              <span>+{quest.reputationGain}</span>
-            </div>
-          )}
-          {quest.deadline && (
-            <div className="flex items-center gap-1 text-zinc-400">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{new Date(quest.deadline).toLocaleDateString('ru-RU')}</span>
-            </div>
-          )}
-        </div>
-
-        {showAccept && quest.status === 'OPEN' && !quest.assignee && (
-          <button
-            onClick={(e) => { e.preventDefault(); acceptTask(quest.id); }}
-            className="px-3 py-1.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-medium hover:bg-purple-500/30 transition"
-          >
-            Взять задачу
-          </button>
-        )}
-      </div>
-
-      {/* Progress */}
-      {quest.progress > 0 && (
-        <div className="mt-3">
-          <div className="flex justify-between text-xs text-zinc-500 mb-1">
-            <span>Прогресс</span>
-            <span>{quest.progress}%</span>
-          </div>
-          <div className="w-full bg-zinc-700 rounded-full h-1.5">
-            <div
-              className="bg-gradient-to-r from-purple-500 to-amber-400 h-1.5 rounded-full transition-all"
-              style={{ width: `${quest.progress}%` }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="container max-w-7xl py-8 space-y-8 animate-in fade-in">
       {/* ── HEADER ── */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Scroll className="text-purple-400 w-8 h-8" />
-            Доска Задач
-          </h1>
-          <p className="text-zinc-400 mt-1">
-            Создавайте и выполняйте задачи организаций — как квесты в RPG
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <Hammer className="text-amber-400 w-8 h-8" />
+          Рынок Труда
+        </h1>
+        <p className="text-zinc-400 mt-1">
+          Создавайте и выполняйте задания — оплата в АЛТАН, репутация в республике
+        </p>
       </div>
+
+      {/* ── STATS BAR ── */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Всего заданий', value: stats.totalQuests, icon: Scroll, color: 'text-zinc-300' },
+            { label: 'Открытые', value: stats.openQuests, icon: Search, color: 'text-green-400' },
+            { label: 'Выполнено', value: stats.completedQuests, icon: CheckCircle2, color: 'text-emerald-400' },
+            { label: 'Оборот (₳)', value: Number(stats.totalVolumeAltan).toLocaleString(), icon: TrendingUp, color: 'text-amber-400' },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <div key={label} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 flex items-center gap-3">
+              <Icon className={`w-5 h-5 ${color}`} />
+              <div>
+                <p className="text-xs text-zinc-500">{label}</p>
+                <p className={`text-lg font-bold ${color}`}>{value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── TABS ── */}
       <div className="flex gap-2 border-b border-zinc-700 pb-2">
         {([
-          { key: 'browse', label: 'Доступные', icon: Search },
-          { key: 'my', label: 'Мои задачи', icon: Briefcase },
-          { key: 'create', label: 'Создать задачу', icon: Plus },
+          { key: 'market', label: 'Рынок', icon: Search },
+          { key: 'my', label: 'Мои задания', icon: Briefcase },
+          { key: 'create', label: 'Создать', icon: Plus },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-t-lg text-sm font-medium transition ${
               tab === key
-                ? 'bg-purple-500/20 text-purple-300 border-b-2 border-purple-400'
+                ? 'bg-amber-500/20 text-amber-300 border-b-2 border-amber-400'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
@@ -302,6 +343,7 @@ export default function QuestsPage() {
         ))}
       </div>
 
+      {/* ── NOTIFICATIONS ── */}
       {error && (
         <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
           <XCircle className="w-4 h-4 flex-shrink-0" />
@@ -309,119 +351,110 @@ export default function QuestsPage() {
           <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-300">✕</button>
         </div>
       )}
+      {success && (
+        <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          {success}
+        </div>
+      )}
 
-      {/* ── BROWSE TAB ── */}
-      {tab === 'browse' && (
+      {/* ── MARKET TAB ── */}
+      {tab === 'market' && (
         <div className="space-y-6">
           {/* Filters */}
-          <div className="flex flex-wrap gap-3 items-center">
-            <div className="relative flex-1 min-w-[200px] max-w-md">
+          <div className="space-y-3">
+            <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input
                 type="text"
-                placeholder="Поиск задач..."
+                placeholder="Поиск заданий..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-amber-500 focus:border-amber-500 text-sm"
               />
             </div>
             <div className="flex gap-1.5 flex-wrap">
-              {CATEGORIES.map((c) => (
+              {CATEGORIES.map(({ value, label, emoji }) => (
                 <button
-                  key={c}
-                  onClick={() => setCategory(c)}
+                  key={value}
+                  onClick={() => setCategory(value)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                    category === c
-                      ? 'bg-purple-500 text-white'
+                    category === value
+                      ? 'bg-amber-500 text-white'
                       : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 border border-zinc-700'
                   }`}
                 >
-                  {c === 'ALL' ? 'Все' : c}
+                  {emoji} {label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Tasks grid */}
+          {/* Quests grid */}
           {loading ? (
             <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mx-auto" />
-              <p className="text-zinc-400 mt-4 text-sm">Загрузка задач...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mx-auto" />
+              <p className="text-zinc-400 mt-4 text-sm">Загрузка заданий...</p>
             </div>
           ) : quests.length === 0 ? (
             <div className="text-center py-16 bg-zinc-800/30 rounded-xl border border-zinc-700/50">
-              <Scroll className="w-14 h-14 text-zinc-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">Нет доступных задач</h3>
-              <p className="text-zinc-400 text-sm">Создайте первую задачу или проверьте позже</p>
+              <Hammer className="w-14 h-14 text-zinc-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">Нет доступных заданий</h3>
+              <p className="text-zinc-400 text-sm">Создайте первое задание или проверьте позже</p>
               <button
                 onClick={() => setTab('create')}
-                className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600 transition"
+                className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm hover:bg-amber-600 transition"
               >
-                Создать задачу
+                Создать задание
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {quests.map((q) => <TaskCard key={q.id} quest={q} showAccept />)}
+              {quests.map((q) => <QuestCard key={q.id} quest={q} showAccept />)}
             </div>
           )}
         </div>
       )}
 
-      {/* ── MY TASKS TAB ── */}
+      {/* ── MY QUESTS TAB ── */}
       {tab === 'my' && (
         <div className="space-y-4">
           {loading ? (
             <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mx-auto" />
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mx-auto" />
             </div>
           ) : myQuests.length === 0 ? (
             <div className="text-center py-16 bg-zinc-800/30 rounded-xl border border-zinc-700/50">
               <Briefcase className="w-14 h-14 text-zinc-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">У вас нет активных задач</h3>
-              <p className="text-zinc-400 text-sm">Найдите задачу на доске или создайте новую</p>
+              <h3 className="text-lg font-semibold text-white mb-2">У вас нет заданий</h3>
+              <p className="text-zinc-400 text-sm">Найдите работу на рынке или создайте новое задание</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {myQuests.map((q) => <TaskCard key={q.id} quest={q} />)}
+              {myQuests.map((q) => <QuestCard key={q.id} quest={q} />)}
             </div>
           )}
         </div>
       )}
 
-      {/* ── CREATE TASK TAB ── */}
+      {/* ── CREATE TAB ── */}
       {tab === 'create' && (
         <form onSubmit={handleCreate} className="max-w-2xl space-y-6">
           <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6 space-y-5">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Plus className="w-5 h-5 text-purple-400" />
-              Новая задача
+              <Plus className="w-5 h-5 text-amber-400" />
+              Новое задание
             </h2>
-
-            {/* Organization */}
-            <div>
-              <label className="text-sm text-zinc-300 mb-1.5 block">Организация *</label>
-              <select
-                value={form.orgId}
-                onChange={(e) => setForm({ ...form, orgId: e.target.value })}
-                className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm focus:ring-purple-500 focus:border-purple-500"
-              >
-                <option value="">Выберите организацию...</option>
-                {orgs.map((o) => (
-                  <option key={o.id} value={o.id}>{o.name} ({o.type})</option>
-                ))}
-              </select>
-            </div>
 
             {/* Title */}
             <div>
-              <label className="text-sm text-zinc-300 mb-1.5 block">Название *</label>
+              <label className="text-sm text-zinc-300 mb-1.5 block">Название работы *</label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Например: Анализ химического состава образца"
-                className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:ring-purple-500 focus:border-purple-500"
+                placeholder="Например: Ремонт крыши, Разработка сайта, Доставка груза"
+                className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:ring-amber-500 focus:border-amber-500"
               />
             </div>
 
@@ -432,14 +465,53 @@ export default function QuestsPage() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
-                placeholder="Подробное описание задачи..."
-                className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                placeholder="Подробное описание работы..."
+                className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:ring-amber-500 focus:border-amber-500 resize-none"
               />
+            </div>
+
+            {/* Category + Payment */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-zinc-300 mb-1.5 block">
+                  <Filter className="w-3.5 h-3.5 inline mr-1 text-amber-400" />
+                  Категория
+                </label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm"
+                >
+                  {CATEGORIES.filter(c => c.value !== 'ALL').map(({ value, label, emoji }) => (
+                    <option key={value} value={value}>{emoji} {label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-300 mb-1.5 block">
+                  <Coins className="w-3.5 h-3.5 inline mr-1 text-amber-400" />
+                  Оплата в АЛТАН *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={form.rewardAltan}
+                  onChange={(e) => setForm({ ...form, rewardAltan: e.target.value })}
+                  placeholder="Обязательно"
+                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500"
+                />
+                {form.rewardAltan && parseFloat(form.rewardAltan) > 0 && (
+                  <p className="text-[10px] text-zinc-500 mt-1">
+                    Налог 10%: {(parseFloat(form.rewardAltan) * 0.07).toFixed(2)} ₳ республика + {(parseFloat(form.rewardAltan) * 0.03).toFixed(2)} ₳ конфедерация
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Objectives */}
             <div>
-              <label className="text-sm text-zinc-300 mb-1.5 block">Цели (чеклист)</label>
+              <label className="text-sm text-zinc-300 mb-1.5 block">Этапы работы</label>
               {form.objectives.map((obj, i) => (
                 <div key={i} className="flex gap-2 mb-2">
                   <input
@@ -450,7 +522,7 @@ export default function QuestsPage() {
                       newObj[i] = e.target.value;
                       setForm({ ...form, objectives: newObj });
                     }}
-                    placeholder={`Цель ${i + 1}`}
+                    placeholder={`Этап ${i + 1}`}
                     className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500"
                   />
                   {form.objectives.length > 1 && (
@@ -465,73 +537,14 @@ export default function QuestsPage() {
               <button
                 type="button"
                 onClick={() => setForm({ ...form, objectives: [...form.objectives, ''] })}
-                className="text-xs text-purple-400 hover:text-purple-300 mt-1"
+                className="text-xs text-amber-400 hover:text-amber-300 mt-1"
               >
-                + Добавить цель
+                + Добавить этап
               </button>
             </div>
 
-            {/* Category + Visibility */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-zinc-300 mb-1.5 block">Категория</label>
-                <select
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm"
-                >
-                  {CATEGORIES.filter(c => c !== 'ALL').map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm text-zinc-300 mb-1.5 block">Видимость</label>
-                <select
-                  value={form.visibility}
-                  onChange={(e) => setForm({ ...form, visibility: e.target.value as any })}
-                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm"
-                >
-                  <option value="ORG_ONLY">🔒 Только организация</option>
-                  <option value="BRANCH">👥 Ветвь власти</option>
-                  <option value="PUBLIC">🌐 Публичный</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Rewards */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-zinc-300 mb-1.5 block">
-                  <Coins className="w-3.5 h-3.5 inline mr-1 text-amber-400" />
-                  Награда (ALTAN)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.rewardAltan}
-                  onChange={(e) => setForm({ ...form, rewardAltan: e.target.value })}
-                  placeholder="0.00"
-                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500"
-                />
-              </div>
-              <div>
-                <label className="text-sm text-zinc-300 mb-1.5 block">
-                  <Trophy className="w-3.5 h-3.5 inline mr-1 text-blue-400" />
-                  Репутация
-                </label>
-                <input
-                  type="number"
-                  value={form.reputationGain}
-                  onChange={(e) => setForm({ ...form, reputationGain: e.target.value })}
-                  placeholder="0"
-                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500"
-                />
-              </div>
-            </div>
-
-            {/* Deadline + Duration */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Deadline + Duration + Reputation */}
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm text-zinc-300 mb-1.5 block">Дедлайн</label>
                 <input
@@ -551,13 +564,26 @@ export default function QuestsPage() {
                   className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500"
                 />
               </div>
+              <div>
+                <label className="text-sm text-zinc-300 mb-1.5 block">
+                  <Trophy className="w-3.5 h-3.5 inline mr-1 text-blue-400" />
+                  Репутация
+                </label>
+                <input
+                  type="number"
+                  value={form.reputationGain}
+                  onChange={(e) => setForm({ ...form, reputationGain: e.target.value })}
+                  placeholder="50"
+                  className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg shadow-purple-500/20"
+              className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg shadow-amber-500/20"
             >
-              Создать задачу
+              Создать задание
             </button>
           </div>
         </form>
