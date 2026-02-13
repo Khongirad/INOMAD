@@ -127,6 +127,12 @@ model User {
   memberInvitations       OrganizationMember[] @relation("MemberInvitations")
   organizationRatings     OrganizationRating[] @relation("OrganizationRatingsGiven")
 
+  // Legislative relations
+  proposalsAuthored LegislativeProposal[] @relation("ProposalAuthor")
+  proposalsSigned   LegislativeProposal[] @relation("ProposalSigner")
+  proposalVotes     ProposalVote[]        @relation("ProposalVoter")
+  proposalDebates   ProposalDebate[]      @relation("ProposalSpeaker")
+
   // Education & Invitations
   educationVerifications   EducationVerification[] @relation("EducationVerifications")
   educationRecommendations EducationVerification[] @relation("EducationRecommendations")
@@ -3463,6 +3469,9 @@ model Marriage {
   spouse1DateOfBirth DateTime
   spouse2DateOfBirth DateTime
 
+  // Union type
+  unionType        String   @default("MARRIAGE") // MARRIAGE | CIVIL_UNION
+
   // Marriage details
   marriageDate     DateTime
   ceremonyLocation String?
@@ -3475,8 +3484,12 @@ model Marriage {
   witness2Id   String?
 
   // Property regime
-  propertyRegime    PropertyRegime?
-  propertyAgreement String?
+  propertyRegime         PropertyRegime?
+  propertyAgreement      String?   @db.Text // Pre-nuptial / pre-union contract
+  jointPropertyStartDate DateTime? // Start date for joint property (set on registration)
+
+  // Family bank account (shared finances)
+  familyAccountId String? // Link to OrgBankAccount or BankLink for shared family finances
 
   // Consent tracking
   spouse1ConsentGranted Boolean @default(false)
@@ -3498,11 +3511,34 @@ model Marriage {
 
   consents MarriageConsent[]
   divorces ZagsDivorce[]
+  gifts    WeddingGift[]
 
   @@index([spouse1Id])
   @@index([spouse2Id])
   @@index([status])
+  @@index([unionType])
   @@index([certificateNumber])
+}
+
+/// WeddingGift — record of gifts given at a wedding/civil union ceremony.
+/// Tracks who gave what to whom for transparency and property division.
+model WeddingGift {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  marriageId  String
+  marriage    Marriage @relation(fields: [marriageId], references: [id], onDelete: Cascade)
+
+  giverId     String   // Who gave the gift (userId or external name)
+  giverName   String   // Display name of the giver
+  recipientId String   // Which spouse received (spouse1Id or spouse2Id)
+
+  description    String
+  estimatedValue Decimal? @db.Decimal(18, 6) // Value in ALTAN
+  category       String?  // MONEY, JEWELRY, HOUSEHOLD, REAL_ESTATE, OTHER
+
+  @@index([marriageId])
+  @@index([recipientId])
 }
 
 model MarriageConsent {
@@ -4806,4 +4842,94 @@ model OrgContract {
   @@index([status])
   @@index([counterpartyOrgId])
 }
+
+// =============================================================================
+// LEGISLATIVE SYSTEM — Proposal lifecycle (DB-based, complements on-chain VotingCenter)
+// =============================================================================
+
+/// LegislativeProposal — full lifecycle of a law proposal.
+/// DRAFT → SUBMITTED → DEBATE → VOTING → PASSED → SIGNED → ARCHIVED | REJECTED
+model LegislativeProposal {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Author
+  authorId String
+  author   User   @relation("ProposalAuthor", fields: [authorId], references: [id])
+
+  // Khural scope
+  khuralLevel String  // ARBAN, ZUN, MYANGAN, TUMEN, REPUBLICAN, CONFEDERATIVE
+  entityId    String  // ID of the KhuralGroup / session entity
+
+  // Content
+  title       String
+  description String   @db.Text
+  fullText    String   @db.Text   // Full law text
+  category    String   // ECONOMIC, SOCIAL, GOVERNANCE, JUDICIAL, MILITARY, CULTURAL
+
+  // Lifecycle
+  status      String   @default("DRAFT")
+  // DRAFT → SUBMITTED → DEBATE → VOTING → PASSED → SIGNED → ARCHIVED | REJECTED
+
+  // Voting results (cached from votes relation)
+  votesFor     Int @default(0)
+  votesAgainst Int @default(0)
+  votesAbstain Int @default(0)
+  quorumMet    Boolean @default(false)
+
+  // Signing
+  signedAt     DateTime?
+  signedById   String?
+  signedBy     User?    @relation("ProposalSigner", fields: [signedById], references: [id])
+  documentId   String?  // Link to DocumentContract in Archive
+
+  // Blockchain (optional — links to on-chain VotingCenter proposal)
+  blockchainProposalId Int?
+  blockchainTxHash     String?
+
+  // Relations
+  votes   ProposalVote[]
+  debates ProposalDebate[]
+
+  @@index([status, khuralLevel])
+  @@index([authorId])
+  @@index([entityId])
+}
+
+/// ProposalVote — individual vote on a legislative proposal.
+model ProposalVote {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  proposalId String
+  proposal   LegislativeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  voterId String
+  voter   User   @relation("ProposalVoter", fields: [voterId], references: [id])
+
+  vote    String  // FOR, AGAINST, ABSTAIN
+  comment String?
+
+  @@unique([proposalId, voterId])
+  @@index([proposalId])
+}
+
+/// ProposalDebate — debate entry (speech) on a legislative proposal. Supports threads.
+model ProposalDebate {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  proposalId String
+  proposal   LegislativeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  speakerId String
+  speaker   User   @relation("ProposalSpeaker", fields: [speakerId], references: [id])
+
+  content   String @db.Text
+  replyToId String? // Thread replies to another debate entry
+
+  @@index([proposalId, createdAt])
+}
+
 

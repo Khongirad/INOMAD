@@ -1,16 +1,21 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { PrismaModule } from '../prisma/prisma.module';
 import { VotingCenterService } from './voting-center.service';
 import { VotingCenterController } from './voting-center.controller';
+import { LegislativeService } from './legislative.service';
+import { LegislativeController } from './legislative.controller';
 
 /**
  * @module LegislativeModule
- * @description Module for Legislative Branch (Khural) functionality
+ * @description Module for Legislative Branch (Khural) functionality.
+ * Combines on-chain voting (VotingCenter) with DB-based proposal lifecycle (Legislative).
  */
 @Module({
-  imports: [ConfigModule],
-  controllers: [VotingCenterController],
-  providers: [VotingCenterService],
-  exports: [VotingCenterService],
+  imports: [ConfigModule, PrismaModule],
+  controllers: [VotingCenterController, LegislativeController],
+  providers: [VotingCenterService, LegislativeService],
+  exports: [VotingCenterService, LegislativeService],
 })
 export class LegislativeModule {}
+

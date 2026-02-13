@@ -87,8 +87,24 @@ export class UnifiedOrgService {
     // Create default permissions for all roles
     await this.createDefaultPermissions(org.id);
 
+    // Auto-create operating bank account for the organization
+    const accountNumber = `ORG-${org.id.substring(0, 8).toUpperCase()}-001`;
+    const bankAccount = await this.prisma.orgBankAccount.create({
+      data: {
+        organizationId: org.id,
+        accountName: 'Операционный счёт',
+        accountNumber,
+        accountType: 'OPERATING',
+        balance: 0,
+        currency: 'ALTAN',
+      },
+    });
+    this.logger.log(
+      `Bank account ${accountNumber} created for org "${org.name}"`,
+    );
+
     this.logger.log(`Organization "${org.name}" created by ${leaderId}`);
-    return org;
+    return { ...org, bankAccount };
   }
 
   /**
