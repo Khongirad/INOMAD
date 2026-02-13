@@ -2,20 +2,11 @@
 
 import { useState } from 'react';
 import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Button,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  Avatar,
-  Chip,
-  LinearProgress,
-  Divider,
-} from '@mui/material';
-import { Vote, Users, Calendar, TrendingUp, CheckCircle2 } from 'lucide-react';
+  Vote, Users, Calendar, TrendingUp, CheckCircle2, Crown, Lock,
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface Candidate {
   id: string;
@@ -66,231 +57,217 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
 
   const isActive = election.status === 'ACTIVE';
   const isCompleted = election.status === 'COMPLETED';
-  const isUpcoming = election.status === 'UPCOMING';
 
-  const getStatusColor = () => {
+  const getStatusStyle = () => {
     switch (election.status) {
-      case 'ACTIVE':
-        return 'success';
-      case 'COMPLETED':
-        return 'default';
-      case 'UPCOMING':
-        return 'info';
-      default:
-        return 'default';
+      case 'ACTIVE': return 'bg-emerald-500/10 text-emerald-500';
+      case 'COMPLETED': return 'bg-zinc-500/10 text-zinc-400';
+      case 'UPCOMING': return 'bg-blue-500/10 text-blue-400';
+      case 'CANCELLED': return 'bg-red-500/10 text-red-400';
+      default: return 'bg-zinc-500/10 text-zinc-400';
     }
   };
 
   const getStatusLabel = () => {
     switch (election.status) {
-      case 'ACTIVE':
-        return 'Идет Голосование';
-      case 'COMPLETED':
-        return 'Завершено';
-      case 'UPCOMING':
-        return 'Предстоящие';
-      case 'CANCELLED':
-        return 'Отменено';
-      default:
-        return election.status;
+      case 'ACTIVE': return 'Голосование';
+      case 'COMPLETED': return 'Завершено';
+      case 'UPCOMING': return 'Предстоящие';
+      case 'CANCELLED': return 'Отменено';
+      default: return election.status;
     }
   };
 
   const handleVote = async () => {
     if (!selectedCandidate || !onVote) return;
-
     setVoting(true);
     try {
       await onVote(election.id, selectedCandidate);
-    } catch (error) {
-      console.error('Failed to vote:', error);
     } finally {
       setVoting(false);
     }
   };
 
-  const getTotalVotes = () => {
-    return isCompleted
-      ? election.totalVotes
-      : election.candidates.reduce((sum, c) => sum + c.votes, 0);
-  };
+  const totalVotes = isCompleted
+    ? election.totalVotes
+    : election.candidates.reduce((sum, c) => sum + c.votes, 0);
 
-  const totalVotes = getTotalVotes();
-
-  const getCandidatePercentage = (votes: number) => {
-    return totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
-  };
+  const getCandidatePercentage = (votes: number) =>
+    totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
 
   return (
-    <Card>
-      <CardContent>
+    <Card className="border-white/5 bg-zinc-900/50 hover:border-blue-500/20 transition-all">
+      <CardContent className="p-5 space-y-4">
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Box>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Users size={20} />
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-semibold text-white flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-400" />
               {election.organization.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {election.organization.type}
-            </Typography>
-          </Box>
-          <Chip label={getStatusLabel()} color={getStatusColor()} />
-        </Box>
+            </h3>
+            <p className="text-xs text-zinc-500 mt-0.5">{election.organization.type}</p>
+          </div>
+          <span className={cn(
+            "text-xs font-bold uppercase px-2 py-1 rounded",
+            getStatusStyle()
+          )}>
+            {getStatusLabel()}
+          </span>
+        </div>
 
-        {/* Dates + Term */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-          <Typography variant="caption" color="text.secondary">
-            <Calendar size={14} style={{ display: 'inline', marginRight: 4 }} />
-            Начало: {new Date(election.startDate).toLocaleDateString('ru-RU')}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Конец: {new Date(election.endDate).toLocaleDateString('ru-RU')}
-          </Typography>
+        {/* Dates + Tags */}
+        <div className="flex flex-wrap gap-3 text-xs text-zinc-500">
+          <span className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            {new Date(election.startDate).toLocaleDateString('ru-RU')}
+            {' — '}
+            {new Date(election.endDate).toLocaleDateString('ru-RU')}
+          </span>
           {election.termMonths && (
-            <Chip label={`Срок: ${election.termMonths} мес.`} size="small" variant="outlined" />
+            <span className="px-2 py-0.5 rounded border border-white/10 text-zinc-400">
+              {election.termMonths} мес.
+            </span>
           )}
           {election.isAnonymous && (
-            <Chip label="Тайное голосование" size="small" color="info" variant="outlined" />
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded border border-blue-500/20 text-blue-400">
+              <Lock className="h-3 w-3" /> Тайное
+            </span>
           )}
-        </Box>
+        </div>
 
-        {/* Winner (if completed) */}
+        {/* Winner */}
         {isCompleted && election.winner && (
-          <Box sx={{ mb: 2, p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
-            <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CheckCircle2 size={16} />
-              Победитель
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-              <Avatar sx={{ width: 32, height: 32 }}>
-                {election.winner.firstName[0]}
-                {election.winner.lastName[0]}
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight="bold">
+          <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
+                <Crown className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <div className="font-semibold text-emerald-400 text-sm">
                   {election.winner.firstName} {election.winner.lastName}
-                </Typography>
-                <Typography variant="caption">
-                  {election.winnerVotes} голосов (
-                  {getCandidatePercentage(election.winnerVotes || 0).toFixed(1)}%)
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
+                </div>
+                <div className="text-xs text-zinc-500">
+                  {election.winnerVotes} голосов ({getCandidatePercentage(election.winnerVotes || 0).toFixed(1)}%)
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
-        <Divider sx={{ my: 2 }} />
+        {/* Divider */}
+        <div className="border-t border-white/5" />
 
-        {/* Candidates */}
-        <Typography variant="subtitle2" gutterBottom>
+        {/* Candidates label */}
+        <div className="text-sm font-semibold text-zinc-300">
           Кандидаты ({election.candidates.length})
-        </Typography>
+        </div>
 
+        {/* Voting Mode */}
         {isActive && !hasVoted ? (
-          // Voting Mode
-          <RadioGroup
-            value={selectedCandidate}
-            onChange={(e) => setSelectedCandidate(e.target.value)}
-          >
+          <div className="space-y-2">
             {election.candidates.map((candidate) => (
-              <Box key={candidate.id} sx={{ mb: 2 }}>
-                <FormControlLabel
+              <label
+                key={candidate.id}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                  selectedCandidate === candidate.candidate.id
+                    ? "border-blue-500/40 bg-blue-500/5"
+                    : "border-white/5 bg-zinc-900/30 hover:border-white/10"
+                )}
+              >
+                <input
+                  type="radio"
+                  name={`election-${election.id}`}
                   value={candidate.candidate.id}
-                  control={<Radio />}
-                  label={
-                    <Box>
-                      <Typography variant="body2" fontWeight="medium">
-                        {candidate.candidate.firstName} {candidate.candidate.lastName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        @{candidate.candidate.username}
-                      </Typography>
-                      {candidate.platform && (
-                        <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
-                          {candidate.platform}
-                        </Typography>
-                      )}
-                    </Box>
-                  }
+                  checked={selectedCandidate === candidate.candidate.id}
+                  onChange={(e) => setSelectedCandidate(e.target.value)}
+                  className="accent-blue-500"
                 />
-              </Box>
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    {candidate.candidate.firstName} {candidate.candidate.lastName}
+                  </div>
+                  <div className="text-xs text-zinc-500">@{candidate.candidate.username}</div>
+                  {candidate.platform && (
+                    <div className="text-xs text-zinc-400 mt-0.5">{candidate.platform}</div>
+                  )}
+                </div>
+              </label>
             ))}
-          </RadioGroup>
+          </div>
+        ) : election.isAnonymous && isActive ? (
+          <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+            <p className="text-sm text-blue-400 flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Тайное голосование — результаты после завершения
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              Кандидатов: {election.candidates.length}
+            </p>
+          </div>
         ) : (
-          // Results Mode — respect anonymous voting
-          election.isAnonymous && isActive ? (
-            <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1, mb: 2 }}>
-              <Typography variant="body2" color="info.dark">
-                🔒 Тайное голосование — результаты будут доступны после завершения
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Кандидатов: {election.candidates.length}
-              </Typography>
-            </Box>
-          ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {election.candidates
-                .sort((a, b) => b.votes - a.votes)
-                .map((candidate) => {
-                  const percentage = getCandidatePercentage(candidate.votes);
-                  const isWinner = isCompleted && candidate.candidate.id === election.winner?.id;
-
-                  return (
-                    <Box key={candidate.id}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2" fontWeight={isWinner ? 'bold' : 'normal'}>
-                          {candidate.candidate.firstName} {candidate.candidate.lastName}
-                          {isWinner && ' 👑'}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {candidate.votes} ({percentage.toFixed(1)}%)
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={percentage}
-                        color={isWinner ? 'success' : 'primary'}
+          /* Results Mode */
+          <div className="space-y-3">
+            {election.candidates
+              .sort((a, b) => b.votes - a.votes)
+              .map((candidate) => {
+                const percentage = getCandidatePercentage(candidate.votes);
+                const isWinner = isCompleted && candidate.candidate.id === election.winner?.id;
+                return (
+                  <div key={candidate.id}>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className={cn(
+                        "text-zinc-200",
+                        isWinner && "font-bold text-emerald-400"
+                      )}>
+                        {candidate.candidate.firstName} {candidate.candidate.lastName}
+                        {isWinner && ' 👑'}
+                      </span>
+                      <span className="text-zinc-500 font-mono text-xs">
+                        {candidate.votes} ({percentage.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full transition-all",
+                          isWinner ? "bg-emerald-500" : "bg-blue-500"
+                        )}
+                        style={{ width: `${percentage}%` }}
                       />
-                    </Box>
-                  );
-                })}
-            </Box>
-          )
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         )}
 
-        {/* Stats */}
-        <Box sx={{ mt: 2, p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
-          <Typography variant="caption" color="text.secondary">
-            <TrendingUp size={14} style={{ display: 'inline', marginRight: 4 }} />
-            Всего голосов: {totalVotes}
-            {isCompleted && election.turnoutRate && (
-              <> • Явка: {election.turnoutRate.toFixed(1)}%</>
-            )}
-          </Typography>
-        </Box>
+        {/* Stats footer */}
+        <div className="pt-2 text-xs text-zinc-500 flex items-center gap-1">
+          <TrendingUp className="h-3 w-3" />
+          Голосов: {totalVotes}
+          {isCompleted && election.turnoutRate && (
+            <> · Явка: {election.turnoutRate.toFixed(1)}%</>
+          )}
+        </div>
 
-        {/* Vote Button */}
+        {/* Vote button */}
         {isActive && !hasVoted && (
           <Button
-            variant="contained"
-            fullWidth
-            sx={{ mt: 2 }}
+            className="w-full"
             onClick={handleVote}
             disabled={!selectedCandidate || voting}
-            startIcon={<Vote size={16} />}
           >
+            <Vote className="mr-2 h-4 w-4" />
             {voting ? 'Голосование...' : 'Проголосовать'}
           </Button>
         )}
 
+        {/* Already voted */}
         {hasVoted && isActive && (
-          <Chip
-            label="Вы уже проголосовали"
-            color="success"
-            sx={{ mt: 2, width: '100%' }}
-            icon={<CheckCircle2 size={14} />}
-          />
+          <div className="w-full text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-medium flex items-center justify-center gap-2">
+            <CheckCircle2 className="h-4 w-4" /> Вы проголосовали
+          </div>
         )}
       </CardContent>
     </Card>
