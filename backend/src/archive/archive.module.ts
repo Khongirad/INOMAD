@@ -7,6 +7,7 @@ import { NotaryService } from './notary.service';
 import { LegalService } from './legal.service';
 import { TemplateSeederService } from './template-seeder.service';
 import { ArchiveController } from './archive.controller';
+import { AuthModule } from '../auth/auth.module';
 
 /**
  * ArchiveModule
@@ -21,13 +22,11 @@ import { ArchiveController } from './archive.controller';
  * - Document archiving
  */
 @Module({
-  imports: [
-    PrismaModule,
+  imports: [PrismaModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '7d' },
-    }),
-  ],
+    }), AuthModule],
   providers: [
     DocumentTemplateService,
     DocumentContractService,

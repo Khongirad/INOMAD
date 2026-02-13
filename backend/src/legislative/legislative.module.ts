@@ -5,6 +5,7 @@ import { VotingCenterService } from './voting-center.service';
 import { VotingCenterController } from './voting-center.controller';
 import { LegislativeService } from './legislative.service';
 import { LegislativeController } from './legislative.controller';
+import { AuthModule } from '../auth/auth.module';
 
 /**
  * @module LegislativeModule
@@ -12,7 +13,7 @@ import { LegislativeController } from './legislative.controller';
  * Combines on-chain voting (VotingCenter) with DB-based proposal lifecycle (Legislative).
  */
 @Module({
-  imports: [ConfigModule, PrismaModule],
+  imports: [ConfigModule, PrismaModule, AuthModule],
   controllers: [VotingCenterController, LegislativeController],
   providers: [VotingCenterService, LegislativeService],
   exports: [VotingCenterService, LegislativeService],

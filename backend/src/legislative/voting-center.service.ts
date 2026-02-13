@@ -34,13 +34,16 @@ export class VotingCenterService {
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
     
     const votingCenterAddress = this.configService.get<string>('VOTING_CENTER_ADDRESS');
- this.votingCenter = new ethers.Contract(
-      votingCenterAddress,
-      this.votingCenterAbi,
-      this.provider,
-    );
-    
-    this.logger.log(`VotingCenter initialized at ${votingCenterAddress}`);
+    if (votingCenterAddress) {
+      this.votingCenter = new ethers.Contract(
+        votingCenterAddress,
+        this.votingCenterAbi,
+        this.provider,
+      );
+      this.logger.log(`VotingCenter initialized at ${votingCenterAddress}`);
+    } else {
+      this.logger.warn('⚠️  VOTING_CENTER_ADDRESS not configured — VotingCenter blockchain features disabled');
+    }
   }
 
   /**

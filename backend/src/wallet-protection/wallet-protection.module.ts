@@ -6,6 +6,7 @@ import { RiskScorerService } from './risk-scorer.service';
 import { AlertService } from './alert.service';
 import { WalletProtectionService } from './wallet-protection.service';
 import { WalletProtectionController } from './wallet-protection.controller';
+import { AuthModule } from '../auth/auth.module';
 
 /**
  * WalletProtectionModule - Hybrid Security System
@@ -17,7 +18,7 @@ import { WalletProtectionController } from './wallet-protection.controller';
  * - WalletProtection: Orchestrator and on-chain interaction
  */
 @Module({
-  imports: [ConfigModule, BlockchainModule],
+  imports: [ConfigModule, BlockchainModule, AuthModule],
   providers: [
     EventIndexerService,
     RiskScorerService,

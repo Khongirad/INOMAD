@@ -4,9 +4,10 @@ import { GuildsController } from './guilds.controller';
 import { GuildsService } from './guilds.service';
 import { CouncilController } from './council.controller';
 import { CouncilService } from './council.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [GuildsController, CouncilController],
   providers: [GuildsService, CouncilService],
   exports: [GuildsService, CouncilService],

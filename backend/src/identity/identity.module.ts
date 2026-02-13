@@ -15,9 +15,10 @@ import { SovereignFundController } from './sovereign-fund.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { BlockchainModule } from '../blockchain/blockchain.module';
 import { BankModule } from '../bank/bank.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, BlockchainModule, BankModule, ScheduleModule.forRoot()],
+  imports: [PrismaModule, BlockchainModule, BankModule, ScheduleModule.forRoot(), AuthModule],
   providers: [
     RegistrationService,
     VerificationService,
