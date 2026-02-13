@@ -26,6 +26,7 @@ import {
   Vote,
   Receipt,
   Wallet,
+  Flag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -94,6 +95,7 @@ const NAV_ITEMS = [
       { name: "Migration", href: "/services/migration", icon: ScrollText },
       { name: "ZAGS (Civil Registry)", href: "/services/zags", icon: Users },
       { name: "Land Registry", href: "/services/land-registry", icon: Building2 },
+      { name: "Citizenship", href: "/citizenship", icon: Flag },
     ],
   },
 ];
