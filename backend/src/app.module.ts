@@ -22,6 +22,8 @@ import { AcademyModule } from './academy/academy.module';
 import { JusticeModule } from './justice/justice.module';
 import { TempleModule } from './temple/temple.module';
 import { LegislativeModule } from './legislative/legislative.module';
+import { GamificationModule } from './gamification/gamification.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 import { TaxModule } from './tax/tax.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
 import { MPCWalletModule } from './mpc-wallet/mpc-wallet.module';
@@ -57,6 +59,9 @@ import { ParliamentModule } from './parliament/parliament.module';
 import { OrgQuestModule } from './org-quests/org-quest.module';
 import { RegionalReputationModule } from './regional-reputation/regional-reputation.module';
 import { OrgBankingModule } from './org-banking/org-banking.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { NewsModule } from './news/news.module';
+import { CitizenshipModule } from './citizenship/citizenship.module';
 
 @Module({
   imports: [
@@ -106,6 +111,8 @@ import { OrgBankingModule } from './org-banking/org-banking.module';
     ArchiveModule,       // State Archive & Document Constructor System
     TransparencyModule,   // Transparency & Accountability System (GOST)
     LegislativeModule,
+    GamificationModule,  // Citizen XP, Levels, Achievements
+    OnboardingModule,    // Guided onboarding quest "Путь Гражданина"
     TaxModule,
     MarketplaceModule,
     AdminModule,  // Admin and Creator management
@@ -120,7 +127,10 @@ import { OrgBankingModule } from './org-banking/org-banking.module';
     ParliamentModule,   // Khural sessions and voting (Tumen leaders only)
     OrgQuestModule,     // Organization Task Board (quests/missions for all orgs)
     RegionalReputationModule, // Territorial reputation per republic
-    OrgBankingModule,         // Org banking with dual authorization & daily reports
+    OrgBankingModule,   // Org banking with dual authorization & daily reports
+    RealtimeModule,
+    NewsModule,
+    CitizenshipModule,
   ],
   providers: [
     {

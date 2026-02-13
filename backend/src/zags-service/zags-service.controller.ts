@@ -102,4 +102,33 @@ export class ZagsServiceController {
   async finalizeDivorce(@Req() req: any, @Param('id') id: string) {
     return this.zagsService.finalizeDivorce(id, req.user.userId);
   }
+
+  // ============ Civil Unions ============
+
+  @Post('civil-unions')
+  async createCivilUnion(@Req() req: any, @Body() body: any) {
+    return this.zagsService.createCivilUnion(req.user.userId, body);
+  }
+
+  // ============ Wedding Gifts ============
+
+  @Post('marriages/:id/gifts')
+  async recordWeddingGift(
+    @Param('id') id: string,
+    @Body() body: { giverId: string; giverName: string; recipientId: string; description: string; estimatedValue?: number; category?: string },
+  ) {
+    return this.zagsService.recordWeddingGift(id, body);
+  }
+
+  @Get('marriages/:id/gifts')
+  async getWeddingGifts(@Param('id') id: string) {
+    return this.zagsService.getWeddingGifts(id);
+  }
+
+  // ============ Officer Dashboard ============
+
+  @Get('officer/stats')
+  async getOfficerStats() {
+    return this.zagsService.getOfficerStats();
+  }
 }

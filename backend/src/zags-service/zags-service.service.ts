@@ -287,12 +287,29 @@ export class ZagsServiceService {
       throw new BadRequestException('Marriage must be approved first');
     }
 
+    const now = new Date();
+
+    // Create family bank account for joint finances
+    const familyAccountNumber = `FAM-${marriageId.substring(0, 8).toUpperCase()}-001`;
+    const familyAccount = await this.prisma.orgBankAccount.create({
+      data: {
+        accountName: `Семейный счёт — ${marriage.spouse1FullName} & ${marriage.spouse2FullName}`,
+        accountNumber: familyAccountNumber,
+        accountType: 'FAMILY',
+        balance: 0,
+        currency: 'ALTAN',
+        // No organizationId — family accounts are standalone
+      },
+    });
+
     return this.prisma.marriage.update({
       where: { id: marriageId },
       data: {
         status: 'REGISTERED',
         registeredBy: officerId,
-        registeredAt: new Date(),
+        registeredAt: now,
+        jointPropertyStartDate: now,
+        familyAccountId: familyAccount.id,
       },
     });
   }
@@ -300,19 +317,176 @@ export class ZagsServiceService {
   async finalizeDivorce(divorceId: string, officerId: string) {
     const divorce = await this.prisma.zagsDivorce.findUnique({
       where: { id: divorceId },
+      include: { marriage: true },
     });
     if (!divorce) throw new NotFoundException('Divorce not found');
     if (divorce.status !== 'FILED' && divorce.status !== 'UNDER_REVIEW') {
       throw new BadRequestException('Divorce not in reviewable state');
     }
 
-    return this.prisma.zagsDivorce.update({
-      where: { id: divorceId },
+    // Finalize divorce and update marriage status
+    const [updatedDivorce] = await this.prisma.$transaction([
+      this.prisma.zagsDivorce.update({
+        where: { id: divorceId },
+        data: {
+          status: 'FINALIZED',
+          finalizedDate: new Date(),
+          finalizedById: officerId,
+        },
+      }),
+      this.prisma.marriage.update({
+        where: { id: divorce.marriageId },
+        data: { status: 'DIVORCED' },
+      }),
+    ]);
+
+    return updatedDivorce;
+  }
+
+  // ===========================================================================
+  // CIVIL UNIONS
+  // ===========================================================================
+
+  /**
+   * Create a civil union application (same flow as marriage, unionType = CIVIL_UNION).
+   */
+  async createCivilUnion(userId: string, data: {
+    partnerId: string;
+    spouse1FullName: string;
+    spouse2FullName: string;
+    spouse1DateOfBirth: string;
+    spouse2DateOfBirth: string;
+    unionDate: string;
+    propertyRegime?: 'SEPARATE' | 'JOINT' | 'CUSTOM';
+    propertyAgreement?: string;
+  }) {
+    // Verify eligibility for both partners
+    const [elig1, elig2] = await Promise.all([
+      this.checkEligibility(userId),
+      this.checkEligibility(data.partnerId),
+    ]);
+
+    if (!elig1.isEligible) {
+      throw new BadRequestException(`Initiator not eligible: ${elig1.reasons.join(', ')}`);
+    }
+    if (!elig2.isEligible) {
+      throw new BadRequestException(`Partner not eligible: ${elig2.reasons.join(', ')}`);
+    }
+
+    const union = await this.prisma.marriage.create({
       data: {
-        status: 'FINALIZED',
-        finalizedDate: new Date(),
-        finalizedById: officerId,
+        spouse1Id: userId,
+        spouse2Id: data.partnerId,
+        spouse1FullName: data.spouse1FullName,
+        spouse2FullName: data.spouse2FullName,
+        spouse1DateOfBirth: new Date(data.spouse1DateOfBirth),
+        spouse2DateOfBirth: new Date(data.spouse2DateOfBirth),
+        marriageDate: new Date(data.unionDate),
+        unionType: 'CIVIL_UNION',
+        propertyRegime: data.propertyRegime,
+        propertyAgreement: data.propertyAgreement,
+        status: 'PENDING_CONSENT',
+        spouse1ConsentGranted: true,
+        spouse1ConsentedAt: new Date(),
+      },
+    });
+
+    // Create consent records
+    await this.prisma.marriageConsent.createMany({
+      data: [
+        { marriageId: union.id, userId, status: 'APPROVED', consentedAt: new Date() },
+        { marriageId: union.id, userId: data.partnerId, status: 'PENDING' },
+      ],
+    });
+
+    return union;
+  }
+
+  // ===========================================================================
+  // WEDDING GIFTS
+  // ===========================================================================
+
+  /**
+   * Record a wedding gift (who gave what to whom).
+   */
+  async recordWeddingGift(
+    marriageId: string,
+    data: {
+      giverId: string;
+      giverName: string;
+      recipientId: string;
+      description: string;
+      estimatedValue?: number;
+      category?: string;
+    },
+  ) {
+    const marriage = await this.prisma.marriage.findUnique({
+      where: { id: marriageId },
+    });
+    if (!marriage) throw new NotFoundException('Marriage not found');
+
+    // Verify recipient is one of the spouses
+    if (data.recipientId !== marriage.spouse1Id && data.recipientId !== marriage.spouse2Id) {
+      throw new BadRequestException('Recipient must be one of the spouses');
+    }
+
+    return this.prisma.weddingGift.create({
+      data: {
+        marriageId,
+        giverId: data.giverId,
+        giverName: data.giverName,
+        recipientId: data.recipientId,
+        description: data.description,
+        estimatedValue: data.estimatedValue,
+        category: data.category,
       },
     });
   }
+
+  /**
+   * Get all gifts for a marriage.
+   */
+  async getWeddingGifts(marriageId: string) {
+    return this.prisma.weddingGift.findMany({
+      where: { marriageId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Officer dashboard statistics.
+   */
+  async getOfficerStats() {
+    const [
+      totalMarriages,
+      pendingMarriages,
+      totalDivorces,
+      recentMarriages,
+    ] = await Promise.all([
+      this.prisma.marriage.count(),
+      this.prisma.marriage.count({
+        where: { status: { in: ['PENDING_CONSENT', 'PENDING_REVIEW'] } },
+      }),
+      this.prisma.marriage.count({
+        where: { status: 'DIVORCED' },
+      }),
+      this.prisma.marriage.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          spouse1: { select: { id: true, seatId: true, username: true } },
+          spouse2: { select: { id: true, seatId: true, username: true } },
+        },
+      }),
+    ]);
+
+    return {
+      totalMarriages,
+      pendingMarriages,
+      totalDivorces,
+      activeMarriages: totalMarriages - totalDivorces,
+      recentMarriages,
+    };
+  }
 }
+

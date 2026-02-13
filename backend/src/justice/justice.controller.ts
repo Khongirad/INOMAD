@@ -127,4 +127,47 @@ export class JusticeController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
+  // ============ Judge Nominations ============
+
+  @Post('nominations')
+  async nominateJudge(@Body() dto: { candidateId: string; nominatorId: string; reason: string }) {
+    try {
+      return await this.justiceService.nominateJudge(dto);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get('nominations')
+  async getNominations() {
+    try {
+      return await this.justiceService.getNominations();
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('nominations/:id/approve')
+  async approveNomination(
+    @Param('id') id: string,
+    @Body() dto: { approverId: string },
+  ) {
+    try {
+      return await this.justiceService.approveNomination(id, dto.approverId);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  // ============ Dashboard ============
+
+  @Get('dashboard/stats')
+  async getDashboardStats() {
+    try {
+      return await this.justiceService.getDashboardStats();
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

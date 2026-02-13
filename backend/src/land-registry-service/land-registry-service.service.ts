@@ -99,6 +99,11 @@ export class LandRegistryServiceService {
     });
   }
 
+  /**
+   * Register ownership. 
+   * GOVERNANCE: Земля принадлежит коренному народу и остаётся в Земельном Фонде.
+   * Только строения (property) могут быть в частной собственности.
+   */
   async registerOwnership(userId: string, data: {
     landPlotId?: string;
     propertyId?: string;
@@ -106,11 +111,26 @@ export class LandRegistryServiceService {
     sharePercentage: number;
     coOwners?: string[];
   }) {
+    // GOVERNANCE: Land plots cannot be privately owned — they stay in the State Land Fund
+    if (data.landPlotId) {
+      throw new BadRequestException(
+        'Земля остаётся в Государственном Земельном Фонде и не может быть в частной собственности. ' +
+        'Используйте аренду (lease) для пользования земельным участком.',
+      );
+    }
+
     // Verify citizen
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
     if (!user) throw new NotFoundException('User not found');
+
+    // Only CITIZEN or INDIGENOUS can own property (buildings)
+    if ((user as any).citizenType === 'RESIDENT') {
+      throw new BadRequestException(
+        'Только граждане (CITIZEN или INDIGENOUS) могут владеть недвижимостью.',
+      );
+    }
 
     return this.prisma.landOwnership.create({
       data: {
@@ -221,6 +241,11 @@ export class LandRegistryServiceService {
     });
   }
 
+  /**
+   * Complete transfer.
+   * GOVERNANCE: Земля не может меняться в собственности — только аренда.
+   * Только строения (property) могут передаваться.
+   */
   async completeTransfer(transactionId: string, officerId: string, blockchainTxHash?: string) {
     const tx = await this.prisma.landTransaction.findUnique({
       where: { id: transactionId },
@@ -230,22 +255,14 @@ export class LandRegistryServiceService {
       throw new BadRequestException('Payment must be confirmed first');
     }
 
-    // Transfer ownership
+    // GOVERNANCE: Land plots cannot be transferred — they stay in the State Land Fund
     if (tx.landPlotId) {
-      await this.prisma.landOwnership.updateMany({
-        where: { landPlotId: tx.landPlotId, ownerId: tx.sellerId, isActive: true },
-        data: { isActive: false },
-      });
-      await this.prisma.landOwnership.create({
-        data: {
-          landPlotId: tx.landPlotId,
-          ownerId: tx.buyerId,
-          ownershipType: 'FULL',
-          sharePercentage: 100,
-          isCitizenVerified: true,
-        },
-      });
+      throw new BadRequestException(
+        'Земельные участки остаются в Государственном Земельном Фонде и не могут быть переданы в собственность.',
+      );
     }
+
+    // Only property (buildings) can be transferred
     if (tx.propertyId) {
       await this.prisma.landOwnership.updateMany({
         where: { propertyId: tx.propertyId, ownerId: tx.sellerId, isActive: true },

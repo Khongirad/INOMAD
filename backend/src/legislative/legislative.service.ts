@@ -31,6 +31,7 @@ export class LegislativeService {
 
   /**
    * Create a new law proposal (starts as DRAFT).
+   * GOVERNANCE: Only holders of exclusive land right (or delegates) can create proposals.
    */
   async createProposal(
     authorId: string,
@@ -43,6 +44,8 @@ export class LegislativeService {
       entityId: string;
     },
   ) {
+    await this.ensureLegislativeEligibility(authorId);
+
     const proposal = await this.prisma.legislativeProposal.create({
       data: {
         authorId,
@@ -171,6 +174,7 @@ export class LegislativeService {
 
   /**
    * Add a debate entry (speech). Only during DEBATE status.
+   * GOVERNANCE: Only holders of exclusive land right (or delegates) can speak.
    */
   async addDebateEntry(
     proposalId: string,
@@ -179,6 +183,7 @@ export class LegislativeService {
     replyToId?: string,
   ) {
     await this.ensureStatus(proposalId, 'DEBATE');
+    await this.ensureLegislativeEligibility(speakerId);
 
     return this.prisma.proposalDebate.create({
       data: {
@@ -208,6 +213,7 @@ export class LegislativeService {
 
   /**
    * Cast a vote on a proposal. Only during VOTING status.
+   * GOVERNANCE: Only holders of exclusive land right (or delegates) can vote on laws.
    * Each voter can only vote once (enforced by @@unique constraint).
    */
   async castVote(
@@ -217,6 +223,7 @@ export class LegislativeService {
     comment?: string,
   ) {
     await this.ensureStatus(proposalId, 'VOTING');
+    await this.ensureLegislativeEligibility(voterId);
 
     // Check if already voted
     const existingVote = await this.prisma.proposalVote.findUnique({
@@ -362,5 +369,30 @@ export class LegislativeService {
     if (proposal.authorId !== userId) {
       throw new ForbiddenException('Only the author can perform this action');
     }
+  }
+
+  /**
+   * GOVERNANCE: Ensure user has exclusive land right or is a delegated Khural representative.
+   * Законодательная власть — ТОЛЬКО для обладателей исключительного земельного права.
+   */
+  private async ensureLegislativeEligibility(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Direct holder of exclusive land right
+    if (user.hasExclusiveLandRight) return;
+
+    // Check if they are a delegated Khural representative
+    const delegatedBy = await this.prisma.user.findFirst({
+      where: {
+        khuralRepresentativeId: userId,
+        hasExclusiveLandRight: true,
+      },
+    });
+    if (delegatedBy) return;
+
+    throw new ForbiddenException(
+      'Только обладатели исключительного земельного права или их представители могут участвовать в законодательной деятельности',
+    );
   }
 }

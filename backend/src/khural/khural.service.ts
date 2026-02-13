@@ -78,8 +78,30 @@ export class KhuralService {
 
   /**
    * Apply for an empty seat
+   * GOVERNANCE: Хурал — законодательная ветка власти. Только коренной народ.
    */
   async applySeat(groupId: string, seatIndex: number, userId: string) {
+    // GOVERNANCE CHECK: only exclusive land right holders or their delegates
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    let eligible = user.hasExclusiveLandRight;
+    if (!eligible) {
+      // Check if delegated representative
+      const delegatedBy = await this.prisma.user.findFirst({
+        where: {
+          khuralRepresentativeId: userId,
+          hasExclusiveLandRight: true,
+        },
+      });
+      eligible = !!delegatedBy;
+    }
+    if (!eligible) {
+      throw new ForbiddenException(
+        'Хурал — законодательная ветка власти. Только обладатели исключительного земельного права или их представители.',
+      );
+    }
+
     // Find the seat
     const seat = await this.prisma.khuralSeat.findFirst({
       where: {

@@ -192,6 +192,14 @@ export class ElectionService {
       throw new ForbiddenException('Only organization members can vote');
     }
 
+    // GOVERNANCE: Only CITIZEN or INDIGENOUS can vote (RESIDENT not yet accepted by indigenous)
+    const voter = await this.prisma.user.findUnique({ where: { id: voterId } });
+    if (!voter || (voter as any).citizenType === 'RESIDENT') {
+      throw new ForbiddenException(
+        'Только граждане (CITIZEN или INDIGENOUS) могут голосовать на выборах. Жители (RESIDENT) должны быть сначала приняты.',
+      );
+    }
+
     // 4. Check candidate exists
     const candidate = await this.prisma.electionCandidate.findFirst({
       where: {

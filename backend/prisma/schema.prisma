@@ -29,6 +29,24 @@ model User {
   currentAddress     Json?
   ethnicity          String[]
   clan               String?
+  gender             String?   // MALE / FEMALE — required for exclusive right inheritance
+
+  // === GOVERNANCE: Коренной народ — источник власти ===
+  citizenType              CitizenType @default(RESIDENT)
+  hasExclusiveLandRight    Boolean     @default(false) // Only indigenous males, passed father→son
+  exclusiveRightGrantedAt  DateTime?
+  exclusiveRightGrantedBy  String?     // fatherId who passed the right
+  exclusiveRightRevokedAt  DateTime?   // Set when returned to Land Fund (no male heir)
+
+  // Family lineage (for inheritance)
+  fatherId                 String?
+  father                   User?       @relation("FatherChild", fields: [fatherId], references: [id])
+  children                 User[]      @relation("FatherChild")
+
+  // Khural representation: head of household can delegate to spouse
+  khuralRepresentativeId   String?     // If set, this user delegates Khural seat to spouse
+  khuralRepresentative     User?       @relation("KhuralDelegate2", fields: [khuralRepresentativeId], references: [id])
+  khuralDelegations        User[]      @relation("KhuralDelegate2") // Users who delegated to this person
   verificationStatus VerificationStatus @default(DRAFT)
   isSuperVerified    Boolean            @default(false)
   superVerifiedBy    String?
@@ -133,6 +151,18 @@ model User {
   proposalVotes     ProposalVote[]        @relation("ProposalVoter")
   proposalDebates   ProposalDebate[]      @relation("ProposalSpeaker")
 
+  // Gamification
+  citizenLevel       CitizenLevel?       @relation("CitizenLevel")
+  onboardingProgress OnboardingProgress? @relation("OnboardingProgress")
+
+  // Judicial relations
+  judgeNominations       JudgeNomination[] @relation("JudgeCandidate")
+  judgeNominationsGiven  JudgeNomination[] @relation("JudgeNominator")
+  judgeNominationsApproved JudgeNomination[] @relation("JudgeApprover")
+
+  // News & Media
+  newsArticles             NewsArticle[]     @relation("NewsAuthor")
+
   // Education & Invitations
   educationVerifications   EducationVerification[] @relation("EducationVerifications")
   educationRecommendations EducationVerification[] @relation("EducationRecommendations")
@@ -224,6 +254,9 @@ model User {
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
+  @@index([citizenType])
+  @@index([hasExclusiveLandRight])
+  @@index([fatherId])
 }
 
 model AuthNonce {
@@ -1176,6 +1209,108 @@ model ReputationProfile {
   @@index([userId])
 }
 
+// =============================================================================
+// GAMIFICATION — Citizen progression system
+// =============================================================================
+
+/// CitizenLevel — Tracks a citizen's progression through 32 levels.
+/// XP is earned through completing quests, voting, paying taxes, joining orgs, etc.
+model CitizenLevel {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation("CitizenLevel", fields: [userId], references: [id], onDelete: Cascade)
+
+  level       Int    @default(1)  // 1-32
+  currentXP   Int    @default(0)  // XP within current level
+  totalXP     Int    @default(0)  // Lifetime XP earned
+  title       String @default("Человек") // Localized title based on level
+
+  // Streak tracking
+  dailyStreak  Int @default(0) // Consecutive days active
+  longestStreak Int @default(0)
+  lastActiveAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  xpTransactions XPTransaction[]
+  achievements   Achievement[]
+
+  @@index([level])
+  @@index([totalXP])
+}
+
+/// Achievement — Formal achievements earned by citizens.
+/// Each achievement is unlocked once and persists forever.
+model Achievement {
+  id String @id @default(uuid())
+
+  citizenLevelId String
+  citizenLevel   CitizenLevel @relation(fields: [citizenLevelId], references: [id], onDelete: Cascade)
+
+  key         String  // Unique key, e.g. "first_quest", "100_votes"
+  name        String  // Display name
+  description String  // Description of how to earn
+  category    String  // GOVERNANCE, ECONOMIC, SOCIAL, MILITARY, CULTURAL
+  icon        String? // Emoji or icon name
+  xpReward    Int     @default(0) // XP bonus upon earning
+
+  earnedAt DateTime @default(now())
+
+  @@unique([citizenLevelId, key])
+  @@index([citizenLevelId])
+  @@index([category])
+}
+
+/// XPTransaction — Immutable audit trail of XP changes.
+model XPTransaction {
+  id String @id @default(uuid())
+
+  citizenLevelId String
+  citizenLevel   CitizenLevel @relation(fields: [citizenLevelId], references: [id], onDelete: Cascade)
+
+  amount    Int    // XP amount (positive or negative)
+  reason    String // Human-readable reason
+  action    String // Action type: QUEST_COMPLETED, VOTE_CAST, TAX_PAID, etc.
+  sourceId  String? // Reference to the source entity (questId, voteId, etc.)
+
+  createdAt DateTime @default(now())
+
+  @@index([citizenLevelId, createdAt])
+  @@index([action])
+}
+
+/// OnboardingProgress — Tracks a citizen's guided tutorial "Путь Гражданина".
+/// Steps: CONSTITUTION → WALLET → FIRST_TRANSFER → JOIN_ARBAN → COMPLETE_QUEST → CAST_VOTE
+model OnboardingProgress {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation("OnboardingProgress", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Step completion flags
+  constitutionRead  Boolean @default(false)
+  walletCreated     Boolean @default(false)
+  firstTransfer     Boolean @default(false)
+  arbanJoined       Boolean @default(false)
+  questCompleted    Boolean @default(false)
+  voteCast          Boolean @default(false)
+
+  // Overall progress
+  currentStep     Int     @default(0) // 0-6
+  totalSteps      Int     @default(6)
+  isComplete      Boolean @default(false)
+  completedAt     DateTime?
+
+  // XP bonus awarded
+  xpBonusClaimed  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 /// Enum: types of actions that affect regional reputation
 enum ReputationActionType {
   QUEST_COMPLETED      // Completed a quest for an org in this region
@@ -1772,6 +1907,13 @@ enum UserRole {
   NOTARY // State Archive notary
   STATE_LAWYER // State Archive legal officer
   CB_GOVERNOR // Central Bank Governor
+}
+
+// Гражданский тип — определяет объём прав в системе управления
+enum CitizenType {
+  RESIDENT   // Житель (зарегистрирован, ещё не принят гражданами)
+  CITIZEN    // Полноценный гражданин (принят коренными, голосует, владеет имуществом)
+  INDIGENOUS // Коренной сибиряк (обладает исключительным земельным правом)
 }
 
 enum WalletStatus {
@@ -3426,6 +3568,7 @@ enum MarriageAppStatus {
   PENDING_REVIEW
   APPROVED
   REGISTERED
+  DIVORCED
   REJECTED
   CANCELLED
 }
@@ -4577,6 +4720,7 @@ enum OrgAccountType {
   OPERATING     // Day-to-day operating account
   TREASURY      // Treasury / reserve
   SHARED_VAULT  // Shared vault (multi-sig)
+  FAMILY        // Family bank account (joint finances)
 }
 
 enum BankApprovalLevel {
@@ -4618,8 +4762,8 @@ enum TaxRecordStatus {
 model OrgBankAccount {
   id String @id @default(uuid())
 
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   accountName   String  // "Operating Account", "Reserve Fund", etc.
   accountNumber String  @unique // Generated account number
@@ -4932,4 +5076,161 @@ model ProposalDebate {
   @@index([proposalId, createdAt])
 }
 
+// =============================================================================
+// JUDICIAL SYSTEM — Judge election / nomination
+// =============================================================================
 
+/// JudgeNomination — tracks judge election from Ministry of Justice leaders,
+/// with Khural approval.
+model JudgeNomination {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // The candidate
+  candidateId String
+  candidate   User   @relation("JudgeCandidate", fields: [candidateId], references: [id])
+
+  // The nominator (Ministry of Justice leader)
+  nominatorId String
+  nominator   User   @relation("JudgeNominator", fields: [nominatorId], references: [id])
+
+  // Khural level and entity for approval
+  khuralLevel String  // REPUBLICAN, CONFEDERATIVE
+  entityId    String  // KhuralGroup / session ID
+
+  // Status: NOMINATED → UNDER_REVIEW → APPROVED | REJECTED
+  status String @default("NOMINATED")
+
+  // Details
+  specialization String?  // Criminal, Civil, Constitutional, etc.
+  qualifications String?  @db.Text
+  notes          String?  @db.Text
+
+  // Approval
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?    @relation("JudgeApprover", fields: [approvedById], references: [id])
+
+  @@index([candidateId])
+  @@index([status, khuralLevel])
+}
+
+// ============ News & Media ============
+
+model NewsArticle {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime @default(now())
+
+  // Author
+  authorId String
+  author   User   @relation("NewsAuthor", fields: [authorId], references: [id])
+
+  // Content
+  title    String
+  content  String @db.Text
+  summary  String @db.Text
+  category String // Politics, Economy, Culture, Sports, Judicial, ZAGS
+  tags     String[]
+  imageUrl String?
+
+  // Metadata
+  status    String  @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  isOfficial Boolean @default(false) // Official state announcement
+  isPinned  Boolean @default(false)
+  viewCount Int     @default(0)
+
+  @@index([authorId])
+  @@index([category, status])
+  @@index([isOfficial, status])
+  @@index([publishedAt])
+}
+
+// ============ Governance: State Land Fund ============
+// Земельный фонд — все земли принадлежат коренному народу.
+// Прибыль с аренды поступает в фонд. Голосуют только коренные.
+
+model StateLandFund {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String   @default("Государственный Земельный Фонд")
+  totalLand   Int      @default(0) // Total land plots in the fund
+  totalIncome Decimal  @default(0) @db.Decimal(18, 2) // Accumulated rent income
+  currency    String   @default("ALTAN")
+
+  // Fund charter rules (JSON for flexibility)
+  charter     Json?    // Distribution rules, voting quorum, etc.
+
+  fundTransactions StateLandFundTransaction[]
+}
+
+model StateLandFundTransaction {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  fundId    String
+  fund      StateLandFund @relation(fields: [fundId], references: [id])
+
+  type      String   // RENT_INCOME, DISTRIBUTION, REVERSION (land returned)
+  amount    Decimal  @db.Decimal(18, 2)
+  landPlotId String? // Related land plot if applicable
+  note      String?
+
+  @@index([fundId])
+  @@index([type])
+}
+
+// ============ Exclusive Right Transfers (Audit Trail) ============
+// Журнал передачи исключительного земельного права.
+// Право передаётся от отца к сыну. Если нет сына — возврат в фонд.
+
+model ExclusiveRightTransfer {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+
+  fromUserId String?  // null if granted by system/fund
+  toUserId   String?  // null if reverted to fund
+  type       String   // INHERITANCE (father→son), INITIAL_GRANT, REVERSION_TO_FUND, REVOCATION
+  reason     String?  // "No male heir", "Death of last male holder", etc.
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([type])
+}
+
+// ============ Citizenship Admission ============
+// Процедура принятия граждан: коренные голосуют за принятие некоренных.
+
+model CitizenshipAdmission {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applicantId String // User applying for citizenship
+  status      String @default("PENDING") // PENDING, APPROVED, REJECTED
+  votesFor    Int    @default(0)
+  votesAgainst Int   @default(0)
+  quorum      Int    @default(5) // Minimum votes needed
+  decidedAt   DateTime?
+
+  admissionVotes CitizenshipAdmissionVote[]
+
+  @@index([applicantId])
+  @@index([status])
+}
+
+model CitizenshipAdmissionVote {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  admissionId String
+  admission   CitizenshipAdmission @relation(fields: [admissionId], references: [id])
+  voterId     String // Must be INDIGENOUS citizen
+  vote        String // FOR, AGAINST
+  comment     String?
+
+  @@unique([admissionId, voterId])
+  @@index([admissionId])
+}

@@ -390,4 +390,82 @@ export class CouncilOfJusticeService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  // ============ Judge Nominations (Database) ============
+
+  /**
+   * Nominate a judge candidate (DB-level nomination from JudgeNomination model).
+   */
+  async nominateJudge(dto: { candidateId: string; nominatorId: string; notes?: string; khuralLevel?: string; entityId?: string; specialization?: string }) {
+    return this.prisma.judgeNomination.create({
+      data: {
+        candidateId: dto.candidateId,
+        nominatorId: dto.nominatorId,
+        notes: dto.notes,
+        khuralLevel: dto.khuralLevel || 'REPUBLICAN',
+        entityId: dto.entityId || 'system',
+        specialization: dto.specialization,
+      },
+      include: {
+        candidate: { select: { id: true, seatId: true, username: true } },
+        nominator: { select: { id: true, seatId: true, username: true } },
+      },
+    });
+  }
+
+  /**
+   * Get all nominations.
+   */
+  async getNominations() {
+    return this.prisma.judgeNomination.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        candidate: { select: { id: true, seatId: true, username: true } },
+        nominator: { select: { id: true, seatId: true, username: true } },
+        approvedBy: { select: { id: true, seatId: true, username: true } },
+      },
+    });
+  }
+
+  /**
+   * Approve a judge nomination.
+   */
+  async approveNomination(nominationId: string, approverId: string) {
+    return this.prisma.judgeNomination.update({
+      where: { id: nominationId },
+      data: {
+        status: 'APPROVED',
+        approvedById: approverId,
+        approvedAt: new Date(),
+      },
+    });
+  }
+
+  // ============ Dashboard ============
+
+  /**
+   * Dashboard stats for judge panel.
+   */
+  async getDashboardStats() {
+    const [totalMembers, totalCases, pendingCases, totalPrecedents] = await Promise.all([
+      this.prisma.councilOfJusticeMember.count({ where: { approved: true } }),
+      this.prisma.judicialCase.count(),
+      this.prisma.judicialCase.count({ where: { status: 'PENDING' } }),
+      this.prisma.legalPrecedent.count(),
+    ]);
+
+    const recentCases = await this.prisma.judicialCase.findMany({
+      take: 10,
+      orderBy: { filedAt: 'desc' },
+    });
+
+    return {
+      totalMembers,
+      totalCases,
+      pendingCases,
+      resolvedCases: totalCases - pendingCases,
+      totalPrecedents,
+      recentCases,
+    };
+  }
 }
