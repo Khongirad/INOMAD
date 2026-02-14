@@ -9,6 +9,10 @@ describe('KhuralService', () => {
 
   beforeEach(async () => {
     prisma = {
+      user: {
+        findUnique: jest.fn(),
+        findFirst: jest.fn(),
+      },
       khuralGroup: {
         create: jest.fn(),
         findUnique: jest.fn(),
@@ -58,17 +62,22 @@ describe('KhuralService', () => {
   });
 
   describe('applySeat', () => {
+    const mockUser = { id: 'u1', hasExclusiveLandRight: true };
+
     it('should throw NotFoundException for missing seat', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser);
       prisma.khuralSeat.findFirst.mockResolvedValue(null);
       await expect(service.applySeat('g1', 0, 'u1')).rejects.toThrow(NotFoundException);
     });
 
     it('should reject occupied seat', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser);
       prisma.khuralSeat.findFirst.mockResolvedValue({ id: 's1', occupantUserId: 'other' });
       await expect(service.applySeat('g1', 0, 'u1')).rejects.toThrow(BadRequestException);
     });
 
     it('should reject if user already has seat in group', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser);
       prisma.khuralSeat.findFirst
         .mockResolvedValueOnce({ id: 's1', occupantUserId: null })
         .mockResolvedValueOnce({ id: 's2', occupantUserId: 'u1' });
@@ -76,6 +85,7 @@ describe('KhuralService', () => {
     });
 
     it('should assign empty seat to user', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser);
       prisma.khuralSeat.findFirst
         .mockResolvedValueOnce({ id: 's1', occupantUserId: null })
         .mockResolvedValueOnce(null);
