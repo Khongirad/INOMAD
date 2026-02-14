@@ -6,11 +6,11 @@
 [![Stage](https://img.shields.io/badge/stage-post--MVP-green)]()
 [![L1](https://img.shields.io/badge/ALTAN%20L1-Cosmos%20SDK-blue)]()
 [![Backend](https://img.shields.io/badge/backend-53%20NestJS%20modules-blueviolet)]()
-[![Frontend](https://img.shields.io/badge/frontend-Next.js%2016-orange)]()
-[![Contracts](https://img.shields.io/badge/contracts-133%20Solidity-yellow)]()
+[![Frontend](https://img.shields.io/badge/frontend-Next.js%2016%20+%20Shadcn%20UI-orange)]()
+[![Contracts](https://img.shields.io/badge/contracts-138%20Solidity-yellow)]()
 [![Tests](https://img.shields.io/badge/tests-140%2B%20suites-brightgreen)]()
 
-> **Latest Update (Feb 11, 2026):** Post-MVP platform · 53 backend modules · 133 smart contracts · 3 Government Services · Docker + CI/CD · 140+ test suites · Global AuthGuard · Universal Work System · Regional Reputation · Organization Banking · PWA
+> **Latest Update (Feb 14, 2026):** Complete MUI→Shadcn UI migration · 138 smart contracts · Toast library consolidated to Sonner · Full blockchain architecture audit · Banking privacy firewall · Soulbound identity (SeatSBT) · Constitutional CoreLaw on-chain · ALTAN sovereign currency (NOT ERC20) · 3 Government Services · Docker + CI/CD · 140+ test suites
 
 ---
 
@@ -28,7 +28,7 @@ Built for the **Siberian Confederation**, a sovereign digital state with constit
 |--------|-------|----------|
 | **Backend code** | 38,915 lines (TypeScript) | `backend/src/` |
 | **Frontend code** | 38,265 lines (TypeScript/React) | `src/` |
-| **Smart contracts** | 39,855 lines (133 Solidity contracts) | `chain/contracts/` |
+| **Smart contracts** | 39,855+ lines (138 Solidity contracts) | `chain/contracts/` |
 | **ALTAN L1 blockchain** | 2,971 lines (Go/Cosmos SDK) | `packages/blockchain-l1/` |
 | **x/corelaw module** | 448 lines (constitutional law) | `packages/blockchain-l1/x/corelaw/` |
 | **Prisma schema** | 4,809 lines (127 models) | `backend/prisma/schema.prisma` |
@@ -45,7 +45,7 @@ Built for the **Siberian Confederation**, a sovereign digital state with constit
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        FE["Next.js 16 Frontend<br/>38,265 LOC · React · Material UI · PWA"]
+        FE["Next.js 16 Frontend<br/>38,265 LOC · React · Shadcn UI · Tailwind CSS · PWA"]
     end
 
     subgraph "Application Layer — 53 NestJS Modules"
@@ -111,7 +111,7 @@ graph TB
 
 ---
 
-## 📊 Platform Status — February 11, 2026
+## 📊 Platform Status — February 14, 2026
 
 ### Core Systems — ✅ Operational
 
@@ -149,7 +149,7 @@ graph TB
 | 💒 **ZAGS (Civil Registry)** | `zags-service/` | 13 | Marriage/divorce, dual-consent, certificate verification |
 | 🏠 **Land Registry** | `land-registry-service/` | 14 | Cadastral system, GPS search, ownership, leases, transfers |
 
-### Smart Contracts — 133 Solidity Contracts
+### Smart Contracts — 138 Solidity Contracts
 
 ```mermaid
 graph LR
