@@ -60,7 +60,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inomad_khural_test
           JWT_SECRET: test-secret-for-ci
-        run: npm run test -- --passWithNoTests
+        run: npm run test
 
   # Frontend: Lint and build
   frontend:
@@ -80,7 +80,10 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint || true
+        run: npm run lint
+
+      - name: Security Audit
+        run: npm audit --audit-level=high || true
 
       - name: Build
         run: npm run build

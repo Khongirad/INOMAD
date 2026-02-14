@@ -1,12 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, ForbiddenException } from '@nestjs/common';
 import { E2ETestService } from './e2e-test.service';
 import { BlockchainService } from './blockchain.service';
 import { Public } from '../auth/decorators/public.decorator';
 
 /**
  * E2E Test Controller
- * Exposes PUBLIC endpoints for running integration tests
- * NO AUTH required - for testing purposes only
+ * Endpoints for running integration tests.
+ * ONLY available when NODE_ENV !== 'production'.
  */
 @Public()
 @Controller('e2e')
@@ -16,12 +16,20 @@ export class E2ETestController {
     private blockchainService: BlockchainService,
   ) {}
 
+  /** Guard: block all requests in production */
+  private ensureNotProduction() {
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('E2E endpoints are disabled in production');
+    }
+  }
+
   /**
    * Run all E2E tests
    * GET /api/e2e/run
    */
   @Get('run')
   async runAllTests(): Promise<any> {
+    this.ensureNotProduction();
     return this.e2eTestService.runAllTests();
   }
 
@@ -31,6 +39,7 @@ export class E2ETestController {
    */
   @Get('health')
   async healthCheck() {
+    this.ensureNotProduction();
     const isAvailable = this.blockchainService.isAvailable();
     
     let totalSeats = null;
@@ -58,7 +67,7 @@ export class E2ETestController {
    */
   @Get('contract/:name')
   async testContract() {
-    // Placeholder for specific contract tests
+    this.ensureNotProduction();
     return { message: 'Not implemented yet' };
   }
 }

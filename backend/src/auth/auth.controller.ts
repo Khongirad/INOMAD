@@ -13,7 +13,14 @@ import { AuthPasswordService } from './auth-password.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthGuard, AuthenticatedRequest } from './auth.guard';
 import { Public } from './decorators/public.decorator';
-import { RequestNonceDto, VerifySignatureDto, RefreshTokenDto } from './dto/auth.dto';
+import {
+  RequestNonceDto,
+  VerifySignatureDto,
+  RefreshTokenDto,
+  RegisterDto,
+  LoginPasswordDto,
+  ChangePasswordDto,
+} from './dto/auth.dto';
 import { Request } from 'express';
 
 @Controller('auth')
@@ -129,7 +136,7 @@ export class AuthController {
   @Public()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() dto: { username: string; password: string; email?: string }) {
+  async register(@Body() dto: RegisterDto) {
     return this.authPasswordService.register(dto);
   }
 
@@ -141,7 +148,7 @@ export class AuthController {
   @Public()
   @Post('login-password')
   @HttpCode(HttpStatus.OK)
-  async loginPassword(@Body() dto: { username: string; password: string }) {
+  async loginPassword(@Body() dto: LoginPasswordDto) {
     return this.authPasswordService.login(dto);
   }
 
@@ -178,7 +185,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async changePassword(
     @Req() req: AuthenticatedRequest,
-    @Body() dto: { oldPassword: string; newPassword: string },
+    @Body() dto: ChangePasswordDto,
   ) {
     return this.authPasswordService.changePassword(
       req.user.userId,

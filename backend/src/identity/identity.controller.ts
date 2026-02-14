@@ -4,6 +4,13 @@ import { VerificationService } from './verification.service';
 import { IdentityBlockchainService } from './identity-blockchain.service';
 import { ethers } from 'ethers';
 import { ConfigService } from '@nestjs/config';
+import {
+  RegisterIdentityDto,
+  VerifyIdentityDto,
+  SuperVerifyDto,
+  ApproveActivationDto,
+  RequestActivationDto,
+} from './dto/identity.dto';
 
 @Controller('identity')
 export class IdentityController {
@@ -15,7 +22,7 @@ export class IdentityController {
   ) {}
 
   @Post('register')
-  async register(@Body() data: any) {
+  async register(@Body() data: RegisterIdentityDto) {
     const user = await this.registrationService.initiateRegistration(data);
     const allocation = await this.registrationService.assignTerritory(user.id, data.birthPlace.district || data.birthPlace.city);
     
@@ -30,13 +37,13 @@ export class IdentityController {
   }
 
   @Post('verify')
-  async verify(@Request() req: any, @Body() body: { targetUserId: string }) {
+  async verify(@Request() req: any, @Body() body: VerifyIdentityDto) {
     const verifierSeatId = req.user?.seatId;
     return this.verificationService.submitVerification(verifierSeatId, body.targetUserId);
   }
 
   @Post('super-verify')
-  async superVerify(@Request() req: any, @Body() body: { targetUserId: string; justification: string }) {
+  async superVerify(@Request() req: any, @Body() body: SuperVerifyDto) {
     const mandateSeatId = req.user?.seatId;
     return this.verificationService.superVerify(mandateSeatId, body.targetUserId, body.justification);
   }
@@ -78,7 +85,7 @@ export class IdentityController {
   @Post('activation/request')
   async requestActivation(
     @Request() req: any,
-    @Body() body: { privateKey?: string },
+    @Body() body: RequestActivationDto,
   ) {
     const seatId = req.user?.seatId;
     if (!seatId) {
@@ -104,10 +111,7 @@ export class IdentityController {
    */
   @Post('activation/approve')
   async approveActivation(
-    @Body() body: { 
-      seatId: string;
-      privateKey?: string;
-    },
+    @Body() body: ApproveActivationDto,
   ) {
     if (!body.seatId) {
       return { success: false, error: 'seatId is required' };

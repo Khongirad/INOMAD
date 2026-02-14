@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/
 import { ElectionService } from './election.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
+import { CreateElectionDto, AddCandidateDto, CastVoteDto } from './dto/election.dto';
 
 @Controller('elections')
 @UseGuards(JwtAuthGuard)
@@ -14,11 +15,7 @@ export class ElectionController {
   @Post('create')
   async createElection(
     @Request() req,
-    @Body() body: {
-      organizationId: string;
-      startDate: string;
-      endDate: string;
-    }
+    @Body() body: CreateElectionDto,
   ) {
     return this.electionService.createElection({
       organizationId: body.organizationId,
@@ -34,10 +31,7 @@ export class ElectionController {
   @Post(':id/candidate')
   async addCandidate(
     @Param('id') electionId: string,
-    @Body() body: {
-      candidateId: string;
-      platform?: string;
-    }
+    @Body() body: AddCandidateDto,
   ) {
     return this.electionService.addCandidate(
       electionId,
@@ -53,7 +47,7 @@ export class ElectionController {
   async vote(
     @Request() req,
     @Param('id') electionId: string,
-    @Body() body: { candidateId: string }
+    @Body() body: CastVoteDto,
   ) {
     await this.electionService.vote({
       electionId,
