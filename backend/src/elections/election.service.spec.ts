@@ -33,6 +33,9 @@ describe('ElectionService', () => {
         count: jest.fn().mockResolvedValue(10),
         updateMany: jest.fn().mockResolvedValue({}),
       },
+      user: {
+        findUnique: jest.fn(),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -118,6 +121,7 @@ describe('ElectionService', () => {
         startDate: past, endDate: future, organization: {},
       });
       prisma.organizationMember.findFirst.mockResolvedValue({ userId: 'u1' });
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'INDIGENOUS' });
       prisma.electionCandidate.findFirst.mockResolvedValue({ id: 'cand-1' });
 
       await service.vote({ electionId: 'e1', voterId: 'u1', candidateId: 'c1' });
