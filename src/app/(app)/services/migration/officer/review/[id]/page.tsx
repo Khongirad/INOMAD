@@ -2,31 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  TextField,
-  Alert,
-  CircularProgress,
-  Divider,
-  Chip,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  Stack,
-} from '@mui/material';
-import {
-  CheckCircle as ApproveIcon,
-  Cancel as RejectIcon,
-  ArrowBack as BackIcon,
-  Download as DownloadIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material';
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   getPassportApplication,
   getPassportDocuments,
@@ -34,6 +23,8 @@ import {
   type PassportApplication,
   type Document,
 } from '@/lib/api/migration';
+import { ArrowLeft, CheckCircle, XCircle, Download, Info, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ApplicationReviewPage() {
   const params = useParams();
@@ -46,7 +37,6 @@ export default function ApplicationReviewPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Review dialog
   const [reviewDialog, setReviewDialog] = useState(false);
   const [reviewAction, setReviewAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [reviewNotes, setReviewNotes] = useState('');
@@ -66,7 +56,7 @@ export default function ApplicationReviewPage() {
       setApplication(appData);
       setDocuments(docsData);
     } catch (err: any) {
-      setError(err.message || 'Failed to load application');
+      setError(err.message || 'Не удалось загрузить заявление');
     } finally {
       setLoading(false);
     }
@@ -76,10 +66,11 @@ export default function ApplicationReviewPage() {
     try {
       setSubmitting(true);
       await reviewPassportApplication(applicationId, reviewAction, reviewNotes, passportNumber);
+      toast.success(reviewAction === 'APPROVE' ? 'Заявление одобрено' : 'Заявление отклонено');
       setReviewDialog(false);
       router.push('/services/migration/officer');
     } catch (err: any) {
-      setError(err.message || 'Failed to submit review');
+      setError(err.message || 'Не удалось обработать рассмотрение');
     } finally {
       setSubmitting(false);
     }
@@ -87,304 +78,279 @@ export default function ApplicationReviewPage() {
 
   const openReviewDialog = (action: 'APPROVE' | 'REJECT') => {
     setReviewAction(action);
+    setReviewNotes('');
+    setPassportNumber('');
     setReviewDialog(true);
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
   if (error || !application) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error || 'Application not found'}</Alert>
-      </Box>
+      <div className="p-6">
+        <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-lg p-4">
+          {error || 'Заявление не найдено'}
+        </div>
+      </div>
     );
   }
 
-  return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/migration/officer')}
-          sx={{ mb: 2 }}
-        >
-          Back to Dashboard
-        </Button>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box>
-            <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-              Application Review
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {application.passportType} Passport - {application.fullName}
-            </Typography>
-          </Box>
-          <Chip
-            label={application.status}
-            color={application.status === 'APPROVED' ? 'success' : 'warning'}
-            size="medium"
-          />
-        </Box>
-      </Box>
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'SUBMITTED':
+        return <Badge variant="secondary">Подано</Badge>;
+      case 'UNDER_REVIEW':
+        return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-500/30">На рассмотрении</Badge>;
+      case 'APPROVED':
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Одобрено</Badge>;
+      case 'REJECTED':
+        return <Badge variant="destructive">Отклонено</Badge>;
+      case 'ISSUED':
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Выдано</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
-      <Grid container spacing={3}>
+  return (
+    <div className="p-6 max-w-[1200px] mx-auto space-y-6">
+      {/* Header */}
+      <div>
+        <Button
+          variant="ghost"
+          onClick={() => router.push('/services/migration/officer')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Назад к панели
+        </Button>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Рассмотрение заявления</h1>
+            <p className="text-muted-foreground mt-1">
+              {application.passportType} паспорт — {application.fullName}
+            </p>
+          </div>
+          {getStatusBadge(application.status)}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Personal Information
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Full Name
-                  </Typography>
-                  <Typography variant="body1" fontWeight={600}>
-                    {application.fullName}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Date of Birth
-                  </Typography>
-                  <Typography variant="body1">
-                    {new Date(application.dateOfBirth).toLocaleDateString()}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Sex
-                  </Typography>
-                  <Typography variant="body1">{application.sex}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Nationality
-                  </Typography>
-                  <Typography variant="body1">{application.nationality}</Typography>
-                </Box>
-                {application.height && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Height
-                    </Typography>
-                    <Typography variant="body1">{application.height} cm</Typography>
-                  </Box>
-                )}
-                {application.eyeColor && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Eye Color
-                    </Typography>
-                    <Typography variant="body1">{application.eyeColor}</Typography>
-                  </Box>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card>
+          <CardHeader>
+            <CardTitle>Личная информация</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground">ФИО</p>
+              <p className="font-semibold">{application.fullName}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Дата рождения</p>
+              <p>{new Date(application.dateOfBirth).toLocaleDateString('ru-RU')}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Пол</p>
+              <p>{application.sex}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Гражданство</p>
+              <p>{application.nationality}</p>
+            </div>
+            {application.height && (
+              <div>
+                <p className="text-xs text-muted-foreground">Рост</p>
+                <p>{application.height} см</p>
+              </div>
+            )}
+            {application.eyeColor && (
+              <div>
+                <p className="text-xs text-muted-foreground">Цвет глаз</p>
+                <p>{application.eyeColor}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Biographical Data */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Biographical Data
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Place of Birth
-                  </Typography>
-                  <Typography variant="body1">{application.placeOfBirth}</Typography>
-                </Box>
-                {application.fatherName && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Father's Name
-                    </Typography>
-                    <Typography variant="body1">{application.fatherName}</Typography>
-                  </Box>
-                )}
-                {application.motherName && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Mother's Name
-                    </Typography>
-                    <Typography variant="body1">{application.motherName}</Typography>
-                  </Box>
-                )}
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Address
-                  </Typography>
-                  <Typography variant="body1">
-                    {application.address}
-                    <br />
-                    {application.city}, {application.region} {application.postalCode}
-                  </Typography>
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card>
+          <CardHeader>
+            <CardTitle>Биографические данные</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Место рождения</p>
+              <p>{application.placeOfBirth}</p>
+            </div>
+            {application.fatherName && (
+              <div>
+                <p className="text-xs text-muted-foreground">Имя отца</p>
+                <p>{application.fatherName}</p>
+              </div>
+            )}
+            {application.motherName && (
+              <div>
+                <p className="text-xs text-muted-foreground">Имя матери</p>
+                <p>{application.motherName}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs text-muted-foreground">Адрес</p>
+              <p>{application.address}</p>
+              <p className="text-sm text-muted-foreground">
+                {application.city}, {application.region} {application.postalCode}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Documents */}
-        <Grid size={12}>
-          <Card>
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Загруженные документы (зашифрованы)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4 flex gap-2">
+              <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                Все документы зашифрованы алгоритмом AES-256-GCM. Доступ регистрируется и проверяется.
+              </p>
+            </div>
+            {documents.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Документы ещё не загружены</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {documents.map((doc) => (
+                  <Card key={doc.id} className="border">
+                    <CardContent className="pt-4">
+                      <p className="font-medium text-sm mb-1">{doc.type.replace('_', ' ')}</p>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Загружено: {new Date(doc.uploadedAt).toLocaleDateString('ru-RU')}
+                      </p>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Download className="h-3 w-3 mr-2" />
+                        Просмотр (Расшифровать)
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Officer Notes */}
+        {application.reviewNotes && (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Предыдущие замечания</CardTitle>
+            </CardHeader>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Uploaded Documents (Encrypted)
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 2 }}>
-                All documents are encrypted with AES-256-GCM. Access is logged and audited.
-              </Alert>
-              <Grid container spacing={2}>
-                {documents.length === 0 ? (
-                  <Grid size={12}>
-                    <Typography variant="body2" color="text.secondary">
-                      No documents uploaded yet
-                    </Typography>
-                  </Grid>
-                ) : (
-                  documents.map((doc) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={doc.id}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="subtitle2" gutterBottom>
-                            {doc.type.replace('_', ' ')}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                            Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
-                          </Typography>
-                          <Button
-                            size="small"
-                            startIcon={<DownloadIcon />}
-                            variant="outlined"
-                            fullWidth
-                            sx={{ mt: 1 }}
-                          >
-                            View (Decrypt)
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))
-                )}
-              </Grid>
+              <p className="text-sm">{application.reviewNotes}</p>
             </CardContent>
           </Card>
-        </Grid>
-
-        {/* Officer Notes (if any) */}
-        {application.reviewNotes && (
-          <Grid size={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Previous Review Notes
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Typography variant="body2">{application.reviewNotes}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
         )}
 
         {/* Action Buttons */}
         {application.status !== 'APPROVED' && application.status !== 'REJECTED' && (
-          <Grid size={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Review Actions
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    size="large"
-                    startIcon={<ApproveIcon />}
-                    onClick={() => openReviewDialog('APPROVE')}
-                    fullWidth
-                  >
-                    Approve Application
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="large"
-                    startIcon={<RejectIcon />}
-                    onClick={() => openReviewDialog('REJECT')}
-                    fullWidth
-                  >
-                    Reject Application
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Действия рассмотрения</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4">
+                <Button
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  size="lg"
+                  onClick={() => openReviewDialog('APPROVE')}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Одобрить заявление
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                  size="lg"
+                  onClick={() => openReviewDialog('REJECT')}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Отклонить заявление
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
-      </Grid>
+      </div>
 
       {/* Review Dialog */}
-      <Dialog open={reviewDialog} onClose={() => setReviewDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {reviewAction === 'APPROVE' ? 'Approve Application' : 'Reject Application'}
-        </DialogTitle>
+      <Dialog open={reviewDialog} onOpenChange={setReviewDialog}>
         <DialogContent>
-          {reviewAction === 'APPROVE' && (
-            <TextField
-              fullWidth
-              label="Passport Number"
-              placeholder="SC-XXXX-XXXX"
-              value={passportNumber}
-              onChange={(e) => setPassportNumber(e.target.value)}
-              sx={{ mb: 2, mt: 1 }}
-              helperText="Generate and assign passport number"
-            />
-          )}
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Review Notes"
-            placeholder={
-              reviewAction === 'APPROVE'
-                ? 'Optional notes for approval'
-                : 'Required: Reason for rejection'
-            }
-            value={reviewNotes}
-            onChange={(e) => setReviewNotes(e.target.value)}
-            required={reviewAction === 'REJECT'}
-          />
+          <DialogHeader>
+            <DialogTitle>
+              {reviewAction === 'APPROVE' ? 'Одобрить заявление' : 'Отклонить заявление'}
+            </DialogTitle>
+            <DialogDescription>
+              {reviewAction === 'APPROVE'
+                ? 'Подтвердите одобрение и назначьте номер паспорта'
+                : 'Укажите причину отклонения'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {reviewAction === 'APPROVE' && (
+              <div className="space-y-2">
+                <Label>Номер паспорта</Label>
+                <Input
+                  placeholder="SC-XXXX-XXXX"
+                  value={passportNumber}
+                  onChange={(e) => setPassportNumber(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Сгенерируйте и назначьте номер паспорта</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Замечания</Label>
+              <Textarea
+                placeholder={
+                  reviewAction === 'APPROVE'
+                    ? 'Необязательные замечания к одобрению'
+                    : 'Обязательно: Причина отклонения'
+                }
+                value={reviewNotes}
+                onChange={(e) => setReviewNotes(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewDialog(false)} disabled={submitting}>
+              Отмена
+            </Button>
+            <Button
+              onClick={handleReview}
+              disabled={submitting || (reviewAction === 'REJECT' && !reviewNotes.trim())}
+              className={reviewAction === 'APPROVE' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Обработка...
+                </>
+              ) : (
+                `Подтвердить ${reviewAction === 'APPROVE' ? 'одобрение' : 'отклонение'}`
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setReviewDialog(false)} disabled={submitting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleReview}
-            variant="contained"
-            color={reviewAction === 'APPROVE' ? 'success' : 'error'}
-            disabled={submitting || (reviewAction === 'REJECT' && !reviewNotes.trim())}
-          >
-            {submitting ? 'Processing...' : `Confirm ${reviewAction}`}
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 }

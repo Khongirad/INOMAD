@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Box,
-  Button,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
-import { ArrowBack as BackIcon } from '@mui/icons-material';
+import { Button } from '@/components/ui/button';
 import { getMarriage, type Marriage } from '@/lib/api/zags';
 import CertificateViewer from '@/components/zags/CertificateViewer';
 
@@ -29,16 +23,13 @@ export default function MarriageCertificatePage() {
     try {
       setLoading(true);
       const data = await getMarriage(marriageId);
-      
-      // Only show certificate if marriage is registered
       if (data.status !== 'REGISTERED') {
-        setError('Certificate not available. Marriage must be registered first.');
+        setError('Свидетельство недоступно. Брак должен быть зарегистрирован.');
         return;
       }
-      
       setMarriage(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load marriage certificate');
+      setError(err.message || 'Не удалось загрузить свидетельство');
     } finally {
       setLoading(false);
     }
@@ -46,39 +37,29 @@ export default function MarriageCertificatePage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
     );
   }
 
   if (error || !marriage) {
     return (
-      <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/zags')}
-          sx={{ mb: 2 }}
-        >
-          Back to ZAGS
-        </Button>
-        <Alert severity="error">{error || 'Marriage not found'}</Alert>
-      </Box>
+      <div className="max-w-3xl mx-auto space-y-4">
+        <Button variant="ghost" onClick={() => router.push('/services/zags')}>← Назад в ЗАГС</Button>
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4">
+          {error || 'Брак не найден'}
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
-      <Button
-        startIcon={<BackIcon />}
-        onClick={() => router.push('/services/zags')}
-        sx={{ mb: 3 }}
-        className="no-print"
-      >
-        Back to ZAGS
+    <div className="max-w-3xl mx-auto space-y-4">
+      <Button variant="ghost" onClick={() => router.push('/services/zags')} className="no-print">
+        ← Назад в ЗАГС
       </Button>
-      
       <CertificateViewer marriage={marriage} type="MARRIAGE" />
-    </Box>
+    </div>
   );
 }

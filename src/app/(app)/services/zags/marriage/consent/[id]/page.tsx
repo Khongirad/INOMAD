@@ -2,21 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  Alert,
-  CircularProgress,
-  TextField,
-} from '@mui/material';
-import { Check as ApproveIcon, Close as RejectIcon, ArrowBack as BackIcon } from '@mui/icons-material';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { getMarriage, grantMarriageConsent } from '@/lib/api/zags';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function MarriageConsentPage() {
   const params = useParams();
@@ -39,7 +30,7 @@ export default function MarriageConsentPage() {
       const data = await getMarriage(marriageId);
       setMarriage(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load marriage application');
+      setError(err.message || 'Не удалось загрузить заявление');
     } finally {
       setLoading(false);
     }
@@ -47,17 +38,16 @@ export default function MarriageConsentPage() {
 
   const handleConsent = async (approve: boolean) => {
     if (approve && !signature.trim()) {
-      toast.error('Please enter your digital signature');
+      toast.error('Введите вашу цифровую подпись');
       return;
     }
-
     try {
       setSubmitting(true);
       await grantMarriageConsent(marriageId, approve, signature);
-      toast.success(approve ? 'Consent granted successfully!' : 'Application rejected');
+      toast.success(approve ? 'Согласие дано!' : 'Заявление отклонено');
       router.push('/services/zags');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to process consent');
+      toast.error(err.message || 'Не удалось обработать согласие');
     } finally {
       setSubmitting(false);
     }
@@ -65,165 +55,98 @@ export default function MarriageConsentPage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
     );
   }
 
   if (error || !marriage) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error || 'Marriage application not found'}</Alert>
-      </Box>
+      <div className="max-w-3xl mx-auto space-y-4">
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4">
+          {error || 'Заявление на брак не найдено'}
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
-      <Box sx={{ mb: 4 }}>
-        <Button startIcon={<BackIcon />} onClick={() => router.push('/services/zags')} sx={{ mb: 2 }}>
-          Back to ZAGS
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div>
+        <Button variant="ghost" onClick={() => router.push('/services/zags')} className="mb-2">
+          ← Назад в ЗАГС
         </Button>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          Marriage Consent
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Review and consent to this marriage application
-        </Typography>
-      </Box>
+        <h1 className="text-2xl font-bold">Согласие на брак</h1>
+        <p className="text-muted-foreground mt-1">Рассмотрите и дайте согласие на заявление</p>
+      </div>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Alert severity="info" sx={{ mb: 3 }}>
-          Your partner has submitted a marriage application. Please review the details and provide your consent.
-        </Alert>
+      <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4 text-sm">
+        Ваш партнёр подал заявление на брак. Пожалуйста, ознакомьтесь с деталями и дайте согласие.
+      </div>
 
-        <Grid container spacing={3}>
-          <Grid size={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Spouses
-                </Typography>
-                <Typography variant="h6">
-                  {marriage.spouse1FullName} & {marriage.spouse2FullName}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          {/* Marriage details */}
+          <div className="border border-border rounded-lg p-4">
+            <p className="text-sm text-muted-foreground">Супруги</p>
+            <p className="text-lg font-semibold">{marriage.spouse1FullName} & {marriage.spouse2FullName}</p>
+          </div>
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Spouse 1 Date of Birth
-                </Typography>
-                <Typography variant="body1">
-                  {new Date(marriage.spouse1DateOfBirth).toLocaleDateString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">Дата рождения супруга 1</p>
+              <p>{new Date(marriage.spouse1DateOfBirth).toLocaleDateString('ru-RU')}</p>
+            </div>
+            <div className="border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">Дата рождения супруга 2</p>
+              <p>{new Date(marriage.spouse2DateOfBirth).toLocaleDateString('ru-RU')}</p>
+            </div>
+          </div>
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Spouse 2 Date of Birth
-                </Typography>
-                <Typography variant="body1">
-                  {new Date(marriage.spouse2DateOfBirth).toLocaleDateString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Desired Marriage Date
-                </Typography>
-                <Typography variant="body1">
-                  {new Date(marriage.marriageDate).toLocaleDateString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+          <div className="border border-border rounded-lg p-4">
+            <p className="text-sm text-muted-foreground">Желаемая дата брака</p>
+            <p>{new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}</p>
+          </div>
 
           {marriage.ceremonyLocation && (
-            <Grid size={12}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Ceremony Location
-                  </Typography>
-                  <Typography variant="body1">{marriage.ceremonyLocation}</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+            <div className="border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">Место церемонии</p>
+              <p>{marriage.ceremonyLocation}</p>
+            </div>
           )}
 
-          <Grid size={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Property Regime
-                </Typography>
-                <Typography variant="body1">{marriage.propertyRegime || 'SEPARATE'}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+          <div className="border border-border rounded-lg p-4">
+            <p className="text-sm text-muted-foreground">Режим имущества</p>
+            <p>{marriage.propertyRegime || 'SEPARATE'}</p>
+          </div>
 
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            Digital Signature
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Enter your full name as digital signature to consent to this marriage
-          </Typography>
-          <TextField
-            fullWidth
-            label="Your Full Name (Digital Signature)"
-            value={signature}
-            onChange={(e) => setSignature(e.target.value)}
-            placeholder="Enter your full name exactly as it appears on your ID"
-          />
-        </Box>
+          {/* Digital Signature */}
+          <div className="pt-4">
+            <h3 className="text-lg font-semibold mb-2">Цифровая подпись</h3>
+            <p className="text-sm text-muted-foreground mb-3">Введите ваше полное имя в качестве цифровой подписи для согласия</p>
+            <div>
+              <Label>Ваше полное имя (цифровая подпись)</Label>
+              <Input value={signature} onChange={(e) => setSignature(e.target.value)} placeholder="Введите имя точно как в документе" />
+            </div>
+          </div>
 
-        <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-          <Button
-            variant="outlined"
-            color="error"
-            fullWidth
-            startIcon={<RejectIcon />}
-            onClick={() => handleConsent(false)}
-            disabled={submitting}
-          >
-            Reject Application
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            fullWidth
-            startIcon={<ApproveIcon />}
-            onClick={() => handleConsent(true)}
-            disabled={submitting || !signature.trim()}
-          >
-            {submitting ? 'Processing...' : 'Grant Consent'}
-          </Button>
-        </Box>
-      </Paper>
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={() => handleConsent(false)} disabled={submitting}>
+              ✕ Отклонить
+            </Button>
+            <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => handleConsent(true)} disabled={submitting || !signature.trim()}>
+              {submitting ? 'Обработка…' : '✓ Дать согласие'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      <Alert severity="warning">
-        <Typography variant="body2" fontWeight={600} gutterBottom>
-          Important Legal Notice
-        </Typography>
-        <Typography variant="body2">
-          By granting consent, you agree to enter into a legally binding marriage. This action cannot be undone without proper divorce proceedings. Make sure all information is correct before proceeding.
-        </Typography>
-      </Alert>
-    </Box>
+      <div className="bg-yellow-500/10 text-yellow-400 rounded-lg p-4 text-sm">
+        <p className="font-semibold">⚠️ Важное юридическое уведомление</p>
+        <p>Давая согласие, вы соглашаетесь на юридически обязывающий брак. Это действие невозможно отменить без бракоразводного процесса.</p>
+      </div>
+    </div>
   );
 }

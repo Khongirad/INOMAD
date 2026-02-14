@@ -1,151 +1,172 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Container, Typography, Box, Tabs, Tab, Button, Alert } from '@mui/material';
-import { SubmitEducationForm, EducationFormData } from '@/components/education/SubmitEducationForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { SubmitEducationForm } from '@/components/education/SubmitEducationForm';
 import { EducationList } from '@/components/education/EducationList';
 import { PendingVerificationCard } from '@/components/education/PendingVerificationCard';
-import { Plus } from 'lucide-react';
-import { getMyEducations, getPendingEducations, submitEducation, verifyEducation, rejectEducation } from '@/lib/api';
+import { GraduationCap, Plus, BookOpen, ShieldCheck, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function EducationPage() {
-  const [currentTab, setCurrentTab] = useState(0);
-  const [showSubmitForm, setShowSubmitForm] = useState(false);
-  const [myEducations, setMyEducations] = useState<any[]>([]);
+  const [educations, setEducations] = useState<any[]>([]);
   const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // TODO: Get user role to determine if admin
-  const isAdmin = false;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
 
-  useEffect(() => {
-    fetchMyEducations();
-    if (isAdmin) {
-      fetchPendingVerifications();
-    }
-  }, []);
-
-  const fetchMyEducations = async () => {
+  const fetchData = async () => {
     try {
-      const data = await getMyEducations();
-      setMyEducations(data);
-    } catch (err: any) {
-      const errorMsg = err.message || 'Failed to fetch educations';
-      setError(errorMsg);
-      toast.error(errorMsg);
+      setLoading(true);
+      const [eduRes, verRes] = await Promise.all([
+        fetch('/api/education/mine', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch('/api/education/pending-verifications', {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+      ]);
+
+      if (eduRes.ok) {
+        const data = await eduRes.json();
+        setEducations(data.data || data || []);
+      }
+
+      if (verRes && verRes.ok) {
+        const data = await verRes.json();
+        setPendingVerifications(data.data || data || []);
+        setIsAdmin(true);
+      }
+    } catch {
+      toast.error('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchPendingVerifications = async () => {
-    try {
-      const data = await getPendingEducations();
-      setPendingVerifications(data);
-    } catch (err: any) {
-      console.error('Failed to fetch pending:', err);
-      toast.error('Failed to load pending verifications');
-    }
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleSubmit = async (formData: any) => {
+    const res = await fetch('/api/education/submit', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+    if (!res.ok) throw new Error('Ошибка при отправке');
+    toast.success('Образование отправлено на проверку');
+    setShowForm(false);
+    fetchData();
   };
 
-  const handleSubmitEducation = async (data: EducationFormData) => {
-    try {
-      await submitEducation(data as unknown as Parameters<typeof submitEducation>[0]);
-      toast.success('Education submitted for verification!');
-      
-      // Refresh list
-      await fetchMyEducations();
-      setShowSubmitForm(false);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to submit education');
-      throw err;
-    }
+  const handleApprove = async (id: string) => {
+    const res = await fetch(`/api/education/${id}/approve`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed');
+    toast.success('Образование подтверждено');
+    fetchData();
   };
 
-  const handleApproveVerification = async (id: string, validForGuilds?: string[]) => {
-    try {
-      await verifyEducation(id);
-      toast.success('Education approved!');
-      
-      // Refresh list
-      await fetchPendingVerifications();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to approve verification');
-    }
+  const handleReject = async (id: string, reason: string) => {
+    const res = await fetch(`/api/education/${id}/reject`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ reason }),
+    });
+    if (!res.ok) throw new Error('Failed');
+    toast.success('Образование отклонено');
+    fetchData();
   };
 
-  const handleRejectVerification = async (id: string) => {
-    try {
-      await rejectEducation(id, 'Rejected by admin');
-      toast.warning('Education rejected');
-      
-      // Refresh list
-      await fetchPendingVerifications();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to reject verification');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Образование
-      </Typography>
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <GraduationCap className="h-7 w-7 text-primary" />
+          <h1 className="text-2xl font-bold">Образование</h1>
+        </div>
+        {!showForm && (
+          <Button onClick={() => setShowForm(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Добавить
+          </Button>
+        )}
+      </div>
 
-      {isAdmin && (
-        <Tabs value={currentTab} onChange={(e, v) => setCurrentTab(v)} sx={{ mb: 3 }}>
-          <Tab label="Мое Образование" />
-          <Tab
-            label={`На Проверке (${pendingVerifications.length})`}
-            disabled={!isAdmin}
+      {showForm && (
+        <div className="mb-8">
+          <SubmitEducationForm
+            onSubmit={handleSubmit}
+            onCancel={() => setShowForm(false)}
           />
-        </Tabs>
+        </div>
       )}
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Tab 0: My Educations */}
-      {currentTab === 0 && (
-        <Box>
-          {showSubmitForm ? (
-            <SubmitEducationForm
-              onSubmit={handleSubmitEducation}
-              onCancel={() => setShowSubmitForm(false)}
-            />
-          ) : (
-            <EducationList
-              educations={myEducations}
-              onAddNew={() => setShowSubmitForm(true)}
-            />
+      <Tabs defaultValue="my-education">
+        <TabsList className="mb-6">
+          <TabsTrigger value="my-education" className="gap-2">
+            <BookOpen className="h-4 w-4" />
+            Моё Образование
+          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="verification" className="gap-2">
+              <ShieldCheck className="h-4 w-4" />
+              Верификация
+              {pendingVerifications.length > 0 && (
+                <span className="ml-1 bg-red-500 text-white text-[10px] rounded-full h-5 min-w-[20px] inline-flex items-center justify-center px-1">
+                  {pendingVerifications.length}
+                </span>
+              )}
+            </TabsTrigger>
           )}
-        </Box>
-      )}
+        </TabsList>
 
-      {/* Tab 1: Pending Verifications (Admin Only) */}
-      {currentTab === 1 && isAdmin && (
-        <Box>
-          {pendingVerifications.length === 0 ? (
-            <Alert severity="info">Нет заявок на проверку</Alert>
-          ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {pendingVerifications.map((verification) => (
-                <PendingVerificationCard
-                  key={verification.id}
-                  verification={verification}
-                  onApprove={handleApproveVerification}
-                  onReject={handleRejectVerification}
-                />
-              ))}
-            </Box>
-          )}
-        </Box>
-      )}
-    </Container>
+        <TabsContent value="my-education">
+          <EducationList educations={educations} />
+        </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="verification">
+            {pendingVerifications.length === 0 ? (
+              <div className="text-center py-16">
+                <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">Нет заявок на верификацию</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingVerifications.map((v) => (
+                  <PendingVerificationCard
+                    key={v.id}
+                    verification={v}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        )}
+      </Tabs>
+    </div>
   );
 }

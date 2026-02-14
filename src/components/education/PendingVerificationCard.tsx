@@ -1,236 +1,191 @@
 'use client';
 
 import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Button,
-  Chip,
-  Avatar,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  Alert,
-} from '@mui/material';
-import { CheckCircle, XCircle, FileText, User, Calendar } from 'lucide-react';
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  GraduationCap,
+  CheckCircle,
+  XCircle,
+  Clock,
+  School,
+  BookOpen,
+  User,
+  Loader2,
+} from 'lucide-react';
 
 interface PendingVerification {
   id: string;
-  user: {
-    id: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  type: 'DIPLOMA' | 'CERTIFICATE' | 'RECOMMENDATION';
+  userId: string;
+  userName?: string;
+  type: string;
   institution: string;
   fieldOfStudy: string;
   graduationYear?: number;
   documentUrl?: string;
-  recommender?: {
-    id: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-  };
-  createdAt: Date;
+  createdAt: string;
 }
 
 interface PendingVerificationCardProps {
   verification: PendingVerification;
-  onApprove: (id: string, validForGuilds?: string[]) => Promise<void>;
-  onReject: (id: string) => Promise<void>;
+  onApprove: (id: string) => Promise<void>;
+  onReject: (id: string, reason: string) => Promise<void>;
 }
+
+const typeLabels: Record<string, string> = {
+  DIPLOMA: 'Диплом',
+  CERTIFICATE: 'Сертификат',
+  RECOMMENDATION: 'Рекомендация',
+};
 
 export function PendingVerificationCard({
   verification,
   onApprove,
   onReject,
 }: PendingVerificationCardProps) {
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
-  const [validGuilds, setValidGuilds] = useState('');
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleApprove = async () => {
-    setLoading(true);
     try {
-      const guildIds = validGuilds
-        .split(',')
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0);
-      
-      await onApprove(verification.id, guildIds.length > 0 ? guildIds : undefined);
-      setApproveDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to approve:', error);
+      setLoading(true);
+      await onApprove(verification.id);
     } finally {
       setLoading(false);
     }
   };
 
   const handleReject = async () => {
-    if (!confirm('Вы уверены, что хотите отклонить эту заявку?')) return;
-    
-    setLoading(true);
+    if (!rejectReason.trim()) return;
     try {
-      await onReject(verification.id);
-    } catch (error) {
-      console.error('Failed to reject:', error);
+      setLoading(true);
+      await onReject(verification.id, rejectReason);
+      setRejectDialogOpen(false);
+      setRejectReason('');
     } finally {
       setLoading(false);
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'DIPLOMA':
-        return 'Диплом';
-      case 'CERTIFICATE':
-        return 'Сертификат';
-      case 'RECOMMENDATION':
-        return 'Рекомендация';
-      default:
-        return type;
-    }
-  };
-
   return (
     <>
-      <Card variant="outlined">
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Box>
-              <Typography variant="h6">{verification.fieldOfStudy}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {verification.institution}
-                {verification.graduationYear && ` • ${verification.graduationYear}`}
-              </Typography>
-              <Chip
-                label={getTypeLabel(verification.type)}
-                size="small"
-                sx={{ mt: 1 }}
-              />
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Calendar size={16} />
-              <Typography variant="caption" color="text.secondary">
-                {new Date(verification.createdAt).toLocaleDateString('ru-RU')}
-              </Typography>
-            </Box>
-          </Box>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold">{verification.institution}</h4>
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <BookOpen className="h-3.5 w-3.5" />
+                  {verification.fieldOfStudy}
+                </p>
+              </div>
+            </div>
 
-          {/* User Info */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Avatar sx={{ width: 32, height: 32 }}>
-              {verification.user.firstName[0]}
-              {verification.user.lastName[0]}
-            </Avatar>
-            <Box>
-              <Typography variant="body2">
-                {verification.user.firstName} {verification.user.lastName}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                @{verification.user.username} • {verification.user.email}
-              </Typography>
-            </Box>
-          </Box>
+            <Badge className="bg-yellow-600 hover:bg-yellow-700 gap-1">
+              <Clock className="h-3 w-3" />
+              На проверке
+            </Badge>
+          </div>
 
-          {/* Recommender (if applicable) */}
-          {verification.type === 'RECOMMENDATION' && verification.recommender && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <User size={16} />
-                <Typography variant="body2">
-                  Рекомендовано:{' '}
-                  <strong>
-                    {verification.recommender.firstName}{' '}
-                    {verification.recommender.lastName}
-                  </strong>{' '}
-                  (@{verification.recommender.username})
-                </Typography>
-              </Box>
-            </Alert>
-          )}
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span>Заявитель: <strong>{verification.userName || verification.userId}</strong></span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline">{typeLabels[verification.type] || verification.type}</Badge>
+              {verification.graduationYear && (
+                <span className="text-sm text-muted-foreground">{verification.graduationYear}</span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Подано: {new Date(verification.createdAt).toLocaleDateString()}
+            </p>
+          </div>
 
-          {/* Document Link */}
           {verification.documentUrl && (
-            <Button
-              variant="outlined"
-              size="small"
-              href={verification.documentUrl}
-              target="_blank"
-              startIcon={<FileText size={16} />}
-              fullWidth
-              sx={{ mb: 2 }}
-            >
-              Просмотреть Документ
-            </Button>
+            <div className="bg-muted/50 rounded-lg p-3 mb-4">
+              <p className="text-sm text-muted-foreground">
+                📄 Документ прикреплён
+              </p>
+            </div>
           )}
 
-          {/* Action Buttons */}
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <div className="flex gap-2">
             <Button
-              variant="contained"
-              color="success"
-              startIcon={<CheckCircle size={16} />}
-              onClick={() => setApproveDialogOpen(true)}
+              className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700"
+              onClick={handleApprove}
               disabled={loading}
-              fullWidth
             >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
               Подтвердить
             </Button>
             <Button
-              variant="outlined"
-              color="error"
-              startIcon={<XCircle size={16} />}
-              onClick={handleReject}
+              variant="outline"
+              className="flex-1 gap-1.5 text-red-600 border-red-300 hover:bg-red-50"
+              onClick={() => setRejectDialogOpen(true)}
               disabled={loading}
-              fullWidth
             >
+              <XCircle className="h-4 w-4" />
               Отклонить
             </Button>
-          </Box>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Approve Dialog */}
-      <Dialog open={approveDialogOpen} onClose={() => setApproveDialogOpen(false)}>
-        <DialogTitle>Подтверждение Образования</DialogTitle>
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Подтверждаете образование пользователя{' '}
-            <strong>
-              {verification.user.firstName} {verification.user.lastName}
-            </strong>{' '}
-            в области <strong>{verification.fieldOfStudy}</strong>?
-          </Typography>
-          <TextField
-            label="Доступно для Гильдий (ID через запятую)"
-            value={validGuilds}
-            onChange={(e) => setValidGuilds(e.target.value)}
-            placeholder="guild-id-1, guild-id-2"
-            fullWidth
-            helperText="Оставьте пустым, чтобы разрешить для всех гильдий"
-          />
+          <DialogHeader>
+            <DialogTitle>Отклонить верификацию</DialogTitle>
+            <DialogDescription>
+              Укажите причину отклонения для {verification.institution}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label>Причина отклонения</Label>
+            <Input
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Укажите причину..."
+            />
+          </div>
+
+          <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300">
+            ⚠️ Это действие нельзя отменить. Пользователь получит уведомление с причиной отклонения.
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              Отмена
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={loading || !rejectReason.trim()}
+              className="gap-2"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Отклонить
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setApproveDialogOpen(false)} disabled={loading}>
-            Отмена
-          </Button>
-          <Button
-            onClick={handleApprove}
-            variant="contained"
-            color="success"
-            disabled={loading}
-          >
-            Подтвердить
-          </Button>
-        </DialogActions>
       </Dialog>
     </>
   );

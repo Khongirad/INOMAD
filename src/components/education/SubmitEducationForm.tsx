@@ -1,37 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Typography,
-  Box,
-  Alert,
-} from '@mui/material';
-import { GraduationCap, Upload, UserCheck } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { GraduationCap, Upload, Loader2 } from 'lucide-react';
 
 type EducationType = 'DIPLOMA' | 'CERTIFICATE' | 'RECOMMENDATION';
 
-interface SubmitEducationFormProps {
-  onSubmit: (data: EducationFormData) => Promise<void>;
-  onCancel?: () => void;
-}
-
-export interface EducationFormData {
+interface EducationFormData {
   type: EducationType;
   institution: string;
   fieldOfStudy: string;
   graduationYear?: number;
-  documentHash?: string;
-  documentUrl?: string;
-  recommenderId?: string;
+  documentFile?: File;
+  verifierId?: string;
+}
+
+interface SubmitEducationFormProps {
+  onSubmit: (data: EducationFormData) => Promise<void>;
+  onCancel?: () => void;
 }
 
 export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormProps) {
@@ -47,49 +37,16 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!formData.institution || !formData.fieldOfStudy) {
-      setError('Пожалуйста, заполните все обязательные поля');
-      return;
-    }
-
-    if (formData.type === 'RECOMMENDATION' && !formData.recommenderId) {
-      setError('Выберите специалиста для рекомендации');
-      return;
-    }
-
-    if (formData.type !== 'RECOMMENDATION' && !formData.documentUrl) {
-      setError('Загрузите документ (диплом/сертификат)');
+      setError('Заполните обязательные поля');
       return;
     }
 
     try {
+      setUploading(true);
       await onSubmit(formData);
     } catch (err: any) {
       setError(err.message || 'Ошибка при отправке');
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      // TODO: Upload to IPFS or backend storage
-      // For now, simulate upload
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      const mockHash = `ipfs://${Math.random().toString(36).substring(7)}`;
-      const mockUrl = URL.createObjectURL(file);
-      
-      setFormData({
-        ...formData,
-        documentHash: mockHash,
-        documentUrl: mockUrl,
-      });
-    } catch (err) {
-      setError('Ошибка загрузки файла');
     } finally {
       setUploading(false);
     }
@@ -97,138 +54,100 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
 
   return (
     <Card>
-      <CardHeader
-        title={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <GraduationCap size={24} />
-            <Typography variant="h6">Подтверждение Образования</Typography>
-          </Box>
-        }
-      />
-      <CardContent>
-        <form onSubmit={handleSubmit}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {error && <Alert severity="error">{error}</Alert>}
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-2 mb-6">
+          <GraduationCap className="h-6 w-6" />
+          <h3 className="text-lg font-semibold">Подтверждение Образования</h3>
+        </div>
 
-            {/* Type Selection */}
-            <FormControl fullWidth>
-              <InputLabel>Тип Документа</InputLabel>
-              <Select
-                value={formData.type}
-                onChange={(e) =>
-                  setFormData({ ...formData, type: e.target.value as EducationType })
-                }
-                label="Тип Документа"
-              >
-                <MenuItem value="DIPLOMA">Диплом</MenuItem>
-                <MenuItem value="CERTIFICATE">Сертификат</MenuItem>
-                <MenuItem value="RECOMMENDATION">Рекомендация Специалиста</MenuItem>
-              </Select>
-            </FormControl>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300">
+              {error}
+            </div>
+          )}
 
-            {/* Field of Study */}
-            <TextField
-              label="Специальность"
-              value={formData.fieldOfStudy}
-              onChange={(e) =>
-                setFormData({ ...formData, fieldOfStudy: e.target.value })
-              }
-              required
-              placeholder="Engineering, Medicine, Law, etc."
-            />
+          <div className="space-y-2">
+            <Label>Тип Документа</Label>
+            <Select
+              value={formData.type}
+              onValueChange={(v) => setFormData({ ...formData, type: v as EducationType })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="DIPLOMA">Диплом</SelectItem>
+                <SelectItem value="CERTIFICATE">Сертификат</SelectItem>
+                <SelectItem value="RECOMMENDATION">Рекомендация Специалиста</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            {/* Institution */}
-            <TextField
-              label="Учебное Заведение / Организация"
+          <div className="space-y-2">
+            <Label htmlFor="institution">Учебное Заведение *</Label>
+            <Input
+              id="institution"
               value={formData.institution}
-              onChange={(e) =>
-                setFormData({ ...formData, institution: e.target.value })
-              }
-              required
-              placeholder="Название университета или организации"
+              onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+              placeholder="Название учебного заведения"
             />
+          </div>
 
-            {/* Graduation Year (for diploma/certificate) */}
-            {formData.type !== 'RECOMMENDATION' && (
-              <TextField
-                label="Год Окончания"
-                type="number"
-                value={formData.graduationYear || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    graduationYear: parseInt(e.target.value) || undefined,
-                  })
-                }
-                placeholder="2020"
+          <div className="space-y-2">
+            <Label htmlFor="fieldOfStudy">Специальность *</Label>
+            <Input
+              id="fieldOfStudy"
+              value={formData.fieldOfStudy}
+              onChange={(e) => setFormData({ ...formData, fieldOfStudy: e.target.value })}
+              placeholder="Направление обучения"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="graduationYear">Год Выпуска</Label>
+            <Input
+              id="graduationYear"
+              type="number"
+              value={formData.graduationYear || ''}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  graduationYear: e.target.value ? parseInt(e.target.value) : undefined,
+                })
+              }
+              placeholder="2024"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Документ</Label>
+            <label className="flex items-center justify-center gap-2 w-full h-10 px-4 rounded-md border border-input bg-background text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors">
+              <Upload className="h-4 w-4" />
+              {formData.documentFile ? formData.documentFile.name : 'Загрузить документ'}
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*,application/pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setFormData({ ...formData, documentFile: file });
+                }}
               />
-            )}
+            </label>
+          </div>
 
-            {/* Document Upload (for diploma/certificate) */}
-            {formData.type !== 'RECOMMENDATION' && (
-              <Box>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<Upload size={20} />}
-                  disabled={uploading}
-                  fullWidth
-                >
-                  {uploading ? 'Загрузка...' : 'Загрузить Документ'}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*,application/pdf"
-                    onChange={handleFileUpload}
-                  />
-                </Button>
-                {formData.documentUrl && (
-                  <Typography variant="caption" color="success.main" sx={{ mt: 1 }}>
-                    ✓ Документ загружен
-                  </Typography>
-                )}
-              </Box>
-            )}
-
-            {/* Recommender Selection (for recommendation) */}
-            {formData.type === 'RECOMMENDATION' && (
-              <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  Выберите сертифицированного специалиста в вашей области
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<UserCheck size={20} />}
-                  fullWidth
-                  onClick={() => {
-                    // TODO: Open specialist selector modal
-                    alert('Specialist selector modal - TODO');
-                  }}
-                >
-                  {formData.recommenderId ? 'Специалист выбран' : 'Выбрать Специалиста'}
-                </Button>
-              </Box>
-            )}
-
-            {/* Info Alert */}
-            <Alert severity="info">
-              {formData.type === 'RECOMMENDATION'
-                ? 'Рекомендация должна быть предоставлена сертифицированным специалистом в вашей области.'
-                : 'Загрузите скан диплома или сертификата. Документ будет проверен администратором.'}
-            </Alert>
-
-            {/* Action Buttons */}
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-              {onCancel && (
-                <Button onClick={onCancel} variant="outlined">
-                  Отмена
-                </Button>
-              )}
-              <Button type="submit" variant="contained" disabled={uploading}>
-                Отправить на Проверку
+          <div className="flex gap-3 justify-end pt-2">
+            {onCancel && (
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Отмена
               </Button>
-            </Box>
-          </Box>
+            )}
+            <Button type="submit" disabled={uploading} className="gap-2">
+              {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Отправить на Проверку
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

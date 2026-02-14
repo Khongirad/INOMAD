@@ -1,29 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Chip,
-  TextField,
-  Alert,
-  CircularProgress,
-  Stack,
-  Divider,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Favorite as MarriedIcon,
-  Person as SingleIcon,
-  HeartBroken as DivorIcon,
-  Search as SearchIcon,
-  VerifiedUser as VerifiedIcon,
-} from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   getMyMarriages,
   getPendingConsents,
@@ -41,12 +23,10 @@ export default function ZAGSPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Certificate verification
   const [certNumber, setCertNumber] = useState('');
   const [certResult, setCertResult] = useState<any>(null);
   const [certLoading, setCertLoading] = useState(false);
 
-  // User's current civil status (mock - should come from main User profile)
   const [civilStatus, setCivilStatus] = useState<CivilStatus>('SINGLE');
 
   useEffect(() => {
@@ -62,12 +42,8 @@ export default function ZAGSPage() {
       ]);
       setMarriages(marriagesData);
       setPendingConsents(consentsData);
-
-      // Determine civil status
       const activeMarriage = marriagesData.find((m) => m.status === 'REGISTERED');
-      if (activeMarriage) {
-        setCivilStatus('MARRIED');
-      }
+      if (activeMarriage) setCivilStatus('MARRIED');
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
     } finally {
@@ -77,7 +53,6 @@ export default function ZAGSPage() {
 
   const handleVerifyCertificate = async () => {
     if (!certNumber.trim()) return;
-
     try {
       setCertLoading(true);
       const result = await verifyCertificate(certNumber);
@@ -90,268 +65,203 @@ export default function ZAGSPage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <div className="space-y-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          ZAGS - Civil Registry Office
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Marriage registration, divorce filing, and civil status management
-        </Typography>
-      </Box>
+      <div>
+        <h1 className="text-2xl font-bold">ЗАГС — Бюро гражданской регистрации</h1>
+        <p className="text-muted-foreground mt-1">
+          Регистрация брака, развод и управление гражданским статусом
+        </p>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-sm underline">Закрыть</button>
+        </div>
       )}
 
-      {/* Civil Status Card */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Your Civil Status
-              </Typography>
+      {/* Civil Status */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Ваш гражданский статус</h3>
               <CivilStatusBadge status={civilStatus} />
-            </Box>
-
+            </div>
             {civilStatus === 'SINGLE' && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => router.push('/services/zags/marriage/apply')}
-              >
-                Apply for Marriage
+              <Button onClick={() => router.push('/services/zags/marriage/apply')}>
+                + Подать заявление на брак
               </Button>
             )}
-
             {civilStatus === 'MARRIED' && (
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => router.push('/services/zags/divorce/apply')}
-              >
-                File for Divorce
+              <Button variant="destructive" onClick={() => router.push('/services/zags/divorce/apply')}>
+                Подать на развод
               </Button>
             )}
-          </Box>
+          </div>
         </CardContent>
       </Card>
 
       {/* Pending Consents */}
       {pendingConsents.length > 0 && (
-        <Card sx={{ mb: 4 }}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Ожидают вашего согласия</CardTitle>
+          </CardHeader>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Pending Consent Requests
-            </Typography>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              You have {pendingConsents.length} marriage application(s) waiting for your consent
-            </Alert>
-            <Stack spacing={2}>
+            <div className="bg-blue-500/10 text-blue-400 rounded-lg p-3 mb-4 text-sm">
+              У вас {pendingConsents.length} заявление(й) на брак, ожидающих вашего согласия
+            </div>
+            <div className="space-y-3">
               {pendingConsents.map((consent) => (
-                <Card key={consent.id} variant="outlined">
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box>
-                        <Typography variant="body1" fontWeight={600}>
-                          Marriage Application
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Submitted: {new Date(consent.createdAt).toLocaleDateString()}
-                        </Typography>
-                      </Box>
-                      <Button
-                        variant="contained"
-                        onClick={() => router.push(`/services/zags/marriage/consent/${consent.marriageId}`)}
-                      >
-                        Review & Consent
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
+                <div key={consent.id} className="border border-border rounded-lg p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">Заявление на брак</p>
+                    <p className="text-sm text-muted-foreground">
+                      Подано: {new Date(consent.createdAt).toLocaleDateString('ru-RU')}
+                    </p>
+                  </div>
+                  <Button onClick={() => router.push(`/services/zags/marriage/consent/${consent.marriageId}`)}>
+                    Рассмотреть
+                  </Button>
+                </div>
               ))}
-            </Stack>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Your Marriages */}
-      <Card sx={{ mb: 4 }}>
+      {/* Marriages */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Записи о браке</CardTitle>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Marriage Records
-          </Typography>
-
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
           ) : marriages.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="body1" color="text.secondary" gutterBottom>
-                No marriage records found
-              </Typography>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-3">Записи о браке не найдены</p>
               {civilStatus === 'SINGLE' && (
-                <Button
-                  variant="outlined"
-                  startIcon={<AddIcon />}
-                  sx={{ mt: 2 }}
-                  onClick={() => router.push('/services/zags/marriage/apply')}
-                >
-                  Apply for Marriage
+                <Button variant="outline" onClick={() => router.push('/services/zags/marriage/apply')}>
+                  + Подать заявление
                 </Button>
               )}
-            </Box>
+            </div>
           ) : (
-            <Stack spacing={2}>
+            <div className="space-y-3">
               {marriages.map((marriage) => (
-                <Card key={marriage.id} variant="outlined">
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <Box>
-                        <Typography variant="body1" fontWeight={600}>
-                          {marriage.spouse1FullName} & {marriage.spouse2FullName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Marriage Date: {new Date(marriage.marriageDate).toLocaleDateString()}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Certificate: {marriage.certificateNumber}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Chip
-                          label={marriage.status}
-                          color={marriage.status === 'REGISTERED' ? 'success' : 'default'}
-                          size="small"
-                          sx={{ mb: 1 }}
-                        />
-                        {marriage.status === 'REGISTERED' && (
-                          <Box>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              onClick={() => router.push(`/services/zags/certificate/${marriage.id}`)}
-                            >
-                              View Certificate
-                            </Button>
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
+                <div key={marriage.id} className="border border-border rounded-lg p-4 flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold">
+                      {marriage.spouse1FullName} & {marriage.spouse2FullName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Дата брака: {new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Свидетельство: {marriage.certificateNumber}
+                    </p>
+                  </div>
+                  <div className="text-right space-y-2">
+                    <Badge variant={marriage.status === 'REGISTERED' ? 'default' : 'secondary'}>
+                      {marriage.status === 'REGISTERED' ? 'Зарегистрирован' : marriage.status}
+                    </Badge>
+                    {marriage.status === 'REGISTERED' && (
+                      <div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => router.push(`/services/zags/certificate/${marriage.id}`)}
+                        >
+                          Свидетельство
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               ))}
-            </Stack>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Certificate Verification */}
       <Card>
+        <CardHeader>
+          <CardTitle>Проверка свидетельства</CardTitle>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Certificate Verification
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Verify the authenticity of a marriage or divorce certificate (public lookup)
-          </Typography>
-
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <TextField
-              fullWidth
-              label="Certificate Number"
-              placeholder="MC-XXXX-XXXX or DC-XXXX-XXXX"
+          <p className="text-sm text-muted-foreground mb-4">
+            Проверьте подлинность свидетельства о браке или разводе (публичный поиск)
+          </p>
+          <div className="flex gap-3 mb-3">
+            <Input
+              placeholder="MC-XXXX-XXXX или DC-XXXX-XXXX"
               value={certNumber}
               onChange={(e) => setCertNumber(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleVerifyCertificate()}
+              onKeyDown={(e) => e.key === 'Enter' && handleVerifyCertificate()}
             />
             <Button
-              variant="contained"
-              startIcon={certLoading ? <CircularProgress size={20} /> : <SearchIcon />}
               onClick={handleVerifyCertificate}
               disabled={certLoading || !certNumber.trim()}
-              sx={{ minWidth: 120 }}
+              className="min-w-[120px]"
             >
-              Verify
+              {certLoading ? '…' : '🔍 Проверить'}
             </Button>
-          </Box>
+          </div>
 
           {certResult && (
-            <Alert
-              severity={certResult.isValid ? 'success' : 'warning'}
-              icon={certResult.isValid ? <VerifiedIcon /> : undefined}
-              sx={{ mt: 2 }}
-            >
+            <div className={`rounded-lg p-4 ${certResult.isValid ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
               {certResult.isValid ? (
                 <>
-                  <Typography variant="body2" fontWeight={600}>
-                    Valid {certResult.type} Certificate
-                  </Typography>
+                  <p className="font-semibold">✅ Действительное свидетельство ({certResult.type})</p>
                   {certResult.details && (
                     <>
-                      <Typography variant="body2">
-                        Spouses: {certResult.details.spouse1Name} & {certResult.details.spouse2Name}
-                      </Typography>
-                      <Typography variant="body2">
-                        Marriage Date: {new Date(certResult.details.marriageDate).toLocaleDateString()}
-                      </Typography>
+                      <p className="text-sm">Супруги: {certResult.details.spouse1Name} & {certResult.details.spouse2Name}</p>
+                      <p className="text-sm">Дата брака: {new Date(certResult.details.marriageDate).toLocaleDateString('ru-RU')}</p>
                     </>
                   )}
-                  <Typography variant="caption" color="text.secondary">
-                    Issued: {new Date(certResult.issuedDate).toLocaleDateString()}
-                  </Typography>
+                  <p className="text-xs opacity-70">Выдано: {new Date(certResult.issuedDate).toLocaleDateString('ru-RU')}</p>
                 </>
               ) : (
-                <Typography variant="body2">
-                  {certResult.error || 'Certificate not found or invalid'}
-                </Typography>
+                <p>{certResult.error || 'Свидетельство не найдено или недействительно'}</p>
               )}
-            </Alert>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Info Section */}
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                📋 Marriage Requirements
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Both parties must be 18+ years old<br />
-                • Both parties must be single (not currently married)<br />
-                • Dual consent required from both partners<br />
-                • ZAGS officer review and approval<br />
-                • Blockchain-backed certificates
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                ⚖️ Divorce Process
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • File divorce application online<br />
-                • Property division agreement (optional)<br />
-                • ZAGS officer review<br />
-                • Certificate issued upon finalization<br />
-                • Civil status updated automatically
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+      {/* Info Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader><CardTitle>📋 Требования к браку</CardTitle></CardHeader>
+          <CardContent>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Обоим партнёрам должно быть 18+ лет</li>
+              <li>• Оба должны быть холосты</li>
+              <li>• Требуется обоюдное согласие</li>
+              <li>• Проверка и одобрение сотрудником ЗАГС</li>
+              <li>• Свидетельства на блокчейне</li>
+            </ul>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>⚖️ Процесс развода</CardTitle></CardHeader>
+          <CardContent>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Подача заявления онлайн</li>
+              <li>• Соглашение о разделе имущества (опционально)</li>
+              <li>• Рассмотрение сотрудником ЗАГС</li>
+              <li>• Свидетельство после завершения</li>
+              <li>• Статус обновляется автоматически</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

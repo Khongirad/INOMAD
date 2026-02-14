@@ -1,44 +1,19 @@
 'use client';
 
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Button,
-  Chip,
-  Avatar,
-  Divider,
-} from '@mui/material';
-import {
-  Mail,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Users,
-  MessageSquare,
-} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Mail, CheckCircle, XCircle, Clock, Users, MessageSquare } from 'lucide-react';
 
 interface Invitation {
   id: string;
-  guild: {
-    id: string;
-    name: string;
-    type: string;
-    fieldOfStudy?: string;
-  };
-  inviter: {
-    id: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-  };
+  organizationId: string;
+  organizationName: string;
+  invitedByName?: string;
+  role: string;
+  status: string;
   message?: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
-  createdAt: Date;
-  acceptedAt?: Date;
-  rejectedAt?: Date;
-  expiredAt?: Date;
+  createdAt: string;
 }
 
 interface ReceivedInvitationCardProps {
@@ -47,133 +22,103 @@ interface ReceivedInvitationCardProps {
   onReject: (id: string) => Promise<void>;
 }
 
+const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ReactNode; className: string }> = {
+  PENDING: {
+    label: 'Ожидает',
+    variant: 'default',
+    icon: <Clock className="h-3 w-3" />,
+    className: 'bg-yellow-600 hover:bg-yellow-700',
+  },
+  ACCEPTED: {
+    label: 'Принято',
+    variant: 'default',
+    icon: <CheckCircle className="h-3 w-3" />,
+    className: 'bg-green-600 hover:bg-green-700',
+  },
+  REJECTED: {
+    label: 'Отклонено',
+    variant: 'destructive',
+    icon: <XCircle className="h-3 w-3" />,
+    className: '',
+  },
+};
+
 export function ReceivedInvitationCard({
   invitation,
   onAccept,
   onReject,
 }: ReceivedInvitationCardProps) {
   const isPending = invitation.status === 'PENDING';
-
-  const getStatusColor = () => {
-    switch (invitation.status) {
-      case 'ACCEPTED':
-        return 'success';
-      case 'REJECTED':
-        return 'error';
-      case 'EXPIRED':
-        return 'default';
-      default:
-        return 'warning';
-    }
-  };
-
-  const getStatusLabel = () => {
-    switch (invitation.status) {
-      case 'ACCEPTED':
-        return 'Принято';
-      case 'REJECTED':
-        return 'Отклонено';
-      case 'EXPIRED':
-        return 'Истекло';
-      default:
-        return 'Ожидает ответа';
-    }
-  };
+  const config = statusConfig[invitation.status] || statusConfig.PENDING;
 
   const handleAccept = async () => {
-    if (!confirm(`Принять приглашение в гильдию "${invitation.guild.name}"?`)) return;
     await onAccept(invitation.id);
   };
 
   const handleReject = async () => {
-    if (!confirm(`Отклонить приглашение в гильдию "${invitation.guild.name}"?`)) return;
     await onReject(invitation.id);
   };
 
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Box>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Users size={20} />
-              {invitation.guild.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {invitation.guild.type}
-              {invitation.guild.fieldOfStudy && ` • ${invitation.guild.fieldOfStudy}`}
-            </Typography>
-          </Box>
-          <Chip
-            label={getStatusLabel()}
-            color={getStatusColor()}
-            size="small"
-            icon={isPending ? <Clock size={14} /> : undefined}
-          />
-        </Box>
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h4 className="font-semibold">{invitation.organizationName}</h4>
+              {invitation.invitedByName && (
+                <p className="text-sm text-muted-foreground">
+                  от {invitation.invitedByName}
+                </p>
+              )}
+            </div>
+          </div>
+          <Badge variant={config.variant} className={`gap-1 ${config.className}`}>
+            {config.icon}
+            {config.label}
+          </Badge>
+        </div>
 
-        {/* Inviter */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Avatar sx={{ width: 32, height: 32 }}>
-            {invitation.inviter.firstName[0]}
-            {invitation.inviter.lastName[0]}
-          </Avatar>
-          <Box>
-            <Typography variant="body2">
-              <strong>От:</strong> {invitation.inviter.firstName}{' '}
-              {invitation.inviter.lastName}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              @{invitation.inviter.username}
-            </Typography>
-          </Box>
-        </Box>
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            <span>Роль: <strong>{invitation.role}</strong></span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {new Date(invitation.createdAt).toLocaleDateString()}
+          </p>
+        </div>
 
-        {/* Message */}
         {invitation.message && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              <MessageSquare size={14} style={{ display: 'inline', marginRight: 4 }} />
-              "{invitation.message}"
-            </Typography>
-          </Box>
+          <div className="bg-muted/50 rounded-lg p-3 mb-4">
+            <div className="flex items-start gap-2">
+              <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
+              <p className="text-sm">{invitation.message}</p>
+            </div>
+          </div>
         )}
 
-        <Divider sx={{ my: 2 }} />
-
-        {/* Date */}
-        <Typography variant="caption" color="text.secondary">
-          {isPending
-            ? `Получено: ${new Date(invitation.createdAt).toLocaleDateString('ru-RU')}`
-            : invitation.status === 'ACCEPTED'
-            ? `Принято: ${new Date(invitation.acceptedAt!).toLocaleDateString('ru-RU')}`
-            : invitation.status === 'REJECTED'
-            ? `Отклонено: ${new Date(invitation.rejectedAt!).toLocaleDateString('ru-RU')}`
-            : `Истекло: ${new Date(invitation.expiredAt!).toLocaleDateString('ru-RU')}`}
-        </Typography>
-
-        {/* Action Buttons (only for pending) */}
         {isPending && (
-          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+          <div className="flex gap-2 mt-3">
             <Button
-              variant="contained"
-              color="success"
-              startIcon={<CheckCircle size={16} />}
+              className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700"
               onClick={handleAccept}
-              fullWidth
             >
+              <CheckCircle className="h-4 w-4" />
               Принять
             </Button>
             <Button
-              variant="outlined"
-              color="error"
-              startIcon={<XCircle size={16} />}
+              variant="outline"
+              className="flex-1 gap-1.5 text-red-600 border-red-300 hover:bg-red-50"
               onClick={handleReject}
-              fullWidth
             >
+              <XCircle className="h-4 w-4" />
               Отклонить
             </Button>
-          </Box>
+          </div>
         )}
       </CardContent>
     </Card>

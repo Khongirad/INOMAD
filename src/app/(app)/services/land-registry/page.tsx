@@ -1,40 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Tabs,
-  Tab,
-  Alert,
-  CircularProgress,
-  Stack,
-  Chip,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Map as MapIcon,
-  Home as PropertyIcon,
-  Description as DocumentIcon,
-  LocationOn as LocationIcon,
-} from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getMyOwnerships, getMyLeases, type Ownership, type Lease } from '@/lib/api/land-registry';
 
 export default function LandRegistryPage() {
   const router = useRouter();
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState('ownerships');
   const [ownerships, setOwnerships] = useState<Ownership[]>([]);
   const [leases, setLeases] = useState<Lease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Mock user citizenship status
-  const [isCitizen, setIsCitizen] = useState(true);
+  const [isCitizen] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -57,252 +38,182 @@ export default function LandRegistryPage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <div className="space-y-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          Land Registry & Cadastral Service
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Property ownership, land registration, and cadastral mapping
-        </Typography>
-      </Box>
+      <div>
+        <h1 className="text-2xl font-bold">Земельный кадастр и реестр</h1>
+        <p className="text-muted-foreground mt-1">
+          Собственность, регистрация земли и кадастровая карта
+        </p>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-sm underline">Закрыть</button>
+        </div>
       )}
 
       {/* Quick Actions */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 3 } }} onClick={() => router.push('/services/land-registry/map')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <MapIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
-              <Typography variant="h6">Cadastral Map</Typography>
-              <Typography variant="body2" color="text.secondary">
-                View interactive map
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/services/land-registry/map')}>
+          <CardContent className="pt-6 text-center">
+            <div className="text-4xl mb-2">🗺️</div>
+            <h3 className="font-semibold">Кадастровая карта</h3>
+            <p className="text-xs text-muted-foreground mt-1">Интерактивная карта</p>
+          </CardContent>
+        </Card>
+        <Card
+          className={`transition-colors ${isCitizen ? 'cursor-pointer hover:border-primary/50' : 'opacity-50 cursor-not-allowed'}`}
+          onClick={() => isCitizen && router.push('/services/land-registry/register/land')}
+        >
+          <CardContent className="pt-6 text-center">
+            <div className="text-4xl mb-2">📍</div>
+            <h3 className="font-semibold">Зарегистрировать участок</h3>
+            <p className="text-xs text-muted-foreground mt-1">{isCitizen ? 'Новый участок' : 'Только для граждан'}</p>
+          </CardContent>
+        </Card>
+        <Card
+          className={`transition-colors ${isCitizen ? 'cursor-pointer hover:border-primary/50' : 'opacity-50 cursor-not-allowed'}`}
+          onClick={() => isCitizen && router.push('/services/land-registry/register/ownership')}
+        >
+          <CardContent className="pt-6 text-center">
+            <div className="text-4xl mb-2">🏠</div>
+            <h3 className="font-semibold">Оформить собственность</h3>
+            <p className="text-xs text-muted-foreground mt-1">{isCitizen ? 'Заявить право' : 'Только для граждан'}</p>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/services/land-registry/register/lease')}>
+          <CardContent className="pt-6 text-center">
+            <div className="text-4xl mb-2">📄</div>
+            <h3 className="font-semibold">Оформить аренду</h3>
+            <p className="text-xs text-muted-foreground mt-1">Аренда имущества</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card 
-            sx={{ cursor: isCitizen ? 'pointer' : 'not-allowed', opacity: isCitizen ? 1 : 0.6, '&:hover': isCitizen ? { boxShadow: 3 } : {} }}
-            onClick={() => isCitizen && router.push('/services/land-registry/register/land')}
-          >
-            <CardContent sx={{ textAlign: 'center' }}>
-              <LocationIcon sx={{ fontSize: 48, color: 'success.main', mb: 1 }} />
-              <Typography variant="h6">Register Land</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {isCitizen ? 'Register new plot' : 'Citizens only'}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card 
-            sx={{ cursor: isCitizen ? 'pointer' : 'not-allowed', opacity: isCitizen ? 1 : 0.6, '&:hover': isCitizen ? { boxShadow: 3 } : {} }}
-            onClick={() => isCitizen && router.push('/services/land-registry/register/ownership')}
-          >
-            <CardContent sx={{ textAlign: 'center' }}>
-              <PropertyIcon sx={{ fontSize: 48, color: 'warning.main', mb: 1 }} />
-              <Typography variant="h6">Register Ownership</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {isCitizen ? 'Claim ownership' : 'Citizens only'}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ cursor: 'pointer', '&:hover': { boxShadow: 3 } }} onClick={() => router.push('/services/land-registry/register/lease')}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <DocumentIcon sx={{ fontSize: 48, color: 'info.main', mb: 1 }} />
-              <Typography variant="h6">Register Lease</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Lease property
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Property/Lease Tabs */}
+      {/* Properties / Leases */}
       <Card>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-            <Tab label={`Your Properties (${ownerships.length})`} />
-            <Tab label={`Your Leases (${leases.length})`} />
-          </Tabs>
-        </Box>
+        <Tabs defaultValue="ownerships" value={tab} onValueChange={setTab}>
+          <div className="border-b border-border px-4 pt-4">
+            <TabsList>
+              <TabsTrigger value="ownerships">Ваша собственность ({ownerships.length})</TabsTrigger>
+              <TabsTrigger value="leases">Ваши аренды ({leases.length})</TabsTrigger>
+            </TabsList>
+          </div>
 
-        <CardContent>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : (
-            <>
-              {/* Ownerships Tab */}
-              {tab === 0 && (
-                <>
+          <CardContent className="pt-4">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : (
+              <>
+                <TabsContent value="ownerships" className="mt-0">
                   {ownerships.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography variant="body1" color="text.secondary" gutterBottom>
-                        You don't own any properties yet
-                      </Typography>
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-3">У вас нет зарегистрированной собственности</p>
                       {isCitizen && (
-                        <Button
-                          variant="outlined"
-                          startIcon={<AddIcon />}
-                          sx={{ mt: 2 }}
-                          onClick={() => router.push('/services/land-registry/register/ownership')}
-                        >
-                          Register Ownership
+                        <Button variant="outline" onClick={() => router.push('/services/land-registry/register/ownership')}>
+                          + Оформить собственность
                         </Button>
                       )}
-                    </Box>
+                    </div>
                   ) : (
-                    <Stack spacing={2}>
+                    <div className="space-y-3">
                       {ownerships.map((ownership) => (
-                        <Card key={ownership.id} variant="outlined">
-                          <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <Box>
-                                <Typography variant="h6" gutterBottom>
-                                  {ownership.ownerName}'s Property
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  Certificate: {ownership.certificateNumber}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  Ownership: {ownership.ownershipType} ({ownership.sharePercentage}%)
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Issued: {new Date(ownership.issuedAt).toLocaleDateString()}
-                                </Typography>
-                              </Box>
-                              <Box sx={{ textAlign: 'right' }}>
-                                <Chip
-                                  label={ownership.isActive ? 'Active' : 'Inactive'}
-                                  color={ownership.isActive ? 'success' : 'default'}
-                                  size="small"
-                                  sx={{ mb: 1 }}
-                                />
-                                <Box>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={() => router.push(`/services/land-registry/properties/${ownership.id}`)}
-                                  >
-                                    View Details
-                                  </Button>
-                                </Box>
-                              </Box>
-                            </Box>
-                          </CardContent>
-                        </Card>
+                        <div key={ownership.id} className="border border-border rounded-lg p-4 flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold">{ownership.ownerName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Свидетельство: {ownership.certificateNumber}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Тип: {ownership.ownershipType} ({ownership.sharePercentage}%)
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Выдано: {new Date(ownership.issuedAt).toLocaleDateString('ru-RU')}
+                            </p>
+                          </div>
+                          <div className="text-right space-y-2">
+                            <Badge variant={ownership.isActive ? 'default' : 'secondary'}>
+                              {ownership.isActive ? 'Активна' : 'Неактивна'}
+                            </Badge>
+                            <div>
+                              <Button size="sm" variant="outline" onClick={() => router.push(`/services/land-registry/properties/${ownership.id}`)}>
+                                Подробнее
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       ))}
-                    </Stack>
+                    </div>
                   )}
-                </>
-              )}
+                </TabsContent>
 
-              {/* Leases Tab */}
-              {tab === 1 && (
-                <>
+                <TabsContent value="leases" className="mt-0">
                   {leases.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography variant="body1" color="text.secondary" gutterBottom>
-                        You don't have any active leases
-                      </Typography>
-                      <Button
-                        variant="outlined"
-                        startIcon={<AddIcon />}
-                        sx={{ mt: 2 }}
-                        onClick={() => router.push('/services/land-registry/register/lease')}
-                      >
-                        Register Lease
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-3">Нет активных аренд</p>
+                      <Button variant="outline" onClick={() => router.push('/services/land-registry/register/lease')}>
+                        + Оформить аренду
                       </Button>
-                    </Box>
+                    </div>
                   ) : (
-                    <Stack spacing={2}>
+                    <div className="space-y-3">
                       {leases.map((lease) => (
-                        <Card key={lease.id} variant="outlined">
-                          <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <Box>
-                                <Typography variant="h6" gutterBottom>
-                                  {lease.leaseType} Lease
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  Lessee: {lease.lesseeName}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  Rent: {lease.monthlyRent} {lease.currency}/month
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {new Date(lease.startDate).toLocaleDateString()} - {new Date(lease.endDate).toLocaleDateString()}
-                                </Typography>
-                              </Box>
-                              <Chip
-                                label={lease.isActive ? 'Active' : 'Expired'}
-                                color={lease.isActive ? 'success' : 'default'}
-                                size="small"
-                              />
-                            </Box>
-                          </CardContent>
-                        </Card>
+                        <div key={lease.id} className="border border-border rounded-lg p-4 flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold">{lease.leaseType} аренда</p>
+                            <p className="text-sm text-muted-foreground">Арендатор: {lease.lesseeName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Плата: {lease.monthlyRent} {lease.currency}/мес
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(lease.startDate).toLocaleDateString('ru-RU')} — {new Date(lease.endDate).toLocaleDateString('ru-RU')}
+                            </p>
+                          </div>
+                          <Badge variant={lease.isActive ? 'default' : 'secondary'}>
+                            {lease.isActive ? 'Активна' : 'Истекла'}
+                          </Badge>
+                        </div>
                       ))}
-                    </Stack>
+                    </div>
                   )}
-                </>
-              )}
-            </>
-          )}
-        </CardContent>
+                </TabsContent>
+              </>
+            )}
+          </CardContent>
+        </Tabs>
       </Card>
 
-      {/* Info Cards */}
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                🏛️ Ownership Rules
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Only citizens can own land and property<br />
-                • Foreigners can only lease (not own)<br />
-                • All co-owners must be citizens<br />
-                • Citizenship verified automatically<br />
-                • Blockchain-backed certificates
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                🔄 Property Transfers
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Initiate transfer online<br />
-                • Buyer confirms payment via blockchain<br />
-                • Registry officer completes transfer<br />
-                • New certificate issued automatically<br />
-                • Full transaction history logged
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+      {/* Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader><CardTitle>🏛️ Правила собственности</CardTitle></CardHeader>
+          <CardContent>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Только граждане могут владеть землёй</li>
+              <li>• Иностранцы могут только арендовать</li>
+              <li>• Все совладельцы должны быть гражданами</li>
+              <li>• Гражданство проверяется автоматически</li>
+              <li>• Свидетельства на блокчейне</li>
+            </ul>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>🔄 Передача собственности</CardTitle></CardHeader>
+          <CardContent>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Инициация передачи онлайн</li>
+              <li>• Покупатель подтверждает оплату через блокчейн</li>
+              <li>• Регистратор завершает передачу</li>
+              <li>• Новое свидетельство выдаётся автоматически</li>
+              <li>• Полная история транзакций</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

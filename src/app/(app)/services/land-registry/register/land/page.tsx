@@ -1,461 +1,229 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Alert,
-  CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Divider,
-  Chip,
-  Stack,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  ArrowBack as BackIcon,
-  NavigateNext as NextIcon,
-  NavigateBefore as PrevIcon,
-  Send as SubmitIcon,
-  Landscape as LandIcon,
-} from '@mui/icons-material';
-import { registerLandPlot, type LandPlot } from '@/lib/api/land-registry';
-import toast from 'react-hot-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { registerLandPlot } from '@/lib/api/land-registry';
+import { toast } from 'sonner';
+import { ArrowLeft, ArrowRight, Send, Mountain, Loader2, Info, AlertTriangle } from 'lucide-react';
 
-const STEPS = ['Basic Info', 'Location & Size', 'Ownership Details', 'Review & Submit'];
-
-const LAND_USE_TYPES = [
-  'AGRICULTURAL',
-  'RESIDENTIAL',
-  'COMMERCIAL',
-  'INDUSTRIAL', 'FOREST',
-  'RECREATIONAL',
-  'CONSERVATION',
-  'MIXED_USE',
-];
+const STEPS = ['Основная информация', 'Расположение и размер', 'Детали собственности', 'Проверка и подача'];
+const LAND_USE_TYPES = ['AGRICULTURAL', 'RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'FOREST', 'RECREATIONAL', 'CONSERVATION', 'MIXED_USE'];
 
 export default function LandRegistrationPage() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  
-  // Mock citizenship check (should come from auth context)
-  const [isCitizen, setIsCitizen] = useState(true);
+  const [isCitizen] = useState(true);
 
-  // Form data
   const [cadastralNumber, setCadastralNumber] = useState('');
   const [address, setAddress] = useState('');
   const [region, setRegion] = useState('');
   const [landUseType, setLandUseType] = useState('');
   const [area, setArea] = useState('');
   const [coordinates, setCoordinates] = useState('');
-  const [boundaries, setBoundaries] = useState('');  
+  const [boundaries, setBoundaries] = useState('');
   const [ownershipType, setOwnershipType] = useState<'FULL' | 'PARTIAL'>('FULL');
   const [ownershipShare, setOwnershipShare] = useState('100');
   const [documents, setDocuments] = useState('');
 
-  useEffect(() => {
-    // Check citizenship
-    // In real app, this would come from auth context
-    const checkCitizenship = async () => {
-      // Mock check
-      setIsCitizen(true);
-    };
-    checkCitizenship();
-  }, []);
-
-  const handleNext = () => {
-    setActiveStep((prev) => prev + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
-  };
+  const handleNext = () => setActiveStep((p) => p + 1);
+  const handleBack = () => setActiveStep((p) => p - 1);
 
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
-      
-      await registerLandPlot({
-        cadastralNumber,
-        address,
-        region,
-        landUseType,
-        area: parseFloat(area),
-        coordinates,
-        boundaries,
-      } as any);
-
-      toast.success('Land plot registered successfully!');
+      await registerLandPlot({ cadastralNumber, address, region, landUseType, area: parseFloat(area), coordinates, boundaries } as any);
+      toast.success('Земельный участок зарегистрирован!');
       router.push('/services/land-registry');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to register land plot');
+      toast.error(err.message || 'Ошибка регистрации');
     } finally {
       setSubmitting(false);
     }
   };
 
   const canProceed = () => {
-    switch (activeStep) {
-      case 0:
-        return cadastralNumber && address && region && landUseType;
-      case 1:
-        return area && coordinates;
-      case 2:
-        return ownershipType && ownershipShare;
-      case 3:
-        return true;
-      default:
-        return false;
-    }
+    if (activeStep === 0) return cadastralNumber && address && region && landUseType;
+    if (activeStep === 1) return area && coordinates;
+    if (activeStep === 2) return ownershipType && ownershipShare;
+    return true;
   };
 
   if (!isCitizen) {
     return (
-      <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/land-registry')}
-          sx={{ mb: 2 }}
-        >
-          Back to Land Registry
+      <div className="p-6 max-w-[900px] mx-auto">
+        <Button variant="ghost" onClick={() => router.push('/services/land-registry')} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />Назад
         </Button>
-        <Alert severity="error">
-          <Typography variant="body2" fontWeight={600} gutterBottom>
-            Citizenship Required
-          </Typography>
-          <Typography variant="body2">
-            Only citizens of the Siberian Confederation can register land ownership. Foreigners may
-            register lease agreements instead.
-          </Typography>
-        </Alert>
-      </Box>
+        <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-lg p-4">
+          <p className="font-semibold">Требуется гражданство</p>
+          <p className="text-sm">Только граждане Сибирской Конфедерации могут регистрировать земельные участки. Иностранцы могут оформить аренду.</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/land-registry')}
-          sx={{ mb: 2 }}
-        >
-          Back to Land Registry
+    <div className="p-6 max-w-[900px] mx-auto space-y-6">
+      <div>
+        <Button variant="ghost" onClick={() => router.push('/services/land-registry')} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />Назад к реестру
         </Button>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <LandIcon sx={{ fontSize: 40, color: 'success.main' }} />
-          <Box>
-            <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-              Register Land Plot
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Register a new land plot in the cadastral registry
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
+        <div className="flex items-center gap-3">
+          <Mountain className="h-10 w-10 text-green-500" />
+          <div>
+            <h1 className="text-3xl font-bold">Регистрация земельного участка</h1>
+            <p className="text-muted-foreground mt-1">Зарегистрируйте новый участок в кадастровом реестре</p>
+          </div>
+        </div>
+      </div>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2" fontWeight={600} gutterBottom>
-          Citizens Only
-        </Typography>
-        <Typography variant="body2">
-          Land ownership is restricted to citizens of the Siberian Confederation. All registrations
-          are recorded on the ALTAN blockchain for permanent, immutable records.
-        </Typography>
-      </Alert>
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex gap-2">
+        <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-semibold">Только для граждан</p>
+          <p className="text-sm text-muted-foreground">Все регистрации записываются в блокчейн ALTAN.</p>
+        </div>
+      </div>
 
       {/* Stepper */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Stepper activeStep={activeStep}>
-            {STEPS.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            {STEPS.map((label, i) => (
+              <div key={label} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${i <= activeStep ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{i + 1}</div>
+                  <span className="text-xs mt-1 text-center max-w-[100px]">{label}</span>
+                </div>
+                {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-2 ${i < activeStep ? 'bg-primary' : 'bg-muted'}`} />}
+              </div>
             ))}
-          </Stepper>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Form Content */}
       <Card>
-        <CardContent>
-          {/* Step 0: Basic Info */}
+        <CardContent className="pt-6 space-y-6">
           {activeStep === 0 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Basic Information
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <TextField
-                  fullWidth
-                  label="Cadastral Number"
-                  placeholder="e.g., 54:35:123456:78"
-                  value={cadastralNumber}
-                  onChange={(e) => setCadastralNumber(e.target.value)}
-                  required
-                  helperText="Unique identification number for this land plot"
-                />
-                <TextField
-                  fullWidth
-                  label="Address"
-                  placeholder="Street address or location description"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  label="Region"
-                  placeholder="e.g., Irkutsk Oblast, Buryatia"
-                  value={region}
-                  onChange={(e) => setRegion(e.target.value)}
-                  required
-                />
-                <FormControl fullWidth required>
-                  <InputLabel>Land Use Type</InputLabel>
-                  <Select
-                    value={landUseType}
-                    onChange={(e) => setLandUseType(e.target.value)}
-                    label="Land Use Type"
-                  >
-                    {LAND_USE_TYPES.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        {type.replace(/_/g, ' ')}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Основная информация</h3><hr />
+              <div className="space-y-2">
+                <Label>Кадастровый номер</Label>
+                <Input placeholder="54:35:123456:78" value={cadastralNumber} onChange={(e) => setCadastralNumber(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Адрес</Label>
+                <Input placeholder="Адрес или описание" value={address} onChange={(e) => setAddress(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Регион</Label>
+                <Input placeholder="Иркутская обл., Бурятия..." value={region} onChange={(e) => setRegion(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Вид использования земли</Label>
+                <Select value={landUseType} onValueChange={setLandUseType}>
+                  <SelectTrigger><SelectValue placeholder="Выберите..." /></SelectTrigger>
+                  <SelectContent>{LAND_USE_TYPES.map((t) => <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
           )}
 
-          {/* Step 1: Location & Size */}
           {activeStep === 1 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Location & Size
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Area (hectares)"
-                  placeholder="e.g., 2.5"
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  required
-                  helperText="Total area in hectares"
-                  inputProps={{ step: '0.01', min: '0' }}
-                />
-                <TextField
-                  fullWidth
-                  label="GPS Coordinates"
-                  placeholder="e.g., 52.2897° N, 104.2806° E"
-                  value={coordinates}
-                  onChange={(e) => setCoordinates(e.target.value)}
-                  required
-                  helperText="Central point or corner coordinates"
-                />
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  label="Boundary Description (Optional)"
-                  placeholder="Describe the boundaries of the land plot..."
-                  value={boundaries}
-                  onChange={(e) => setBoundaries(e.target.value)}
-                  helperText="E.g., 'Bounded by Main Road to the north, River to the south'"
-                />
-                <Alert severity="info">
-                  <Typography variant="body2">
-                    <strong>GIS Integration Coming Soon:</strong> Interactive map for selecting
-                    boundaries with polygon drawing tools will be available in the next update.
-                  </Typography>
-                </Alert>
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Расположение и размер</h3><hr />
+              <div className="space-y-2">
+                <Label>Площадь (га)</Label>
+                <Input type="number" placeholder="2.5" value={area} onChange={(e) => setArea(e.target.value)} step="0.01" min="0" />
+              </div>
+              <div className="space-y-2">
+                <Label>GPS-координаты</Label>
+                <Input placeholder="52.2897° N, 104.2806° E" value={coordinates} onChange={(e) => setCoordinates(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Описание границ (необязательно)</Label>
+                <Textarea placeholder="Опишите границы..." value={boundaries} onChange={(e) => setBoundaries(e.target.value)} rows={4} />
+              </div>
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex gap-2">
+                <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground"><strong>ГИС скоро:</strong> Интерактивная карта для рисования границ будет доступна в следующем обновлении.</p>
+              </div>
+            </div>
           )}
 
-          {/* Step 2: Ownership Details */}
           {activeStep === 2 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Ownership Details
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Ownership Type</InputLabel>
-                  <Select
-                    value={ownershipType}
-                    onChange={(e) => setOwnershipType(e.target.value as 'FULL' | 'PARTIAL')}
-                    label="Ownership Type"
-                  >
-                    <MenuItem value="FULL">Full Ownership (100%)</MenuItem>
-                    <MenuItem value="PARTIAL">Partial/Shared Ownership</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Ownership Share (%)"
-                  value={ownershipShare}
-                  onChange={(e) => setOwnershipShare(e.target.value)}
-                  disabled={ownershipType === 'FULL'}
-                  inputProps={{ min: '0', max: '100', step: '0.01' }}
-                  helperText={
-                    ownershipType === 'FULL'
-                      ? 'Full ownership = 100%'
-                      : 'Enter your percentage share (e.g., 50 for 50%)'
-                  }
-                />
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  label="Supporting Documents (Optional)"
-                  placeholder="List any supporting documents (will be uploaded separately)..."
-                  value={documents}
-                  onChange={(e) => setDocuments(e.target.value)}
-                  helperText="E.g., previous deeds, survey reports, tax records"
-                />
-                <Alert severity="warning">
-                  <Typography variant="body2">
-                    <strong>Note:</strong> Land registration will be reviewed by a cadastral officer
-                    before finalization. You may be required to provide additional documentation.
-                  </Typography>
-                </Alert>
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Детали собственности</h3><hr />
+              <div className="space-y-2">
+                <Label>Тип собственности</Label>
+                <Select value={ownershipType} onValueChange={(v) => setOwnershipType(v as 'FULL' | 'PARTIAL')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FULL">Полная (100%)</SelectItem>
+                    <SelectItem value="PARTIAL">Долевая</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Доля (%)</Label>
+                <Input type="number" value={ownershipShare} onChange={(e) => setOwnershipShare(e.target.value)} disabled={ownershipType === 'FULL'} />
+                <p className="text-xs text-muted-foreground">{ownershipType === 'FULL' ? 'Полная = 100%' : 'Введите вашу долю'}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Подтверждающие документы (необязательно)</Label>
+                <Textarea placeholder="Перечислите документы..." value={documents} onChange={(e) => setDocuments(e.target.value)} rows={3} />
+              </div>
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+                <p className="text-sm"><strong>Примечание:</strong> Регистрация будет проверена кадастровым офицером.</p>
+              </div>
+            </div>
           )}
 
-          {/* Step 3: Review */}
           {activeStep === 3 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Review Your Registration
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Cadastral Number
-                  </Typography>
-                  <Typography variant="body1" fontWeight={600}>
-                    {cadastralNumber}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Address & Region
-                  </Typography>
-                  <Typography variant="body1">{address}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {region}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Land Use Type
-                  </Typography>
-                  <Chip label={landUseType.replace(/_/g, ' ')} color="primary" size="small" />
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Area & Location
-                  </Typography>
-                  <Typography variant="body1">{area} hectares</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    GPS: {coordinates}
-                  </Typography>
-                </Box>
-                {boundaries && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Boundaries
-                    </Typography>
-                    <Typography variant="body2">{boundaries}</Typography>
-                  </Box>
-                )}
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Ownership
-                  </Typography>
-                  <Typography variant="body1">
-                    {ownershipType === 'FULL' ? 'Full Ownership' : `Partial Ownership (${ownershipShare}%)`}
-                  </Typography>
-                </Box>
-                {documents && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Supporting Documents
-                    </Typography>
-                    <Typography variant="body2">{documents}</Typography>
-                  </Box>
-                )}
-                <Alert severity="info">
-                  <Typography variant="body2" fontWeight={600} gutterBottom>
-                    Final Confirmation
-                  </Typography>
-                  <Typography variant="body2">
-                    By submitting this registration, you confirm that:
-                  </Typography>
-                  <ul>
-                    <li>All information provided is accurate and truthful</li>
-                    <li>You have legal rights to this land plot</li>
-                    <li>This registration will be reviewed by a cadastral officer</li>
-                    <li>The record will be permanently registered on the ALTAN blockchain</li>
-                  </ul>
-                </Alert>
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Проверка регистрации</h3><hr />
+              <div><p className="text-xs text-muted-foreground">Кадастровый номер</p><p className="font-semibold">{cadastralNumber}</p></div>
+              <div><p className="text-xs text-muted-foreground">Адрес / Регион</p><p>{address}</p><p className="text-sm text-muted-foreground">{region}</p></div>
+              <div><p className="text-xs text-muted-foreground">Вид использования</p><Badge>{landUseType.replace(/_/g, ' ')}</Badge></div>
+              <div><p className="text-xs text-muted-foreground">Площадь</p><p>{area} га</p><p className="text-sm text-muted-foreground">GPS: {coordinates}</p></div>
+              {boundaries && <div><p className="text-xs text-muted-foreground">Границы</p><p className="text-sm">{boundaries}</p></div>}
+              <div><p className="text-xs text-muted-foreground">Собственность</p><p>{ownershipType === 'FULL' ? 'Полная' : `Долевая (${ownershipShare}%)`}</p></div>
+              {documents && <div><p className="text-xs text-muted-foreground">Документы</p><p className="text-sm">{documents}</p></div>}
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                <p className="text-sm font-semibold mb-1">Подтверждение</p>
+                <p className="text-sm text-muted-foreground">Подавая заявку, вы подтверждаете что:</p>
+                <ul className="text-sm text-muted-foreground list-disc ml-4 mt-1 space-y-1">
+                  <li>Вся информация точна и достоверна</li>
+                  <li>Вы имеете законные права на этот участок</li>
+                  <li>Регистрация будет проверена кадастровым офицером</li>
+                  <li>Запись будет внесена в блокчейн ALTAN</li>
+                </ul>
+              </div>
+            </div>
           )}
 
-          {/* Navigation Buttons */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button onClick={handleBack} disabled={activeStep === 0} startIcon={<PrevIcon />}>
-              Back
-            </Button>
+          <div className="flex justify-between pt-4">
+            <Button variant="outline" onClick={handleBack} disabled={activeStep === 0}><ArrowLeft className="h-4 w-4 mr-2" />Назад</Button>
             {activeStep === STEPS.length - 1 ? (
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleSubmit}
-                disabled={!canProceed() || submitting}
-                endIcon={submitting ? <CircularProgress size={20} /> : <SubmitIcon />}
-              >
-                {submitting ? 'Registering...' : 'Submit Registration'}
+              <Button className="bg-green-600 hover:bg-green-700" onClick={handleSubmit} disabled={!canProceed() || submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                {submitting ? 'Регистрация...' : 'Подать заявку'}
               </Button>
             ) : (
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                disabled={!canProceed()}
-                endIcon={<NextIcon />}
-              >
-                Next
-              </Button>
+              <Button onClick={handleNext} disabled={!canProceed()}>Далее<ArrowRight className="h-4 w-4 ml-2" /></Button>
             )}
-          </Box>
+          </div>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }

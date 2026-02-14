@@ -1,12 +1,7 @@
 'use client';
 
-import { Chip } from '@mui/material';
-import {
-  Person as SingleIcon,
-  Favorite as MarriedIcon,
-  HeartBroken as DivorcedIcon,
-  Cancel as WidowedIcon,
-} from '@mui/icons-material';
+import { Badge } from '@/components/ui/badge';
+import { Heart, HeartCrack, User, XCircle } from 'lucide-react';
 import type { CivilStatus } from '@/lib/api/zags';
 
 interface CivilStatusBadgeProps {
@@ -14,38 +9,43 @@ interface CivilStatusBadgeProps {
   size?: 'small' | 'medium';
 }
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ReactNode; className: string }> = {
   SINGLE: {
     label: 'Single',
-    color: 'default' as const,
-    icon: <SingleIcon />,
+    variant: 'secondary',
+    icon: <User className="h-3.5 w-3.5" />,
+    className: '',
   },
   MARRIED: {
     label: 'Married',
-    color: 'success' as const,
-    icon: <MarriedIcon />,
+    variant: 'default',
+    icon: <Heart className="h-3.5 w-3.5" />,
+    className: 'bg-green-600 hover:bg-green-700',
   },
   DIVORCED: {
     label: 'Divorced',
-    color: 'warning' as const,
-    icon: <DivorcedIcon />,
+    variant: 'default',
+    icon: <HeartCrack className="h-3.5 w-3.5" />,
+    className: 'bg-yellow-600 hover:bg-yellow-700',
   },
   WIDOWED: {
     label: 'Widowed',
-    color: 'error' as const,
-    icon: <WidowedIcon />,
+    variant: 'destructive',
+    icon: <XCircle className="h-3.5 w-3.5" />,
+    className: '',
   },
 };
 
 export default function CivilStatusBadge({ status, size = 'medium' }: CivilStatusBadgeProps) {
-  const config = STATUS_CONFIG[status];
+  const config = STATUS_CONFIG[status] || STATUS_CONFIG.SINGLE;
 
   return (
-    <Chip
-      icon={config.icon}
-      label={config.label}
-      color={config.color}
-      size={size}
-    />
+    <Badge
+      variant={config.variant}
+      className={`gap-1 ${size === 'small' ? 'text-xs px-2 py-0.5' : 'text-sm px-3 py-1'} ${config.className}`}
+    >
+      {config.icon}
+      {config.label}
+    </Badge>
   );
 }

@@ -1,23 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Divider,
-  Chip,
-  Stack,
-  Alert,
-} from '@mui/material';
-import {
-  Download as DownloadIcon,
-  Verified as VerifiedIcon,
-  QrCode as QrCodeIcon,
-  Print as PrintIcon,
-} from '@mui/icons-material';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Download, Printer, ShieldCheck, QrCode } from 'lucide-react';
 import type { Marriage } from '@/lib/api/zags';
 
 interface CertificateViewerProps {
@@ -42,171 +29,145 @@ export default function CertificateViewer({ marriage, type }: CertificateViewerP
 
   return (
     <Card>
-      <CardContent>
+      <CardContent className="pt-6">
         {/* Certificate Header */}
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <VerifiedIcon sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
-          <Typography variant="h4" fontWeight={700} gutterBottom>
+        <div className="text-center mb-8">
+          <ShieldCheck className="h-16 w-16 text-green-500 mx-auto mb-3" />
+          <h2 className="text-2xl font-bold mb-1">
             {type === 'MARRIAGE' ? 'Marriage Certificate' : 'Divorce Certificate'}
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
+          </h2>
+          <p className="text-lg text-muted-foreground">
             Siberian Confederation - ZAGS
-          </Typography>
-          <Divider sx={{ my: 3 }} />
-        </Box>
+          </p>
+          <hr className="my-6" />
+        </div>
 
         {/* Certificate Number */}
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Typography variant="caption" color="text.secondary">
-            Certificate Number
-          </Typography>
-          <Typography variant="h5" fontWeight={600} color="primary.main">
-            {marriage.certificateNumber}
-          </Typography>
-          <Chip
-            label="Blockchain Verified"
-            color="success"
-            size="small"
-            icon={<VerifiedIcon />}
-            sx={{ mt: 1 }}
-          />
-        </Box>
+        <div className="text-center mb-8">
+          <p className="text-xs text-muted-foreground">Certificate Number</p>
+          <p className="text-xl font-semibold text-primary">{marriage.certificateNumber}</p>
+          <Badge className="mt-2 gap-1 bg-green-600 hover:bg-green-700">
+            <ShieldCheck className="h-3 w-3" />
+            Blockchain Verified
+          </Badge>
+        </div>
 
-        <Divider sx={{ my: 3 }} />
+        <hr className="my-6" />
 
         {/* Marriage Details */}
-        <Stack spacing={3}>
-          <Box>
-            <Typography variant="caption" color="text.secondary" display="block">
-              Spouses
-            </Typography>
-            <Typography variant="h6" fontWeight={600}>
-              {marriage.spouse1FullName}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+        <div className="space-y-6">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Spouses</p>
+            <p className="text-lg font-semibold">{marriage.spouse1FullName}</p>
+            <p className="text-sm text-muted-foreground mb-2">
               Date of Birth: {new Date(marriage.spouse1DateOfBirth).toLocaleDateString()}
-            </Typography>
-            <Typography variant="h6" fontWeight={600} sx={{ mt: 1 }}>
-              {marriage.spouse2FullName}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </p>
+            <p className="text-lg font-semibold mt-2">{marriage.spouse2FullName}</p>
+            <p className="text-sm text-muted-foreground">
               Date of Birth: {new Date(marriage.spouse2DateOfBirth).toLocaleDateString()}
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
-          <Box>
-            <Typography variant="caption" color="text.secondary">
+          <div>
+            <p className="text-xs text-muted-foreground">
               Date of {type === 'MARRIAGE' ? 'Marriage' : 'Divorce'}
-            </Typography>
-            <Typography variant="body1" fontWeight={600}>
+            </p>
+            <p className="font-semibold">
               {new Date(marriage.marriageDate).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
               })}
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
           {marriage.ceremonyLocation && (
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Location
-              </Typography>
-              <Typography variant="body1">{marriage.ceremonyLocation}</Typography>
-            </Box>
+            <div>
+              <p className="text-xs text-muted-foreground">Location</p>
+              <p>{marriage.ceremonyLocation}</p>
+            </div>
           )}
 
           {marriage.ceremonyType && (
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Ceremony Type
-              </Typography>
-              <Typography variant="body1">{marriage.ceremonyType}</Typography>
-            </Box>
+            <div>
+              <p className="text-xs text-muted-foreground">Ceremony Type</p>
+              <p>{marriage.ceremonyType}</p>
+            </div>
           )}
 
           {marriage.propertyRegime && (
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Property Regime
-              </Typography>
-              <Typography variant="body1">{marriage.propertyRegime}</Typography>
-            </Box>
+            <div>
+              <p className="text-xs text-muted-foreground">Property Regime</p>
+              <p>{marriage.propertyRegime}</p>
+            </div>
           )}
 
           {(marriage.witness1Name || marriage.witness2Name) && (
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Witnesses
-              </Typography>
-              {marriage.witness1Name && (
-                <Typography variant="body2">1. {marriage.witness1Name}</Typography>
-              )}
-              {marriage.witness2Name && (
-                <Typography variant="body2">2. {marriage.witness2Name}</Typography>
-              )}
-            </Box>
+            <div>
+              <p className="text-xs text-muted-foreground">Witnesses</p>
+              {marriage.witness1Name && <p className="text-sm">1. {marriage.witness1Name}</p>}
+              {marriage.witness2Name && <p className="text-sm">2. {marriage.witness2Name}</p>}
+            </div>
           )}
 
           {marriage.registeredBy && (
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Registered By
-              </Typography>
-              <Typography variant="body1">{marriage.registeredBy}</Typography>
-              <Typography variant="body2" color="text.secondary">
+            <div>
+              <p className="text-xs text-muted-foreground">Registered By</p>
+              <p>{marriage.registeredBy}</p>
+              <p className="text-sm text-muted-foreground">
                 on {marriage.registeredAt && new Date(marriage.registeredAt).toLocaleDateString()}
-              </Typography>
-            </Box>
+              </p>
+            </div>
           )}
-        </Stack>
+        </div>
 
-        <Divider sx={{ my: 3 }} />
+        <hr className="my-6" />
 
         {/* Blockchain Info */}
-        <Alert severity="success" icon={<VerifiedIcon />}>
-          <Typography variant="body2" fontWeight={600} gutterBottom>
-            Blockchain Verified Certificate
-          </Typography>
-          <Typography variant="body2">
-            This certificate is registered on the ALTAN blockchain, ensuring immutability and
-            authenticity. The certificate hash is permanently recorded and can be verified by any
-            third party.
-          </Typography>
-        </Alert>
+        <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <div className="flex items-start gap-2">
+            <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5" />
+            <div>
+              <p className="font-semibold text-sm text-green-800 dark:text-green-300 mb-1">
+                Blockchain Verified Certificate
+              </p>
+              <p className="text-sm text-green-700 dark:text-green-400">
+                This certificate is registered on the ALTAN blockchain, ensuring immutability and
+                authenticity. The certificate hash is permanently recorded and can be verified by any
+                third party.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* QR Code Placeholder */}
-        <Box sx={{ textAlign: 'center', my: 3 }}>
-          <QrCodeIcon sx={{ fontSize: 120, color: 'text.secondary' }} />
-          <Typography variant="caption" display="block" color="text.secondary">
+        <div className="text-center my-6">
+          <QrCode className="h-28 w-28 text-muted-foreground mx-auto" />
+          <p className="text-xs text-muted-foreground mt-1">
             QR Code for quick verification
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
         {/* Action Buttons */}
-        <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            onClick={handleDownload}
-            disabled={downloading}
-            fullWidth
-          >
+        <div className="flex gap-3 mt-8">
+          <Button className="flex-1 gap-2" onClick={handleDownload} disabled={downloading}>
+            <Download className="h-4 w-4" />
             {downloading ? 'Generating PDF...' : 'Download PDF'}
           </Button>
-          <Button variant="outlined" startIcon={<PrintIcon />} onClick={handlePrint} fullWidth>
+          <Button variant="outline" className="flex-1 gap-2" onClick={handlePrint}>
+            <Printer className="h-4 w-4" />
             Print
           </Button>
-        </Stack>
+        </div>
 
         {/* Footer */}
-        <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
-          <Typography variant="caption" color="text.secondary">
+        <div className="mt-8 pt-4 border-t text-center">
+          <p className="text-xs text-muted-foreground">
             This is an official certificate issued by the Civil Registry Office (ZAGS) of the
             Siberian Confederation. This document has legal validity and is registered on the ALTAN
             blockchain.
-          </Typography>
-        </Box>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

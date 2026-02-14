@@ -1,460 +1,299 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { RateOrganizationDialog } from '@/components/organizations/RateOrganizationDialog';
 import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Grid,
-  Card,
-  CardContent,
-  Chip,
-  Avatar,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Alert,
-  LinearProgress,
-  Divider,
-} from '@mui/material';
-import {
+  Building2,
   Users,
-  Award,
-  TrendingUp,
   Star,
-  DollarSign,
-  Heart,
-  CheckCircle,
-  UserPlus,
+  MapPin,
+  Calendar,
+  ArrowLeft,
+  Crown,
+  TrendingUp,
+  ShieldCheck,
+  ExternalLink,
+  Loader2,
 } from 'lucide-react';
-import { RateOrganizationDialog, RatingData } from '@/components/organizations/RateOrganizationDialog';
+import { toast } from 'sonner';
 
-interface OrganizationDetail {
+interface Organization {
   id: string;
   name: string;
   type: string;
-  branch?: string;
   description?: string;
-  leader: {
-    id: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-  };
-  parent?: {
-    id: string;
-    name: string;
-  };
-  children: Array<{
-    id: string;
-    name: string;
-  }>;
-  members: Array<{
-    id: string;
-    user: {
-      id: string;
-      username: string;
-      firstName: string;
-      lastName: string;
-    };
-    role: string;
-    joinedAt: Date;
-  }>;
-  trustScore: number;
-  qualityScore: number;
-  financialScore: number;
-  overallRating: number;
-  currentRank?: number;
-  previousRank?: number;
-  contractsCompleted: number;
-  contractsActive: number;
-  totalRevenue: number;
-  createdAt: Date;
+  location?: string;
+  leader?: { id: string; fullName: string; seatId: string };
+  memberCount: number;
+  rating: number;
+  ratingCount: number;
+  financialRating?: number;
+  trustRating?: number;
+  qualityRating?: number;
+  parentOrganization?: { id: string; name: string };
+  childOrganizations?: { id: string; name: string; type: string; memberCount: number }[];
+  members?: { id: string; fullName: string; role: string; seatId: string }[];
+  createdAt: string;
 }
 
-export default function OrganizationProfilePage() {
+export default function OrganizationDetailPage() {
   const params = useParams();
-  const organizationId = params.id as string;
+  const router = useRouter();
+  const id = params.id as string;
 
-  const [organization, setOrganization] = useState<OrganizationDetail | null>(null);
+  const [org, setOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
+  const [rateDialogOpen, setRateDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (organizationId) {
-      fetchOrganization();
-    }
-  }, [organizationId]);
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
 
-  const fetchOrganization = async () => {
-    setLoading(true);
+  const fetchOrg = async () => {
     try {
-      const response = await fetch(`/api/organizations/${organizationId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+      setLoading(true);
+      const res = await fetch(`/api/organizations/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!response.ok) throw new Error('Failed to fetch organization');
-
-      const data = await response.json();
-      setOrganization(data);
-    } catch (err: any) {
-      setError(err.message);
+      if (!res.ok) throw new Error('Failed to load');
+      const data = await res.json();
+      setOrg(data);
+    } catch {
+      toast.error('Ошибка загрузки организации');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmitRating = async (ratings: RatingData) => {
-    if (!organization) return;
+  useEffect(() => {
+    if (id) fetchOrg();
+  }, [id]);
 
-    try {
-      const response = await fetch(`/api/organizations/${organization.id}/rate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(ratings),
-      });
-
-      if (!response.ok) throw new Error('Failed to submit rating');
-
-      // Refresh organization
-      await fetchOrganization();
-    } catch (err: any) {
-      throw err;
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return 'success.main';
-    if (score >= 6) return 'warning.main';
-    return 'error.main';
+  const handleRate = async (data: { financialScore: number; trustScore: number; qualityScore: number }) => {
+    const res = await fetch(`/api/organizations/${id}/rate`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed');
+    toast.success('Оценка отправлена');
+    fetchOrg();
   };
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <LinearProgress />
-      </Container>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
-  if (error || !organization) {
+  if (!org) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error">{error || 'Organization not found'}</Alert>
-      </Container>
+      <div className="max-w-4xl mx-auto py-8 px-4 text-center">
+        <p className="text-muted-foreground">Организация не найдена</p>
+        <Button variant="outline" className="mt-4" onClick={() => router.back()}>
+          Назад
+        </Button>
+      </div>
     );
   }
 
   return (
-    <>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Box>
-              <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Users size={32} />
-                {organization.name}
-                {organization.currentRank && organization.currentRank <= 100 && (
-                  <Chip
-                    label={`#${organization.currentRank}`}
-                    color="primary"
-                    icon={<Award size={14} />}
-                  />
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      {/* Header */}
+      <div className="mb-6">
+        <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-1 mb-4">
+          <ArrowLeft className="h-4 w-4" />
+          Назад
+        </Button>
+
+        <div className="flex justify-between items-start">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Building2 className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{org.name}</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline">{org.type}</Badge>
+                {org.location && (
+                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {org.location}
+                  </span>
                 )}
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary">
-                {organization.type}
-                {organization.branch && ` • ${organization.branch}`}
-              </Typography>
-            </Box>
+              </div>
+            </div>
+          </div>
 
+          <Button onClick={() => setRateDialogOpen(true)} className="gap-2">
+            <Star className="h-4 w-4" />
+            Оценить
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <Card>
+          <CardContent className="pt-4 pb-4 text-center">
+            <Star className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold">{org.rating?.toFixed(1) || '—'}</p>
+            <p className="text-xs text-muted-foreground">{org.ratingCount || 0} оценок</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4 text-center">
+            <Users className="h-5 w-5 text-blue-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold">{org.memberCount || 0}</p>
+            <p className="text-xs text-muted-foreground">участников</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4 text-center">
+            <TrendingUp className="h-5 w-5 text-green-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold">{org.financialRating?.toFixed(1) || '—'}</p>
+            <p className="text-xs text-muted-foreground">финансы</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4 text-center">
+            <ShieldCheck className="h-5 w-5 text-purple-500 mx-auto mb-1" />
+            <p className="text-2xl font-bold">{org.trustRating?.toFixed(1) || '—'}</p>
+            <p className="text-xs text-muted-foreground">доверие</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Description */}
+      {org.description && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold mb-2">О организации</h3>
+            <p className="text-sm text-muted-foreground">{org.description}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Leader */}
+      {org.leader && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Crown className="h-4 w-4 text-yellow-500" />
+              Руководитель
+            </h3>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
+                <Crown className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="font-medium">{org.leader.fullName}</p>
+                <p className="text-sm text-muted-foreground">{org.leader.seatId}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Members */}
+      {org.members && org.members.length > 0 && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Участники ({org.members.length})
+            </h3>
+            <div className="space-y-2">
+              {org.members.map((member) => (
+                <div key={member.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                      {member.fullName?.charAt(0) || '?'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{member.fullName}</p>
+                      <p className="text-xs text-muted-foreground">{member.seatId}</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{member.role}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Parent Organization */}
+      {org.parentOrganization && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold mb-3">Вышестоящая организация</h3>
             <Button
-              variant="contained"
-              startIcon={<Star size={20} />}
-              onClick={() => setRatingDialogOpen(true)}
+              variant="outline"
+              className="gap-2"
+              onClick={() => router.push(`/organizations/${org.parentOrganization!.id}`)}
             >
-              Оценить
+              <Building2 className="h-4 w-4" />
+              {org.parentOrganization.name}
+              <ExternalLink className="h-3.5 w-3.5" />
             </Button>
-          </Box>
+          </CardContent>
+        </Card>
+      )}
 
-          {organization.description && (
-            <Typography variant="body1" color="text.secondary">
-              {organization.description}
-            </Typography>
-          )}
-        </Box>
+      {/* Child Organizations */}
+      {org.childOrganizations && org.childOrganizations.length > 0 && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold mb-3">Дочерние организации ({org.childOrganizations.length})</h3>
+            <div className="space-y-2">
+              {org.childOrganizations.map((child) => (
+                <button
+                  key={child.id}
+                  onClick={() => router.push(`/organizations/${child.id}`)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">{child.name}</p>
+                      <p className="text-xs text-muted-foreground">{child.type}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Users className="h-3.5 w-3.5" />
+                    {child.memberCount}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        <Grid container spacing={3}>
-          {/* Stats Cards */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Общий Рейтинг
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <Star size={24} color="#FFD700" fill="#FFD700" />
-                  <Typography variant="h3" color="primary">
-                    {organization.overallRating.toFixed(1)}
-                  </Typography>
-                  <Typography variant="h6" color="text.secondary">
-                    / 10
-                  </Typography>
-                </Box>
+      {/* Created date */}
+      <div className="text-center py-4">
+        <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center">
+          <Calendar className="h-3.5 w-3.5" />
+          Создана: {new Date(org.createdAt).toLocaleDateString()}
+        </p>
+      </div>
 
-                {/* Individual Scores */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2">
-                        <DollarSign size={16} style={{ display: 'inline', marginRight: 4 }} />
-                        Финансы
-                      </Typography>
-                      <Typography variant="body2" color={getScoreColor(organization.financialScore)}>
-                        {organization.financialScore.toFixed(1)}
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={organization.financialScore * 10}
-                      sx={{
-                        height: 6,
-                        borderRadius: 1,
-                        '& .MuiLinearProgress-bar': {
-                          bgcolor: getScoreColor(organization.financialScore),
-                        },
-                      }}
-                    />
-                  </Box>
-
-                  <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2">
-                        <Heart size={16} style={{ display: 'inline', marginRight: 4 }} />
-                        Доверие
-                      </Typography>
-                      <Typography variant="body2" color={getScoreColor(organization.trustScore)}>
-                        {organization.trustScore.toFixed(1)}
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={organization.trustScore * 10}
-                      sx={{
-                        height: 6,
-                        borderRadius: 1,
-                        '& .MuiLinearProgress-bar': {
-                          bgcolor: getScoreColor(organization.trustScore),
-                        },
-                      }}
-                    />
-                  </Box>
-
-                  <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2">
-                        <Award size={16} style={{ display: 'inline', marginRight: 4 }} />
-                        Качество
-                      </Typography>
-                      <Typography variant="body2" color={getScoreColor(organization.qualityScore)}>
-                        {organization.qualityScore.toFixed(1)}
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={organization.qualityScore * 10}
-                      sx={{
-                        height: 6,
-                        borderRadius: 1,
-                        '& .MuiLinearProgress-bar': {
-                          bgcolor: getScoreColor(organization.qualityScore),
-                        },
-                      }}
-                    />
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Статистика
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Контракты Завершены
-                    </Typography>
-                    <Typography variant="h5">
-                      <CheckCircle size={20} style={{ display: 'inline', marginRight: 4 }} />
-                      {organization.contractsCompleted}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Активные Контракты
-                    </Typography>
-                    <Typography variant="h5">{organization.contractsActive}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Общая Выручка
-                    </Typography>
-                    <Typography variant="h5">{organization.totalRevenue.toLocaleString()} ₮</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Участников
-                    </Typography>
-                    <Typography variant="h5">{organization.members.length}</Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Информация
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Лидер
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <Avatar sx={{ width: 32, height: 32 }}>
-                        {organization.leader.firstName[0]}
-                        {organization.leader.lastName[0]}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2">
-                          {organization.leader.firstName} {organization.leader.lastName}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          @{organization.leader.username}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-
-                  {organization.parent && (
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Родительская Организация
-                      </Typography>
-                      <Typography variant="body2">
-                        <a href={`/organizations/${organization.parent.id}`}>
-                          {organization.parent.name}
-                        </a>
-                      </Typography>
-                    </Box>
-                  )}
-
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Создано
-                    </Typography>
-                    <Typography variant="body2">
-                      {new Date(organization.createdAt).toLocaleDateString('ru-RU')}
-                    </Typography>
-                  </Box>
-
-                  {organization.children.length > 0 && (
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Дочерние Организации
-                      </Typography>
-                      <Typography variant="body2">{organization.children.length}</Typography>
-                    </Box>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Members Table */}
-          <Grid size={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Участники ({organization.members.length})
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Пользователь</TableCell>
-                        <TableCell>Роль</TableCell>
-                        <TableCell>Дата вступления</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {organization.members.map((member) => (
-                        <TableRow key={member.id}>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Avatar sx={{ width: 32, height: 32 }}>
-                                {member.user.firstName[0]}
-                                {member.user.lastName[0]}
-                              </Avatar>
-                              <Box>
-                                <Typography variant="body2">
-                                  {member.user.firstName} {member.user.lastName}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  @{member.user.username}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={member.role}
-                              size="small"
-                              color={member.role === 'LEADER' ? 'primary' : 'default'}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            {new Date(member.joinedAt).toLocaleDateString('ru-RU')}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Container>
-
-      {/* Rating Dialog */}
+      {/* Rate Dialog */}
       <RateOrganizationDialog
-        open={ratingDialogOpen}
-        onClose={() => setRatingDialogOpen(false)}
-        organizationName={organization.name}
-        organizationId={organization.id}
-        onSubmit={handleSubmitRating}
+        open={rateDialogOpen}
+        onClose={() => setRateDialogOpen(false)}
+        organizationName={org.name}
+        organizationId={org.id}
+        onSubmit={handleRate}
       />
-    </>
+    </div>
   );
 }

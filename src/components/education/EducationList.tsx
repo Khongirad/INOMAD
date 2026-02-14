@@ -1,171 +1,120 @@
 'use client';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Typography,
-  Box,
-  Chip,
-  Button,
-  Avatar,
-  Divider,
-} from '@mui/material';
-import { GraduationCap, CheckCircle, Clock, FileText, User } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { GraduationCap, CheckCircle, Clock, XCircle, School, BookOpen, ExternalLink } from 'lucide-react';
 
-interface EducationVerification {
+interface Education {
   id: string;
-  type: 'DIPLOMA' | 'CERTIFICATE' | 'RECOMMENDATION';
+  type: string;
   institution: string;
   fieldOfStudy: string;
   graduationYear?: number;
+  status: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
   documentUrl?: string;
-  recommender?: {
-    id: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-  };
-  isVerified: boolean;
-  verifiedAt?: Date;
-  createdAt: Date;
 }
 
 interface EducationListProps {
-  educations: EducationVerification[];
-  onAddNew?: () => void;
+  educations: Education[];
+  onViewDocument?: (id: string) => void;
 }
 
-export function EducationList({ educations, onAddNew }: EducationListProps) {
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'DIPLOMA':
-        return 'Диплом';
-      case 'CERTIFICATE':
-        return 'Сертификат';
-      case 'RECOMMENDATION':
-        return 'Рекомендация';
-      default:
-        return type;
-    }
-  };
+const typeLabels: Record<string, string> = {
+  DIPLOMA: 'Диплом',
+  CERTIFICATE: 'Сертификат',
+  RECOMMENDATION: 'Рекомендация',
+};
 
-  const getStatusColor = (isVerified: boolean) => {
-    return isVerified ? 'success' : 'warning';
-  };
+const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+  VERIFIED: {
+    label: 'Подтверждено',
+    icon: <CheckCircle className="h-3 w-3" />,
+    className: 'bg-green-600 hover:bg-green-700',
+  },
+  PENDING: {
+    label: 'На проверке',
+    icon: <Clock className="h-3 w-3" />,
+    className: 'bg-yellow-600 hover:bg-yellow-700',
+  },
+  REJECTED: {
+    label: 'Отклонено',
+    icon: <XCircle className="h-3 w-3" />,
+    className: 'bg-red-600 hover:bg-red-700',
+  },
+};
 
-  const getStatusLabel = (isVerified: boolean) => {
-    return isVerified ? 'Подтверждено' : 'На проверке';
-  };
-
-  const getStatusIcon = (isVerified: boolean) => {
-    return isVerified ? <CheckCircle size={16} /> : <Clock size={16} />;
-  };
+export function EducationList({ educations, onViewDocument }: EducationListProps) {
+  if (educations.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center">
+          <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">Нет записей об образовании</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <GraduationCap size={24} />
-          Мое Образование
-        </Typography>
-        {onAddNew && (
-          <Button variant="contained" onClick={onAddNew}>
-            Добавить
-          </Button>
-        )}
-      </Box>
+    <div className="space-y-3">
+      {educations.map((edu) => {
+        const status = statusConfig[edu.status] || statusConfig.PENDING;
 
-      {educations.length === 0 ? (
-        <Card>
-          <CardContent>
-            <Typography variant="body2" color="text.secondary" align="center">
-              У вас пока нет подтвержденного образования.
-              <br />
-              Добавьте диплом, сертификат или получите рекомендацию специалиста.
-            </Typography>
-          </CardContent>
-        </Card>
-      ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {educations.map((edu) => (
-            <Card key={edu.id} variant="outlined">
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Box>
-                    <Typography variant="h6">{edu.fieldOfStudy}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {edu.institution}
-                      {edu.graduationYear && ` • ${edu.graduationYear}`}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Chip
-                      label={getTypeLabel(edu.type)}
-                      size="small"
-                      icon={<FileText size={14} />}
-                    />
-                    <Chip
-                      label={getStatusLabel(edu.isVerified)}
-                      color={getStatusColor(edu.isVerified)}
-                      size="small"
-                      icon={getStatusIcon(edu.isVerified)}
-                    />
-                  </Box>
-                </Box>
+        return (
+          <Card key={edu.id}>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <School className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">{edu.institution}</h4>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <BookOpen className="h-3.5 w-3.5" />
+                      {edu.fieldOfStudy}
+                    </p>
+                  </div>
+                </div>
 
-                {/* Recommender Info */}
-                {edu.type === 'RECOMMENDATION' && edu.recommender && (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <User size={16} />
-                      <Typography variant="body2">
-                        Рекомендовано:{' '}
-                        <strong>
-                          {edu.recommender.firstName} {edu.recommender.lastName}
-                        </strong>{' '}
-                        (@{edu.recommender.username})
-                      </Typography>
-                    </Box>
-                  </>
+                <Badge className={`gap-1 ${status.className}`}>
+                  {status.icon}
+                  {status.label}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-3 text-sm">
+                <Badge variant="outline">{typeLabels[edu.type] || edu.type}</Badge>
+                {edu.graduationYear && (
+                  <span className="text-muted-foreground">{edu.graduationYear}</span>
                 )}
-
-                {/* Document Link */}
-                {edu.documentUrl && (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Button
-                      variant="text"
-                      size="small"
-                      href={edu.documentUrl}
-                      target="_blank"
-                      startIcon={<FileText size={16} />}
-                    >
-                      Просмотреть Документ
-                    </Button>
-                  </>
+                {edu.verifiedBy && (
+                  <span className="text-xs text-muted-foreground">
+                    Проверил: {edu.verifiedBy}
+                  </span>
                 )}
+              </div>
 
-                {/* Verification Date */}
-                {edu.isVerified && edu.verifiedAt && (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-                    Подтверждено:{' '}
-                    {new Date(edu.verifiedAt).toLocaleDateString('ru-RU')}
-                  </Typography>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-      )}
-    </Box>
+              {onViewDocument && edu.documentUrl && (
+                <div className="mt-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={() => onViewDocument(edu.id)}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Просмотреть документ
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
   );
 }

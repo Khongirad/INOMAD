@@ -1,21 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Chip,
-  TextField,
-  Alert,
-  CircularProgress,
-  Stack,
-} from '@mui/material';
-import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getMyPassportApplications, lookupPassport, type PassportApplication } from '@/lib/api/migration';
 import ApplicationStatusCard from '@/components/migration/ApplicationStatusCard';
 
@@ -24,8 +15,7 @@ export default function MigrationServicePage() {
   const [applications, setApplications] = useState<PassportApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Passport lookup
+
   const [lookupNumber, setLookupNumber] = useState('');
   const [lookupResult, setLookupResult] = useState<any>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -48,7 +38,6 @@ export default function MigrationServicePage() {
 
   const handleLookup = async () => {
     if (!lookupNumber.trim()) return;
-    
     try {
       setLookupLoading(true);
       const result = await lookupPassport(lookupNumber);
@@ -61,126 +50,83 @@ export default function MigrationServicePage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <div className="space-y-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          Migration Service
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Apply for passports, manage your applications, and verify documents
-        </Typography>
-      </Box>
+      <div>
+        <h1 className="text-2xl font-bold">Миграционная служба</h1>
+        <p className="text-muted-foreground mt-1">
+          Оформление паспортов, управление заявлениями и проверка документов
+        </p>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-sm underline">Закрыть</button>
+        </div>
       )}
 
-      {/* Info Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                📘 Standard Passport
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                For regular citizens. Valid for 10 years. Allows international travel to all partner nations.
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                fullWidth
-                sx={{ mt: 2 }}
-                onClick={() => router.push('/services/migration/apply?type=STANDARD')}
-              >
-                Apply Now
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                🎖️ Diplomatic Passport
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                For government officials and diplomats. Special privileges and immunities.
-              </Typography>
-              <Button
-                variant="outlined"
-                fullWidth
-                disabled
-                sx={{ mt: 2 }}
-              >
-                Requires Nomination
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                🛂 Service Passport
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                For public service employees on official duty abroad.
-              </Typography>
-              <Button
-                variant="outlined"
-                fullWidth
-                disabled
-                sx={{ mt: 2 }}
-              >
-                Requires Authorization
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Your Applications */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6">
-              Your Applications
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => router.push('/services/migration/apply')}
-            >
-              New Application
+      {/* Passport Types */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader><CardTitle>📘 Стандартный паспорт</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Для граждан. Действителен 10 лет. Международные поездки во все страны-партнёры.
+            </p>
+            <Button className="w-full" onClick={() => router.push('/services/migration/apply?type=STANDARD')}>
+              + Подать заявление
             </Button>
-          </Box>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>🎖️ Дипломатический паспорт</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Для гос. служащих и дипломатов. Особые привилегии и иммунитеты.
+            </p>
+            <Button variant="outline" className="w-full" disabled>
+              Требуется номинация
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>🛂 Служебный паспорт</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Для служащих в командировках за рубежом.
+            </p>
+            <Button variant="outline" className="w-full" disabled>
+              Требуется авторизация
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
+      {/* Applications */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Ваши заявления</CardTitle>
+            <Button onClick={() => router.push('/services/migration/apply')}>
+              + Новое заявление
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
           ) : applications.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="body1" color="text.secondary" gutterBottom>
-                You haven't submitted any passport applications yet
-              </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                sx={{ mt: 2 }}
-                onClick={() => router.push('/services/migration/apply')}
-              >
-                Apply for Passport
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-3">Вы ещё не подавали заявлений</p>
+              <Button variant="outline" onClick={() => router.push('/services/migration/apply')}>
+                + Подать на паспорт
               </Button>
-            </Box>
+            </div>
           ) : (
-            <Stack spacing={2}>
+            <div className="space-y-3">
               {applications.map((app) => (
                 <ApplicationStatusCard
                   key={app.id}
@@ -188,69 +134,53 @@ export default function MigrationServicePage() {
                   onClick={() => router.push(`/services/migration/applications/${app.id}`)}
                 />
               ))}
-            </Stack>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Passport Lookup */}
       <Card>
+        <CardHeader>
+          <CardTitle>Проверка паспорта</CardTitle>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Passport Verification
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Verify the validity of a Siberian Confederation passport (public lookup)
-          </Typography>
-
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <TextField
-              fullWidth
-              label="Passport Number"
+          <p className="text-sm text-muted-foreground mb-4">
+            Проверьте действительность паспорта (публичный поиск)
+          </p>
+          <div className="flex gap-3 mb-3">
+            <Input
               placeholder="SC-XXXX-XXXX"
               value={lookupNumber}
               onChange={(e) => setLookupNumber(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleLookup()}
+              onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
             />
             <Button
-              variant="contained"
-              startIcon={lookupLoading ? <CircularProgress size={20} /> : <SearchIcon />}
               onClick={handleLookup}
               disabled={lookupLoading || !lookupNumber.trim()}
-              sx={{ minWidth: 120 }}
+              className="min-w-[120px]"
             >
-              Verify
+              {lookupLoading ? '…' : '🔍 Проверить'}
             </Button>
-          </Box>
+          </div>
 
           {lookupResult && (
-            <Alert
-              severity={lookupResult.exists ? 'success' : 'warning'}
-              sx={{ mt: 2 }}
-            >
+            <div className={`rounded-lg p-4 ${lookupResult.exists ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
               {lookupResult.exists ? (
                 <>
-                  <Typography variant="body2" fontWeight={600}>
-                    Valid Passport Found
-                  </Typography>
-                  <Typography variant="body2">
-                    Holder: {lookupResult.fullName}
-                  </Typography>
+                  <p className="font-semibold">✅ Действительный паспорт</p>
+                  <p className="text-sm">Владелец: {lookupResult.fullName}</p>
                   {lookupResult.expiresAt && (
-                    <Typography variant="body2">
-                      Expires: {new Date(lookupResult.expiresAt).toLocaleDateString()}
-                    </Typography>
+                    <p className="text-sm">Истекает: {new Date(lookupResult.expiresAt).toLocaleDateString('ru-RU')}</p>
                   )}
                 </>
               ) : (
-                <Typography variant="body2">
-                  {lookupResult.error || 'Passport not found or invalid'}
-                </Typography>
+                <p>{lookupResult.error || 'Паспорт не найден или недействителен'}</p>
               )}
-            </Alert>
+            </div>
           )}
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }

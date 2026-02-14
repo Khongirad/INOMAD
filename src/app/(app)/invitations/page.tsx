@@ -1,186 +1,176 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Tabs,
-  Tab,
-  Alert,
-  Button,
-  Badge,
-} from '@mui/material';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ReceivedInvitationCard } from '@/components/invitations/ReceivedInvitationCard';
 import { SentInvitationCard } from '@/components/invitations/SentInvitationCard';
-import { Mail, Send } from 'lucide-react';
-import { getReceivedInvitations, getSentInvitations, acceptInvitation, rejectInvitation, cancelInvitation } from '@/lib/api';
+import { Mail, Inbox, Send, Loader2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function InvitationsPage() {
-  const [currentTab, setCurrentTab] = useState(0);
-  const [receivedInvitations, setReceivedInvitations] = useState<any[]>([]);
-  const [sentInvitations, setSentInvitations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface Invitation {
+  id: string;
+  organizationId: string;
+  organizationName: string;
+  invitedByName?: string;
+  invitedUserId: string;
+  invitedUserName?: string;
+  role: string;
+  status: string;
+  message?: string;
+  createdAt: string;
+}
 
-  useEffect(() => {
-    fetchInvitations();
-  }, []);
+export default function InvitationsPage() {
+  const [received, setReceived] = useState<Invitation[]>([]);
+  const [sent, setSent] = useState<Invitation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
 
   const fetchInvitations = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      // Fetch both in parallel
-      const [receivedData, sentData] = await Promise.all([
-        getReceivedInvitations(),
-        getSentInvitations(),
-      ]);
-
-      setReceivedInvitations(receivedData);
-      setSentInvitations(sentData);
-    } catch (err: any) {
-      const errorMsg = err.message || 'Failed to fetch invitations';
-      setError(errorMsg);
-      toast.error(errorMsg);
+      setLoading(true);
+      const res = await fetch('/api/invitations', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to load');
+      const data = await res.json();
+      setReceived(data.received || []);
+      setSent(data.sent || []);
+    } catch {
+      toast.error('Ошибка загрузки приглашений');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAcceptInvitation = async (id: string) => {
+  useEffect(() => {
+    fetchInvitations();
+  }, []);
+
+  const handleAccept = async (id: string) => {
     try {
-      await acceptInvitation(id);
-      toast.success('Invitation accepted!');
-      
-      // Refresh invitations
-      await fetchInvitations();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to accept invitation');
+      const res = await fetch(`/api/invitations/${id}/accept`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed');
+      toast.success('Приглашение принято');
+      fetchInvitations();
+    } catch {
+      toast.error('Ошибка при принятии');
     }
   };
 
-  const handleRejectInvitation = async (id: string) => {
+  const handleReject = async (id: string) => {
     try {
-      await rejectInvitation(id);
-      toast.warning('Invitation rejected');
-      
-      // Refresh invitations
-      await fetchInvitations();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to reject invitation');
+      const res = await fetch(`/api/invitations/${id}/reject`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed');
+      toast.success('Приглашение отклонено');
+      fetchInvitations();
+    } catch {
+      toast.error('Ошибка при отклонении');
     }
   };
 
-  const handleCancelInvitation = async (id: string) =>{ 
+  const handleCancel = async (id: string) => {
     try {
-      await cancelInvitation(id);
-      toast.info('Invitation cancelled');
-      
-      // Refresh invitations
-      await fetchInvitations();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to cancel invitation');
+      const res = await fetch(`/api/invitations/${id}/cancel`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed');
+      toast.success('Приглашение отменено');
+      fetchInvitations();
+    } catch {
+      toast.error('Ошибка при отмене');
     }
   };
 
-  const pendingReceivedCount = receivedInvitations.filter(
-    (inv) => inv.status === 'PENDING'
-  ).length;
+  const pendingReceivedCount = received.filter((i) => i.status === 'PENDING').length;
+  const pendingSentCount = sent.filter((i) => i.status === 'PENDING').length;
 
-  const pendingSentCount = sentInvitations.filter(
-    (inv) => inv.status === 'PENDING'
-  ).length;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Приглашения
-      </Typography>
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="flex items-center gap-3 mb-8">
+        <Mail className="h-7 w-7 text-primary" />
+        <h1 className="text-2xl font-bold">Приглашения</h1>
+      </div>
 
-      <Tabs value={currentTab} onChange={(e, v) => setCurrentTab(v)} sx={{ mb: 3 }}>
-        <Tab
-          label={
-            <Badge badgeContent={pendingReceivedCount} color="primary">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2 }}>
-                <Mail size={20} />
-                Полученные
-              </Box>
-            </Badge>
-          }
-        />
-        <Tab
-          label={
-            <Badge badgeContent={pendingSentCount} color="secondary">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2 }}>
-                <Send size={20} />
-                Отправленные
-              </Box>
-            </Badge>
-          }
-        />
-      </Tabs>
+      <Tabs defaultValue="received">
+        <TabsList className="mb-6">
+          <TabsTrigger value="received" className="gap-2">
+            <Inbox className="h-4 w-4" />
+            Полученные
+            {pendingReceivedCount > 0 && (
+              <Badge className="ml-1 h-5 min-w-[20px] text-[10px] bg-red-500">
+                {pendingReceivedCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="sent" className="gap-2">
+            <Send className="h-4 w-4" />
+            Отправленные
+            {pendingSentCount > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] text-[10px]">
+                {pendingSentCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Tab 0: Received Invitations */}
-      {currentTab === 0 && (
-        <Box>
-          {receivedInvitations.length === 0 ? (
-            <Alert severity="info">У вас нет приглашений</Alert>
+        <TabsContent value="received">
+          {received.length === 0 ? (
+            <div className="text-center py-16">
+              <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">Нет полученных приглашений</p>
+            </div>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {/* Pending first */}
-              {receivedInvitations
-                .filter((inv) => inv.status === 'PENDING')
-                .map((invitation) => (
-                  <ReceivedInvitationCard
-                    key={invitation.id}
-                    invitation={invitation}
-                    onAccept={handleAcceptInvitation}
-                    onReject={handleRejectInvitation}
-                  />
-                ))}
-
-              {/* Then others */}
-              {receivedInvitations
-                .filter((inv) => inv.status !== 'PENDING')
-                .map((invitation) => (
-                  <ReceivedInvitationCard
-                    key={invitation.id}
-                    invitation={invitation}
-                    onAccept={handleAcceptInvitation}
-                    onReject={handleRejectInvitation}
-                  />
-                ))}
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {/* Tab 1: Sent Invitations */}
-      {currentTab === 1 && (
-        <Box>
-          {sentInvitations.length === 0 ? (
-            <Alert severity="info">Вы еще не отправили приглашений</Alert>
-          ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {sentInvitations.map((invitation) => (
-                <SentInvitationCard
-                  key={invitation.id}
-                  invitation={invitation}
-                  onCancel={handleCancelInvitation}
+            <div className="space-y-3">
+              {received.map((inv) => (
+                <ReceivedInvitationCard
+                  key={inv.id}
+                  invitation={inv}
+                  onAccept={handleAccept}
+                  onReject={handleReject}
                 />
               ))}
-            </Box>
+            </div>
           )}
-        </Box>
-      )}
-    </Container>
+        </TabsContent>
+
+        <TabsContent value="sent">
+          {sent.length === 0 ? (
+            <div className="text-center py-16">
+              <Send className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">Нет отправленных приглашений</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sent.map((inv) => (
+                <SentInvitationCard
+                  key={inv.id}
+                  invitation={inv}
+                  onCancel={handleCancel}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

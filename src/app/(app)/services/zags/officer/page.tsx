@@ -2,40 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Chip,
-  Stack,
-  Alert,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Tooltip,
-  Tabs,
-  Tab,
-} from '@mui/material';
-import {
-  Visibility as ViewIcon,
-  CheckCircle as ApproveIcon,
-  Cancel as RejectIcon,
-  Favorite as MarriageIcon,
-  HeartBroken as DivorceIcon,
-} from '@mui/icons-material';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllMarriages, type Marriage } from '@/lib/api/zags';
 
 export default function ZAGSOfficerPage() {
   const router = useRouter();
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState('all');
   const [marriages, setMarriages] = useState<Marriage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,223 +38,150 @@ export default function ZAGSOfficerPage() {
     registered: marriages.filter((m) => m.status === 'REGISTERED').length,
   };
 
-  const getStatusColor = (status: string) => {
+  const statusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
     switch (status) {
-      case 'PENDING_CONSENT':
-        return 'info';
-      case 'PENDING_REVIEW':
-        return 'warning';
-      case 'APPROVED':
-        return 'success';
-      case 'REGISTERED':
-        return 'success';
-      case 'REJECTED':
-        return 'error';
-      default:
-        return 'default';
+      case 'REGISTERED': case 'APPROVED': return 'default';
+      case 'REJECTED': return 'destructive';
+      default: return 'secondary';
     }
   };
 
-  const filteredMarriages = tab === 0
-    ? marriages
-    : tab === 1
-    ? marriages.filter((m) => m.status === 'PENDING_REVIEW')
-    : tab === 2
-    ? marriages.filter((m) => m.status === 'APPROVED' || m.status === 'REGISTERED')
+  const filteredMarriages =
+    tab === 'all' ? marriages
+    : tab === 'pending' ? marriages.filter((m) => m.status === 'PENDING_REVIEW')
+    : tab === 'approved' ? marriages.filter((m) => m.status === 'APPROVED' || m.status === 'REGISTERED')
     : marriages.filter((m) => m.status === 'REJECTED' || m.status === 'CANCELLED');
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          ZAGS Officer Dashboard
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Review and approve marriage registrations
-        </Typography>
-      </Box>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Панель сотрудника ЗАГС</h1>
+        <p className="text-muted-foreground mt-1">Рассмотрение и одобрение регистраций брака</p>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-sm underline">Закрыть</button>
+        </div>
       )}
 
-      {/* Statistics Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 4 }}>
+      {/* Statistics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" fontWeight={600}>
-                  {stats.total}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Applications
-                </Typography>
-              </Box>
-              <MarriageIcon sx={{ fontSize: 40, color: 'primary.main', opacity: 0.3 }} />
-            </Box>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">Всего заявлений</p>
+              </div>
+              <span className="text-4xl opacity-30">💍</span>
+            </div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" fontWeight={600} color="warning.main">
-                  {stats.pendingReview}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pending Review
-                </Typography>
-              </Box>
-              <MarriageIcon sx={{ fontSize: 40, color: 'warning.main', opacity: 0.3 }} />
-            </Box>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold text-yellow-500">{stats.pendingReview}</p>
+                <p className="text-sm text-muted-foreground">На рассмотрении</p>
+              </div>
+              <span className="text-4xl opacity-30">⏳</span>
+            </div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" fontWeight={600} color="success.main">
-                  {stats.approved}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Approved
-                </Typography>
-              </Box>
-              <ApproveIcon sx={{ fontSize: 40, color: 'success.main', opacity: 0.3 }} />
-            </Box>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold text-green-500">{stats.approved}</p>
+                <p className="text-sm text-muted-foreground">Одобрено</p>
+              </div>
+              <span className="text-4xl opacity-30">✅</span>
+            </div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" fontWeight={600} color="success.main">
-                  {stats.registered}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Registered
-                </Typography>
-              </Box>
-              <MarriageIcon sx={{ fontSize: 40, color: 'success.main', opacity: 0.3 }} />
-            </Box>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold text-green-500">{stats.registered}</p>
+                <p className="text-sm text-muted-foreground">Зарегистрировано</p>
+              </div>
+              <span className="text-4xl opacity-30">📜</span>
+            </div>
           </CardContent>
         </Card>
-      </Box>
+      </div>
 
-      {/* Filter Tabs */}
-      <Card sx={{ mb: 3 }}>
-        <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-          <Tab label="All Applications" />
-          <Tab label="Pending Review" />
-          <Tab label="Approved/Registered" />
-          <Tab label="Rejected/Cancelled" />
-        </Tabs>
-      </Card>
-
-      {/* Marriages Table */}
+      {/* Table with Tabs */}
       <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Marriage Applications
-          </Typography>
+        <Tabs defaultValue="all" value={tab} onValueChange={setTab}>
+          <div className="border-b border-border px-4 pt-4">
+            <TabsList>
+              <TabsTrigger value="all">Все</TabsTrigger>
+              <TabsTrigger value="pending">На рассмотрении</TabsTrigger>
+              <TabsTrigger value="approved">Одобрено/Зарег.</TabsTrigger>
+              <TabsTrigger value="rejected">Отклонено</TabsTrigger>
+            </TabsList>
+          </div>
+          <CardContent className="pt-4">
+            <h3 className="text-lg font-semibold mb-3">Заявления на брак</h3>
 
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : filteredMarriages.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="body1" color="text.secondary">
-                No applications found
-              </Typography>
-            </Box>
-          ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Spouses</TableCell>
-                    <TableCell>Marriage Date</TableCell>
-                    <TableCell>Ceremony Type</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Certificate</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredMarriages.map((marriage) => (
-                    <TableRow key={marriage.id} hover>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2" fontWeight={600}>
-                            {marriage.spouse1FullName}
-                          </Typography>
-                          <Typography variant="body2">
-                            {marriage.spouse2FullName}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(marriage.marriageDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Chip label={marriage.ceremonyType || 'Civil'} size="small" variant="outlined" />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={marriage.status}
-                          color={getStatusColor(marriage.status) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {marriage.certificateNumber ? (
-                          <Typography variant="caption">{marriage.certificateNumber}</Typography>
-                        ) : (
-                          <Typography variant="caption" color="text.secondary">
-                            Not issued
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="View Details">
-                          <IconButton
-                            size="small"
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : filteredMarriages.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">Заявления не найдены</div>
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-3 font-medium">Супруги</th>
+                      <th className="text-left p-3 font-medium">Дата брака</th>
+                      <th className="text-left p-3 font-medium">Тип церемонии</th>
+                      <th className="text-left p-3 font-medium">Статус</th>
+                      <th className="text-left p-3 font-medium">Свидетельство</th>
+                      <th className="text-right p-3 font-medium">Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredMarriages.map((marriage) => (
+                      <tr key={marriage.id} className="border-t border-border hover:bg-muted/30 transition-colors">
+                        <td className="p-3">
+                          <p className="font-semibold">{marriage.spouse1FullName}</p>
+                          <p className="text-muted-foreground">{marriage.spouse2FullName}</p>
+                        </td>
+                        <td className="p-3">{new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}</td>
+                        <td className="p-3">
+                          <Badge variant="outline">{marriage.ceremonyType || 'Гражданский'}</Badge>
+                        </td>
+                        <td className="p-3">
+                          <Badge variant={statusVariant(marriage.status)}>{marriage.status}</Badge>
+                        </td>
+                        <td className="p-3 text-xs text-muted-foreground">
+                          {marriage.certificateNumber || 'Не выдано'}
+                        </td>
+                        <td className="p-3 text-right space-x-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => router.push(`/services/zags/officer/review/${marriage.id}`)}
                           >
-                            <ViewIcon />
-                          </IconButton>
-                        </Tooltip>
-                        {marriage.status === 'PENDING_REVIEW' && (
-                          <>
-                            <Tooltip title="Quick Approve">
-                              <IconButton size="small" color="success">
-                                <ApproveIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Quick Reject">
-                              <IconButton size="small" color="error">
-                                <RejectIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
+                            👁️ Просмотр
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Tabs>
       </Card>
-    </Box>
+    </div>
   );
 }

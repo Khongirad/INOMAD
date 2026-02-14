@@ -1,62 +1,38 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Grid,
-  Card,
-  CardContent,
-  Chip,
-  Avatar,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Alert,
-  LinearProgress,
-  Divider,
-  Tabs,
-  Tab,
-  IconButton,
-  Tooltip,
-  Badge,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  Snackbar,
-} from '@mui/material';
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Users,
   Award,
   Star,
   DollarSign,
-  Heart,
   CheckCircle,
   Shield,
-  Settings,
-  Vote,
   FileText,
-  BarChart3,
   Building2,
   GitBranch,
   Crown,
   UserPlus,
   UserMinus,
   ChevronRight,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 // ========================
 // Types
@@ -152,13 +128,13 @@ interface OrgDashboardData {
 // ========================
 
 const ROLE_CONFIG: Record<string, { label: string; color: string; icon: string; order: number }> = {
-  LEADER: { label: 'Глава', color: '#FFD700', icon: '👑', order: 0 },
-  DEPUTY: { label: 'Заместитель', color: '#C0C0C0', icon: '🛡️', order: 1 },
-  TREASURER: { label: 'Казначей', color: '#4CAF50', icon: '💰', order: 2 },
-  SECRETARY: { label: 'Секретарь', color: '#2196F3', icon: '📋', order: 3 },
-  OFFICER: { label: 'Должностное лицо', color: '#9C27B0', icon: '⚔️', order: 4 },
-  MEMBER: { label: 'Участник', color: '#757575', icon: '👤', order: 5 },
-  APPRENTICE: { label: 'Стажёр', color: '#FF9800', icon: '📚', order: 6 },
+  LEADER: { label: 'Глава', color: 'bg-yellow-500', icon: '👑', order: 0 },
+  DEPUTY: { label: 'Заместитель', color: 'bg-gray-400', icon: '🛡️', order: 1 },
+  TREASURER: { label: 'Казначей', color: 'bg-green-500', icon: '💰', order: 2 },
+  SECRETARY: { label: 'Секретарь', color: 'bg-blue-500', icon: '📋', order: 3 },
+  OFFICER: { label: 'Должностное лицо', color: 'bg-purple-500', icon: '⚔️', order: 4 },
+  MEMBER: { label: 'Участник', color: 'bg-gray-500', icon: '👤', order: 5 },
+  APPRENTICE: { label: 'Стажёр', color: 'bg-orange-500', icon: '📚', order: 6 },
 };
 
 const PERMISSION_LABELS: Record<string, string> = {
@@ -190,12 +166,6 @@ export default function UnifiedOrgDashboard() {
   const [data, setData] = useState<OrgDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState(0);
-  const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
 
   // Invite dialog
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -228,10 +198,7 @@ export default function UnifiedOrgDashboard() {
     try {
       const res = await fetch(`/api/org/${orgId}/members`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ userId: inviteUserId, role: inviteRole }),
       });
       if (!res.ok) {
@@ -240,10 +207,10 @@ export default function UnifiedOrgDashboard() {
       }
       setInviteOpen(false);
       setInviteUserId('');
-      setToast({ open: true, message: 'Участник добавлен', severity: 'success' });
+      toast.success('Участник добавлен');
       fetchDashboard();
     } catch (err: any) {
-      setToast({ open: true, message: err.message, severity: 'error' });
+      toast.error(err.message);
     }
   };
 
@@ -258,10 +225,10 @@ export default function UnifiedOrgDashboard() {
         const err = await res.json();
         throw new Error(err.message || 'Failed');
       }
-      setToast({ open: true, message: 'Участник удалён', severity: 'success' });
+      toast.success('Участник удалён');
       fetchDashboard();
     } catch (err: any) {
-      setToast({ open: true, message: err.message, severity: 'error' });
+      toast.error(err.message);
     }
   };
 
@@ -269,27 +236,30 @@ export default function UnifiedOrgDashboard() {
     try {
       const res = await fetch(`/api/org/${orgId}/members/role`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ userId, newRole }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || 'Failed');
       }
-      setToast({ open: true, message: 'Роль обновлена', severity: 'success' });
+      toast.success('Роль обновлена');
       fetchDashboard();
     } catch (err: any) {
-      setToast({ open: true, message: err.message, severity: 'error' });
+      toast.error(err.message);
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return '#4CAF50';
-    if (score >= 6) return '#FF9800';
-    return '#f44336';
+    if (score >= 8) return 'text-green-500';
+    if (score >= 6) return 'text-orange-500';
+    return 'text-red-500';
+  };
+
+  const getScoreBarColor = (score: number) => {
+    if (score >= 8) return 'bg-green-500';
+    if (score >= 6) return 'bg-orange-500';
+    return 'bg-red-500';
   };
 
   const getTypeLabel = (type: string) => {
@@ -319,629 +289,505 @@ export default function UnifiedOrgDashboard() {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <LinearProgress />
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-          Загрузка организации...
-        </Typography>
-      </Container>
+      <div className="flex flex-col items-center justify-center py-20 gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Загрузка организации...</p>
+      </div>
     );
   }
 
   if (error || !data) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error">{error || 'Организация не найдена'}</Alert>
-      </Container>
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-sm text-red-400">
+          {error || 'Организация не найдена'}
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <div className="max-w-5xl mx-auto py-6 px-4">
       {/* ==================== HEADER ==================== */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-          color: 'white',
-          borderRadius: 3,
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-              <Typography variant="h4" fontWeight="bold">
-                {data.name}
-              </Typography>
+      <div className="rounded-xl p-6 mb-6 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] text-white">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-2xl font-bold">{data.name}</h1>
               {data.currentRank && data.currentRank <= 100 && (
-                <Chip
-                  label={`#${data.currentRank}`}
-                  size="small"
-                  sx={{ bgcolor: 'rgba(255,215,0,0.2)', color: '#FFD700', fontWeight: 'bold' }}
-                  icon={<Award size={14} color="#FFD700" />}
-                />
+                <Badge className="bg-yellow-500/20 text-yellow-400 font-bold gap-1">
+                  <Award className="h-3.5 w-3.5" />
+                  #{data.currentRank}
+                </Badge>
               )}
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip label={getTypeLabel(data.type)} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white' }} />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Badge className="bg-white/15 text-white">{getTypeLabel(data.type)}</Badge>
               {getBranchLabel(data.branch) && (
-                <Chip label={getBranchLabel(data.branch)!} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white' }} />
+                <Badge className="bg-white/15 text-white">{getBranchLabel(data.branch)!}</Badge>
               )}
-              <Chip
-                label={`${data.memberCount}/${data.maxMembers} участников`}
-                size="small"
-                sx={{ bgcolor: data.isFull ? 'rgba(244,67,54,0.3)' : 'rgba(76,175,80,0.3)', color: 'white' }}
-                icon={<Users size={14} color="white" />}
-              />
-            </Box>
+              <Badge className={`text-white gap-1 ${data.isFull ? 'bg-red-500/30' : 'bg-green-500/30'}`}>
+                <Users className="h-3 w-3" />
+                {data.memberCount}/{data.maxMembers} участников
+              </Badge>
+            </div>
             {data.description && (
-              <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
-                {data.description}
-              </Typography>
+              <p className="text-sm mt-2 opacity-80">{data.description}</p>
             )}
-          </Box>
+          </div>
 
           {/* Rating Circle */}
-          <Box sx={{ textAlign: 'center', minWidth: 100 }}>
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                border: `4px solid ${getScoreColor(data.overallRating)}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mx: 'auto',
-              }}
-            >
-              <Typography variant="h4" fontWeight="bold">
-                {data.overallRating.toFixed(1)}
-              </Typography>
-            </Box>
-            <Typography variant="caption" sx={{ opacity: 0.7 }}>
-              Общий рейтинг
-            </Typography>
-          </Box>
-        </Box>
+          <div className="text-center min-w-[100px]">
+            <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center mx-auto ${
+              data.overallRating >= 8 ? 'border-green-500' : data.overallRating >= 6 ? 'border-orange-500' : 'border-red-500'
+            }`}>
+              <span className="text-2xl font-bold">{data.overallRating.toFixed(1)}</span>
+            </div>
+            <p className="text-xs opacity-70 mt-1">Общий рейтинг</p>
+          </div>
+        </div>
 
         {/* Sub-ratings */}
-        <Grid container spacing={2} sx={{ mt: 2 }}>
+        <div className="grid grid-cols-3 gap-4 mt-4">
           {[
             { label: 'Доверие', score: data.trustScore, icon: '❤️' },
             { label: 'Качество', score: data.qualityScore, icon: '⭐' },
             { label: 'Финансы', score: data.financialScore, icon: '💰' },
           ].map((item) => (
-            <Grid size={{ xs: 4 }} key={item.label}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography>{item.icon}</Typography>
-                <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="caption">{item.label}</Typography>
-                    <Typography variant="caption" fontWeight="bold" color={getScoreColor(item.score)}>
-                      {item.score.toFixed(1)}
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={item.score * 10}
-                    sx={{
-                      height: 4,
-                      borderRadius: 2,
-                      bgcolor: 'rgba(255,255,255,0.1)',
-                      '& .MuiLinearProgress-bar': { bgcolor: getScoreColor(item.score) },
-                    }}
+            <div key={item.label} className="flex items-center gap-2">
+              <span>{item.icon}</span>
+              <div className="flex-1">
+                <div className="flex justify-between">
+                  <span className="text-xs">{item.label}</span>
+                  <span className={`text-xs font-bold ${getScoreColor(item.score)}`}>
+                    {item.score.toFixed(1)}
+                  </span>
+                </div>
+                <div className="h-1 bg-white/10 rounded-full mt-0.5">
+                  <div
+                    className={`h-full rounded-full ${getScoreBarColor(item.score)}`}
+                    style={{ width: `${item.score * 10}%` }}
                   />
-                </Box>
-              </Box>
-            </Grid>
+                </div>
+              </div>
+            </div>
           ))}
-        </Grid>
-      </Paper>
+        </div>
+      </div>
 
       {/* ==================== NAVIGATION TABS ==================== */}
-      <Paper sx={{ mb: 3, borderRadius: 2 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(_, v) => setActiveTab(v)}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{ '& .MuiTab-root': { minHeight: 56 } }}
-        >
-          <Tab label="📊 Обзор" />
-          <Tab label="👥 Команда" />
-          <Tab label="🛡️ Полномочия" />
-          <Tab label="🏆 Достижения" />
-          <Tab label="🏗️ Структура" />
-        </Tabs>
-      </Paper>
+      <Tabs defaultValue="overview">
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">📊 Обзор</TabsTrigger>
+          <TabsTrigger value="team">👥 Команда</TabsTrigger>
+          <TabsTrigger value="permissions">🛡️ Полномочия</TabsTrigger>
+          <TabsTrigger value="achievements">🏆 Достижения</TabsTrigger>
+          <TabsTrigger value="structure">🏗️ Структура</TabsTrigger>
+        </TabsList>
 
-      {/* ==================== TAB: OVERVIEW ==================== */}
-      {activeTab === 0 && (
-        <Grid container spacing={3}>
-          {/* Stats */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card sx={{ borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  📊 Статистика
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
+        {/* ==================== TAB: OVERVIEW ==================== */}
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Stats */}
+            <Card>
+              <CardContent className="pt-6">
+                <h3 className="font-semibold mb-3">📊 Статистика</h3>
+                <div className="border-t border-border mb-3" />
                 {[
-                  { label: 'Контрактов завершено', value: data.contractsCompleted, icon: <CheckCircle size={18} /> },
-                  { label: 'Активные контракты', value: data.contractsActive, icon: <FileText size={18} /> },
-                  { label: 'Общая выручка', value: `${data.totalRevenue.toLocaleString()} ₮`, icon: <DollarSign size={18} /> },
-                  { label: 'Участников', value: `${data.memberCount}/${data.maxMembers}`, icon: <Users size={18} /> },
-                  { label: 'Подразделений', value: data.childCount, icon: <Building2 size={18} /> },
+                  { label: 'Контрактов завершено', value: data.contractsCompleted, icon: <CheckCircle className="h-4 w-4" /> },
+                  { label: 'Активные контракты', value: data.contractsActive, icon: <FileText className="h-4 w-4" /> },
+                  { label: 'Общая выручка', value: `${data.totalRevenue.toLocaleString()} ₮`, icon: <DollarSign className="h-4 w-4" /> },
+                  { label: 'Участников', value: `${data.memberCount}/${data.maxMembers}`, icon: <Users className="h-4 w-4" /> },
+                  { label: 'Подразделений', value: data.childCount, icon: <Building2 className="h-4 w-4" /> },
                 ].map((stat) => (
-                  <Box key={stat.label} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <div key={stat.label} className="flex justify-between items-center py-1.5">
+                    <span className="flex items-center gap-2 text-sm text-muted-foreground">
                       {stat.icon}
-                      <Typography variant="body2" color="text.secondary">
-                        {stat.label}
-                      </Typography>
-                    </Box>
-                    <Typography variant="body1" fontWeight="bold">
-                      {stat.value}
-                    </Typography>
-                  </Box>
+                      {stat.label}
+                    </span>
+                    <span className="font-bold text-sm">{stat.value}</span>
+                  </div>
                 ))}
               </CardContent>
             </Card>
-          </Grid>
 
-          {/* Leader & Info */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card sx={{ borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  👑 Руководство
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                  <Avatar sx={{ bgcolor: '#FFD700', width: 48, height: 48 }}>
+            {/* Leader & Roles */}
+            <Card>
+              <CardContent className="pt-6">
+                <h3 className="font-semibold mb-3">👑 Руководство</h3>
+                <div className="border-t border-border mb-3" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold">
                     {data.leader.username?.[0]?.toUpperCase() || '?'}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="body1" fontWeight="bold">
-                      {data.leader.username || data.leader.seatId}
-                    </Typography>
-                    <Chip label="Глава" size="small" sx={{ bgcolor: '#FFD700', color: '#000' }} />
-                  </Box>
-                </Box>
+                  </div>
+                  <div>
+                    <p className="font-bold">{data.leader.username || data.leader.seatId}</p>
+                    <Badge className="bg-yellow-500 text-black text-xs">Глава</Badge>
+                  </div>
+                </div>
 
-                {/* Role Distribution */}
-                <Typography variant="body2" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>
-                  Распределение ролей:
-                </Typography>
+                <p className="text-sm font-semibold mt-3 mb-1">Распределение ролей:</p>
                 {Object.entries(data.roleDistribution ?? {}).map(([role, count]) => (
-                  <Box key={role} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
-                    <Typography variant="body2">
+                  <div key={role} className="flex justify-between py-0.5">
+                    <span className="text-sm">
                       {ROLE_CONFIG[role]?.icon} {ROLE_CONFIG[role]?.label || role}
-                    </Typography>
-                    <Chip label={count} size="small" variant="outlined" />
-                  </Box>
+                    </span>
+                    <Badge variant="outline" className="text-xs">{count}</Badge>
+                  </div>
                 ))}
               </CardContent>
             </Card>
-          </Grid>
 
-          {/* Recent Ratings */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card sx={{ borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  ⭐ Последние оценки
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
+            {/* Recent Ratings */}
+            <Card>
+              <CardContent className="pt-6">
+                <h3 className="font-semibold mb-3">⭐ Последние оценки</h3>
+                <div className="border-t border-border mb-3" />
                 {data.ratings.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    Пока нет оценок
-                  </Typography>
+                  <p className="text-sm text-muted-foreground">Пока нет оценок</p>
                 ) : (
                   data.ratings.slice(0, 5).map((r) => (
-                    <Box key={r.id} sx={{ py: 1, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body2">{r.category}</Typography>
-                        <Chip
-                          label={r.score.toFixed(1)}
-                          size="small"
-                          sx={{ bgcolor: getScoreColor(r.score) + '20', color: getScoreColor(r.score) }}
-                        />
-                      </Box>
+                    <div key={r.id} className="py-2 border-b border-border/50 last:border-0">
+                      <div className="flex justify-between">
+                        <span className="text-sm">{r.category}</span>
+                        <Badge variant="outline" className={`text-xs ${getScoreColor(r.score)}`}>
+                          {r.score.toFixed(1)}
+                        </Badge>
+                      </div>
                       {r.comment && (
-                        <Typography variant="caption" color="text.secondary">
-                          "{r.comment}"
-                        </Typography>
+                        <p className="text-xs text-muted-foreground">"{r.comment}"</p>
                       )}
-                      <Typography variant="caption" display="block" color="text.secondary">
+                      <p className="text-xs text-muted-foreground">
                         — @{r.rater.username} • {new Date(r.createdAt).toLocaleDateString('ru-RU')}
-                      </Typography>
-                    </Box>
+                      </p>
+                    </div>
                   ))
                 )}
               </CardContent>
             </Card>
-          </Grid>
 
-          {/* Hierarchy path */}
-          {data.parent && (
-            <Grid size={12}>
-              <Alert
-                severity="info"
-                icon={<GitBranch size={20} />}
-                action={
-                  <Button size="small" onClick={() => router.push(`/org/${data.parent!.id}`)}>
+            {/* Hierarchy path */}
+            {data.parent && (
+              <div className="col-span-full">
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-sm">
+                    <GitBranch className="h-4 w-4" />
+                    Родительская организация: <strong>{data.parent.name}</strong> ({data.parent.type})
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => router.push(`/org/${data.parent!.id}`)}>
                     Перейти
                   </Button>
-                }
-              >
-                Родительская организация: <strong>{data.parent.name}</strong> ({data.parent.type})
-              </Alert>
-            </Grid>
-          )}
-        </Grid>
-      )}
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
-      {/* ==================== TAB: TEAM ==================== */}
-      {activeTab === 1 && (
-        <Card sx={{ borderRadius: 2 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                👥 Команда ({data.memberCount}/{data.maxMembers})
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<UserPlus size={18} />}
-                onClick={() => setInviteOpen(true)}
-                disabled={data.isFull}
-              >
-                Пригласить
-              </Button>
-            </Box>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Участник</TableCell>
-                    <TableCell>Роль</TableCell>
-                    <TableCell>Верификация</TableCell>
-                    <TableCell>Дата вступления</TableCell>
-                    <TableCell align="right">Действия</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {data.members
-                    .sort((a, b) => (ROLE_CONFIG[a.role]?.order ?? 99) - (ROLE_CONFIG[b.role]?.order ?? 99))
-                    .map((member) => (
-                      <TableRow key={member.id} hover>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar
-                              sx={{
-                                width: 36,
-                                height: 36,
-                                bgcolor: ROLE_CONFIG[member.role]?.color || '#757575',
-                                fontSize: 14,
-                              }}
-                            >
-                              {ROLE_CONFIG[member.role]?.icon || '👤'}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2" fontWeight="bold">
-                                {member.user.username || member.user.seatId}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                Seat: {member.user.seatId.slice(0, 8)}...
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <FormControl size="small" sx={{ minWidth: 140 }}>
-                            <Select
-                              value={member.role}
-                              onChange={(e) => handleRoleChange(member.userId, e.target.value)}
-                              disabled={member.role === 'LEADER'}
-                              size="small"
-                            >
-                              {Object.entries(ROLE_CONFIG)
-                                .filter(([key]) => key !== 'LEADER')
-                                .map(([key, cfg]) => (
-                                  <MenuItem key={key} value={key}>
-                                    {cfg.icon} {cfg.label}
-                                  </MenuItem>
-                                ))}
-                            </Select>
-                          </FormControl>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={member.user.verificationLevel || 'NONE'}
-                            size="small"
-                            color={member.user.verificationLevel === 'VERIFIED' ? 'success' : 'default'}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {new Date(member.joinedAt).toLocaleDateString('ru-RU')}
-                        </TableCell>
-                        <TableCell align="right">
-                          {member.role !== 'LEADER' && (
-                            <Tooltip title="Удалить участника">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleRemoveMember(member.userId)}
-                              >
-                                <UserMinus size={18} />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-      )}
+        {/* ==================== TAB: TEAM ==================== */}
+        <TabsContent value="team">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold">👥 Команда ({data.memberCount}/{data.maxMembers})</h3>
+                <Button className="gap-2" onClick={() => setInviteOpen(true)} disabled={data.isFull}>
+                  <UserPlus className="h-4 w-4" />
+                  Пригласить
+                </Button>
+              </div>
 
-      {/* ==================== TAB: PERMISSIONS ==================== */}
-      {activeTab === 2 && (
-        <Card sx={{ borderRadius: 2 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              🛡️ Матрица Полномочий
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Каждая роль имеет определённый набор разрешений в организации
-            </Typography>
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Полномочие</TableCell>
-                    {Object.entries(ROLE_CONFIG).map(([role, cfg]) => (
-                      <TableCell key={role} align="center" sx={{ fontWeight: 'bold', fontSize: 12 }}>
-                        {cfg.icon}<br />{cfg.label}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
+              {/* Table header */}
+              <div className="hidden md:grid grid-cols-12 gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border">
+                <div className="col-span-3">Участник</div>
+                <div className="col-span-3">Роль</div>
+                <div className="col-span-2">Верификация</div>
+                <div className="col-span-2">Дата вступления</div>
+                <div className="col-span-2 text-right">Действия</div>
+              </div>
+
+              {/* Table rows */}
+              {data.members
+                .sort((a, b) => (ROLE_CONFIG[a.role]?.order ?? 99) - (ROLE_CONFIG[b.role]?.order ?? 99))
+                .map((member) => (
+                  <div key={member.id} className="grid grid-cols-12 gap-2 px-3 py-3 items-center border-b border-border/50 hover:bg-muted/30 last:border-0">
+                    {/* Member */}
+                    <div className="col-span-3 flex items-center gap-2">
+                      <div className={`h-9 w-9 rounded-full ${ROLE_CONFIG[member.role]?.color || 'bg-gray-500'} flex items-center justify-center text-sm`}>
+                        {ROLE_CONFIG[member.role]?.icon || '👤'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{member.user.username || member.user.seatId}</p>
+                        <p className="text-xs text-muted-foreground">Seat: {member.user.seatId.slice(0, 8)}...</p>
+                      </div>
+                    </div>
+
+                    {/* Role */}
+                    <div className="col-span-3">
+                      {member.role === 'LEADER' ? (
+                        <Badge className="bg-yellow-500 text-black text-xs">
+                          {ROLE_CONFIG.LEADER.icon} {ROLE_CONFIG.LEADER.label}
+                        </Badge>
+                      ) : (
+                        <Select
+                          value={member.role}
+                          onValueChange={(v) => handleRoleChange(member.userId, v)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(ROLE_CONFIG)
+                              .filter(([key]) => key !== 'LEADER')
+                              .map(([key, cfg]) => (
+                                <SelectItem key={key} value={key}>
+                                  {cfg.icon} {cfg.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+
+                    {/* Verification */}
+                    <div className="col-span-2">
+                      <Badge className={`text-xs ${member.user.verificationLevel === 'VERIFIED' ? 'bg-green-600' : 'bg-gray-600'}`}>
+                        {member.user.verificationLevel || 'NONE'}
+                      </Badge>
+                    </div>
+
+                    {/* Date */}
+                    <div className="col-span-2 text-sm text-muted-foreground">
+                      {new Date(member.joinedAt).toLocaleDateString('ru-RU')}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="col-span-2 text-right">
+                      {member.role !== 'LEADER' && (
+                        <button
+                          onClick={() => handleRemoveMember(member.userId)}
+                          className="p-1.5 rounded-md hover:bg-red-500/20 text-red-500 transition-colors"
+                          title="Удалить участника"
+                        >
+                          <UserMinus className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ==================== TAB: PERMISSIONS ==================== */}
+        <TabsContent value="permissions">
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="font-semibold mb-1">🛡️ Матрица Полномочий</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Каждая роль имеет определённый набор разрешений в организации
+              </p>
+
+              <div className="overflow-x-auto">
+                {/* Table header */}
+                <div className="grid gap-1 min-w-[700px]" style={{ gridTemplateColumns: `200px repeat(${Object.keys(ROLE_CONFIG).length}, 1fr)` }}>
+                  <div className="p-2 text-xs font-bold">Полномочие</div>
+                  {Object.entries(ROLE_CONFIG).map(([role, cfg]) => (
+                    <div key={role} className="p-2 text-center text-xs font-bold">
+                      {cfg.icon}<br />{cfg.label}
+                    </div>
+                  ))}
+
+                  {/* Permission rows */}
                   {Object.entries(PERMISSION_LABELS).map(([perm, label]) => (
-                    <TableRow key={perm} hover>
-                      <TableCell>{label}</TableCell>
+                    <React.Fragment key={perm}>
+                      <div className="p-2 text-xs border-t border-border/30">{label}</div>
                       {Object.keys(ROLE_CONFIG).map((role) => {
                         const rolePerms = data.permissions.find((p) => p.role === role);
                         const hasPermission = rolePerms ? (rolePerms as any)[perm] : false;
                         return (
-                          <TableCell key={role} align="center">
+                          <div key={role} className="p-2 text-center border-t border-border/30">
                             {hasPermission ? (
-                              <CheckCircle size={18} color="#4CAF50" />
+                              <CheckCircle className="h-4 w-4 text-green-500 mx-auto" />
                             ) : (
-                              <Typography variant="body2" color="text.disabled">
-                                —
-                              </Typography>
+                              <span className="text-muted-foreground">—</span>
                             )}
-                          </TableCell>
+                          </div>
                         );
                       })}
-                    </TableRow>
+                    </React.Fragment>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-      )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* ==================== TAB: ACHIEVEMENTS ==================== */}
-      {activeTab === 3 && (
-        <Grid container spacing={3}>
-          {data.achievements.length === 0 ? (
-            <Grid size={12}>
-              <Alert severity="info">Организация пока не получила достижений</Alert>
-            </Grid>
-          ) : (
-            data.achievements.map((ach) => (
-              <Grid size={{ xs: 12, md: 4 }} key={ach.id}>
-                <Card sx={{ borderRadius: 2, textAlign: 'center', py: 2 }}>
+        {/* ==================== TAB: ACHIEVEMENTS ==================== */}
+        <TabsContent value="achievements">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {data.achievements.length === 0 ? (
+              <div className="col-span-full bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
+                ℹ️ Организация пока не получила достижений
+              </div>
+            ) : (
+              data.achievements.map((ach) => (
+                <Card key={ach.id} className="text-center py-4">
                   <CardContent>
-                    <Typography variant="h3" sx={{ mb: 1 }}>
-                      🏆
-                    </Typography>
-                    <Typography variant="h6">{ach.title}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {ach.description}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    <p className="text-4xl mb-2">🏆</p>
+                    <h4 className="font-semibold">{ach.title}</h4>
+                    <p className="text-sm text-muted-foreground">{ach.description}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
                       {new Date(ach.awardedAt).toLocaleDateString('ru-RU')}
-                    </Typography>
+                    </p>
                   </CardContent>
                 </Card>
-              </Grid>
-            ))
-          )}
+              ))
+            )}
 
-          {/* Elections */}
-          <Grid size={12}>
-            <Card sx={{ borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  🗳️ Выборы
-                </Typography>
-                {data.elections.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    История выборов пуста
-                  </Typography>
-                ) : (
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Статус</TableCell>
-                        <TableCell>Начало</TableCell>
-                        <TableCell>Окончание</TableCell>
-                        <TableCell>Кандидатов</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
+            {/* Elections */}
+            <div className="col-span-full">
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-3">🗳️ Выборы</h3>
+                  {data.elections.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">История выборов пуста</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      {/* Table header */}
+                      <div className="grid grid-cols-4 gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border">
+                        <div>Статус</div>
+                        <div>Начало</div>
+                        <div>Окончание</div>
+                        <div>Кандидатов</div>
+                      </div>
                       {data.elections.map((el) => (
-                        <TableRow key={el.id}>
-                          <TableCell>
-                            <Chip label={el.status} size="small" color={el.status === 'COMPLETED' ? 'success' : 'warning'} />
-                          </TableCell>
-                          <TableCell>{new Date(el.startDate).toLocaleDateString('ru-RU')}</TableCell>
-                          <TableCell>{new Date(el.endDate).toLocaleDateString('ru-RU')}</TableCell>
-                          <TableCell>{el.candidates.length}</TableCell>
-                        </TableRow>
+                        <div key={el.id} className="grid grid-cols-4 gap-2 px-3 py-2 items-center border-b border-border/50 last:border-0">
+                          <div>
+                            <Badge className={`text-xs ${el.status === 'COMPLETED' ? 'bg-green-600' : 'bg-yellow-600'}`}>
+                              {el.status}
+                            </Badge>
+                          </div>
+                          <div className="text-sm">{new Date(el.startDate).toLocaleDateString('ru-RU')}</div>
+                          <div className="text-sm">{new Date(el.endDate).toLocaleDateString('ru-RU')}</div>
+                          <div className="text-sm">{el.candidates.length}</div>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {/* ==================== TAB: STRUCTURE ==================== */}
-      {activeTab === 4 && (
-        <Grid container spacing={3}>
-          {data.parent && (
-            <Grid size={12}>
-              <Card
-                sx={{ borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-                onClick={() => router.push(`/org/${data.parent!.id}`)}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="h5">⬆️</Typography>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Родительская организация
-                      </Typography>
-                      <Typography variant="h6">{data.parent.name}</Typography>
-                      <Chip label={data.parent.type} size="small" />
-                    </Box>
-                    <ChevronRight size={24} style={{ marginLeft: 'auto' }} />
-                  </Box>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            </Grid>
-          )}
+            </div>
+          </div>
+        </TabsContent>
 
-          <Grid size={12}>
-            <Card sx={{ borderRadius: 2, border: '2px solid', borderColor: 'primary.main' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="h5">🏛️</Typography>
-                  <Box>
-                    <Typography variant="caption" color="primary">
-                      ← ВЫ ЗДЕСЬ
-                    </Typography>
-                    <Typography variant="h6">{data.name}</Typography>
-                    <Chip label={getTypeLabel(data.type)} size="small" color="primary" />
-                  </Box>
-                </Box>
+        {/* ==================== TAB: STRUCTURE ==================== */}
+        <TabsContent value="structure">
+          <div className="space-y-4">
+            {/* Parent */}
+            {data.parent && (
+              <Card
+                className="cursor-pointer hover:bg-accent transition-colors"
+                onClick={() => router.push(`/org/${data.parent!.id}`)}
+              >
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">⬆️</span>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Родительская организация</p>
+                      <p className="font-semibold text-lg">{data.parent.name}</p>
+                      <Badge variant="outline">{data.parent.type}</Badge>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Current */}
+            <Card className="border-2 border-primary">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🏛️</span>
+                  <div>
+                    <p className="text-xs text-primary">← ВЫ ЗДЕСЬ</p>
+                    <p className="font-semibold text-lg">{data.name}</p>
+                    <Badge>{getTypeLabel(data.type)}</Badge>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          </Grid>
 
-          {data.children.length > 0 && (
-            <Grid size={12}>
-              <Typography variant="h6" sx={{ mb: 1 }}>
-                ⬇️ Подразделения ({data.childCount})
-              </Typography>
-              <Grid container spacing={2}>
-                {data.children.map((child) => (
-                  <Grid size={{ xs: 12, md: 4 }} key={child.id}>
+            {/* Children */}
+            {data.children.length > 0 && (
+              <>
+                <h3 className="font-semibold">⬇️ Подразделения ({data.childCount})</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {data.children.map((child) => (
                     <Card
-                      sx={{ borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                      key={child.id}
+                      className="cursor-pointer hover:bg-accent transition-colors"
                       onClick={() => router.push(`/org/${child.id}`)}
                     >
-                      <CardContent>
-                        <Typography variant="body1" fontWeight="bold">
-                          {child.name}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                          <Chip label={child.type} size="small" />
-                          <Chip
-                            label={`⭐ ${child.overallRating?.toFixed(1) || '—'}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                          <Chip
-                            label={`👥 ${child.members?.length || 0}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        </Box>
+                      <CardContent className="pt-4 pb-4">
+                        <p className="font-semibold">{child.name}</p>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">{child.type}</Badge>
+                          <Badge variant="outline" className="text-xs">⭐ {child.overallRating?.toFixed(1) || '—'}</Badge>
+                          <Badge variant="outline" className="text-xs">👥 {child.members?.length || 0}</Badge>
+                        </div>
                       </CardContent>
                     </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-          )}
+                  ))}
+                </div>
+              </>
+            )}
 
-          {data.children.length === 0 && (
-            <Grid size={12}>
-              <Alert severity="info">
-                У этой организации пока нет подразделений.
-              </Alert>
-            </Grid>
-          )}
-        </Grid>
-      )}
+            {data.children.length === 0 && (
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
+                ℹ️ У этой организации пока нет подразделений.
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* ==================== INVITE DIALOG ==================== */}
-      <Dialog open={inviteOpen} onClose={() => setInviteOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Пригласить участника</DialogTitle>
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent>
-          <TextField
-            label="User ID"
-            fullWidth
-            value={inviteUserId}
-            onChange={(e) => setInviteUserId(e.target.value)}
-            sx={{ mt: 1, mb: 2 }}
-          />
-          <FormControl fullWidth>
-            <InputLabel>Роль</InputLabel>
-            <Select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} label="Роль">
-              {Object.entries(ROLE_CONFIG)
-                .filter(([k]) => k !== 'LEADER')
-                .map(([key, cfg]) => (
-                  <MenuItem key={key} value={key}>
-                    {cfg.icon} {cfg.label}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setInviteOpen(false)}>Отмена</Button>
-          <Button variant="contained" onClick={handleInvite} disabled={!inviteUserId}>
-            Пригласить
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <DialogHeader>
+            <DialogTitle>Пригласить участника</DialogTitle>
+          </DialogHeader>
 
-      {/* Toast */}
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={4000}
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity={toast.severity} onClose={() => setToast({ ...toast, open: false })}>
-          {toast.message}
-        </Alert>
-      </Snackbar>
-    </Container>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>User ID</Label>
+              <Input
+                value={inviteUserId}
+                onChange={(e) => setInviteUserId(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Роль</Label>
+              <Select value={inviteRole} onValueChange={setInviteRole}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(ROLE_CONFIG)
+                    .filter(([k]) => k !== 'LEADER')
+                    .map(([key, cfg]) => (
+                      <SelectItem key={key} value={key}>
+                        {cfg.icon} {cfg.label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>Отмена</Button>
+            <Button onClick={handleInvite} disabled={!inviteUserId}>Пригласить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

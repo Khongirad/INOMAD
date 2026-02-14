@@ -3,18 +3,14 @@
 import { useState } from 'react';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,  
-  Button,
-  Box,
-  Typography,
-  Chip,
-  Alert,
-  LinearProgress,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Network, UserCheck, UserX, Info, TrendingUp } from 'lucide-react';
 
 interface VerificationChainNode {
@@ -54,13 +50,11 @@ export function VerificationManagement({
     setError(null);
 
     try {
-      // Fetch verification chain
       const chainRes = await fetch(`/api/verification/chain/${userId}`);
       if (!chainRes.ok) throw new Error('Failed to fetch verification chain');
       const chainData = await chainRes.json();
       setChain(chainData);
 
-      // Fetch verifier stats
       const statsRes = await fetch(`/api/verification/stats?userId=${userId}`);
       if (!statsRes.ok) throw new Error('Failed to fetch stats');
       const statsData = await statsRes.json();
@@ -96,164 +90,148 @@ export function VerificationManagement({
 
   return (
     <>
-      <Tooltip title="View verification chain and management options">
-        <IconButton onClick={handleOpen} size="small" color="primary">
-          <Network size={18} />
-        </IconButton>
-      </Tooltip>
+      <button
+        onClick={handleOpen}
+        className="p-1.5 rounded-md hover:bg-accent transition-colors text-primary"
+        title="View verification chain and management options"
+      >
+        <Network className="h-4 w-4" />
+      </button>
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Network size={24} />
-            Verification Management - {seatId}
-          </Box>
-        </DialogTitle>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Network className="h-5 w-5" />
+              Verification Management - {seatId}
+            </DialogTitle>
+            <DialogDescription>
+              View verification chain and manage verification status
+            </DialogDescription>
+          </DialogHeader>
 
-        <DialogContent>
-          {loading && <LinearProgress />}
-          
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+          <div className="space-y-6">
+            {loading && (
+              <div className="w-full bg-muted rounded-full h-1 overflow-hidden">
+                <div className="bg-primary h-1 animate-pulse w-full" />
+              </div>
+            )}
 
-          {/* Current Status */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Current Status
-            </Typography>
-            <Chip
-              label={verificationStatus}
-              color={
-                verificationStatus === 'VERIFIED'
-                  ? 'success'
-                  : verificationStatus === 'PENDING'
-                  ? 'warning'
-                  : 'default'
-              }
-              icon={verificationStatus === 'VERIFIED' ? <UserCheck size={16} /> : undefined}
-            />
-          </Box>
+            {error && (
+              <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300">
+                {error}
+              </div>
+            )}
 
-          {/* Verification Chain */}
-          {chain.length > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Verification Chain
-              </Typography>
-              <Box sx={{ pl: 2 }}>
-                {chain.map((node, index) => (
-                  <Box
-                    key={node.userId}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                      mb: 1,
-                      pl: node.depth * 3,
-                    }}
-                  >
-                    {/* Depth indicator */}
-                    <Typography variant="body2" color="text.secondary">
-                      L{node.depth}
-                    </Typography>
+            {/* Current Status */}
+            <div>
+              <h4 className="font-semibold mb-2">Current Status</h4>
+              <Badge
+                variant={verificationStatus === 'VERIFIED' ? 'default' : 'secondary'}
+                className={`gap-1 ${
+                  verificationStatus === 'VERIFIED'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : verificationStatus === 'PENDING'
+                    ? 'bg-yellow-600 hover:bg-yellow-700'
+                    : ''
+                }`}
+              >
+                {verificationStatus === 'VERIFIED' && <UserCheck className="h-3.5 w-3.5" />}
+                {verificationStatus}
+              </Badge>
+            </div>
 
-                    {/* User info */}
-                    <Chip
-                      label={node.seatId}
-                      size="small"
-                      variant={index === 0 ? 'filled' : 'outlined'}
-                      color={index === 0 ? 'primary' : 'default'}
-                    />
+            {/* Verification Chain */}
+            {chain.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">Verification Chain</h4>
+                <div className="pl-2 space-y-2">
+                  {chain.map((node, index) => (
+                    <div
+                      key={node.userId}
+                      className="flex items-center gap-3"
+                      style={{ paddingLeft: `${node.depth * 24}px` }}
+                    >
+                      <span className="text-sm text-muted-foreground">L{node.depth}</span>
+                      <Badge variant={index === 0 ? 'default' : 'outline'} className="text-xs">
+                        {node.seatId}
+                      </Badge>
+                      {node.verifiedBy && (
+                        <span className="text-xs text-muted-foreground">
+                          verified by {node.verifiedBy}
+                          {node.verifiedAt && (
+                            <> on {new Date(node.verifiedAt).toLocaleDateString()}</>
+                          )}
+                        </span>
+                      )}
+                      <Badge variant="outline" className="text-xs gap-1">
+                        <TrendingUp className="h-3 w-3" />
+                        {node.hasVerifiedCount}/{node.canVerifyCount} verified
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                    {/* Verification info */}
-                    {node.verifiedBy && (
-                      <Typography variant="caption" color="text.secondary">
-                        verified by {node.verifiedBy}
-                        {node.verifiedAt && (
-                          <> on {new Date(node.verifiedAt).toLocaleDateString()}</>
-                        )}
-                      </Typography>
-                    )}
+            {/* Statistics */}
+            {stats && (
+              <div>
+                <h4 className="font-semibold mb-2">Verifier Statistics</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Verified</p>
+                    <p className="text-2xl font-bold">{stats.totalVerified}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Quota Remaining</p>
+                    <p className="text-2xl font-bold">
+                      {stats.quota - stats.used}/{stats.quota}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Usage</p>
+                    <p className="text-2xl font-bold">
+                      {Math.round((stats.used / stats.quota) * 100)}%
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 w-full bg-muted rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${
+                      stats.used >= stats.quota ? 'bg-red-500' : 'bg-primary'
+                    }`}
+                    style={{ width: `${Math.min((stats.used / stats.quota) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
-                    {/* Stats */}
-                    <Chip
-                      label={`${node.hasVerifiedCount}/${node.canVerifyCount} verified`}
-                      size="small"
-                      variant="outlined"
-                      icon={<TrendingUp size={12} />}
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          )}
+            {/* Warning Info */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
+              <Info className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                Revoking verification will remove the user&apos;s VERIFIED status and affect all
+                users they have verified.
+              </span>
+            </div>
+          </div>
 
-          {/* Statistics */}
-          {stats && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Verifier Statistics
-              </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Total Verified
-                  </Typography>
-                  <Typography variant="h5">{stats.totalVerified}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Quota Remaining
-                  </Typography>
-                  <Typography variant="h5">
-                    {stats.quota - stats.used}/{stats.quota}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Usage
-                  </Typography>
-                  <Typography variant="h5">
-                    {Math.round((stats.used / stats.quota) * 100)}%
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Quota Progress Bar */}
-              <Box sx={{ mt: 2 }}>
-                <LinearProgress
-                  variant="determinate"
-                  value={Math.min((stats.used / stats.quota) * 100, 100)}
-                  color={stats.used >= stats.quota ? 'error' : 'primary'}
-                />
-              </Box>
-            </Box>
-          )}
-
-          {/* Warning Info */}
-          <Alert severity="info" icon={<Info size={18} />} sx={{ mt: 2 }}>
-            Revoking verification will remove the user's VERIFIED status and affect all
-            users they have verified.
-          </Alert>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Close</Button>
+            {verificationStatus === 'VERIFIED' && (
+              <Button
+                variant="destructive"
+                onClick={handleRevokeVerification}
+                disabled={loading}
+                className="gap-2"
+              >
+                <UserX className="h-4 w-4" />
+                Revoke Verification
+              </Button>
+            )}
+          </DialogFooter>
         </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Close</Button>
-          {verificationStatus === 'VERIFIED' && (
-            <Button
-              onClick={handleRevokeVerification}
-              color="error"
-              variant="contained"
-              startIcon={<UserX size={18} />}
-              disabled={loading}
-            >
-              Revoke Verification
-            </Button>
-          )}
-        </DialogActions>
       </Dialog>
     </>
   );

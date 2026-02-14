@@ -2,39 +2,22 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Alert,
-  CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
-  Divider,
-  Stack,
-} from '@mui/material';
-import {
-  ArrowBack as BackIcon,
-  NavigateNext as NextIcon,
-  NavigateBefore as PrevIcon,
-  Send as SubmitIcon,
-  Key as LeaseIcon,
-} from '@mui/icons-material';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { registerLease } from '@/lib/api/land-registry';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { ArrowLeft, ArrowRight, Send, Key, Loader2, Info, AlertTriangle, CheckCircle } from 'lucide-react';
 
-const STEPS = ['Property Selection', 'Lease Terms', 'Financial Details', 'Review & Submit'];
+const STEPS = ['Выбор объекта', 'Условия аренды', 'Финансовые условия', 'Проверка и подача'];
 
 export default function LeaseRegistrationPage() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form data
   const [landPlotId, setLandPlotId] = useState('');
   const [lessorName, setLessorName] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -46,298 +29,188 @@ export default function LeaseRegistrationPage() {
   const [terms, setTerms] = useState('');
   const [notes, setNotes] = useState('');
 
-  const handleNext = () => setActiveStep((prev) => prev + 1);
-  const handleBack = () => setActiveStep((prev) => prev - 1);
+  const handleNext = () => setActiveStep((p) => p + 1);
+  const handleBack = () => setActiveStep((p) => p - 1);
 
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
       await registerLease({
-        landPlotId,
-        lessorUserId: lessorName, // In real app, this would be a user ID
-        startDate: startDate,
-        endDate: endDate,
-        monthlyRent: parseFloat(monthlyRent),
-        currency,
+        landPlotId, lessorUserId: lessorName, startDate, endDate,
+        monthlyRent: parseFloat(monthlyRent), currency,
         paymentDay: parseInt(paymentDay),
-        deposit: deposit ? parseFloat(deposit) : undefined,
-        terms,
-        notes,
+        deposit: deposit ? parseFloat(deposit) : undefined, terms, notes,
       } as any);
-      toast.success('Lease registered successfully!');
+      toast.success('Аренда зарегистрирована!');
       router.push('/services/land-registry');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to register lease');
+      toast.error(err.message || 'Ошибка регистрации');
     } finally {
       setSubmitting(false);
     }
   };
 
   const canProceed = () => {
-    switch (activeStep) {
-      case 0:
-        return landPlotId && lessorName;
-      case 1:
-        return startDate && endDate;
-      case 2:
-        return monthlyRent && paymentDay;
-      case 3:
-        return true;
-      default:
-        return false;
-    }
+    if (activeStep === 0) return landPlotId && lessorName;
+    if (activeStep === 1) return startDate && endDate;
+    if (activeStep === 2) return monthlyRent && paymentDay;
+    return true;
   };
 
-  // Calculate lease duration
-  const calculateDuration = () => {
+  const calcDuration = () => {
     if (!startDate || !endDate) return '';
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const months = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30));
-    return `${months} months (${Math.floor(months / 12)} years, ${months % 12} months)`;
+    const m = Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24 * 30));
+    return `${m} мес. (${Math.floor(m / 12)} лет, ${m % 12} мес.)`;
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/land-registry')}
-          sx={{ mb: 2 }}
-        >
-          Back
+    <div className="p-6 max-w-[900px] mx-auto space-y-6">
+      <div>
+        <Button variant="ghost" onClick={() => router.push('/services/land-registry')} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />Назад
         </Button>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <LeaseIcon sx={{ fontSize: 40, color: 'warning.main' }} />
-          <Box>
-            <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-              Register Lease Agreement
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Available to all users - citizens and foreigners
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
+        <div className="flex items-center gap-3">
+          <Key className="h-10 w-10 text-yellow-500" />
+          <div>
+            <h1 className="text-3xl font-bold">Регистрация договора аренды</h1>
+            <p className="text-muted-foreground mt-1">Доступно всем — гражданам и иностранцам</p>
+          </div>
+        </div>
+      </div>
 
-      <Alert severity="success" sx={{ mb: 3 }}>
-        <Typography variant="body2" fontWeight={600} gutterBottom>
-          Lease Registration Open to All
-        </Typography>
-        <Typography variant="body2">
-          Unlike land ownership (citizens only), lease agreements can be registered by anyone,
-          including foreign nationals.
-        </Typography>
-      </Alert>
+      <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex gap-2">
+        <CheckCircle className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-semibold">Аренда открыта для всех</p>
+          <p className="text-sm text-muted-foreground">В отличие от собственности (только граждане), аренду может зарегистрировать любой.</p>
+        </div>
+      </div>
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Stepper activeStep={activeStep}>
-            {STEPS.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
-          </Stepper>
+      {/* Stepper */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            {STEPS.map((label, i) => (
+              <div key={label} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${i <= activeStep ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{i + 1}</div>
+                  <span className="text-xs mt-1 text-center max-w-[90px]">{label}</span>
+                </div>
+                {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-2 ${i < activeStep ? 'bg-primary' : 'bg-muted'}`} />}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent>
-          {/* Step 0: Property Selection */}
+        <CardContent className="pt-6 space-y-6">
           {activeStep === 0 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>Property Selection</Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <TextField
-                  fullWidth
-                  label="Land Plot ID or Cadastral Number"
-                  placeholder="Enter the property you're leasing"
-                  value={landPlotId}
-                  onChange={(e) => setLandPlotId(e.target.value)}
-                  required
-                  helperText="The property being leased"
-                />
-                <TextField
-                  fullWidth
-                  label="Lessor (Property Owner)"
-                  placeholder="Name or User ID of the property owner"
-                  value={lessorName}
-                  onChange={(e) => setLessorName(e.target.value)}
-                  required
-                  helperText="The person or entity leasing the property to you"
-                />
-                <Alert severity="info">
-                  The lessor will need to approve this lease agreement before it becomes active.
-                </Alert>
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Выбор объекта</h3><hr />
+              <div className="space-y-2">
+                <Label>ID участка / кадастровый номер</Label>
+                <Input placeholder="Объект аренды" value={landPlotId} onChange={(e) => setLandPlotId(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Арендодатель (собственник)</Label>
+                <Input placeholder="Имя или ID собственника" value={lessorName} onChange={(e) => setLessorName(e.target.value)} />
+                <p className="text-xs text-muted-foreground">Лицо, сдающее объект в аренду</p>
+              </div>
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex gap-2">
+                <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">Арендодатель должен будет подтвердить договор.</p>
+              </div>
+            </div>
           )}
 
-          {/* Step 1: Lease Terms */}
           {activeStep === 1 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>Lease Terms</Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <TextField
-                  fullWidth
-                  type="date"
-                  label="Lease Start Date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  type="date"
-                  label="Lease End Date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                  helperText={calculateDuration()}
-                />
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  label="Lease Terms & Conditions"
-                  placeholder="Describe the terms of the lease agreement..."
-                  value={terms}
-                  onChange={(e) => setTerms(e.target.value)}
-                  helperText="E.g., permitted use, maintenance responsibilities, renewal terms, etc."
-                />
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Условия аренды</h3><hr />
+              <div className="space-y-2">
+                <Label>Дата начала</Label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Дата окончания</Label>
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                {calcDuration() && <p className="text-xs text-muted-foreground">Срок: {calcDuration()}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Условия договора</Label>
+                <Textarea placeholder="Опишите условия аренды..." value={terms} onChange={(e) => setTerms(e.target.value)} rows={4} />
+                <p className="text-xs text-muted-foreground">Разрешённое использование, обязанности по обслуживанию и т.д.</p>
+              </div>
+            </div>
           )}
 
-          {/* Step 2: Financial Details */}
           {activeStep === 2 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>Financial Details</Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Monthly Rent"
-                  value={monthlyRent}
-                  onChange={(e) => setMonthlyRent(e.target.value)}
-                  inputProps={{ min: 0, step: 0.01 }}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  label="Currency"
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  placeholder="ALTAN"
-                  helperText="Default: ALTAN"
-                />
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Payment Day of Month"
-                  value={paymentDay}
-                  onChange={(e) => setPaymentDay(e.target.value)}
-                  inputProps={{ min: 1, max: 31 }}
-                  required
-                  helperText="Day of month when rent is due (1-31)"
-                />
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Security Deposit (Optional)"
-                  value={deposit}
-                  onChange={(e) => setDeposit(e.target.value)}
-                  inputProps={{ min: 0, step: 0.01 }}
-                  helperText="Amount paid upfront as security"
-                />
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={2}
-                  label="Additional Notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Финансовые условия</h3><hr />
+              <div className="space-y-2">
+                <Label>Ежемесячная арендная плата</Label>
+                <Input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Валюта</Label>
+                <Input value={currency} onChange={(e) => setCurrency(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>День оплаты (1-31)</Label>
+                <Input type="number" min={1} max={31} value={paymentDay} onChange={(e) => setPaymentDay(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Залог (необязательно)</Label>
+                <Input type="number" value={deposit} onChange={(e) => setDeposit(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Заметки</Label>
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+              </div>
+            </div>
           )}
 
-          {/* Step 3: Review */}
           {activeStep === 3 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>Review Lease Agreement</Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Property</Typography>
-                  <Typography variant="body1" fontWeight={600}>{landPlotId}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Lessor (Owner)</Typography>
-                  <Typography variant="body1">{lessorName}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Lease Period</Typography>
-                  <Typography variant="body1">
-                    {new Date(startDate).toLocaleDateString()} → {new Date(endDate).toLocaleDateString()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Duration: {calculateDuration()}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Financial Terms</Typography>
-                  <Typography variant="body1" fontWeight={600}>
-                    {monthlyRent} {currency}/month
-                  </Typography>
-                  <Typography variant="body2">Payment due: Day {paymentDay} of each month</Typography>
-                  {deposit && <Typography variant="body2">Security Deposit: {deposit} {currency}</Typography>}
-                </Box>
-                {terms && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Lease Terms</Typography>
-                    <Typography variant="body2">{terms}</Typography>
-                  </Box>
-                )}
-                {notes && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Additional Notes</Typography>
-                    <Typography variant="body2">{notes}</Typography>
-                  </Box>
-                )}
-                <Alert severity="warning">
-                  <Typography variant="body2" fontWeight={600} gutterBottom>
-                    ⚠️ Lessor Approval Required
-                  </Typography>
-                  <Typography variant="body2">
-                    This lease agreement will be sent to the property owner for approval. Once approved,
-                    it will be recorded on the ALTAN blockchain and become legally binding.
-                  </Typography>
-                </Alert>
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Проверка договора аренды</h3><hr />
+              <div><p className="text-xs text-muted-foreground">Объект</p><p className="font-semibold">{landPlotId}</p></div>
+              <div><p className="text-xs text-muted-foreground">Арендодатель</p><p>{lessorName}</p></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Период</p>
+                <p>{startDate ? new Date(startDate).toLocaleDateString('ru-RU') : ''} → {endDate ? new Date(endDate).toLocaleDateString('ru-RU') : ''}</p>
+                <p className="text-sm text-muted-foreground">{calcDuration()}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Финансы</p>
+                <p className="font-semibold">{monthlyRent} {currency}/мес.</p>
+                <p className="text-sm">День оплаты: {paymentDay}</p>
+                {deposit && <p className="text-sm">Залог: {deposit} {currency}</p>}
+              </div>
+              {terms && <div><p className="text-xs text-muted-foreground">Условия</p><p className="text-sm">{terms}</p></div>}
+              {notes && <div><p className="text-xs text-muted-foreground">Заметки</p><p className="text-sm">{notes}</p></div>}
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold">⚠️ Требуется подтверждение арендодателя</p>
+                  <p className="text-sm text-muted-foreground">Договор будет отправлен собственнику на подтверждение и записан в блокчейн ALTAN.</p>
+                </div>
+              </div>
+            </div>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button onClick={handleBack} disabled={activeStep === 0} startIcon={<PrevIcon />}>Back</Button>
+          <div className="flex justify-between pt-4">
+            <Button variant="outline" onClick={handleBack} disabled={activeStep === 0}><ArrowLeft className="h-4 w-4 mr-2" />Назад</Button>
             {activeStep === STEPS.length - 1 ? (
-              <Button
-                variant="contained"
-                color="warning"
-                onClick={handleSubmit}
-                disabled={!canProceed() || submitting}
-                endIcon={submitting ? <CircularProgress size={20} /> : <SubmitIcon />}
-              >
-                {submitting ? 'Registering...' : 'Submit for Approval'}
+              <Button className="bg-yellow-600 hover:bg-yellow-700" onClick={handleSubmit} disabled={!canProceed() || submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                {submitting ? 'Регистрация...' : 'Подать на утверждение'}
               </Button>
             ) : (
-              <Button variant="contained" onClick={handleNext} disabled={!canProceed()} endIcon={<NextIcon />}>Next</Button>
+              <Button onClick={handleNext} disabled={!canProceed()}>Далее<ArrowRight className="h-4 w-4 ml-2" /></Button>
             )}
-          </Box>
+          </div>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }

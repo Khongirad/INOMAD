@@ -1,315 +1,248 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RateOrganizationDialog } from '@/components/organizations/RateOrganizationDialog';
 import {
-  Container,
-  Typography,
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  Avatar,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Alert,
-  LinearProgress,
-} from '@mui/material';
-import { Trophy, TrendingUp, TrendingDown, Minus, Award } from 'lucide-react';
-import { RateOrganizationDialog, RatingData } from '@/components/organizations/RateOrganizationDialog';
-import { getLeaderboard, rateOrganization } from '@/lib/api';
+  Trophy,
+  Star,
+  Users,
+  Building2,
+  Search,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Loader2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
-interface LeaderboardOrganization {
+interface LeaderboardEntry {
   id: string;
   name: string;
   type: string;
-  branch?: string;
-  leader: {
-    firstName: string;
-    lastName: string;
-  };
-  trustScore: number;
-  qualityScore: number;
-  financialScore: number;
-  overallRating: number;
-  currentRank: number;
+  rating: number;
+  ratingCount: number;
+  memberCount: number;
+  rank: number;
   previousRank?: number;
-  contractsCompleted: number;
+  financialRating?: number;
+  trustRating?: number;
+  qualityRating?: number;
 }
 
 export default function LeaderboardPage() {
-  const [organizations, setOrganizations] = useState<LeaderboardOrganization[]>([]);
+  const router = useRouter();
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filterBranch, setFilterBranch] = useState<string>('ALL');
-  const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
-  const [selectedOrg, setSelectedOrg] = useState<LeaderboardOrganization | null>(null);
+  const [sortBy, setSortBy] = useState('rating');
+  const [search, setSearch] = useState('');
+  const [rateDialogOpen, setRateDialogOpen] = useState(false);
+  const [selectedOrg, setSelectedOrg] = useState<{ id: string; name: string } | null>(null);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
 
   const fetchLeaderboard = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const data = await getLeaderboard();
-      setOrganizations(data as unknown as LeaderboardOrganization[]);
-    } catch (err: any) {
-      const errorMsg = err.message || 'Failed to fetch leaderboard';
-      setError(errorMsg);
-      toast.error(errorMsg);
+      setLoading(true);
+      const res = await fetch(`/api/organizations/leaderboard?sortBy=${sortBy}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      setEntries(data.data || data || []);
+    } catch {
+      toast.error('Ошибка загрузки рейтинга');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRate = (org: LeaderboardOrganization) => {
-    setSelectedOrg(org);
-    setRatingDialogOpen(true);
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [sortBy]);
+
+  const handleRate = async (data: { financialScore: number; trustScore: number; qualityScore: number }) => {
+    if (!selectedOrg) return;
+    const res = await fetch(`/api/organizations/${selectedOrg.id}/rate`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed');
+    toast.success('Оценка отправлена');
+    fetchLeaderboard();
   };
 
-  const handleSubmitRating = async (ratings: RatingData) => {
-    if (!selectedOrg) return;
-
-    try {
-      await rateOrganization(selectedOrg.id, ratings);
-      toast.success(`Successfully rated ${selectedOrg.name}!`);
-      setRatingDialogOpen(false);
-      
-      // Refresh leaderboard
-      await fetchLeaderboard();
-    } catch (err: any) {
-      const errorMsg = err.message || 'Failed to submit rating';
-      toast.error(errorMsg);
-      throw err;
-    }
+  const openRateDialog = (org: { id: string; name: string }) => {
+    setSelectedOrg(org);
+    setRateDialogOpen(true);
   };
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Trophy size={20} color="#FFD700" />;
-    if (rank === 2) return <Trophy size={20} color="#C0C0C0" />;
-    if (rank === 3) return <Trophy size={20} color="#CD7F32" />;
-    return null;
+    if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
+    if (rank === 2) return <Trophy className="h-5 w-5 text-gray-400" />;
+    if (rank === 3) return <Trophy className="h-5 w-5 text-amber-700" />;
+    return <span className="text-sm font-bold text-muted-foreground w-5 text-center">{rank}</span>;
   };
 
-  const getRankChange = (current: number, previous?: number) => {
-    if (!previous) return null;
-    const change = previous - current;
-    
-    if (change > 0) {
-      return (
-        <Chip
-          label={`+${change}`}
-          size="small"
-          icon={<TrendingUp size={14} />}
-          color="success"
-        />
-      );
-    } else if (change < 0) {
-      return (
-        <Chip
-          label={Math.abs(change)}
-          size="small"
-          icon={<TrendingDown size={14} />}
-          color="error"
-        />
-      );
-    } else {
-      return (
-        <Chip
-          label="—"
-          size="small"
-          icon={<Minus size={14} />}
-          color="default"
-        />
-      );
-    }
+  const getRankChange = (entry: LeaderboardEntry) => {
+    if (!entry.previousRank) return null;
+    const diff = entry.previousRank - entry.rank;
+    if (diff > 0) return <span className="text-green-600 flex items-center gap-0.5 text-xs"><TrendingUp className="h-3 w-3" />+{diff}</span>;
+    if (diff < 0) return <span className="text-red-600 flex items-center gap-0.5 text-xs"><TrendingDown className="h-3 w-3" />{diff}</span>;
+    return <span className="text-muted-foreground flex items-center text-xs"><Minus className="h-3 w-3" /></span>;
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return 'success';
-    if (score >= 6) return 'warning';
-    return 'error';
-  };
-
-  const filteredOrgs = organizations.filter(org => 
-    filterBranch === 'ALL' || org.branch === filterBranch
+  const filteredEntries = entries.filter((e) =>
+    e.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const top100 = filteredOrgs.slice(0, 100);
-
   return (
-    <>
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Award size={32} />
-            Топ-100 Организаций
-          </Typography>
+    <div className="max-w-5xl mx-auto py-8 px-4">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-8">
+        <Trophy className="h-7 w-7 text-yellow-500" />
+        <h1 className="text-2xl font-bold">Рейтинг Организаций</h1>
+      </div>
 
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Ветвь</InputLabel>
-            <Select
-              value={filterBranch}
-              onChange={(e) => setFilterBranch(e.target.value)}
-              label="Ветвь"
-            >
-              <MenuItem value="ALL">Все</MenuItem>
-              <MenuItem value="LEGISLATIVE">Законодательная</MenuItem>
-              <MenuItem value="EXECUTIVE">Исполнительная</MenuItem>
-              <MenuItem value="JUDICIAL">Судебная</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Поиск организации..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Сортировать по" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="rating">Общий рейтинг</SelectItem>
+            <SelectItem value="financial">Финансы</SelectItem>
+            <SelectItem value="trust">Доверие</SelectItem>
+            <SelectItem value="quality">Качество</SelectItem>
+            <SelectItem value="members">Участники</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+      {/* Loading */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : filteredEntries.length === 0 ? (
+        <div className="text-center py-16">
+          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">Организации не найдены</p>
+        </div>
+      ) : (
+        /* Leaderboard Table */
+        <div className="space-y-2">
+          {/* Header row */}
+          <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2 text-xs font-medium text-muted-foreground">
+            <div className="col-span-1">#</div>
+            <div className="col-span-4">Организация</div>
+            <div className="col-span-1 text-center">⭐</div>
+            <div className="col-span-1 text-center">💰</div>
+            <div className="col-span-1 text-center">🤝</div>
+            <div className="col-span-1 text-center">📊</div>
+            <div className="col-span-1 text-center">👥</div>
+            <div className="col-span-2 text-center">Действие</div>
+          </div>
 
-        {loading ? (
-          <LinearProgress />
-        ) : (
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell width={80}>Место</TableCell>
-                  <TableCell>Организация</TableCell>
-                  <TableCell>Лидер</TableCell>
-                  <TableCell align="center">Финансы</TableCell>
-                  <TableCell align="center">Доверие</TableCell>
-                  <TableCell align="center">Качество</TableCell>
-                  <TableCell align="center">Общий</TableCell>
-                  <TableCell align="center">Изменение</TableCell>
-                  <TableCell align="right">Действия</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {top100.map((org) => (
-                  <TableRow
-                    key={org.id}
-                    sx={{
-                      bgcolor: org.currentRank <= 3 ? 'action.hover' : 'inherit',
-                      '&:hover': { bgcolor: 'action.selected' },
-                    }}
-                  >
-                    {/* Rank */}
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {getRankIcon(org.currentRank)}
-                        <Typography variant="h6">#{org.currentRank}</Typography>
-                      </Box>
-                    </TableCell>
+          {filteredEntries.map((entry) => (
+            <Card key={entry.id} className={`transition-all hover:shadow-md ${entry.rank <= 3 ? 'border-yellow-200 dark:border-yellow-800' : ''}`}>
+              <CardContent className="py-3 px-4">
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  {/* Rank */}
+                  <div className="col-span-1 flex items-center gap-1">
+                    {getRankIcon(entry.rank)}
+                    {getRankChange(entry)}
+                  </div>
 
-                    {/* Organization */}
-                    <TableCell>
-                      <Typography variant="body1" fontWeight="medium">
-                        {org.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {org.type}
-                        {org.branch && ` • ${org.branch}`}
-                      </Typography>
-                    </TableCell>
+                  {/* Name */}
+                  <div className="col-span-4">
+                    <button
+                      className="text-left hover:text-primary transition-colors"
+                      onClick={() => router.push(`/organizations/${entry.id}`)}
+                    >
+                      <p className="font-semibold text-sm">{entry.name}</p>
+                      <Badge variant="outline" className="text-[10px] mt-0.5">{entry.type}</Badge>
+                    </button>
+                  </div>
 
-                    {/* Leader */}
-                    <TableCell>
-                      <Typography variant="body2">
-                        {org.leader.firstName} {org.leader.lastName}
-                      </Typography>
-                    </TableCell>
+                  {/* Rating */}
+                  <div className="col-span-1 text-center">
+                    <span className="font-bold text-sm">{entry.rating?.toFixed(1) || '—'}</span>
+                    <p className="text-[10px] text-muted-foreground">{entry.ratingCount}</p>
+                  </div>
 
-                    {/* Financial Score */}
-                    <TableCell align="center">
-                      <Chip
-                        label={org.financialScore.toFixed(1)}
-                        color={getScoreColor(org.financialScore)}
-                        size="small"
-                      />
-                    </TableCell>
+                  {/* Financial */}
+                  <div className="col-span-1 text-center text-sm">
+                    {entry.financialRating?.toFixed(1) || '—'}
+                  </div>
 
-                    {/* Trust Score */}
-                    <TableCell align="center">
-                      <Chip
-                        label={org.trustScore.toFixed(1)}
-                        color={getScoreColor(org.trustScore)}
-                        size="small"
-                      />
-                    </TableCell>
+                  {/* Trust */}
+                  <div className="col-span-1 text-center text-sm">
+                    {entry.trustRating?.toFixed(1) || '—'}
+                  </div>
 
-                    {/* Quality Score */}
-                    <TableCell align="center">
-                      <Chip
-                        label={org.qualityScore.toFixed(1)}
-                        color={getScoreColor(org.qualityScore)}
-                        size="small"
-                      />
-                    </TableCell>
+                  {/* Quality */}
+                  <div className="col-span-1 text-center text-sm">
+                    {entry.qualityRating?.toFixed(1) || '—'}
+                  </div>
 
-                    {/* Overall Rating */}
-                    <TableCell align="center">
-                      <Typography variant="h6" color="primary">
-                        {org.overallRating.toFixed(1)}
-                      </Typography>
-                    </TableCell>
+                  {/* Members */}
+                  <div className="col-span-1 text-center text-sm flex items-center justify-center gap-1">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    {entry.memberCount}
+                  </div>
 
-                    {/* Rank Change */}
-                    <TableCell align="center">
-                      {getRankChange(org.currentRank, org.previousRank)}
-                    </TableCell>
+                  {/* Action */}
+                  <div className="col-span-2 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-xs"
+                      onClick={() => openRateDialog({ id: entry.id, name: entry.name })}
+                    >
+                      <Star className="h-3.5 w-3.5" />
+                      Оценить
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-                    {/* Actions */}
-                    <TableCell align="right">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          href={`/organizations/${org.id}`}
-                        >
-                          Профиль
-                        </Button>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleRate(org)}
-                        >
-                          Оценить
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-
-        {!loading && top100.length === 0 && (
-          <Alert severity="info">Нет организаций для отображения</Alert>
-        )}
-      </Container>
-
-      {/* Rating Dialog */}
+      {/* Rate Dialog */}
       {selectedOrg && (
         <RateOrganizationDialog
-          open={ratingDialogOpen}
-          onClose={() => setRatingDialogOpen(false)}
+          open={rateDialogOpen}
+          onClose={() => {
+            setRateDialogOpen(false);
+            setSelectedOrg(null);
+          }}
           organizationName={selectedOrg.name}
           organizationId={selectedOrg.id}
-          onSubmit={handleSubmitRating}
+          onSubmit={handleRate}
         />
       )}
-    </>
+    </div>
   );
 }

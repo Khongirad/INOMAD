@@ -2,49 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Alert,
-  CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Divider,
-  Stack,
-Chip,
-} from '@mui/material';
-import {
-  ArrowBack as BackIcon,
-  NavigateNext as NextIcon,
-  NavigateBefore as PrevIcon,
-  Send as SubmitIcon,
-  Home as PropertyIcon,
-} from '@mui/icons-material';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { registerOwnership } from '@/lib/api/land-registry';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { ArrowLeft, ArrowRight, Send, Home, Loader2, Info, AlertTriangle } from 'lucide-react';
 
-const STEPS = ['Land Plot Selection', 'Ownership Details', 'Review & Submit'];
-
+const STEPS = ['Выбор участка', 'Детали собственности', 'Проверка и подача'];
 const OWNERSHIP_TYPES = ['FULL', 'PARTIAL', 'JOINT', 'USUFRUCT'];
 
 export default function PropertyOwnershipRegistrationPage() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-
-  // Mock citizenship check
   const [isCitizen] = useState(true);
 
-  // Form data
   const [landPlotId, setLandPlotId] = useState('');
   const [ownershipType, setOwnershipType] = useState('FULL');
   const [ownershipShare, setOwnershipShare] = useState('100');
@@ -53,216 +30,158 @@ export default function PropertyOwnershipRegistrationPage() {
   const [purchasePrice, setPurchasePrice] = useState('');
   const [notes, setNotes] = useState('');
 
-  const handleNext = () => setActiveStep((prev) => prev + 1);
-  const handleBack = () => setActiveStep((prev) => prev - 1);
+  const handleNext = () => setActiveStep((p) => p + 1);
+  const handleBack = () => setActiveStep((p) => p - 1);
 
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
-      await registerOwnership({
-        landPlotId,
-        ownershipType: ownershipType as any,
-        sharePercentage: parseFloat(ownershipShare),
-      });
-      toast.success('Property ownership registered successfully!');
+      await registerOwnership({ landPlotId, ownershipType: ownershipType as any, sharePercentage: parseFloat(ownershipShare) });
+      toast.success('Право собственности зарегистрировано!');
       router.push('/services/land-registry');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to register ownership');
+      toast.error(err.message || 'Ошибка регистрации');
     } finally {
       setSubmitting(false);
     }
   };
 
   const canProceed = () => {
-    switch (activeStep) {
-      case 0:
-        return landPlotId !== '';
-      case 1:
-        return ownershipType && ownershipShare && acquisitionDate && acquisitionMethod;
-      case 2:
-        return true;
-      default:
-        return false;
-    }
+    if (activeStep === 0) return landPlotId !== '';
+    if (activeStep === 1) return ownershipType && ownershipShare && acquisitionDate && acquisitionMethod;
+    return true;
   };
 
   if (!isCitizen) {
     return (
-      <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-        <Alert severity="error">
-          Only citizens can register property ownership. Foreigners may register leases.
-        </Alert>
-      </Box>
+      <div className="p-6 max-w-[900px] mx-auto">
+        <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-lg p-4">
+          Только граждане могут регистрировать право собственности.
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/land-registry')}
-          sx={{ mb: 2 }}
-        >
-          Back
+    <div className="p-6 max-w-[900px] mx-auto space-y-6">
+      <div>
+        <Button variant="ghost" onClick={() => router.push('/services/land-registry')} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />Назад
         </Button>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <PropertyIcon sx={{ fontSize: 40, color: 'info.main' }} />
-          <Box>
-            <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-              Register Property Ownership
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Register your ownership of a land plot or building
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
+        <div className="flex items-center gap-3">
+          <Home className="h-10 w-10 text-blue-500" />
+          <div>
+            <h1 className="text-3xl font-bold">Регистрация права собственности</h1>
+            <p className="text-muted-foreground mt-1">Зарегистрируйте право на земельный участок</p>
+          </div>
+        </div>
+      </div>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Property ownership registration links you to an existing registered land plot.
-      </Alert>
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex gap-2">
+        <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+        <p className="text-sm text-muted-foreground">Регистрация связывает вас с зарегистрированным участком.</p>
+      </div>
 
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Stepper activeStep={activeStep}>
-            {STEPS.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
-          </Stepper>
+      {/* Stepper */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            {STEPS.map((label, i) => (
+              <div key={label} className="flex items-center flex-1">
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${i <= activeStep ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{i + 1}</div>
+                  <span className="text-xs mt-1 text-center max-w-[100px]">{label}</span>
+                </div>
+                {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-2 ${i < activeStep ? 'bg-primary' : 'bg-muted'}`} />}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent>
+        <CardContent className="pt-6 space-y-6">
           {activeStep === 0 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>Land Plot Selection</Typography>
-              <Divider sx={{ mb: 3 }} />
-              <TextField
-                fullWidth
-                label="Land Plot ID or Cadastral Number"
-                placeholder="Enter land plot ID"
-                value={landPlotId}
-                onChange={(e) => setLandPlotId(e.target.value)}
-                required
-                helperText="The land plot must already be registered in the cadastral system"
-              />
-              <Alert severity="warning" sx={{ mt: 2 }}>
-                <strong>Note:</strong> Land plot lookup and verification will be added in future updates.
-              </Alert>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Выбор земельного участка</h3><hr />
+              <div className="space-y-2">
+                <Label>ID участка или кадастровый номер</Label>
+                <Input placeholder="Введите ID" value={landPlotId} onChange={(e) => setLandPlotId(e.target.value)} />
+                <p className="text-xs text-muted-foreground">Участок должен быть в кадастровой системе</p>
+              </div>
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+                <p className="text-sm"><strong>Примечание:</strong> Поиск участков будет добавлен позже.</p>
+              </div>
+            </div>
           )}
 
           {activeStep === 1 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>Ownership Details</Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Ownership Type</InputLabel>
-                  <Select value={ownershipType} onChange={(e) => setOwnershipType(e.target.value)} label="Ownership Type">
-                    {OWNERSHIP_TYPES.map((type) => <MenuItem key={type} value={type}>{type}</MenuItem>)}
-                  </Select>
-                </FormControl>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Ownership Share (%)"
-                  value={ownershipShare}
-                  onChange={(e) => setOwnershipShare(e.target.value)}
-                  inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  disabled={ownershipType === 'FULL'}
-                />
-                <TextField
-                  fullWidth
-                  type="date"
-                  label="Acquisition Date"
-                  value={acquisitionDate}
-                  onChange={(e) => setAcquisitionDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  label="Acquisition Method"
-                  placeholder="e.g., Purchase, Inheritance, Gift, Privatization"
-                  value={acquisitionMethod}
-                  onChange={(e) => setAcquisitionMethod(e.target.value)}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Purchase Price (ALTAN) - Optional"
-                  value={purchasePrice}
-                  onChange={(e) => setPurchasePrice(e.target.value)}
-                  inputProps={{ min: 0, step: 0.01 }}
-                />
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  label="Additional Notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Детали собственности</h3><hr />
+              <div className="space-y-2">
+                <Label>Тип собственности</Label>
+                <Select value={ownershipType} onValueChange={setOwnershipType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{OWNERSHIP_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Доля (%)</Label>
+                <Input type="number" value={ownershipShare} onChange={(e) => setOwnershipShare(e.target.value)} disabled={ownershipType === 'FULL'} />
+              </div>
+              <div className="space-y-2">
+                <Label>Дата приобретения</Label>
+                <Input type="date" value={acquisitionDate} onChange={(e) => setAcquisitionDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Способ приобретения</Label>
+                <Input placeholder="Покупка, Наследование, Дарение..." value={acquisitionMethod} onChange={(e) => setAcquisitionMethod(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Цена (ALTAN) — необязательно</Label>
+                <Input type="number" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Заметки</Label>
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+              </div>
+            </div>
           )}
 
           {activeStep === 2 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>Review Registration</Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Land Plot</Typography>
-                  <Typography variant="body1" fontWeight={600}>{landPlotId}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Ownership Type</Typography>
-                  <Chip label={ownershipType} color="primary" size="small" />
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Ownership Share</Typography>
-                  <Typography variant="body1">{ownershipShare}%</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Acquisition Details</Typography>
-                  <Typography variant="body2">Method: {acquisitionMethod}</Typography>
-                  <Typography variant="body2">Date: {new Date(acquisitionDate).toLocaleDateString()}</Typography>
-                  {purchasePrice && <Typography variant="body2">Price: {purchasePrice} ALTAN</Typography>}
-                </Box>
-                {notes && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Notes</Typography>
-                    <Typography variant="body2">{notes}</Typography>
-                  </Box>
-                )}
-                <Alert severity="info">
-                  This ownership will be recorded on the ALTAN blockchain and reviewed by a cadastral officer.
-                </Alert>
-              </Stack>
-            </Box>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Проверка регистрации</h3><hr />
+              <div><p className="text-xs text-muted-foreground">Участок</p><p className="font-semibold">{landPlotId}</p></div>
+              <div><p className="text-xs text-muted-foreground">Тип</p><Badge>{ownershipType}</Badge></div>
+              <div><p className="text-xs text-muted-foreground">Доля</p><p>{ownershipShare}%</p></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Приобретение</p>
+                <p className="text-sm">Способ: {acquisitionMethod}</p>
+                <p className="text-sm">Дата: {acquisitionDate ? new Date(acquisitionDate).toLocaleDateString('ru-RU') : '—'}</p>
+                {purchasePrice && <p className="text-sm">Цена: {purchasePrice} ALTAN</p>}
+              </div>
+              {notes && <div><p className="text-xs text-muted-foreground">Заметки</p><p className="text-sm">{notes}</p></div>}
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex gap-2">
+                <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">Запись будет внесена в блокчейн ALTAN.</p>
+              </div>
+            </div>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button onClick={handleBack} disabled={activeStep === 0} startIcon={<PrevIcon />}>Back</Button>
+          <div className="flex justify-between pt-4">
+            <Button variant="outline" onClick={handleBack} disabled={activeStep === 0}><ArrowLeft className="h-4 w-4 mr-2" />Назад</Button>
             {activeStep === STEPS.length - 1 ? (
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleSubmit}
-                disabled={!canProceed() || submitting}
-                endIcon={submitting ? <CircularProgress size={20} /> : <SubmitIcon />}
-              >
-                {submitting ? 'Registering...' : 'Submit'}
+              <Button className="bg-green-600 hover:bg-green-700" onClick={handleSubmit} disabled={!canProceed() || submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                {submitting ? 'Регистрация...' : 'Подать'}
               </Button>
             ) : (
-              <Button variant="contained" onClick={handleNext} disabled={!canProceed()} endIcon={<NextIcon />}>Next</Button>
+              <Button onClick={handleNext} disabled={!canProceed()}>Далее<ArrowRight className="h-4 w-4 ml-2" /></Button>
             )}
-          </Box>
+          </div>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }

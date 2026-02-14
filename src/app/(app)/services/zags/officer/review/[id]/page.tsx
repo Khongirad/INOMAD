@@ -2,30 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  TextField,
-  Alert,
-  CircularProgress,
-  Divider,
-  Chip,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  Stack,
-} from '@mui/material';
-import {
-  CheckCircle as ApproveIcon,
-  Cancel as RejectIcon,
-  ArrowBack as BackIcon,
-  Article as CertificateIcon,
-} from '@mui/icons-material';
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   getMarriage,
   approveMarriage,
@@ -43,7 +33,6 @@ export default function MarriageReviewPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Review dialog
   const [reviewDialog, setReviewDialog] = useState(false);
   const [reviewAction, setReviewAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [notes, setNotes] = useState('');
@@ -59,7 +48,7 @@ export default function MarriageReviewPage() {
       const data = await getMarriage(marriageId);
       setMarriage(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load marriage');
+      setError(err.message || 'Не удалось загрузить данные');
     } finally {
       setLoading(false);
     }
@@ -76,7 +65,7 @@ export default function MarriageReviewPage() {
       setReviewDialog(false);
       router.push('/services/zags/officer');
     } catch (err: any) {
-      setError(err.message || 'Failed to submit review');
+      setError(err.message || 'Не удалось обработать');
     } finally {
       setSubmitting(false);
     }
@@ -89,296 +78,201 @@ export default function MarriageReviewPage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
     );
   }
 
   if (error || !marriage) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error || 'Marriage not found'}</Alert>
-      </Box>
+      <div className="p-4">
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4">
+          {error || 'Брак не найден'}
+        </div>
+      </div>
     );
   }
 
   const consentComplete = marriage.spouse1ConsentGranted && marriage.spouse2ConsentGranted;
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1000, mx: 'auto' }}>
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/zags/officer')}
-          sx={{ mb: 2 }}
-        >
-          Back to Dashboard
+      <div>
+        <Button variant="ghost" onClick={() => router.push('/services/zags/officer')} className="mb-2">
+          ← Назад к панели
         </Button>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box>
-            <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-              Marriage Application Review
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {marriage.spouse1FullName} & {marriage.spouse2FullName}
-            </Typography>
-          </Box>
-          <Chip
-            label={marriage.status}
-            color={marriage.status === 'REGISTERED' ? 'success' : 'warning'}
-            size="medium"
-          />
-        </Box>
-      </Box>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Рассмотрение заявления на брак</h1>
+            <p className="text-muted-foreground mt-1">{marriage.spouse1FullName} & {marriage.spouse2FullName}</p>
+          </div>
+          <Badge variant={marriage.status === 'REGISTERED' ? 'default' : 'secondary'}>
+            {marriage.status}
+          </Badge>
+        </div>
+      </div>
 
-      <Grid container spacing={3}>
-        {/* Consent Status */}
-        <Grid size={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Consent Status
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Stack spacing={2}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2">{marriage.spouse1FullName}</Typography>
-                  <Chip
-                    label={marriage.spouse1ConsentGranted ? 'Consented' : 'Pending'}
-                    color={marriage.spouse1ConsentGranted ? 'success' : 'warning'}
-                    size="small"
-                  />
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2">{marriage.spouse2FullName}</Typography>
-                  <Chip
-                    label={marriage.spouse2ConsentGranted ? 'Consented' : 'Pending'}
-                    color={marriage.spouse2ConsentGranted ? 'success' : 'warning'}
-                    size="small"
-                  />
-                </Box>
-              </Stack>
-              {!consentComplete && (
-                <Alert severity="warning" sx={{ mt: 2 }}>
-                  Dual consent required before officer review. Both parties must consent to proceed.
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+      {/* Consent Status */}
+      <Card>
+        <CardHeader><CardTitle>Статус согласий</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span>{marriage.spouse1FullName}</span>
+            <Badge variant={marriage.spouse1ConsentGranted ? 'default' : 'secondary'}>
+              {marriage.spouse1ConsentGranted ? '✓ Согласие дано' : '⏳ Ожидание'}
+            </Badge>
+          </div>
+          <div className="flex justify-between items-center">
+            <span>{marriage.spouse2FullName}</span>
+            <Badge variant={marriage.spouse2ConsentGranted ? 'default' : 'secondary'}>
+              {marriage.spouse2ConsentGranted ? '✓ Согласие дано' : '⏳ Ожидание'}
+            </Badge>
+          </div>
+          {!consentComplete && (
+            <div className="bg-yellow-500/10 text-yellow-400 rounded-lg p-3 text-sm mt-2">
+              Необходимо двустороннее согласие для рассмотрения.
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Marriage Details */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Marriage Details
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Marriage Date
-                  </Typography>
-                  <Typography variant="body1" fontWeight={600}>
-                    {new Date(marriage.marriageDate).toLocaleDateString()}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Ceremony Type
-                  </Typography>
-                  <Typography variant="body1">{marriage.ceremonyType || 'Civil'}</Typography>
-                </Box>
-                {marriage.ceremonyLocation && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Ceremony Location
-                    </Typography>
-                    <Typography variant="body1">{marriage.ceremonyLocation}</Typography>
-                  </Box>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card>
+          <CardHeader><CardTitle>Детали брака</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Дата брака</p>
+              <p className="font-semibold">{new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Тип церемонии</p>
+              <p>{marriage.ceremonyType || 'Гражданская'}</p>
+            </div>
+            {marriage.ceremonyLocation && (
+              <div>
+                <p className="text-xs text-muted-foreground">Место</p>
+                <p>{marriage.ceremonyLocation}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Spouse Information */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Spouses Information
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Spouse 1
-                  </Typography>
-                  <Typography variant="body1" fontWeight={600}>
-                    {marriage.spouse1FullName}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    DOB: {new Date(marriage.spouse1DateOfBirth).toLocaleDateString()}
-                  </Typography>
-                </Box>
-                <Divider />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Spouse 2
-                  </Typography>
-                  <Typography variant="body1" fontWeight={600}>
-                    {marriage.spouse2FullName}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    DOB: {new Date(marriage.spouse2DateOfBirth).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
+        {/* Spouse Info */}
+        <Card>
+          <CardHeader><CardTitle>Данные супругов</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Супруг 1</p>
+              <p className="font-semibold">{marriage.spouse1FullName}</p>
+              <p className="text-xs text-muted-foreground">Дата рождения: {new Date(marriage.spouse1DateOfBirth).toLocaleDateString('ru-RU')}</p>
+            </div>
+            <hr className="border-border" />
+            <div>
+              <p className="text-xs text-muted-foreground">Супруг 2</p>
+              <p className="font-semibold">{marriage.spouse2FullName}</p>
+              <p className="text-xs text-muted-foreground">Дата рождения: {new Date(marriage.spouse2DateOfBirth).toLocaleDateString('ru-RU')}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Property Regime */}
-        {marriage.propertyRegime && (
-          <Grid size={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Property Regime
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Chip label={marriage.propertyRegime} color="primary" />
-                {marriage.propertyAgreement && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Agreement Details
-                    </Typography>
-                    <Typography variant="body2">{marriage.propertyAgreement}</Typography>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
+      {/* Property Regime */}
+      {marriage.propertyRegime && (
+        <Card>
+          <CardHeader><CardTitle>Режим имущества</CardTitle></CardHeader>
+          <CardContent>
+            <Badge>{marriage.propertyRegime}</Badge>
+            {marriage.propertyAgreement && (
+              <div className="mt-3">
+                <p className="text-xs text-muted-foreground">Детали соглашения</p>
+                <p className="text-sm">{marriage.propertyAgreement}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Certificate Info */}
-        {marriage.certificateNumber && (
-          <Grid size={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Certificate Information
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <CertificateIcon color="success" />
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Certificate Number
-                    </Typography>
-                    <Typography variant="body1" fontWeight={600}>
-                      {marriage.certificateNumber}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
+      {/* Certificate */}
+      {marriage.certificateNumber && (
+        <Card>
+          <CardHeader><CardTitle>Свидетельство</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📜</span>
+              <div>
+                <p className="text-xs text-muted-foreground">Номер свидетельства</p>
+                <p className="font-semibold">{marriage.certificateNumber}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Action Buttons */}
-        {marriage.status === 'PENDING_REVIEW' && consentComplete && (
-          <Grid size={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Review Actions
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    size="large"
-                    startIcon={<ApproveIcon />}
-                    onClick={() => openReviewDialog('APPROVE')}
-                    fullWidth
-                  >
-                    Approve & Issue Certificate
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="large"
-                    startIcon={<RejectIcon />}
-                    onClick={() => openReviewDialog('REJECT')}
-                    fullWidth
-                  >
-                    Reject Application
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-      </Grid>
+      {/* Actions */}
+      {marriage.status === 'PENDING_REVIEW' && consentComplete && (
+        <Card>
+          <CardHeader><CardTitle>Действия</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex gap-3">
+              <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => openReviewDialog('APPROVE')}>
+                ✓ Одобрить и выдать свидетельство
+              </Button>
+              <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={() => openReviewDialog('REJECT')}>
+                ✕ Отклонить
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Review Dialog */}
-      <Dialog open={reviewDialog} onClose={() => setReviewDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {reviewAction === 'APPROVE' ? 'Approve Marriage' : 'Reject Marriage'}
-        </DialogTitle>
+      <Dialog open={reviewDialog} onOpenChange={setReviewDialog}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {reviewAction === 'APPROVE' ? 'Одобрить брак' : 'Отклонить заявление'}
+            </DialogTitle>
+            <DialogDescription>
+              {reviewAction === 'APPROVE'
+                ? 'Это зарегистрирует брак и выдаст свидетельство'
+                : 'Укажите причину отклонения'}
+            </DialogDescription>
+          </DialogHeader>
           {reviewAction === 'APPROVE' ? (
-            <>
-              <Alert severity="success" sx={{ mb: 2, mt: 1 }}>
-                This will register the marriage and issue an official certificate
-              </Alert>
-              <TextField
-                fullWidth
-                label="Certificate Number"
-                placeholder="MC-XXXX-XXXX"
-                value={certificateNumber}
-                onChange={(e) => setCertificateNumber(e.target.value)}
-                helperText="Generate and assign marriage certificate number"
-              />
-            </>
+            <div className="space-y-3">
+              <div className="bg-green-500/10 text-green-400 rounded-lg p-3 text-sm">
+                Брак будет зарегистрирован и выдано официальное свидетельство
+              </div>
+              <div>
+                <Label>Номер свидетельства</Label>
+                <Input placeholder="MC-XXXX-XXXX" value={certificateNumber} onChange={(e) => setCertificateNumber(e.target.value)} />
+              </div>
+            </div>
           ) : (
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Rejection Notes"
-              placeholder="Required: Reason for rejection"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              required
-              sx={{ mt: 1 }}
-            />
+            <div>
+              <Label>Причина отклонения *</Label>
+              <Textarea rows={4} placeholder="Обязательно: причина отклонения" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </div>
           )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewDialog(false)} disabled={submitting}>Отмена</Button>
+            <Button
+              onClick={handleReview}
+              variant={reviewAction === 'APPROVE' ? 'primary' : 'destructive'}
+              disabled={
+                submitting ||
+                (reviewAction === 'APPROVE' && !certificateNumber.trim()) ||
+                (reviewAction === 'REJECT' && !notes.trim())
+              }
+            >
+              {submitting ? 'Обработка…' : `Подтвердить ${reviewAction === 'APPROVE' ? 'одобрение' : 'отклонение'}`}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setReviewDialog(false)} disabled={submitting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleReview}
-            variant="contained"
-            color={reviewAction === 'APPROVE' ? 'success' : 'error'}
-            disabled={
-              submitting ||
-              (reviewAction === 'APPROVE' && !certificateNumber.trim()) ||
-              (reviewAction === 'REJECT' && !notes.trim())
-            }
-          >
-            {submitting ? 'Processing...' : `Confirm ${reviewAction}`}
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 }

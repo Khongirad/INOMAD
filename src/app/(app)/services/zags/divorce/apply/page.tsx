@@ -2,36 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Alert,
-  CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
   Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Stack,
-  Divider,
-} from '@mui/material';
-import {
-  HeartBroken as DivorceIcon,
-  ArrowBack as BackIcon,
-  NavigateNext as NextIcon,
-  NavigateBefore as PrevIcon,
-  Send as SubmitIcon,
-} from '@mui/icons-material';
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { getMyMarriages, fileDivorce, type Marriage } from '@/lib/api/zags';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
-const STEPS = ['Select Marriage', 'Divorce Details', 'Property Division', 'Review & Submit'];
+const STEPS = ['Выбор брака', 'Причины развода', 'Раздел имущества', 'Проверка и подача'];
 
 export default function DivorceApplicationPage() {
   const router = useRouter();
@@ -40,7 +25,6 @@ export default function DivorceApplicationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [marriages, setMarriages] = useState<Marriage[]>([]);
 
-  // Form data
   const [selectedMarriageId, setSelectedMarriageId] = useState('');
   const [reason, setReason] = useState('');
   const [propertyDivision, setPropertyDivision] = useState('');
@@ -53,22 +37,12 @@ export default function DivorceApplicationPage() {
     try {
       setLoading(true);
       const data = await getMyMarriages();
-      // Filter only registered marriages
-      const registered = data.filter((m) => m.status === 'REGISTERED');
-      setMarriages(registered);
+      setMarriages(data.filter((m) => m.status === 'REGISTERED'));
     } catch (err: any) {
-      toast.error(err.message || 'Failed to load marriages');
+      toast.error(err.message || 'Не удалось загрузить данные');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleNext = () => {
-    setActiveStep((prev) => prev + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
   };
 
   const handleSubmit = async () => {
@@ -79,10 +53,10 @@ export default function DivorceApplicationPage() {
         reason,
         propertyDivision: propertyDivision || undefined,
       });
-      toast.success('Divorce application filed successfully');
+      toast.success('Заявление на развод подано');
       router.push('/services/zags');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to file divorce');
+      toast.error(err.message || 'Не удалось подать заявление');
     } finally {
       setSubmitting(false);
     }
@@ -92,272 +66,172 @@ export default function DivorceApplicationPage() {
 
   const canProceed = () => {
     switch (activeStep) {
-      case 0:
-        return selectedMarriageId !== '';
-      case 1:
-        return reason.trim().length > 0;
-      case 2:
-        return true; // Property division is optional
-      case 3:
-        return true;
-      default:
-        return false;
+      case 0: return selectedMarriageId !== '';
+      case 1: return reason.trim().length > 0;
+      default: return true;
     }
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/zags')}
-          sx={{ mb: 2 }}
-        >
-          Back to ZAGS
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div>
+        <Button variant="ghost" onClick={() => router.push('/services/zags')} className="mb-2">
+          ← Назад в ЗАГС
         </Button>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <DivorceIcon sx={{ fontSize: 40, color: 'error.main' }} />
-          <Box>
-            <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-              File for Divorce
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Submit your divorce application
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
+        <div className="flex items-center gap-3">
+          <span className="text-4xl">💔</span>
+          <div>
+            <h1 className="text-2xl font-bold">Подача заявления на развод</h1>
+            <p className="text-muted-foreground">Подайте заявление на расторжение брака</p>
+          </div>
+        </div>
+      </div>
 
       {marriages.length === 0 ? (
-        <Alert severity="info">
-          You have no registered marriages. Only registered marriages can be dissolved.
-        </Alert>
+        <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4">
+          У вас нет зарегистрированных браков. Развод возможен только для зарегистрированных браков.
+        </div>
       ) : (
         <>
           {/* Stepper */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Stepper activeStep={activeStep}>
-                {STEPS.map((label) => (
-                  <Step key={label}>
-                    <StepLabel>{label}</StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-2">
+            {STEPS.map((label, i) => (
+              <div key={label} className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                  i <= activeStep ? 'bg-destructive text-destructive-foreground' : 'bg-muted text-muted-foreground'
+                }`}>
+                  {i < activeStep ? '✓' : i + 1}
+                </div>
+                <span className={`text-sm hidden md:inline ${i <= activeStep ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {label}
+                </span>
+                {i < STEPS.length - 1 && <div className="w-8 h-px bg-border" />}
+              </div>
+            ))}
+          </div>
 
-          {/* Form Content */}
           <Card>
-            <CardContent>
-              {/* Step 0: Select Marriage */}
+            <CardContent className="pt-6 space-y-4">
+              {/* Step 0 */}
               {activeStep === 0 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Select Marriage to Dissolve
-                  </Typography>
-                  <Divider sx={{ mb: 3 }} />
-                  <FormControl fullWidth>
-                    <InputLabel>Marriage</InputLabel>
-                    <Select
-                      value={selectedMarriageId}
-                      onChange={(e) => setSelectedMarriageId(e.target.value)}
-                      label="Marriage"
-                    >
-                      {marriages.map((marriage) => (
-                        <MenuItem key={marriage.id} value={marriage.id}>
-                          {marriage.spouse1FullName} & {marriage.spouse2FullName} - Married on{' '}
-                          {new Date(marriage.marriageDate).toLocaleDateString()} (Certificate:{' '}
-                          {marriage.certificateNumber})
-                        </MenuItem>
+                <>
+                  <h3 className="text-lg font-semibold">Выберите брак для расторжения</h3>
+                  <Select value={selectedMarriageId} onValueChange={setSelectedMarriageId}>
+                    <SelectTrigger><SelectValue placeholder="Выберите брак" /></SelectTrigger>
+                    <SelectContent>
+                      {marriages.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.spouse1FullName} & {m.spouse2FullName} — {new Date(m.marriageDate).toLocaleDateString('ru-RU')}
+                        </SelectItem>
                       ))}
-                    </Select>
-                  </FormControl>
-
+                    </SelectContent>
+                  </Select>
                   {selectedMarriage && (
-                    <Alert severity="info" sx={{ mt: 3 }}>
-                      <Typography variant="body2" fontWeight={600} gutterBottom>
-                        Selected Marriage Details
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Spouses:</strong> {selectedMarriage.spouse1FullName} &{' '}
-                        {selectedMarriage.spouse2FullName}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Marriage Date:</strong>{' '}
-                        {new Date(selectedMarriage.marriageDate).toLocaleDateString()}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Property Regime:</strong> {selectedMarriage.propertyRegime || 'N/A'}
-                      </Typography>
-                    </Alert>
+                    <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4 text-sm space-y-1">
+                      <p className="font-semibold">Выбранный брак</p>
+                      <p><strong>Супруги:</strong> {selectedMarriage.spouse1FullName} & {selectedMarriage.spouse2FullName}</p>
+                      <p><strong>Дата:</strong> {new Date(selectedMarriage.marriageDate).toLocaleDateString('ru-RU')}</p>
+                      <p><strong>Режим имущества:</strong> {selectedMarriage.propertyRegime || 'Не указано'}</p>
+                    </div>
                   )}
-                </Box>
+                </>
               )}
 
-              {/* Step 1: Divorce Details */}
+              {/* Step 1 */}
               {activeStep === 1 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Divorce Details
-                  </Typography>
-                  <Divider sx={{ mb: 3 }} />
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={6}
-                    label="Reason for Divorce"
-                    placeholder="Please provide detailed reasons for filing divorce..."
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    required
-                    helperText="This information will be reviewed by ZAGS officers"
-                  />
-                  <Alert severity="warning" sx={{ mt: 3 }}>
-                    <Typography variant="body2" fontWeight={600} gutterBottom>
-                      Important Notice
-                    </Typography>
-                    <Typography variant="body2">
-                      Filing for divorce is a serious legal action. Your spouse will be notified of
-                      this application. The ZAGS officer will review and may require additional
-                      documentation.
-                    </Typography>
-                  </Alert>
-                </Box>
+                <>
+                  <h3 className="text-lg font-semibold">Причины развода</h3>
+                  <div>
+                    <Label>Причина развода *</Label>
+                    <Textarea rows={6} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Подробно опишите причины…" />
+                    <p className="text-xs text-muted-foreground mt-1">Эта информация будет рассмотрена сотрудником ЗАГС</p>
+                  </div>
+                  <div className="bg-yellow-500/10 text-yellow-400 rounded-lg p-4 text-sm">
+                    <p className="font-semibold">⚠️ Важное уведомление</p>
+                    <p>Подача заявления на развод — серьёзное юридическое действие. Ваш супруг(а) будет уведомлён(а).</p>
+                  </div>
+                </>
               )}
 
-              {/* Step 2: Property Division */}
+              {/* Step 2 */}
               {activeStep === 2 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Property Division (Optional)
-                  </Typography>
-                  <Divider sx={{ mb: 3 }} />
+                <>
+                  <h3 className="text-lg font-semibold">Раздел имущества (необязательно)</h3>
                   {selectedMarriage?.propertyRegime && (
-                    <Alert severity="info" sx={{ mb: 3 }}>
-                      <Typography variant="body2">
-                        <strong>Current Property Regime:</strong> {selectedMarriage.propertyRegime}
-                      </Typography>
+                    <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4 text-sm">
+                      <p><strong>Текущий режим:</strong> {selectedMarriage.propertyRegime}</p>
                       {selectedMarriage.propertyAgreement && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          <strong>Agreement:</strong> {selectedMarriage.propertyAgreement}
-                        </Typography>
+                        <p><strong>Договор:</strong> {selectedMarriage.propertyAgreement}</p>
                       )}
-                    </Alert>
+                    </div>
                   )}
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={6}
-                    label="Proposed Property Division"
-                    placeholder="Describe how you propose to divide jointly owned property, assets, and debts..."
-                    value={propertyDivision}
-                    onChange={(e) => setPropertyDivision(e.target.value)}
-                    helperText="Optional: You can propose how property should be divided, or leave this to be determined during the divorce process"
-                  />
-                </Box>
+                  <div>
+                    <Label>Предлагаемый раздел имущества</Label>
+                    <Textarea rows={6} value={propertyDivision} onChange={(e) => setPropertyDivision(e.target.value)} placeholder="Опишите, как предлагаете разделить совместное имущество…" />
+                  </div>
+                </>
               )}
 
               {/* Step 3: Review */}
               {activeStep === 3 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Review Your Application
-                  </Typography>
-                  <Divider sx={{ mb: 3 }} />
-                  <Stack spacing={3}>
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Marriage to Dissolve
-                      </Typography>
-                      <Typography variant="body1" fontWeight={600}>
-                        {selectedMarriage?.spouse1FullName} & {selectedMarriage?.spouse2FullName}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Certificate: {selectedMarriage?.certificateNumber}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Married: {selectedMarriage && new Date(selectedMarriage.marriageDate).toLocaleDateString()}
-                      </Typography>
-                    </Box>
-
-                    <Box>
-                      <Typography variant="caption" color="text.secondary">
-                        Reason for Divorce
-                      </Typography>
-                      <Typography variant="body2">{reason}</Typography>
-                    </Box>
-
+                <>
+                  <h3 className="text-lg font-semibold">Проверка заявления</h3>
+                  <div className="space-y-3">
+                    <div className="border border-border rounded-lg p-4">
+                      <p className="text-sm text-muted-foreground">Брак</p>
+                      <p className="font-semibold">{selectedMarriage?.spouse1FullName} & {selectedMarriage?.spouse2FullName}</p>
+                      <p className="text-xs text-muted-foreground">Свидетельство: {selectedMarriage?.certificateNumber}</p>
+                    </div>
+                    <div className="border border-border rounded-lg p-4">
+                      <p className="text-sm text-muted-foreground">Причина</p>
+                      <p>{reason}</p>
+                    </div>
                     {propertyDivision && (
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Proposed Property Division
-                        </Typography>
-                        <Typography variant="body2">{propertyDivision}</Typography>
-                      </Box>
+                      <div className="border border-border rounded-lg p-4">
+                        <p className="text-sm text-muted-foreground">Раздел имущества</p>
+                        <p>{propertyDivision}</p>
+                      </div>
                     )}
-
-                    <Alert severity="error">
-                      <Typography variant="body2" fontWeight={600} gutterBottom>
-                        ⚠️ Final Confirmation
-                      </Typography>
-                      <Typography variant="body2">
-                        By submitting this application, you confirm that:
-                      </Typography>
-                      <ul>
-                        <li>All information provided is true and accurate</li>
-                        <li>You understand this will initiate formal divorce proceedings</li>
-                        <li>Your spouse will be officially notified</li>
-                        <li>This action cannot be easily reversed</li>
-                      </ul>
-                    </Alert>
-                  </Stack>
-                </Box>
+                  </div>
+                  <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">
+                    <p className="font-semibold">⚠️ Подтверждение</p>
+                    <ul className="list-disc ml-4 mt-1 space-y-1">
+                      <li>Вся предоставленная информация верна</li>
+                      <li>Вы понимаете, что это начнёт бракоразводный процесс</li>
+                      <li>Супруг(а) будет уведомлён(а) официально</li>
+                      <li>Действие сложно отменить</li>
+                    </ul>
+                  </div>
+                </>
               )}
 
-              {/* Navigation Buttons */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                <Button
-                  onClick={handleBack}
-                  disabled={activeStep === 0}
-                  startIcon={<PrevIcon />}
-                >
-                  Back
+              {/* Navigation */}
+              <div className="flex justify-between pt-4">
+                <Button variant="outline" onClick={() => setActiveStep((p) => p - 1)} disabled={activeStep === 0}>
+                  ← Назад
                 </Button>
                 {activeStep === STEPS.length - 1 ? (
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={handleSubmit}
-                    disabled={!canProceed() || submitting}
-                    endIcon={submitting ? <CircularProgress size={20} /> : <SubmitIcon />}
-                  >
-                    {submitting ? 'Filing...' : 'File Divorce Application'}
+                  <Button variant="destructive" onClick={handleSubmit} disabled={!canProceed() || submitting}>
+                    {submitting ? 'Отправка…' : '📤 Подать заявление'}
                   </Button>
                 ) : (
-                  <Button
-                    variant="contained"
-                    onClick={handleNext}
-                    disabled={!canProceed()}
-                    endIcon={<NextIcon />}
-                  >
-                    Next
+                  <Button onClick={() => setActiveStep((p) => p + 1)} disabled={!canProceed()}>
+                    Далее →
                   </Button>
                 )}
-              </Box>
+              </div>
             </CardContent>
           </Card>
         </>
       )}
-    </Box>
+    </div>
   );
 }

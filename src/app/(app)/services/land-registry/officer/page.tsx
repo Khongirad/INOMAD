@@ -2,137 +2,106 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Tabs,
-  Tab,
-  Alert,
-  Stack,
-} from '@mui/material';
-import {
-  Map as MapIcon,
-  Landscape as LandIcon,
-  Home as PropertyIcon,
-  Receipt as LeaseIcon,
-  Gavel as TransferIcon,
-} from '@mui/icons-material';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Map, Mountain, Home, Gavel, Info } from 'lucide-react';
 
 export default function LandRegistryOfficerPage() {
   const router = useRouter();
-  const [tab, setTab] = useState(0);
 
   return (
-    <Box sx={{ p: 3 }}>
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          Land Registry Officer Dashboard
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Approve registrations, manage transfers, and maintain cadastral records
-        </Typography>
-      </Box>
+      <div>
+        <h1 className="text-3xl font-bold">Панель офицера земельного реестра</h1>
+        <p className="text-muted-foreground mt-1">
+          Утверждение регистраций, управление переводами и ведение кадастровых записей
+        </p>
+      </div>
 
-      <Alert severity="info" sx={{ mb: 4 }}>
-        <Typography variant="body2" fontWeight={600} gutterBottom>
-          Land Registry Officer Tools
-        </Typography>
-        <Typography variant="body2">
-          Review and approve land plot registrations, property ownerships, lease agreements, and ownership transfers. 
-          All transactions are recorded on the ALTAN blockchain for immutability.
-        </Typography>
-      </Alert>
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex gap-2">
+        <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-semibold mb-1">Инструменты офицера земельного реестра</p>
+          <p className="text-sm text-muted-foreground">
+            Рассмотрение и утверждение регистраций земельных участков, прав собственности, договоров аренды и передачи прав.
+            Все транзакции записываются в блокчейн ALTAN для неизменяемости.
+          </p>
+        </div>
+      </div>
 
       {/* Quick Actions */}
-      <Typography variant="h6" gutterBottom>
-        Quick Actions
-      </Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 2, mb: 4 }}>
-        <Card>
-          <CardContent>
-            <Stack spacing={2}>
-              <MapIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-              <Typography variant="h6">Cadastral Map</Typography>
-              <Typography variant="body2" color="text.secondary">
-                View and manage all registered land plots on the interactive GIS map
-              </Typography>
-              <Button variant="contained" fullWidth>
-                Open Map
-              </Button>
-            </Stack>
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Быстрые действия</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <Map className="h-10 w-10 text-primary" />
+              <h3 className="text-lg font-semibold">Кадастровая карта</h3>
+              <p className="text-sm text-muted-foreground">
+                Просмотр всех зарегистрированных земельных участков на интерактивной ГИС-карте
+              </p>
+              <Button className="w-full">Открыть карту</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <Mountain className="h-10 w-10 text-green-500" />
+              <h3 className="text-lg font-semibold">Ожидающие участки</h3>
+              <p className="text-sm text-muted-foreground">
+                Рассмотрение и утверждение заявок на регистрацию земельных участков
+              </p>
+              <Button variant="outline" className="w-full">Ожидающие (0)</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <Home className="h-10 w-10 text-yellow-500" />
+              <h3 className="text-lg font-semibold">Ожидающие права собственности</h3>
+              <p className="text-sm text-muted-foreground">
+                Утверждение регистраций собственности и проверка гражданства
+              </p>
+              <Button variant="outline" className="w-full">Ожидающие (0)</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <Gavel className="h-10 w-10 text-red-500" />
+              <h3 className="text-lg font-semibold">Ожидающие передачи</h3>
+              <p className="text-sm text-muted-foreground">
+                Рассмотрение заявок на передачу прав и подтверждение оплаты
+              </p>
+              <Button variant="outline" className="w-full">Ожидающие (0)</Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="all">
+        <TabsList>
+          <TabsTrigger value="all">Все записи</TabsTrigger>
+          <TabsTrigger value="land">Земельные участки</TabsTrigger>
+          <TabsTrigger value="ownership">Права собственности</TabsTrigger>
+          <TabsTrigger value="leases">Аренда</TabsTrigger>
+          <TabsTrigger value="transfers">Передачи</TabsTrigger>
+        </TabsList>
+
+        <Card className="mt-4">
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">
+              Инструменты офицера земельного реестра скоро будут доступны...
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Полная интеграция кадастровой карты, просмотрщик ГИС и рабочие процессы утверждения будут добавлены в следующем обновлении.
+            </p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardContent>
-            <Stack spacing={2}>
-              <LandIcon sx={{ fontSize: 40, color: 'success.main' }} />
-              <Typography variant="h6">Pending Land Plots</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Review and approve land plot registration requests
-              </Typography>
-              <Button variant="outlined" fullWidth>
-                View Pending (0)
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Stack spacing={2}>
-              <PropertyIcon sx={{ fontSize: 40, color: 'warning.main' }} />
-              <Typography variant="h6">Pending Ownerships</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Approve ownership registrations and verify citizenship
-              </Typography>
-              <Button variant="outlined" fullWidth>
-                View Pending (0)
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Stack spacing={2}>
-              <TransferIcon sx={{ fontSize: 40, color: 'error.main' }} />
-              <Typography variant="h6">Pending Transfers</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Review ownership transfer requests and payment confirmations
-              </Typography>
-              <Button variant="outlined" fullWidth>
-                View Pending (0)
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {/* Tabs for different sections */}
-      <Card>
-        <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-          <Tab label="All Records" />
-          <Tab label="Land Plots" />
-          <Tab label="Ownerships" />
-          <Tab label="Leases" />
-          <Tab label="Transfers" />
-        </Tabs>
-        <CardContent>
-          <Box sx={{ py: 4, textAlign: 'center' }}>
-            <Typography variant="body1" color="text.secondary">
-              Land Registry officer tools coming soon...
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Full cadastral map integration, GIS viewer, and approval workflows will be added in the next phase.
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
-    </Box>
+      </Tabs>
+    </div>
   );
 }

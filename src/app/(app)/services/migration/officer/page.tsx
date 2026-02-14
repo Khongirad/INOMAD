@@ -2,55 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Tabs,
-  Tab,
-  Chip,
-  Stack,
-  Alert,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import {
-  Visibility as ViewIcon,
-  CheckCircle as ApproveIcon,
-  Cancel as RejectIcon,
-  Pending as PendingIcon,
-  Assessment as StatsIcon,
-} from '@mui/icons-material';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllPassportApplications, type PassportApplication } from '@/lib/api/migration';
-
-const STATUS_FILTERS = ['ALL', 'SUBMITTED', 'UNDER_REVIEW', 'PENDING_DOCUMENTS'] as const;
+import { Eye, CheckCircle, XCircle, Clock, BarChart3, Loader2 } from 'lucide-react';
 
 export default function MigrationOfficerPage() {
   const router = useRouter();
-  const [tab, setTab] = useState(0);
   const [applications, setApplications] = useState<PassportApplication[]>([]);
-  const [filteredApps, setFilteredApps] = useState<PassportApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<typeof STATUS_FILTERS[number]>('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   useEffect(() => {
     loadApplications();
   }, []);
-
-  useEffect(() => {
-    filterApplications();
-  }, [applications, statusFilter]);
 
   const loadApplications = async () => {
     try {
@@ -58,18 +26,16 @@ export default function MigrationOfficerPage() {
       const data = await getAllPassportApplications();
       setApplications(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load applications');
+      setError(err.message || 'Не удалось загрузить заявления');
     } finally {
       setLoading(false);
     }
   };
 
-  const filterApplications = () => {
-    if (statusFilter === 'ALL') {
-      setFilteredApps(applications);
-    } else {
-      setFilteredApps(applications.filter((app) => app.status === statusFilter));
-    }
+  const getFiltered = (filter: string) => {
+    if (filter === 'ALL') return applications;
+    if (filter === 'PROCESSED') return applications.filter((a) => ['APPROVED', 'REJECTED', 'ISSUED'].includes(a.status));
+    return applications.filter((a) => a.status === filter);
   };
 
   const stats = {
@@ -80,218 +46,176 @@ export default function MigrationOfficerPage() {
     issued: applications.filter((a) => a.status === 'ISSUED').length,
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'SUBMITTED':
-        return 'info';
+        return <Badge variant="secondary">Подано</Badge>;
       case 'UNDER_REVIEW':
-        return 'warning';
+        return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-500/30">На рассмотрении</Badge>;
       case 'APPROVED':
-        return 'success';
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Одобрено</Badge>;
       case 'REJECTED':
-        return 'error';
+        return <Badge variant="destructive">Отклонено</Badge>;
       case 'ISSUED':
-        return 'success';
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Выдано</Badge>;
       default:
-        return 'default';
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
+  const renderTable = (apps: PassportApplication[]) => (
+    <div className="overflow-x-auto">
+      {apps.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          Заявления не найдены
+        </div>
+      ) : (
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Заявитель</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Тип паспорта</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Дата подачи</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Статус</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {apps.map((app) => (
+              <tr key={app.id} className="border-b hover:bg-muted/50 transition-colors">
+                <td className="py-3 px-4">
+                  <p className="font-medium text-sm">{app.fullName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Д.Р.: {new Date(app.dateOfBirth).toLocaleDateString('ru-RU')}
+                  </p>
+                </td>
+                <td className="py-3 px-4">
+                  <Badge variant="outline">{app.passportType}</Badge>
+                </td>
+                <td className="py-3 px-4 text-sm">
+                  {new Date(app.createdAt).toLocaleString('ru-RU')}
+                </td>
+                <td className="py-3 px-4">
+                  {getStatusBadge(app.status)}
+                </td>
+                <td className="py-3 px-4 text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(`/services/migration/officer/review/${app.id}`)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {app.status === 'SUBMITTED' && (
+                      <>
+                        <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700">
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+
   return (
-    <Box sx={{ p: 3 }}>
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          Migration Officer Dashboard
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Review and process passport applications
-        </Typography>
-      </Box>
+      <div>
+        <h1 className="text-3xl font-bold">Панель офицера миграции</h1>
+        <p className="text-muted-foreground mt-1">Рассмотрение и обработка заявлений на паспорт</p>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-lg p-3 flex items-center justify-between">
+          <span className="text-sm">{error}</span>
+          <button onClick={() => setError(null)} className="text-destructive hover:opacity-70">✕</button>
+        </div>
       )}
 
       {/* Statistics Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 4 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" fontWeight={600}>
-                  {stats.total}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Applications
-                </Typography>
-              </Box>
-              <StatsIcon sx={{ fontSize: 40, color: 'primary.main', opacity: 0.3 }} />
-            </Box>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">Всего заявлений</p>
+              </div>
+              <BarChart3 className="h-10 w-10 text-primary opacity-30" />
+            </div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" fontWeight={600} color="info.main">
-                  {stats.pending}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pending Review
-                </Typography>
-              </Box>
-              <PendingIcon sx={{ fontSize: 40, color: 'info.main', opacity: 0.3 }} />
-            </Box>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold text-blue-600">{stats.pending}</p>
+                <p className="text-sm text-muted-foreground">Ожидают рассмотрения</p>
+              </div>
+              <Clock className="h-10 w-10 text-blue-500 opacity-30" />
+            </div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" fontWeight={600} color="warning.main">
-                  {stats.underReview}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Under Review
-                </Typography>
-              </Box>
-              <PendingIcon sx={{ fontSize: 40, color: 'warning.main', opacity: 0.3 }} />
-            </Box>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold text-yellow-600">{stats.underReview}</p>
+                <p className="text-sm text-muted-foreground">На рассмотрении</p>
+              </div>
+              <Clock className="h-10 w-10 text-yellow-500 opacity-30" />
+            </div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" fontWeight={600} color="success.main">
-                  {stats.approved + stats.issued}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Approved/Issued
-                </Typography>
-              </Box>
-              <ApproveIcon sx={{ fontSize: 40, color: 'success.main', opacity: 0.3 }} />
-            </Box>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold text-green-600">{stats.approved + stats.issued}</p>
+                <p className="text-sm text-muted-foreground">Одобрено / Выдано</p>
+              </div>
+              <CheckCircle className="h-10 w-10 text-green-500 opacity-30" />
+            </div>
           </CardContent>
         </Card>
-      </Box>
+      </div>
 
-      {/* Filter Tabs */}
-      <Card sx={{ mb: 3 }}>
-        <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-          <Tab label="All Applications" />
-          <Tab label="Pending Review" />
-          <Tab label="Under Review" />
-          <Tab label="Processed" />
-        </Tabs>
-      </Card>
+      {/* Tabs + Table */}
+      <Tabs defaultValue="ALL" onValueChange={setStatusFilter}>
+        <TabsList>
+          <TabsTrigger value="ALL">Все заявления</TabsTrigger>
+          <TabsTrigger value="SUBMITTED">Ожидают</TabsTrigger>
+          <TabsTrigger value="UNDER_REVIEW">На рассмотрении</TabsTrigger>
+          <TabsTrigger value="PROCESSED">Обработанные</TabsTrigger>
+        </TabsList>
 
-      {/* Applications Table */}
-      <Card>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6">
-              Applications
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              {STATUS_FILTERS.map((filter) => (
-                <Chip
-                  key={filter}
-                  label={filter.replace('_', ' ')}
-                  onClick={() => setStatusFilter(filter)}
-                  color={statusFilter === filter ? 'primary' : 'default'}
-                  variant={statusFilter === filter ? 'filled' : 'outlined'}
-                />
-              ))}
-            </Stack>
-          </Box>
-
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : filteredApps.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="body1" color="text.secondary">
-                No applications found
-              </Typography>
-            </Box>
-          ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Applicant</TableCell>
-                    <TableCell>Passport Type</TableCell>
-                    <TableCell>Submitted Date</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredApps.map((app) => (
-                    <TableRow key={app.id} hover>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2" fontWeight={600}>
-                            {app.fullName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            DOB: {new Date(app.dateOfBirth).toLocaleDateString()}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Chip label={app.passportType} size="small" />
-                      </TableCell>
-                      <TableCell>
-                        {new Date(app.createdAt).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={app.status}
-                          color={getStatusColor(app.status) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="View Details">
-                          <IconButton
-                            size="small"
-                            onClick={() => router.push(`/services/migration/officer/review/${app.id}`)}
-                          >
-                            <ViewIcon />
-                          </IconButton>
-                        </Tooltip>
-                        {app.status === 'SUBMITTED' && (
-                          <>
-                            <Tooltip title="Quick Approve">
-                              <IconButton size="small" color="success">
-                                <ApproveIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Quick Reject">
-                              <IconButton size="small" color="error">
-                                <RejectIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </CardContent>
-      </Card>
-    </Box>
+        <Card className="mt-4">
+          <CardContent className="pt-6">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <TabsContent value="ALL" className="mt-0">{renderTable(getFiltered('ALL'))}</TabsContent>
+                <TabsContent value="SUBMITTED" className="mt-0">{renderTable(getFiltered('SUBMITTED'))}</TabsContent>
+                <TabsContent value="UNDER_REVIEW" className="mt-0">{renderTable(getFiltered('UNDER_REVIEW'))}</TabsContent>
+                <TabsContent value="PROCESSED" className="mt-0">{renderTable(getFiltered('PROCESSED'))}</TabsContent>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </Tabs>
+    </div>
   );
 }

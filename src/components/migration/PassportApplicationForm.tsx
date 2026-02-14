@@ -1,21 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Grid,
-  TextField,
-  MenuItem,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
-import { CloudUpload as UploadIcon, CheckCircle as CheckIcon } from '@mui/icons-material';
-import { uploadPassportDocument, getPassportDocuments, type Document } from '@/lib/api/migration';
-import { toast } from 'react-hot-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Upload, CheckCircle, Loader2 } from 'lucide-react';
+import { uploadPassportDocument, type Document } from '@/lib/api/migration';
+import { toast } from 'sonner';
 
 interface PassportApplicationFormProps {
   step: number;
@@ -58,180 +51,174 @@ export default function PassportApplicationForm({
   // Step 0: Personal Information
   if (step === 0) {
     return (
-      <Grid container spacing={3}>
-        <Grid size={12}>
-          <Typography variant="h6" gutterBottom>
-            Personal Information
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-1">Personal Information</h3>
+          <p className="text-sm text-muted-foreground mb-4">
             Enter your basic personal details as they appear on your birth certificate
-          </Typography>
-        </Grid>
+          </p>
+        </div>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            required
-            label="Full Name"
-            value={formData.fullName}
-            onChange={(e) => handleChange('fullName', e.target.value)}
-            helperText="As it appears on birth certificate"
-          />
-        </Grid>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Full Name *</Label>
+            <Input
+              id="fullName"
+              value={formData.fullName}
+              onChange={(e) => handleChange('fullName', e.target.value)}
+              placeholder="As it appears on birth certificate"
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            required
-            type="date"
-            label="Date of Birth"
-            value={formData.dateOfBirth}
-            onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+            <Input
+              id="dateOfBirth"
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            required
-            select
-            label="Sex"
-            value={formData.sex}
-            onChange={(e) => handleChange('sex', e.target.value)}
-          >
-            <MenuItem value="M">Male</MenuItem>
-            <MenuItem value="F">Female</MenuItem>
-            <MenuItem value="O">Other</MenuItem>
-          </TextField>
-        </Grid>
+          <div className="space-y-2">
+            <Label>Sex *</Label>
+            <Select
+              value={formData.sex}
+              onValueChange={(v) => handleChange('sex', v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="M">Male</SelectItem>
+                <SelectItem value="F">Female</SelectItem>
+                <SelectItem value="O">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Nationality"
-            value={formData.nationality}
-            onChange={(e) => handleChange('nationality', e.target.value)}
-            disabled
-            helperText="Citizens only can apply"
-          />
-        </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="nationality">Nationality</Label>
+            <Input
+              id="nationality"
+              value={formData.nationality}
+              disabled
+              placeholder="Citizens only can apply"
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <TextField
-            fullWidth
-            type="number"
-            label="Height (cm)"
-            value={formData.height || ''}
-            onChange={(e) => handleChange('height', e.target.value ? parseInt(e.target.value) : undefined)}
-          />
-        </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="height">Height (cm)</Label>
+            <Input
+              id="height"
+              type="number"
+              value={formData.height || ''}
+              onChange={(e) => handleChange('height', e.target.value ? parseInt(e.target.value) : undefined)}
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <TextField
-            fullWidth
-            label="Eye Color"
-            value={formData.eyeColor}
-            onChange={(e) => handleChange('eyeColor', e.target.value)}
-          />
-        </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="eyeColor">Eye Color</Label>
+            <Input
+              id="eyeColor"
+              value={formData.eyeColor}
+              onChange={(e) => handleChange('eyeColor', e.target.value)}
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <TextField
-            fullWidth
-            label="Previous Passport Number"
-            value={formData.previousPassportNumber}
-            onChange={(e) => handleChange('previousPassportNumber', e.target.value)}
-            helperText="If renewing"
-          />
-        </Grid>
-      </Grid>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="previousPassport">Previous Passport Number</Label>
+            <Input
+              id="previousPassport"
+              value={formData.previousPassportNumber}
+              onChange={(e) => handleChange('previousPassportNumber', e.target.value)}
+              placeholder="If renewing"
+            />
+          </div>
+        </div>
+      </div>
     );
   }
 
   // Step 1: Biographical Data
   if (step === 1) {
     return (
-      <Grid container spacing={3}>
-        <Grid size={12}>
-          <Typography variant="h6" gutterBottom>
-            Biographical Data
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-1">Biographical Data</h3>
+          <p className="text-sm text-muted-foreground mb-4">
             Additional information for passport records
-          </Typography>
-        </Grid>
+          </p>
+        </div>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            required
-            label="Place of Birth"
-            value={formData.placeOfBirth}
-            onChange={(e) => handleChange('placeOfBirth', e.target.value)}
-            helperText="City, Region"
-          />
-        </Grid>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="placeOfBirth">Place of Birth *</Label>
+            <Input
+              id="placeOfBirth"
+              value={formData.placeOfBirth}
+              onChange={(e) => handleChange('placeOfBirth', e.target.value)}
+              placeholder="City, Region"
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Father's Name"
-            value={formData.fatherName}
-            onChange={(e) => handleChange('fatherName', e.target.value)}
-          />
-        </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="fatherName">Father's Name</Label>
+            <Input
+              id="fatherName"
+              value={formData.fatherName}
+              onChange={(e) => handleChange('fatherName', e.target.value)}
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Mother's Name"
-            value={formData.motherName}
-            onChange={(e) => handleChange('motherName', e.target.value)}
-          />
-        </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="motherName">Mother's Name</Label>
+            <Input
+              id="motherName"
+              value={formData.motherName}
+              onChange={(e) => handleChange('motherName', e.target.value)}
+            />
+          </div>
 
-        <Grid size={12}>
-          <TextField
-            fullWidth
-            required
-            label="Current Address"
-            value={formData.address}
-            onChange={(e) => handleChange('address', e.target.value)}
-            multiline
-            rows={2}
-          />
-        </Grid>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="address">Current Address *</Label>
+            <textarea
+              id="address"
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              value={formData.address}
+              onChange={(e) => handleChange('address', e.target.value)}
+              rows={2}
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <TextField
-            fullWidth
-            required
-            label="City"
-            value={formData.city}
-            onChange={(e) => handleChange('city', e.target.value)}
-          />
-        </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="city">City *</Label>
+            <Input
+              id="city"
+              value={formData.city}
+              onChange={(e) => handleChange('city', e.target.value)}
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <TextField
-            fullWidth
-            required
-            label="Region"
-            value={formData.region}
-            onChange={(e) => handleChange('region', e.target.value)}
-          />
-        </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="region">Region *</Label>
+            <Input
+              id="region"
+              value={formData.region}
+              onChange={(e) => handleChange('region', e.target.value)}
+            />
+          </div>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <TextField
-            fullWidth
-            label="Postal Code"
-            value={formData.postalCode}
-            onChange={(e) => handleChange('postalCode', e.target.value)}
-          />
-        </Grid>
-      </Grid>
+          <div className="space-y-2">
+            <Label htmlFor="postalCode">Postal Code</Label>
+            <Input
+              id="postalCode"
+              value={formData.postalCode}
+              onChange={(e) => handleChange('postalCode', e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -241,222 +228,123 @@ export default function PassportApplicationForm({
     const hasSignature = documents.some((d) => d.type === 'SIGNATURE');
     const hasBirthCert = documents.some((d) => d.type === 'BIRTH_CERTIFICATE');
 
+    const UploadCard = ({
+      title,
+      description,
+      accept,
+      hasDoc,
+      docType,
+    }: {
+      title: string;
+      description: string;
+      accept: string;
+      hasDoc: boolean;
+      docType: 'PHOTO' | 'SIGNATURE' | 'BIRTH_CERTIFICATE';
+    }) => (
+      <Card className="border">
+        <CardContent className="pt-6">
+          <h4 className="font-medium mb-1 flex items-center gap-2">
+            {title}
+            {hasDoc && <CheckCircle className="h-4 w-4 text-green-500" />}
+          </h4>
+          <p className="text-sm text-muted-foreground mb-4">{description}</p>
+          <label className={`flex items-center justify-center gap-2 w-full h-10 px-4 rounded-md text-sm cursor-pointer transition-colors ${
+            hasDoc
+              ? 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+          } ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {hasDoc ? 'Replace' : 'Upload'}
+            <input
+              type="file"
+              className="hidden"
+              accept={accept}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileUpload(docType, file);
+              }}
+            />
+          </label>
+        </CardContent>
+      </Card>
+    );
+
     return (
-      <Box>
-        <Typography variant="h6" gutterBottom>
-          Document Upload
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Upload required documents. All files are encrypted with AES-256-GCM
-        </Typography>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-1">Document Upload</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Upload required documents. All files are encrypted with AES-256-GCM
+          </p>
+        </div>
 
-        <Grid container spacing={3}>
-          {/* Photo */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  Passport Photo {hasPhoto && <CheckIcon color="success" fontSize="small" />}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Recent color photo, 600x600px min
-                </Typography>
-                <Button
-                  variant={hasPhoto ? 'outlined' : 'contained'}
-                  component="label"
-                  fullWidth
-                  startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
-                  disabled={uploading}
-                  sx={{ mt: 2 }}
-                >
-                  {hasPhoto ? 'Replace' : 'Upload'}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload('PHOTO', file);
-                    }}
-                  />
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Signature */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  Signature {hasSignature && <CheckIcon color="success" fontSize="small" />}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Scan or photo of your signature
-                </Typography>
-                <Button
-                  variant={hasSignature ? 'outlined' : 'contained'}
-                  component="label"
-                  fullWidth
-                  startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
-                  disabled={uploading}
-                  sx={{ mt: 2 }}
-                >
-                  {hasSignature ? 'Replace' : 'Upload'}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload('SIGNATURE', file);
-                    }}
-                  />
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Birth Certificate */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  Birth Certificate {hasBirthCert && <CheckIcon color="success" fontSize="small" />}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Scan of original certificate
-                </Typography>
-                <Button
-                  variant={hasBirthCert ? 'outlined' : 'contained'}
-                  component="label"
-                  fullWidth
-                  startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
-                  disabled={uploading}
-                  sx={{ mt: 2 }}
-                >
-                  {hasBirthCert ? 'Replace' : 'Upload'}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*,application/pdf"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload('BIRTH_CERTIFICATE', file);
-                    }}
-                  />
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <UploadCard title="Passport Photo" description="Recent color photo, 600x600px min" accept="image/*" hasDoc={hasPhoto} docType="PHOTO" />
+          <UploadCard title="Signature" description="Scan or photo of your signature" accept="image/*" hasDoc={hasSignature} docType="SIGNATURE" />
+          <UploadCard title="Birth Certificate" description="Scan of original certificate" accept="image/*,application/pdf" hasDoc={hasBirthCert} docType="BIRTH_CERTIFICATE" />
+        </div>
 
         {!hasPhoto || !hasSignature || !hasBirthCert ? (
-          <Alert severity="warning" sx={{ mt: 3 }}>
-            Please upload all required documents to proceed
-          </Alert>
+          <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300">
+            ⚠️ Please upload all required documents to proceed
+          </div>
         ) : (
-          <Alert severity="success" sx={{ mt: 3 }}>
-            All required documents uploaded successfully
-          </Alert>
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-sm text-green-700 dark:text-green-300">
+            ✅ All required documents uploaded successfully
+          </div>
         )}
-      </Box>
+      </div>
     );
   }
 
   // Step 3: Review & Confirm
   if (step === 3) {
+    const ReviewField = ({ label, value }: { label: string; value: string }) => (
+      <Card className="border">
+        <CardContent className="pt-4 pb-4">
+          <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+          <p className="font-medium">{value}</p>
+        </CardContent>
+      </Card>
+    );
+
     return (
-      <Box>
-        <Typography variant="h6" gutterBottom>
-          Review & Confirm
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Please review all information before submitting
-        </Typography>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-1">Review & Confirm</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Please review all information before submitting
+          </p>
+        </div>
 
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Full Name
-                </Typography>
-                <Typography variant="body1">{formData.fullName}</Typography>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ReviewField label="Full Name" value={formData.fullName} />
+          <ReviewField label="Date of Birth" value={formData.dateOfBirth} />
+          <ReviewField label="Place of Birth" value={formData.placeOfBirth} />
+          <ReviewField label="Nationality" value={formData.nationality} />
+          <div className="md:col-span-2">
+            <ReviewField label="Address" value={`${formData.address}, ${formData.city}, ${formData.region}`} />
+          </div>
+          <div className="md:col-span-2">
+            <Card className="border">
+              <CardContent className="pt-4 pb-4">
+                <p className="text-xs text-muted-foreground mb-1">Documents Uploaded</p>
+                <div className="text-sm space-y-0.5">
+                  <p>✅ Passport Photo</p>
+                  <p>✅ Signature</p>
+                  <p>✅ Birth Certificate</p>
+                  <p className="text-xs text-muted-foreground mt-1">(All documents encrypted)</p>
+                </div>
               </CardContent>
             </Card>
-          </Grid>
+          </div>
+        </div>
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Date of Birth
-                </Typography>
-                <Typography variant="body1">{formData.dateOfBirth}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Place of Birth
-                </Typography>
-                <Typography variant="body1">{formData.placeOfBirth}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Nationality
-                </Typography>
-                <Typography variant="body1">{formData.nationality}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Address
-                </Typography>
-                <Typography variant="body1">
-                  {formData.address}, {formData.city}, {formData.region}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Documents Uploaded
-                </Typography>
-                <Typography variant="body2">
-                  ✅ Passport Photo<br />
-                  ✅ Signature<br />
-                  ✅ Birth Certificate<br />
-                  <Typography variant="caption" color="text.secondary">
-                    (All documents encrypted)
-                  </Typography>
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        <Alert severity="info" sx={{ mt: 3 }}>
-          By submitting this application, you confirm that all information provided is accurate and truthful.
+        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">
+          ℹ️ By submitting this application, you confirm that all information provided is accurate and truthful.
           False information may result in application rejection or legal consequences.
-        </Alert>
-      </Box>
+        </div>
+      </div>
     );
   }
 

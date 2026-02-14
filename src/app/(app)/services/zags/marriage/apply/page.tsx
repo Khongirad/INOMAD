@@ -2,26 +2,22 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
-  Box,
-  Paper,
-  Stepper,
-  Step,
-  StepLabel,
-  Button,
-  Typography,
-  Alert,
-  Grid,
-  TextField,
-  MenuItem,
-  Card,
-  CardContent,
-} from '@mui/material';
-import { ArrowBack as BackIcon, ArrowForward as NextIcon, Send as SubmitIcon } from '@mui/icons-material';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { createMarriageApplication, checkMarriageEligibility } from '@/lib/api/zags';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
-const steps = ['Partner Information', 'Marriage Details', 'Property Regime', 'Review & Submit'];
+const STEPS = ['Данные партнёра', 'Детали брака', 'Имущественный режим', 'Проверка и подача'];
 
 export default function MarriageApplicationPage() {
   const router = useRouter();
@@ -53,21 +49,19 @@ export default function MarriageApplicationPage() {
   const handleNext = async () => {
     if (activeStep === 0) {
       if (!formData.partnerId || !formData.spouse1FullName || !formData.spouse2FullName) {
-        setError('Please fill in all partner information');
+        setError('Заполните все поля информации о партнёре');
         return;
       }
-      // Check eligibility
       try {
         setLoading(true);
-        await checkMarriageEligibility('current-user'); // Should use actual userId
+        await checkMarriageEligibility('current-user');
         setLoading(false);
       } catch (err: any) {
-        setError(err.message || 'You are not eligible to marry');
+        setError(err.message || 'Вы не имеете права на заключение брака');
         setLoading(false);
         return;
       }
     }
-
     setError(null);
     setActiveStep((prev) => prev + 1);
   };
@@ -80,278 +74,192 @@ export default function MarriageApplicationPage() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const marriage = await createMarriageApplication(formData);
-      toast.success('Marriage application submitted! Waiting for partner consent...');
+      await createMarriageApplication(formData);
+      toast.success('Заявление подано! Ожидается согласие партнёра…');
       router.push('/services/zags');
     } catch (err: any) {
-      setError(err.message || 'Failed to submit application');
+      setError(err.message || 'Не удалось подать заявление');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<BackIcon />}
-          onClick={() => router.push('/services/zags')}
-          sx={{ mb: 2 }}
-        >
-          Back to ZAGS
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div>
+        <Button variant="ghost" onClick={() => router.push('/services/zags')} className="mb-2">
+          ← Назад в ЗАГС
         </Button>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          Marriage Application
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Apply for marriage registration - both partners must consent
-        </Typography>
-      </Box>
+        <h1 className="text-2xl font-bold">Заявление на регистрацию брака</h1>
+        <p className="text-muted-foreground mt-1">Оба партнёра должны дать согласие</p>
+      </div>
 
-      <Paper sx={{ p: 3 }}>
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+      {/* Stepper */}
+      <div className="flex items-center gap-2">
+        {STEPS.map((label, i) => (
+          <div key={label} className="flex items-center gap-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+              i <= activeStep ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            }`}>
+              {i < activeStep ? '✓' : i + 1}
+            </div>
+            <span className={`text-sm hidden md:inline ${i <= activeStep ? 'text-foreground' : 'text-muted-foreground'}`}>
+              {label}
+            </span>
+            {i < STEPS.length - 1 && <div className="w-8 h-px bg-border" />}
+          </div>
+        ))}
+      </div>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-sm underline">Закрыть</button>
+        </div>
+      )}
 
-        {/* Step Content */}
-        {activeStep === 0 && (
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Typography variant="h6" gutterBottom>
-                Partner Information
-              </Typography>
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                fullWidth
-                required
-                label="Partner User ID"
-                value={formData.partnerId}
-                onChange={(e) => handleChange('partnerId', e.target.value)}
-                helperText="Enter your partner's username or user ID"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                required
-                label="Spouse 1 Full Name"
-                value={formData.spouse1FullName}
-                onChange={(e) => handleChange('spouse1FullName', e.target.value)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                required
-                label="Spouse 2 Full Name"
-                value={formData.spouse2FullName}
-                onChange={(e) => handleChange('spouse2FullName', e.target.value)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                required
-                type="date"
-                label="Spouse 1 Date of Birth"
-                value={formData.spouse1DateOfBirth}
-                onChange={(e) => handleChange('spouse1DateOfBirth', e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                required
-                type="date"
-                label="Spouse 2 Date of Birth"
-                value={formData.spouse2DateOfBirth}
-                onChange={(e) => handleChange('spouse2DateOfBirth', e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-          </Grid>
-        )}
-
-        {activeStep === 1 && (
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Typography variant="h6" gutterBottom>
-                Marriage Details
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                required
-                type="date"
-                label="Desired Marriage Date"
-                value={formData.marriageDate}
-                onChange={(e) => handleChange('marriageDate', e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                helperText="Must be at least 30 days from today"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                select
-                label="Ceremony Type"
-                value={formData.ceremonyType}
-                onChange={(e) => handleChange('ceremonyType', e.target.value)}
-              >
-                <MenuItem value="Civil">Civil</MenuItem>
-                <MenuItem value="Religious">Religious</MenuItem>
-                <MenuItem value="Traditional">Traditional</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                fullWidth
-                label="Ceremony Location"
-                value={formData.ceremonyLocation}
-                onChange={(e) => handleChange('ceremonyLocation', e.target.value)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Witness 1 Name"
-                value={formData.witness1Name}
-                onChange={(e) => handleChange('witness1Name', e.target.value)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Witness 2 Name"
-                value={formData.witness2Name}
-                onChange={(e) => handleChange('witness2Name', e.target.value)}
-              />
-            </Grid>
-          </Grid>
-        )}
-
-        {activeStep === 2 && (
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Typography variant="h6" gutterBottom>
-                Property Regime
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Choose how property will be managed during marriage
-              </Typography>
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                fullWidth
-                select
-                label="Property Regime"
-                value={formData.propertyRegime}
-                onChange={(e) => handleChange('propertyRegime', e.target.value)}
-              >
-                <MenuItem value="SEPARATE">Separate Property</MenuItem>
-                <MenuItem value="JOINT">Joint Property</MenuItem>
-                <MenuItem value="CUSTOM">Custom Agreement</MenuItem>
-              </TextField>
-            </Grid>
-            {formData.propertyRegime === 'CUSTOM' && (
-              <Grid size={12}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  label="Property Agreement Details"
-                  value={formData.propertyAgreement}
-                  onChange={(e) => handleChange('propertyAgreement', e.target.value)}
-                  helperText="Describe custom property arrangements"
-                />
-              </Grid>
-            )}
-          </Grid>
-        )}
-
-        {activeStep === 3 && (
-          <Box>
-            <Typography variant="h6" gutterBottom>
-              Review & Submit
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid size={12}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Spouses
-                    </Typography>
-                    <Typography variant="body1">
-                      {formData.spouse1FullName} & {formData.spouse2FullName}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid size={12}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Marriage Date
-                    </Typography>
-                    <Typography variant="body1">{formData.marriageDate}</Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid size={12}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Property Regime
-                    </Typography>
-                    <Typography variant="body1">{formData.propertyRegime}</Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-            <Alert severity="info" sx={{ mt: 3 }}>
-              After submission, your partner must consent to this application. You'll both be notified once consent is granted.
-            </Alert>
-          </Box>
-        )}
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-          <Button onClick={handleBack} disabled={activeStep === 0 || loading} startIcon={<BackIcon />}>
-            Back
-          </Button>
-          {activeStep === steps.length - 1 ? (
-            <Button
-              variant="contained"
-              onClick={handleSubmit}
-              disabled={loading}
-              startIcon={<SubmitIcon />}
-            >
-              {loading ? 'Submitting...' : 'Submit Application'}
-            </Button>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              disabled={loading}
-              endIcon={<NextIcon />}
-            >
-              Next
-            </Button>
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          {/* Step 0: Partner Info */}
+          {activeStep === 0 && (
+            <>
+              <h3 className="text-lg font-semibold">Данные партнёра</h3>
+              <div className="space-y-3">
+                <div>
+                  <Label>ID партнёра *</Label>
+                  <Input value={formData.partnerId} onChange={(e) => handleChange('partnerId', e.target.value)} placeholder="Имя пользователя или ID" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label>ФИО супруга 1 *</Label>
+                    <Input value={formData.spouse1FullName} onChange={(e) => handleChange('spouse1FullName', e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>ФИО супруга 2 *</Label>
+                    <Input value={formData.spouse2FullName} onChange={(e) => handleChange('spouse2FullName', e.target.value)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Дата рождения супруга 1 *</Label>
+                    <Input type="date" value={formData.spouse1DateOfBirth} onChange={(e) => handleChange('spouse1DateOfBirth', e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Дата рождения супруга 2 *</Label>
+                    <Input type="date" value={formData.spouse2DateOfBirth} onChange={(e) => handleChange('spouse2DateOfBirth', e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            </>
           )}
-        </Box>
-      </Paper>
-    </Box>
+
+          {/* Step 1: Marriage Details */}
+          {activeStep === 1 && (
+            <>
+              <h3 className="text-lg font-semibold">Детали брака</h3>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Желаемая дата брака *</Label>
+                    <Input type="date" value={formData.marriageDate} onChange={(e) => handleChange('marriageDate', e.target.value)} />
+                    <p className="text-xs text-muted-foreground mt-1">Минимум 30 дней от сегодня</p>
+                  </div>
+                  <div>
+                    <Label>Тип церемонии</Label>
+                    <Select value={formData.ceremonyType} onValueChange={(v) => handleChange('ceremonyType', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Civil">Гражданская</SelectItem>
+                        <SelectItem value="Religious">Религиозная</SelectItem>
+                        <SelectItem value="Traditional">Традиционная</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Место церемонии</Label>
+                  <Input value={formData.ceremonyLocation} onChange={(e) => handleChange('ceremonyLocation', e.target.value)} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Имя свидетеля 1</Label>
+                    <Input value={formData.witness1Name} onChange={(e) => handleChange('witness1Name', e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Имя свидетеля 2</Label>
+                    <Input value={formData.witness2Name} onChange={(e) => handleChange('witness2Name', e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Step 2: Property Regime */}
+          {activeStep === 2 && (
+            <>
+              <h3 className="text-lg font-semibold">Имущественный режим</h3>
+              <p className="text-sm text-muted-foreground mb-3">Выберите порядок управления имуществом в браке</p>
+              <div>
+                <Label>Режим имущества</Label>
+                <Select value={formData.propertyRegime} onValueChange={(v) => handleChange('propertyRegime', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SEPARATE">Раздельное имущество</SelectItem>
+                    <SelectItem value="JOINT">Совместное имущество</SelectItem>
+                    <SelectItem value="CUSTOM">Свой договор</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {formData.propertyRegime === 'CUSTOM' && (
+                <div>
+                  <Label>Детали договора</Label>
+                  <Textarea rows={4} value={formData.propertyAgreement} onChange={(e) => handleChange('propertyAgreement', e.target.value)} placeholder="Опишите индивидуальные условия…" />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Step 3: Review */}
+          {activeStep === 3 && (
+            <>
+              <h3 className="text-lg font-semibold">Проверка и подача</h3>
+              <div className="space-y-3">
+                <div className="border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Супруги</p>
+                  <p className="font-semibold">{formData.spouse1FullName} & {formData.spouse2FullName}</p>
+                </div>
+                <div className="border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Дата брака</p>
+                  <p className="font-semibold">{formData.marriageDate}</p>
+                </div>
+                <div className="border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Режим имущества</p>
+                  <p className="font-semibold">{formData.propertyRegime}</p>
+                </div>
+              </div>
+              <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4 text-sm">
+                После подачи партнёр должен дать согласие. Вы оба получите уведомление.
+              </div>
+            </>
+          )}
+
+          {/* Navigation */}
+          <div className="flex justify-between pt-4">
+            <Button variant="outline" onClick={handleBack} disabled={activeStep === 0 || loading}>
+              ← Назад
+            </Button>
+            {activeStep === STEPS.length - 1 ? (
+              <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? 'Отправка…' : '📤 Подать заявление'}
+              </Button>
+            ) : (
+              <Button onClick={handleNext} disabled={loading}>
+                Далее →
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
