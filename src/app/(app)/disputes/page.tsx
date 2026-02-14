@@ -1,42 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  Chip,
-  Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Alert,
-} from '@mui/material';
-import {
-  Handshake,
-  Scale,
-  AlertTriangle,
-  MessageSquare,
-  ArrowUpRight,
-  CheckCircle,
-  FileText,
-  Clock,
+  Handshake, Scale, AlertTriangle, MessageSquare,
+  CheckCircle, FileText, Clock, ArrowUpRight, Plus, Loader2,
 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import {
+  useDisputes,
+  useOpenDispute,
+  useSettleDispute,
+  useEscalateDispute,
+} from '@/lib/api';
+import type { Dispute, DisputeStatus, DisputeSourceType } from '@/lib/types/models';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  OPENED: { label: 'Открыт', color: '#2196f3' },
-  NEGOTIATING: { label: 'Переговоры', color: '#ff9800' },
-  SETTLED: { label: 'Урегулирован', color: '#4caf50' },
-  COMPLAINT_FILED: { label: 'Подана жалоба', color: '#f44336' },
-  COURT_FILED: { label: 'Передано в суд', color: '#9c27b0' },
+  OPENED: { label: 'Открыт', color: 'text-blue-400' },
+  NEGOTIATING: { label: 'Переговоры', color: 'text-amber-400' },
+  SETTLED: { label: 'Урегулирован', color: 'text-emerald-400' },
+  COMPLAINT_FILED: { label: 'Подана жалоба', color: 'text-rose-400' },
+  COURT_FILED: { label: 'Передано в суд', color: 'text-purple-400' },
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -46,227 +33,281 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 export default function DisputesPage() {
-  const [disputes, setDisputes] = useState<any[]>([]);
-  const [selectedDispute, setSelectedDispute] = useState<any>(null);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [formData, setFormData] = useState({
+  const [tab, setTab] = useState('all');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({
     partyBId: '',
-    sourceType: 'CONTRACT' as string,
+    sourceType: 'CONTRACT' as DisputeSourceType,
     sourceId: '',
     title: '',
     description: '',
   });
-  const [stats, setStats] = useState({ total: 0, open: 0, settled: 0, escalated: 0 });
 
-  // Mock data for demonstration
-  useEffect(() => {
-    setDisputes([
-      {
-        id: '1',
-        partyA: { username: 'Иванов А.' },
-        partyB: { username: 'Петров Б.' },
-        sourceType: 'CONTRACT',
-        sourceId: 'c-001',
-        title: 'Нарушение сроков поставки',
-        description: 'Контрагент не выполнил поставку в установленный договором срок',
-        status: 'NEGOTIATING',
-        createdAt: '2026-02-10T10:00:00Z',
-        _count: { complaints: 0 },
-      },
-      {
-        id: '2',
-        partyA: { username: 'Сидоров В.' },
-        partyB: { username: 'Козлова Г.' },
-        sourceType: 'QUEST',
-        sourceId: 'q-042',
-        title: 'Качество выполненного задания',
-        description: 'Результат не соответствует описанию задания',
-        status: 'OPENED',
-        createdAt: '2026-02-09T14:30:00Z',
-        _count: { complaints: 0 },
-      },
-      {
-        id: '3',
-        partyA: { username: 'Николаев Д.' },
-        partyB: { username: 'Фёдорова Е.' },
-        sourceType: 'WORK_ACT',
-        sourceId: 'wa-007',
-        title: 'Несогласие с актом выполненных работ',
-        description: 'Заказчик не принимает акт из-за дефектов',
-        status: 'SETTLED',
-        createdAt: '2026-02-08T09:15:00Z',
-        _count: { complaints: 0 },
-      },
-    ]);
-    setStats({ total: 3, open: 2, settled: 1, escalated: 0 });
-  }, []);
+  const { data: disputes = [], isLoading } = useDisputes();
+  const openMutation = useOpenDispute();
+  const settleMutation = useSettleDispute();
+  const escalateMutation = useEscalateDispute();
+
+  const stats = {
+    total: disputes.length,
+    open: disputes.filter((d: Dispute) => ['OPENED', 'NEGOTIATING'].includes(d.status)).length,
+    settled: disputes.filter((d: Dispute) => d.status === 'SETTLED').length,
+    escalated: disputes.filter((d: Dispute) =>
+      ['COMPLAINT_FILED', 'COURT_FILED'].includes(d.status),
+    ).length,
+  };
+
+  const handleOpen = async () => {
+    try {
+      await openMutation.mutateAsync(form);
+      toast.success('Спор открыт');
+      setDialogOpen(false);
+      setForm({ partyBId: '', sourceType: 'CONTRACT', sourceId: '', title: '', description: '' });
+    } catch (e: any) {
+      toast.error(e.message || 'Ошибка');
+    }
+  };
+
+  const handleSettle = async (id: string) => {
+    const resolution = prompt('Описание решения:');
+    if (!resolution) return;
+    try {
+      await settleMutation.mutateAsync({ id, resolution });
+      toast.success('Спор урегулирован');
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const handleEscalate = async (id: string, target: 'complaint' | 'court') => {
+    try {
+      await escalateMutation.mutateAsync({ id, target });
+      toast.success(target === 'complaint' ? 'Жалоба подана' : 'Передано в суд');
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const filteredDisputes =
+    tab === 'all'
+      ? disputes
+      : tab === 'open'
+        ? disputes.filter((d: Dispute) => ['OPENED', 'NEGOTIATING'].includes(d.status))
+        : disputes.filter((d: Dispute) => d.status === 'SETTLED');
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Handshake size={32} />
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Handshake className="h-7 w-7 text-blue-400" />
           Споры
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+        </h1>
+        <p className="text-sm text-zinc-400 mt-1">
           Переговоры по спорным вопросам. Каждый спор привязан к договору, заданию или акту работ.
-        </Typography>
-      </Box>
+        </p>
+      </div>
 
       {/* Stats */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 2, mb: 4 }}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Всего споров', value: stats.total, icon: <FileText size={20} />, color: '#2196f3' },
-          { label: 'Открытых', value: stats.open, icon: <Clock size={20} />, color: '#ff9800' },
-          { label: 'Урегулировано', value: stats.settled, icon: <CheckCircle size={20} />, color: '#4caf50' },
-          { label: 'Эскалировано', value: stats.escalated, icon: <ArrowUpRight size={20} />, color: '#f44336' },
-        ].map((stat) => (
-          <Card key={stat.label} sx={{ border: `1px solid ${stat.color}20` }}>
-            <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: stat.color }}>{stat.value}</Typography>
-                <Typography variant="body2" color="text.secondary">{stat.label}</Typography>
-              </Box>
-              <Box sx={{ color: stat.color, opacity: 0.5 }}>{stat.icon}</Box>
+          { label: 'Всего споров', value: stats.total, icon: FileText, cls: 'text-blue-400' },
+          { label: 'Открытых', value: stats.open, icon: Clock, cls: 'text-amber-400' },
+          { label: 'Урегулировано', value: stats.settled, icon: CheckCircle, cls: 'text-emerald-400' },
+          { label: 'Эскалировано', value: stats.escalated, icon: ArrowUpRight, cls: 'text-rose-400' },
+        ].map((s) => (
+          <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">
+            <CardContent className="p-4 flex justify-between items-center">
+              <div>
+                <p className={`text-2xl font-bold ${s.cls}`}>{s.value}</p>
+                <p className="text-xs text-zinc-500">{s.label}</p>
+              </div>
+              <s.icon className={`h-5 w-5 ${s.cls} opacity-40`} />
             </CardContent>
           </Card>
         ))}
-      </Box>
+      </div>
 
-      {/* Actions */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <Button variant="contained" startIcon={<AlertTriangle size={18} />} onClick={() => setOpenDialog(true)}>
-          Открыть спор
+      {/* Actions + info */}
+      <div className="flex items-center gap-3">
+        <Button
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4 mr-1" /> Открыть спор
         </Button>
-      </Box>
+      </div>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        💡 Спор — первый шаг перед жалобой. Стороны пытаются решить вопрос сами. Если не получается — можно подать жалобу (мягкий путь) или сразу в суд (жёсткий путь).
-      </Alert>
+      <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-sm text-zinc-300">
+        💡 Спор — первый шаг перед жалобой. Стороны пытаются решить вопрос сами.
+        Если не получается — можно подать жалобу или сразу в суд.
+      </div>
 
-      {/* Dispute List */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {disputes.map((dispute) => {
-          const status = STATUS_LABELS[dispute.status] || { label: dispute.status, color: '#999' };
-          return (
-            <Card
-              key={dispute.id}
-              sx={{
-                cursor: 'pointer',
-                border: selectedDispute?.id === dispute.id ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                '&:hover': { borderColor: '#1976d2', boxShadow: 2 },
-                transition: 'all 0.2s',
-              }}
-              onClick={() => setSelectedDispute(dispute)}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{dispute.title}</Typography>
-                  <Chip
-                    label={status.label}
-                    size="small"
-                    sx={{ bgcolor: `${status.color}15`, color: status.color, fontWeight: 600 }}
-                  />
-                </Box>
+      {/* Tabs */}
+      <Tabs defaultValue="all" value={tab} onValueChange={setTab} className="w-full">
+        <TabsList className="bg-zinc-900 border border-zinc-800">
+          <TabsTrigger value="all">Все</TabsTrigger>
+          <TabsTrigger value="open">Открытые</TabsTrigger>
+          <TabsTrigger value="settled">Завершённые</TabsTrigger>
+        </TabsList>
 
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {dispute.description}
-                </Typography>
+        <TabsContent value={tab} className="mt-4 space-y-3">
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
+          ) : filteredDisputes.length === 0 ? (
+            <div className="text-center py-12 text-zinc-500">
+              Споров нет
+            </div>
+          ) : (
+            filteredDisputes.map((dispute: Dispute) => {
+              const status = STATUS_LABELS[dispute.status] || {
+                label: dispute.status,
+                color: 'text-zinc-400',
+              };
+              return (
+                <Card
+                  key={dispute.id}
+                  className="bg-zinc-900/60 border-zinc-800 hover:border-zinc-600 transition-colors"
+                >
+                  <CardContent className="p-4 space-y-3">
+                    {/* Title + status */}
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-semibold text-zinc-100">{dispute.title}</h3>
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-800 ${status.color}`}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
 
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <Chip
-                    label={SOURCE_LABELS[dispute.sourceType]}
-                    size="small"
-                    variant="outlined"
-                    icon={<FileText size={14} />}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    {dispute.partyA.username} ↔ {dispute.partyB.username}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(dispute.createdAt).toLocaleDateString('ru-RU')}
-                  </Typography>
-                </Box>
+                    <p className="text-sm text-zinc-400">{dispute.description}</p>
 
-                {/* Actions for open disputes */}
-                {['OPENED', 'NEGOTIATING'].includes(dispute.status) && (
-                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                    <Button size="small" variant="outlined" startIcon={<MessageSquare size={14} />}>
-                      Переговоры
-                    </Button>
-                    <Button size="small" variant="outlined" color="success" startIcon={<CheckCircle size={14} />}>
-                      Урегулировать
-                    </Button>
-                    <Button size="small" variant="outlined" color="warning" startIcon={<AlertTriangle size={14} />}>
-                      Подать жалобу
-                    </Button>
-                    <Button size="small" variant="outlined" color="error" startIcon={<Scale size={14} />}>
-                      В суд
-                    </Button>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Box>
+                    {/* Meta chips */}
+                    <div className="flex flex-wrap gap-2 items-center text-xs">
+                      <span className="px-2 py-0.5 bg-zinc-800 rounded text-zinc-300 flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        {SOURCE_LABELS[dispute.sourceType] || dispute.sourceType}
+                      </span>
+                      <span className="text-zinc-500">
+                        {dispute.partyA?.username} ↔ {dispute.partyB?.username}
+                      </span>
+                      <span className="text-zinc-600">
+                        {new Date(dispute.createdAt).toLocaleDateString('ru-RU')}
+                      </span>
+                    </div>
+
+                    {/* Actions for open disputes */}
+                    {['OPENED', 'NEGOTIATING'].includes(dispute.status) && (
+                      <div className="flex gap-2 pt-1">
+                        <Button size="sm" variant="outline" className="border-zinc-700 text-zinc-300 text-xs">
+                          <MessageSquare className="h-3 w-3 mr-1" /> Переговоры
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-emerald-800 text-emerald-400 text-xs"
+                          onClick={() => handleSettle(dispute.id)}
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" /> Урегулировать
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-amber-800 text-amber-400 text-xs"
+                          onClick={() => handleEscalate(dispute.id, 'complaint')}
+                        >
+                          <AlertTriangle className="h-3 w-3 mr-1" /> Жалоба
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-rose-800 text-rose-400 text-xs"
+                          onClick={() => handleEscalate(dispute.id, 'court')}
+                        >
+                          <Scale className="h-3 w-3 mr-1" /> В суд
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Open Dispute Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Открыть спор</DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Спор всегда привязан к конкретному договору, заданию или акту работ.
-          </Alert>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <FormControl fullWidth>
-              <InputLabel>Тип источника</InputLabel>
-              <Select
-                value={formData.sourceType}
-                label="Тип источника"
-                onChange={(e) => setFormData({ ...formData, sourceType: e.target.value })}
-              >
-                <MenuItem value="CONTRACT">Договор</MenuItem>
-                <MenuItem value="QUEST">Задание</MenuItem>
-                <MenuItem value="WORK_ACT">Акт работ</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              label="ID документа"
-              value={formData.sourceId}
-              onChange={(e) => setFormData({ ...formData, sourceId: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="ID второй стороны"
-              value={formData.partyBId}
-              onChange={(e) => setFormData({ ...formData, partyBId: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Тема спора"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Описание"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              multiline
-              rows={3}
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Отмена</Button>
-          <Button variant="contained" onClick={() => setOpenDialog(false)}>
-            Открыть спор
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      {dialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <Card className="w-full max-w-md bg-zinc-900 border-zinc-700">
+            <CardContent className="p-6 space-y-4">
+              <h2 className="text-lg font-bold text-zinc-100">Открыть спор</h2>
+
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-zinc-300">
+                ⚠️ Спор всегда привязан к конкретному договору, заданию или акту работ.
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">Тип источника</label>
+                  <select
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100"
+                    value={form.sourceType}
+                    onChange={(e) => setForm({ ...form, sourceType: e.target.value as DisputeSourceType })}
+                  >
+                    <option value="CONTRACT">Договор</option>
+                    <option value="QUEST">Задание</option>
+                    <option value="WORK_ACT">Акт работ</option>
+                  </select>
+                </div>
+                <Input
+                  placeholder="ID документа"
+                  className="bg-zinc-800 border-zinc-700"
+                  value={form.sourceId}
+                  onChange={(e) => setForm({ ...form, sourceId: e.target.value })}
+                />
+                <Input
+                  placeholder="ID второй стороны"
+                  className="bg-zinc-800 border-zinc-700"
+                  value={form.partyBId}
+                  onChange={(e) => setForm({ ...form, partyBId: e.target.value })}
+                />
+                <Input
+                  placeholder="Тема спора"
+                  className="bg-zinc-800 border-zinc-700"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                />
+                <textarea
+                  placeholder="Описание"
+                  rows={3}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 resize-none"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" className="border-zinc-700" onClick={() => setDialogOpen(false)}>
+                  Отмена
+                </Button>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={handleOpen}
+                  disabled={openMutation.isPending}
+                >
+                  {openMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  ) : null}
+                  Открыть спор
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }

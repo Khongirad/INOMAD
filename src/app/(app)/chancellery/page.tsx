@@ -1,282 +1,189 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
-  InputAdornment,
-  Tabs,
-  Tab,
-  Alert,
-} from '@mui/material';
-import {
-  Building2,
-  Search,
-  Shield,
-  FileText,
-  Scale,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
+  Building2, FileText, Search, Shield, Scale, AlertTriangle,
+  CheckCircle, XCircle, Loader2, Clock,
 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  useChancelleryRegistry,
+  useChancelleryStats,
+} from '@/lib/api';
+import type { ChancelleryContract } from '@/lib/types/models';
+
+const STAGE_COLORS: Record<string, string> = {
+  DRAFT: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20',
+  PENDING_SIGNATURES: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+  SIGNED: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  NOTARIZED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  LEGALLY_CERTIFIED: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+  ARCHIVED: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20',
+};
+
+const STAGE_LABELS: Record<string, string> = {
+  DRAFT: 'Черновик',
+  PENDING_SIGNATURES: 'На подписании',
+  SIGNED: 'Подписан',
+  NOTARIZED: 'Нотариально заверен',
+  LEGALLY_CERTIFIED: 'Юридически проверен',
+  ARCHIVED: 'Архив',
+};
 
 export default function ChancelleryPage() {
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState('registry');
   const [search, setSearch] = useState('');
-  const [stats, setStats] = useState({
+
+  const { data: contracts = [], isLoading } = useChancelleryRegistry({ search: search || undefined });
+  const { data: stats } = useChancelleryStats();
+
+  const defaultStats = stats || {
     totalContracts: 0,
     activeContracts: 0,
-    notarized: 0,
-    legallyCertified: 0,
     totalDisputes: 0,
-    openDisputes: 0,
     totalComplaints: 0,
-    activeComplaints: 0,
-  });
-
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [disputes, setDisputes] = useState<any[]>([]);
-
-  useEffect(() => {
-    // Mock data
-    setStats({
-      totalContracts: 156,
-      activeContracts: 89,
-      notarized: 134,
-      legallyCertified: 112,
-      totalDisputes: 12,
-      openDisputes: 4,
-      totalComplaints: 8,
-      activeComplaints: 3,
-    });
-
-    setContracts([
-      {
-        id: 'c-001',
-        documentNumber: 'DC-2026/001',
-        title: 'Договор поставки оборудования',
-        issuer: { username: 'Иванов А.' },
-        recipient: { username: 'Петров Б.' },
-        currentStage: 'SIGNED',
-        status: 'ACTIVE',
-        transactionAmount: '150000',
-        notarization: { notarizedAt: '2026-02-01' },
-        legalCert: { compliant: true },
-        createdAt: '2026-01-15T10:00:00Z',
-      },
-      {
-        id: 'c-002',
-        documentNumber: 'DC-2026/002',
-        title: 'Банковская лицензия — ТоргБанк',
-        issuer: { username: 'ЦБ Управляющий' },
-        recipient: { username: 'ТоргБанк' },
-        currentStage: 'NOTARIZED',
-        status: 'ACTIVE',
-        transactionAmount: null,
-        notarization: { notarizedAt: '2026-02-05' },
-        legalCert: { compliant: true },
-        createdAt: '2026-02-01T12:00:00Z',
-      },
-      {
-        id: 'c-003',
-        documentNumber: 'DC-2026/003',
-        title: 'Земельный договор — участок №42',
-        issuer: { username: 'Сидоров В.' },
-        recipient: { username: 'Козлова Г.' },
-        currentStage: 'DRAFT',
-        status: 'ACTIVE',
-        transactionAmount: '50000',
-        notarization: null,
-        legalCert: null,
-        createdAt: '2026-02-10T08:30:00Z',
-      },
-    ]);
-
-    setDisputes([
-      {
-        id: 'd-001',
-        partyA: { username: 'Иванов А.' },
-        partyB: { username: 'Петров Б.' },
-        sourceType: 'CONTRACT',
-        title: 'Нарушение сроков',
-        status: 'NEGOTIATING',
-        createdAt: '2026-02-10T10:00:00Z',
-        _count: { complaints: 1 },
-      },
-    ]);
-  }, []);
-
-  const STAGE_COLORS: Record<string, string> = {
-    DRAFT: '#9e9e9e',
-    PENDING_SIGNATURES: '#ff9800',
-    SIGNED: '#2196f3',
-    NOTARIZED: '#4caf50',
-    LEGALLY_CERTIFIED: '#00bcd4',
-    ARCHIVED: '#795548',
+    pendingReview: 0,
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Building2 size={32} />
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Building2 className="h-7 w-7 text-cyan-400" />
           Канцелярия
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+        </h1>
+        <p className="text-sm text-zinc-400 mt-1">
           Реестр договоров. Доступ только для нотариусов и юристов.
-        </Typography>
-      </Box>
+        </p>
+      </div>
 
-      <Alert severity="info" icon={<Shield size={20} />} sx={{ mb: 3 }}>
-        🔒 Канцелярия — официальный реестр всех договоров системы. Доступ предоставляется только подтверждённым нотариусам и юристам.
-      </Alert>
+      <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-4 py-3 text-sm text-zinc-300 flex items-center gap-2">
+        <Shield className="h-4 w-4 text-cyan-400 flex-shrink-0" />
+        🔒 Канцелярия — официальный реестр всех договоров системы.
+      </div>
 
       {/* Stats */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 2, mb: 4 }}>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: 'Всего договоров', value: stats.totalContracts, color: '#2196f3' },
-          { label: 'Активных', value: stats.activeContracts, color: '#4caf50' },
-          { label: 'Нотариально заверено', value: stats.notarized, color: '#00bcd4' },
-          { label: 'Юридически проверено', value: stats.legallyCertified, color: '#9c27b0' },
-          { label: 'Споров', value: stats.totalDisputes, color: '#ff9800' },
-          { label: 'Жалоб', value: stats.totalComplaints, color: '#f44336' },
-        ].map((stat) => (
-          <Card key={stat.label} sx={{ border: `1px solid ${stat.color}20` }}>
-            <CardContent sx={{ textAlign: 'center', py: 2 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: stat.color }}>{stat.value}</Typography>
-              <Typography variant="caption" color="text.secondary">{stat.label}</Typography>
+          { label: 'Всего договоров', value: defaultStats.totalContracts, icon: FileText, cls: 'text-blue-400' },
+          { label: 'Активных', value: defaultStats.activeContracts, icon: CheckCircle, cls: 'text-emerald-400' },
+          { label: 'На рассмотрении', value: defaultStats.pendingReview, icon: Clock, cls: 'text-amber-400' },
+          { label: 'Споров', value: defaultStats.totalDisputes, icon: AlertTriangle, cls: 'text-orange-400' },
+          { label: 'Жалоб', value: defaultStats.totalComplaints, icon: Scale, cls: 'text-rose-400' },
+        ].map((s) => (
+          <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">
+            <CardContent className="p-3 flex justify-between items-center">
+              <div>
+                <p className={`text-xl font-bold ${s.cls}`}>{s.value}</p>
+                <p className="text-[10px] text-zinc-500">{s.label}</p>
+              </div>
+              <s.icon className={`h-4 w-4 ${s.cls} opacity-40`} />
             </CardContent>
           </Card>
         ))}
-      </Box>
+      </div>
 
       {/* Search */}
-      <TextField
-        placeholder="Поиск по номеру, названию..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        fullWidth
-        sx={{ mb: 3 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search size={18} />
-            </InputAdornment>
-          ),
-        }}
-      />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+        <Input
+          placeholder="Поиск по номеру, названию..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-10 bg-zinc-900 border-zinc-700"
+        />
+      </div>
 
       {/* Tabs */}
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3 }}>
-        <Tab label="Реестр договоров" icon={<FileText size={16} />} iconPosition="start" />
-        <Tab label="Споры по договорам" icon={<AlertTriangle size={16} />} iconPosition="start" />
-        <Tab label="Жалобы" icon={<Scale size={16} />} iconPosition="start" />
-      </Tabs>
+      <Tabs defaultValue="registry" value={tab} onValueChange={setTab} className="w-full">
+        <TabsList className="bg-zinc-900 border border-zinc-800">
+          <TabsTrigger value="registry" className="flex items-center gap-1">
+            <FileText className="h-3 w-3" /> Реестр
+          </TabsTrigger>
+          <TabsTrigger value="disputes" className="flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" /> Споры
+          </TabsTrigger>
+          <TabsTrigger value="complaints" className="flex items-center gap-1">
+            <Scale className="h-3 w-3" /> Жалобы
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Registry Tab */}
-      {tab === 0 && (
-        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0' }}>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                <TableCell sx={{ fontWeight: 700 }}>Номер</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Название</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Стороны</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Стадия</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Сумма</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Нотариус</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Юрист</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {contracts.map((contract) => (
-                <TableRow key={contract.id} hover sx={{ cursor: 'pointer' }}>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
-                      {contract.documentNumber}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{contract.title}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {contract.issuer.username} → {contract.recipient?.username || '—'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={contract.currentStage}
-                      size="small"
-                      sx={{
-                        bgcolor: `${STAGE_COLORS[contract.currentStage] || '#999'}15`,
-                        color: STAGE_COLORS[contract.currentStage] || '#999',
-                        fontWeight: 600,
-                        fontSize: '0.7rem',
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {contract.transactionAmount
-                      ? `${Number(contract.transactionAmount).toLocaleString()} ₳`
-                      : '—'}
-                  </TableCell>
-                  <TableCell>
-                    {contract.notarization ? (
-                      <CheckCircle size={18} color="#4caf50" />
-                    ) : (
-                      <XCircle size={18} color="#ccc" />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {contract.legalCert ? (
-                      <CheckCircle size={18} color={contract.legalCert.compliant ? '#4caf50' : '#f44336'} />
-                    ) : (
-                      <XCircle size={18} color="#ccc" />
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-
-      {/* Disputes Tab */}
-      {tab === 1 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {disputes.map((dispute) => (
-            <Card key={dispute.id} sx={{ border: '1px solid #e0e0e0' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>{dispute.title}</Typography>
-                  <Chip label={dispute.status} size="small" color="warning" />
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {dispute.partyA.username} ↔ {dispute.partyB.username} • Жалоб: {dispute._count.complaints}
-                </Typography>
+        {/* Registry */}
+        <TabsContent value="registry" className="mt-4">
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
+          ) : contracts.length === 0 ? (
+            <div className="text-center py-12 text-zinc-500">
+              <FileText className="h-12 w-12 mx-auto opacity-30 mb-2" />
+              Договоров нет
+            </div>
+          ) : (
+            <Card className="bg-zinc-900/30 border-zinc-800">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b border-zinc-800">
+                      <tr>
+                        {['Название', 'Стороны', 'Стадия', 'Статус', 'Дата'].map((h) => (
+                          <th key={h} className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {contracts.map((contract: ChancelleryContract) => (
+                        <tr key={contract.id} className="hover:bg-zinc-800/50 transition-colors cursor-pointer">
+                          <td className="px-4 py-3 text-sm text-zinc-100">{contract.title}</td>
+                          <td className="px-4 py-3 text-xs text-zinc-400">
+                            {contract.parties?.map((p) => p.username).join(', ') || '—'}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${
+                              STAGE_COLORS[contract.stage] || 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20'
+                            }`}>
+                              {STAGE_LABELS[contract.stage] || contract.stage}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`text-xs ${
+                              contract.status === 'ACTIVE' ? 'text-emerald-400' : 'text-zinc-400'
+                            }`}>
+                              {contract.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-zinc-500">
+                            {new Date(contract.createdAt).toLocaleDateString('ru-RU')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </CardContent>
             </Card>
-          ))}
-        </Box>
-      )}
+          )}
+        </TabsContent>
 
-      {/* Complaints Tab */}
-      {tab === 2 && (
-        <Alert severity="info">
-          Жалобы по договорам отображаются здесь. Используйте раздел &quot;Жалобы&quot; для полного управления.
-        </Alert>
-      )}
-    </Box>
+        {/* Disputes */}
+        <TabsContent value="disputes" className="mt-4">
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-zinc-300">
+            Споры по договорам. Используйте раздел «Споры» для полного управления.
+          </div>
+        </TabsContent>
+
+        {/* Complaints */}
+        <TabsContent value="complaints" className="mt-4">
+          <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-zinc-300">
+            Жалобы по договорам. Используйте раздел «Жалобы» для полного управления.
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

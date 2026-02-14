@@ -1,89 +1,39 @@
 'use client';
 
 import * as React from 'react';
-import { Users, Building2, Briefcase, Package, TrendingUp, Plus, Search } from 'lucide-react';
+import { Users, Building2, Briefcase, Package, TrendingUp, Plus, Search, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-
-interface Cooperative {
-  id: string;
-  name: string;
-  type: 'GUILD' | 'PRODUCTION' | 'TRADE' | 'SERVICE';
-  members: number;
-  foundedDate: string;
-  revenue: number;
-  status: 'ACTIVE' | 'FORMING' | 'INACTIVE';
-}
-
-// Mock cooperatives
-const mockCooperatives: Cooperative[] = [
-  {
-    id: '1',
-    name: 'Baikal Software Guild',
-    type: 'GUILD',
-    members: 45,
-    foundedDate: '2023-06-15',
-    revenue: 125000,
-    status: 'ACTIVE',
-  },
-  {
-    id: '2',
-    name: 'Siberian Crafts Collective',
-    type: 'PRODUCTION',
-    members: 23,
-    foundedDate: '2023-09-20',
-    revenue: 78000,
-    status: 'ACTIVE',
-  },
-  {
-    id: '3',
-    name: 'Digital Trade Network',
-    type: 'TRADE',
-    members: 67,
-    foundedDate: '2023-11-10',
-    revenue: 234000,
-    status: 'ACTIVE',
-  },
-  {
-    id: '4',
-    name: 'Community Services Hub',
-    type: 'SERVICE',
-    members: 12,
-    foundedDate: '2024-01-05',
-    revenue: 34000,
-    status: 'FORMING',
-  },
-];
+import { toast } from 'sonner';
+import { useGuilds, useJoinGuild } from '@/lib/api';
+import type { Guild, GuildType } from '@/lib/types/models';
 
 const getTypeColor = (type: string) => {
   switch (type) {
-    case 'GUILD': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
-    case 'PRODUCTION': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-    case 'TRADE': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-    case 'SERVICE': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+    case 'CLAN': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+    case 'PROFESSION': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+    case 'ORGANIZATION': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+    case 'GOVERNMENT': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
     default: return 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20';
   }
 };
 
-const getTypeIcon = (type: string) => {
-  switch (type) {
-    case 'GUILD': return Briefcase;
-    case 'PRODUCTION': return Package;
-    case 'TRADE': return TrendingUp;
-    case 'SERVICE': return Users;
-    default: return Building2;
-  }
+const TYPE_LABELS: Record<string, string> = {
+  CLAN: 'Клан',
+  PROFESSION: 'Гильдия',
+  ORGANIZATION: 'Организация',
+  GOVERNMENT: 'Государственный',
 };
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'ACTIVE': return 'text-emerald-500 bg-emerald-500/10';
-    case 'FORMING': return 'text-amber-500 bg-amber-500/10';
-    case 'INACTIVE': return 'text-zinc-500 bg-zinc-500/10';
-    default: return 'text-zinc-400 bg-zinc-500/10';
+const getTypeIcon = (type: string) => {
+  switch (type) {
+    case 'CLAN': return Briefcase;
+    case 'PROFESSION': return Package;
+    case 'ORGANIZATION': return TrendingUp;
+    case 'GOVERNMENT': return Users;
+    default: return Building2;
   }
 };
 
@@ -91,17 +41,29 @@ export default function CooperativesPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filterType, setFilterType] = React.useState<string>('all');
 
-  const filteredCooperatives = mockCooperatives.filter((coop) => {
-    const matchesSearch = coop.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || coop.type === filterType;
-    return matchesSearch && matchesType;
-  });
+  const { data: guilds = [], isLoading } = useGuilds(
+    filterType !== 'all' ? (filterType as GuildType) : undefined,
+  );
+  const joinMutation = useJoinGuild();
+
+  const filteredGuilds = guilds.filter((g: Guild) =>
+    g.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   const stats = {
-    totalCooperatives: mockCooperatives.length,
-    totalMembers: mockCooperatives.reduce((sum, c) => sum + c.members, 0),
-    activeCooperatives: mockCooperatives.filter(c => c.status === 'ACTIVE').length,
-    totalRevenue: mockCooperatives.reduce((sum, c) => sum + c.revenue, 0),
+    totalCooperatives: guilds.length,
+    totalMembers: guilds.reduce((sum: number, c: Guild) => sum + c.memberCount, 0),
+    activeGuilds: guilds.length,
+    totalTreasury: guilds.reduce((sum: number, c: Guild) => sum + (c.treasury || 0), 0),
+  };
+
+  const handleJoin = async (id: string) => {
+    try {
+      await joinMutation.mutateAsync(id);
+      toast.success('Вы вступили в кооператив');
+    } catch (e: any) {
+      toast.error(e.message || 'Ошибка');
+    }
   };
 
   return (
@@ -111,15 +73,15 @@ export default function CooperativesPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
             <Users className="text-purple-500 w-8 h-8" />
-            Cooperatives
+            Кооперативы
           </h2>
           <p className="text-zinc-400 mt-1">
-            Guilds, production networks, services, and trade organizations
+            Гильдии, кланы, профессиональные объединения и государственные организации
           </p>
         </div>
         <Button className="bg-purple-600 hover:bg-purple-700">
           <Plus className="mr-2 h-4 w-4" />
-          Create Cooperative
+          Создать кооператив
         </Button>
       </div>
 
@@ -132,7 +94,7 @@ export default function CooperativesPage() {
                 <Building2 className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Total Co-ops</div>
+                <div className="text-xs text-zinc-500 uppercase">Всего</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {stats.totalCooperatives}
                 </div>
@@ -148,7 +110,7 @@ export default function CooperativesPage() {
                 <Users className="h-5 w-5 text-purple-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Total Members</div>
+                <div className="text-xs text-zinc-500 uppercase">Участников</div>
                 <div className="text-lg font-mono font-bold text-purple-500">
                   {stats.totalMembers}
                 </div>
@@ -164,9 +126,9 @@ export default function CooperativesPage() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Active</div>
+                <div className="text-xs text-zinc-500 uppercase">Активных</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
-                  {stats.activeCooperatives}
+                  {stats.activeGuilds}
                 </div>
               </div>
             </div>
@@ -180,9 +142,9 @@ export default function CooperativesPage() {
                 <TrendingUp className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Revenue</div>
+                <div className="text-xs text-zinc-500 uppercase">Казна</div>
                 <div className="text-lg font-mono font-bold text-white">
-                  {(stats.totalRevenue / 1000).toFixed(0)}K
+                  {(stats.totalTreasury / 1000).toFixed(0)}K ALT
                 </div>
               </div>
             </div>
@@ -195,7 +157,7 @@ export default function CooperativesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
-            placeholder="Search cooperatives..."
+            placeholder="Поиск кооперативов..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -206,74 +168,93 @@ export default function CooperativesPage() {
           onChange={(e) => setFilterType(e.target.value)}
           className="px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white"
         >
-          <option value="all">All Types</option>
-          <option value="GUILD">Guilds</option>
-          <option value="PRODUCTION">Production</option>
-          <option value="TRADE">Trade</option>
-          <option value="SERVICE">Service</option>
+          <option value="all">Все типы</option>
+          <option value="CLAN">Кланы</option>
+          <option value="PROFESSION">Гильдии</option>
+          <option value="ORGANIZATION">Организации</option>
+          <option value="GOVERNMENT">Государственные</option>
         </select>
       </div>
 
       {/* Cooperatives Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCooperatives.map((coop) => {
-          const Icon = getTypeIcon(coop.type);
-          return (
-            <Card
-              key={coop.id}
-              className="border-white/5 bg-zinc-900/50 hover:border-purple-500/30 transition-all cursor-pointer"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10">
-                      <Icon className="h-5 w-5 text-purple-500" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base text-white">{coop.name}</CardTitle>
-                      <span className={cn(
-                        "text-xs font-bold uppercase px-2 py-0.5 rounded border mt-1 inline-block",
-                        getTypeColor(coop.type)
-                      )}>
-                        {coop.type}
-                      </span>
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+        </div>
+      ) : filteredGuilds.length === 0 ? (
+        <div className="text-center py-12 text-zinc-500">
+          <Building2 className="h-12 w-12 mx-auto opacity-30 mb-2" />
+          Кооперативов нет
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredGuilds.map((guild: Guild) => {
+            const Icon = getTypeIcon(guild.type);
+            return (
+              <Card
+                key={guild.id}
+                className="border-white/5 bg-zinc-900/50 hover:border-purple-500/30 transition-all cursor-pointer"
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10">
+                        <Icon className="h-5 w-5 text-purple-500" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base text-white">{guild.name}</CardTitle>
+                        <span className={cn(
+                          "text-xs font-bold uppercase px-2 py-0.5 rounded border mt-1 inline-block",
+                          getTypeColor(guild.type)
+                        )}>
+                          {TYPE_LABELS[guild.type] || guild.type}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-1 text-zinc-400">
-                    <Users className="h-3 w-3" />
-                    <span>Members</span>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1 text-zinc-400">
+                      <Users className="h-3 w-3" />
+                      <span>Участников</span>
+                    </div>
+                    <span className="font-mono text-white">
+                      {guild.memberCount} / {guild.maxMembers}
+                    </span>
                   </div>
-                  <span className="font-mono text-white">{coop.members}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-400">Revenue</span>
-                  <span className="font-mono text-gold-primary">
-                    {(coop.revenue / 1000).toFixed(0)}K ALT
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-400">Founded</span>
-                  <span className="text-zinc-300">
-                    {new Date(coop.foundedDate).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="pt-3 border-t border-white/5">
-                  <span className={cn(
-                    "text-xs font-bold uppercase px-2 py-1 rounded",
-                    getStatusColor(coop.status)
-                  )}>
-                    {coop.status}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-zinc-400">Казна</span>
+                    <span className="font-mono text-gold-primary">
+                      {(guild.treasury / 1000).toFixed(0)}K ALT
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-zinc-400">Глава</span>
+                    <span className="text-zinc-300">
+                      {guild.leader?.username || '—'}
+                    </span>
+                  </div>
+                  <div className="pt-3 border-t border-white/5 flex justify-between items-center">
+                    <span className="text-xs text-zinc-500">
+                      {new Date(guild.createdAt).toLocaleDateString('ru-RU')}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-purple-500/30 text-purple-400 text-xs"
+                      onClick={() => handleJoin(guild.id)}
+                      disabled={joinMutation.isPending}
+                    >
+                      Вступить
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Info Banner */}
       <Card className="border-purple-500/20 bg-purple-950/10">
@@ -283,11 +264,10 @@ export default function CooperativesPage() {
               <Users className="h-4 w-4 text-purple-500" />
             </div>
             <div>
-              <h4 className="font-semibold text-purple-200 mb-1">About Cooperatives</h4>
+              <h4 className="font-semibold text-purple-200 mb-1">О кооперативах</h4>
               <p className="text-sm text-purple-100/70">
-                Cooperatives are self-governed organizations where members pool resources
-                and skills. Guilds focus on professional services, Production co-ops manufacture
-                goods, Trade networks facilitate commerce, and Service hubs provide community services.
+                Кооперативы — самоуправляемые организации, где участники объединяют ресурсы
+                и навыки. Кланы — родовые объединения, Гильдии — профессиональные, Организации — иерархические структуры.
               </p>
             </div>
           </div>

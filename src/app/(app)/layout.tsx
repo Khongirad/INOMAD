@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { AuthSession } from "@/lib/auth/session";
 import { Toaster } from "sonner";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -37,9 +38,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main className="flex-1 ml-64 flex flex-col min-h-screen relative overflow-x-hidden">
         <Header />
-        <div className="flex-1 w-full max-w-[1920px] mx-auto">
-          {children}
-        </div>
+        <QueryProvider>
+          <div className="flex-1 w-full max-w-[1920px] mx-auto">
+            {children}
+          </div>
+        </QueryProvider>
       </main>
       <Toaster 
         position="top-right" 

@@ -1,85 +1,89 @@
 'use client';
 
 import * as React from 'react';
-import { Coins, TrendingUp, PieChart, DollarSign, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Coins, TrendingUp, PieChart, DollarSign, Wallet, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+import type { FundInvestment, FundTransaction, FundStats } from '@/lib/types/models';
 
-interface Investment {
-  id: string;
-  name: string;
-  category: 'INFRASTRUCTURE' | 'TECHNOLOGY' | 'EDUCATION' | 'RESOURCE';
-  amount: number;
-  return: number;
-  status: 'ACTIVE' | 'PENDING' | 'COMPLETED';
-}
+// Direct hooks for sovereign fund (no separate API wrapper needed for Phase 2)
+const useFundStats = () =>
+  useQuery<FundStats>({
+    queryKey: ['fundStats'],
+    queryFn: () => api.get<FundStats>('/sovereign-fund/stats'),
+  });
 
-interface Transaction {
-  id: string;
-  date: string;
-  type: 'DEPOSIT' | 'WITHDRAWAL' | 'DIVIDEND';
-  amount: number;
-  description: string;
-}
+const useFundInvestments = () =>
+  useQuery<FundInvestment[]>({
+    queryKey: ['fundInvestments'],
+    queryFn: () => api.get<FundInvestment[]>('/sovereign-fund/investments'),
+  });
 
-// Mock data
-const mockInvestments: Investment[] = [
-  { id: '1', name: 'Digital Infrastructure', category: 'INFRASTRUCTURE', amount: 500000, return: 12.5, status: 'ACTIVE' },
-  { id: '2', name: 'AI Research Lab', category: 'TECHNOLOGY', amount: 350000, return: 18.3, status: 'ACTIVE' },
-  { id: '3', name: 'Education Platform', category: 'EDUCATION', amount: 200000, return: 8.7, status: 'ACTIVE' },
-  { id: '4', name: 'Resource Extraction', category: 'RESOURCE', amount: 750000, return: 15.2, status: 'PENDING' },
-];
-
-const mockTransactions: Transaction[] = [
-  { id: '1', date: '2024-02-08', type: 'DEPOSIT', amount: 100000, description: 'UBI surplus allocation' },
-  { id: '2', date: '2024-02-07', type: 'DIVIDEND', amount: 25000, description: 'Infrastructure project returns' },
-  { id: '3', date: '2024-02-06', type: 'WITHDRAWAL', amount: 50000, description: 'Emergency relief fund' },
-  { id: '4', date: '2024-02-05', type: 'DEPOSIT', amount: 150000, description: 'Tax revenue allocation' },
-];
+const useFundTransactions = () =>
+  useQuery<FundTransaction[]>({
+    queryKey: ['fundTransactions'],
+    queryFn: () => api.get<FundTransaction[]>('/sovereign-fund/transactions'),
+  });
 
 const getCategoryColor = (category: string) => {
   switch (category) {
-    case 'INFRASTRUCTURE': return 'text-blue-400 bg-blue-500/10';
-    case 'TECHNOLOGY': return 'text-purple-400 bg-purple-500/10';
-    case 'EDUCATION': return 'text-emerald-400 bg-emerald-500/10';
-    case 'RESOURCE': return 'text-amber-400 bg-amber-500/10';
+    case 'INFRASTRUCTURE': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+    case 'TECHNOLOGY': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+    case 'EDUCATION': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+    case 'RESOURCE': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+    default: return 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20';
+  }
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  INFRASTRUCTURE: 'Инфраструктура',
+  TECHNOLOGY: 'Технологии',
+  EDUCATION: 'Образование',
+  RESOURCE: 'Ресурсы',
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'ACTIVE': return 'text-emerald-500 bg-emerald-500/10';
+    case 'PENDING': return 'text-amber-500 bg-amber-500/10';
+    case 'MATURED': return 'text-blue-500 bg-blue-500/10';
     default: return 'text-zinc-400 bg-zinc-500/10';
   }
 };
 
-const getTransactionIcon = (type: string) => {
-  switch (type) {
-    case 'DEPOSIT': return ArrowDownRight;
-    case 'WITHDRAWAL': return ArrowUpRight;
-    case 'DIVIDEND': return TrendingUp;
-    default: return DollarSign;
-  }
+const TXN_LABELS: Record<string, { label: string; cls: string }> = {
+  DEPOSIT: { label: 'Пополнение', cls: 'text-emerald-400' },
+  WITHDRAWAL: { label: 'Вывод', cls: 'text-rose-400' },
+  DIVIDEND: { label: 'Дивиденд', cls: 'text-blue-400' },
+  REINVEST: { label: 'Реинвестиция', cls: 'text-purple-400' },
 };
 
 export default function FundPage() {
-  const stats = {
-    totalBalance: mockInvestments.reduce((sum, inv) => sum + inv.amount, 0),
-    activeInvestments: mockInvestments.filter(inv => inv.status === 'ACTIVE').length,
-    avgReturn: mockInvestments.reduce((sum, inv) => sum + inv.return, 0) / mockInvestments.length,
-    totalDividends: mockTransactions
-      .filter(t => t.type === 'DIVIDEND')
-      .reduce((sum, t) => sum + t.amount, 0),
+  const { data: stats } = useFundStats();
+  const { data: investments = [], isLoading: loadingInv } = useFundInvestments();
+  const { data: transactions = [], isLoading: loadingTxn } = useFundTransactions();
+
+  const defaultStats = stats || {
+    totalBalance: 0,
+    activeInvestments: 0,
+    avgReturn: 0,
+    totalDividends: 0,
   };
 
   return (
     <div className="p-6 lg:p-8 space-y-8 animate-in">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
-            <Coins className="text-gold-primary w-8 h-8" />
-            Resources & Sovereign Fund
-          </h2>
-          <p className="text-zinc-400 mt-1">
-            State resource management and sovereign fund operations
-          </p>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
+          <Coins className="text-gold-primary w-8 h-8" />
+          Суверенный фонд
+        </h2>
+        <p className="text-zinc-400 mt-1">
+          Управление национальным богатством и инвестициями Конфедерации
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -91,9 +95,9 @@ export default function FundPage() {
                 <Wallet className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Fund Balance</div>
-                <div className="text-lg font-mono font-bold text-gold-primary">
-                  {(stats.totalBalance / 1000000).toFixed(1)}M
+                <div className="text-xs text-zinc-500 uppercase">Баланс</div>
+                <div className="text-lg font-mono font-bold text-white">
+                  {(defaultStats.totalBalance / 1000).toFixed(0)}K ₳
                 </div>
               </div>
             </div>
@@ -103,13 +107,13 @@ export default function FundPage() {
         <Card className="border-white/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-                <PieChart className="h-5 w-5 text-blue-500" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10">
+                <PieChart className="h-5 w-5 text-purple-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Active Investments</div>
-                <div className="text-lg font-mono font-bold text-blue-500">
-                  {stats.activeInvestments}
+                <div className="text-xs text-zinc-500 uppercase">Инвестиций</div>
+                <div className="text-lg font-mono font-bold text-purple-500">
+                  {defaultStats.activeInvestments}
                 </div>
               </div>
             </div>
@@ -123,9 +127,9 @@ export default function FundPage() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Avg Return</div>
+                <div className="text-xs text-zinc-500 uppercase">Средняя доходность</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
-                  {stats.avgReturn.toFixed(1)}%
+                  {defaultStats.avgReturn.toFixed(1)}%
                 </div>
               </div>
             </div>
@@ -135,13 +139,13 @@ export default function FundPage() {
         <Card className="border-white/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10">
-                <DollarSign className="h-5 w-5 text-purple-500" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
+                <DollarSign className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Total Dividends</div>
+                <div className="text-xs text-zinc-500 uppercase">Дивиденды</div>
                 <div className="text-lg font-mono font-bold text-white">
-                  {(stats.totalDividends / 1000).toFixed(0)}K
+                  {(defaultStats.totalDividends / 1000).toFixed(0)}K ₳
                 </div>
               </div>
             </div>
@@ -149,163 +153,144 @@ export default function FundPage() {
         </Card>
       </div>
 
-      {/* Main Content */}
       <Tabs defaultValue="investments" className="space-y-6">
         <TabsList className="bg-zinc-900/50 border border-white/5">
-          <TabsTrigger value="investments">Investments</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="allocation">Allocation</TabsTrigger>
+          <TabsTrigger value="investments">Инвестиции</TabsTrigger>
+          <TabsTrigger value="transactions">Транзакции</TabsTrigger>
         </TabsList>
 
+        {/* Investments */}
         <TabsContent value="investments" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mockInvestments.map((investment) => (
-              <Card
-                key={investment.id}
-                className="border-white/5 bg-zinc-900/50 hover:border-gold-primary/30 transition-all"
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-base text-white">{investment.name}</CardTitle>
+          {loadingInv ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
+          ) : investments.length === 0 ? (
+            <div className="text-center py-12 text-zinc-500">
+              <PieChart className="h-12 w-12 mx-auto opacity-30 mb-2" />
+              Инвестиций нет
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {investments.map((inv: FundInvestment) => (
+                <Card key={inv.id} className="border-white/5 bg-zinc-900/50 hover:border-white/10 transition-all">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-base text-white">{inv.name}</CardTitle>
                       <span className={cn(
-                        "text-xs font-bold uppercase px-2 py-0.5 rounded mt-1 inline-block",
-                        getCategoryColor(investment.category)
+                        "text-xs font-bold uppercase px-2 py-1 rounded",
+                        getStatusColor(inv.status)
                       )}>
-                        {investment.category}
+                        {inv.status === 'ACTIVE' ? 'Активна' : inv.status === 'PENDING' ? 'Ожидание' : 'Завершена'}
                       </span>
                     </div>
-                    <div className={cn(
-                      "text-xs font-bold uppercase px-2 py-1 rounded",
-                      investment.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500' :
-                      investment.status === 'PENDING' ? 'bg-amber-500/10 text-amber-500' :
-                      'bg-zinc-500/10 text-zinc-500'
-                    )}>
-                      {investment.status}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400">Investment</span>
-                    <span className="font-mono text-gold-primary font-medium">
-                      {investment.amount.toLocaleString()} ALT
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400">Return Rate</span>
-                    <span className="font-mono text-emerald-500 flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3" />
-                      {investment.return.toFixed(1)}%
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="transactions" className="space-y-4">
-          <Card className="border-white/5 bg-zinc-900/30">
-            <CardHeader>
-              <CardTitle className="text-base text-zinc-200">Recent Transactions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {mockTransactions.map((transaction) => {
-                const Icon = getTransactionIcon(transaction.type);
-                return (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-zinc-900/50 border border-white/5 hover:border-gold-primary/20 transition-all"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-full",
-                        transaction.type === 'DEPOSIT' ? 'bg-emerald-500/10' :
-                        transaction.type === 'WITHDRAWAL' ? 'bg-red-500/10' :
-                        'bg-blue-500/10'
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-zinc-400">Сектор</span>
+                      <span className={cn(
+                        "text-xs font-bold uppercase px-2 py-0.5 rounded border",
+                        getCategoryColor(inv.sector)
                       )}>
-                        <Icon className={cn(
-                          "h-5 w-5",
-                          transaction.type === 'DEPOSIT' ? 'text-emerald-500' :
-                          transaction.type === 'WITHDRAWAL' ? 'text-red-500' :
-                          'text-blue-500'
-                        )} />
-                      </div>
-                      <div>
-                        <div className="font-medium text-white">{transaction.description}</div>
-                        <div className="text-xs text-zinc-500">
-                          {new Date(transaction.date).toLocaleDateString()}
-                        </div>
-                      </div>
+                        {CATEGORY_LABELS[inv.sector] || inv.sector}
+                      </span>
                     </div>
-                    <div className={cn(
-                      "font-mono font-bold text-lg",
-                      transaction.type === 'DEPOSIT' ? 'text-emerald-500' :
-                      transaction.type === 'WITHDRAWAL' ? 'text-red-500' :
-                      'text-blue-500'
-                    )}>
-                      {transaction.type === 'WITHDRAWAL' ? '-' : '+'}
-                      {transaction.amount.toLocaleString()}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-zinc-400">Сумма</span>
+                      <span className="font-mono text-white">
+                        {(inv.amount / 1000).toFixed(0)}K ₳
+                      </span>
                     </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-zinc-400">Доходность</span>
+                      <span className={cn("font-mono", inv.return >= 0 ? 'text-emerald-400' : 'text-rose-400')}>
+                        {inv.return >= 0 ? '+' : ''}{inv.return.toFixed(1)}%
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="allocation" className="space-y-4">
-          <Card className="border-white/5 bg-zinc-900/30">
-            <CardHeader>
-              <CardTitle className="text-base text-zinc-200">Resource Allocation</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {['INFRASTRUCTURE', 'TECHNOLOGY', 'EDUCATION', 'RESOURCE'].map((category) => {
-                const total = mockInvestments
-                  .filter(inv => inv.category === category)
-                  .reduce((sum, inv) => sum + inv.amount, 0);
-                const percentage = (total / stats.totalBalance) * 100;
-                
-                return (
-                  <div key={category}>
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-zinc-300">{category}</span>
-                      <span className="font-mono text-white">{percentage.toFixed(1)}%</span>
-                    </div>
-                    <div className="h-3 w-full rounded-full bg-zinc-800 overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full transition-all",
-                          category === 'INFRASTRUCTURE' ? 'bg-blue-500' :
-                          category === 'TECHNOLOGY' ? 'bg-purple-500' :
-                          category === 'EDUCATION' ? 'bg-emerald-500' :
-                          'bg-amber-500'
-                        )}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
+        {/* Transactions */}
+        <TabsContent value="transactions" className="space-y-4">
+          {loadingTxn ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
+          ) : transactions.length === 0 ? (
+            <div className="text-center py-12 text-zinc-500">
+              Транзакций нет
+            </div>
+          ) : (
+            <Card className="border-white/5 bg-zinc-900/30">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b border-white/5">
+                      <tr>
+                        {['Дата', 'Тип', 'Сумма', 'Описание'].map((h) => (
+                          <th key={h} className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {transactions.map((txn: FundTransaction) => {
+                        const info = TXN_LABELS[txn.type] || { label: txn.type, cls: 'text-zinc-400' };
+                        const isPositive = ['DEPOSIT', 'DIVIDEND', 'REINVEST'].includes(txn.type);
+                        return (
+                          <tr key={txn.id} className="hover:bg-zinc-800/50 transition-colors">
+                            <td className="px-6 py-4 text-sm text-zinc-400">
+                              {new Date(txn.createdAt).toLocaleDateString('ru-RU')}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-1">
+                                {isPositive ? (
+                                  <ArrowUpRight className="h-3 w-3 text-emerald-400" />
+                                ) : (
+                                  <ArrowDownRight className="h-3 w-3 text-rose-400" />
+                                )}
+                                <span className={cn('text-xs font-semibold', info.cls)}>
+                                  {info.label}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={cn('font-mono text-sm', isPositive ? 'text-emerald-400' : 'text-rose-400')}>
+                                {isPositive ? '+' : '−'}{(txn.amount / 1000).toFixed(1)}K ₳
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-zinc-300">
+                              {txn.description}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
-      {/* Info Banner */}
-      <Card className="border-gold-border/20 bg-gold-surface/5">
+      {/* Info */}
+      <Card className="border-gold-border/20 bg-gradient-to-r from-amber-950/10 to-transparent">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gold-surface/20 flex-shrink-0">
               <Coins className="h-4 w-4 text-gold-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-gold-primary mb-1">Sovereign Fund Purpose</h4>
-              <p className="text-sm text-zinc-300">
-                The Sovereign Fund manages state resources and strategic investments to ensure
-                long-term prosperity. Dividends are distributed to citizens through UBI and
-                reinvested in critical infrastructure, technology, education, and resource development.
+              <h4 className="font-semibold text-amber-200 mb-1">О Суверенном фонде</h4>
+              <p className="text-sm text-amber-100/70">
+                Суверенный фонд инвестирует налоговые поступления и UBI-излишки в инфраструктуру,
+                технологии, образование и ресурсы. Дивиденды распределяются между гражданами.
               </p>
             </div>
           </div>
