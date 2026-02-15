@@ -203,9 +203,9 @@ export default function KhuralPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Total groups', value: stats.total, cls: 'text-blue-400' },
-          { label: 'Arbanов', value: stats.arbans, cls: 'text-emerald-400' },
+          { label: 'Arbans', value: stats.arbans, cls: 'text-emerald-400' },
           { label: 'Zuuns', value: stats.zuuns, cls: 'text-blue-400' },
-          { label: 'Myanganоin / Tumenов', value: stats.myangans + stats.tumens, cls: 'text-purple-400' },
+          { label: 'Myangans / Tumens', value: stats.myangans + stats.tumens, cls: 'text-purple-400' },
         ].map((s) => (
           <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">
             <CardContent className="p-3 flex justify-between items-center">
@@ -263,11 +263,11 @@ export default function KhuralPage() {
               <Building2 className="h-4 w-4 text-amber-500" />
             </div>
             <div>
-              <h4 className="font-semibold text-amber-200 mb-1">About the Khural Systemа</h4>
+              <h4 className="font-semibold text-amber-200 mb-1">About the Khural System</h4>
               <p className="text-sm text-amber-100/70">
                 Khural — the foundation of self-governance. 10 citizens form Arban, 10 Arbans — Zuun (100),
-                10 Zuunоin — Myangan (1 000), 10 Myanganоin — Tumen (10 000). Each level
-                elects its leaderа-decurion.
+                10 Zuuns — Myangan (1,000), 10 Myangans — Tumen (10,000). Each level
+                elects its leader-decurion.
               </p>
             </div>
           </div>

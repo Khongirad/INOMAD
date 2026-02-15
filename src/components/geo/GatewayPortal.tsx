@@ -47,7 +47,7 @@ export function GatewayPortal({
 
   if (!isOpen) return null;
 
-  // Showing контент после анимации loginа
+  // Show content after login animation
   if (showContent) {
     return (
       <div
@@ -111,7 +111,7 @@ export function GatewayPortal({
           {/* Text */}
           <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
             <div className="text-gold-text text-sm font-medium animate-pulse">
-              {lang === "ru" ? "Login in пространство..." : "Entering space..."}
+              {lang === "ru" ? "Entering space..." : "Entering space..."}
             </div>
           </div>
         </div>
@@ -232,7 +232,7 @@ export function GatewayPortal({
               />
             </svg>
 
-            {/* Внутреннее пространство portalа */}
+            {/* Inner portal space */}
             <div className="absolute inset-x-[50px] top-[60px] bottom-[10px] overflow-hidden rounded-t-full">
               {/* Gradient vortex */}
               <div
@@ -270,7 +270,7 @@ export function GatewayPortal({
               {lang === "ru" ? "Sign in" : "Enter"}
             </div>
             <div className="text-zinc-500 text-xs mt-1 group-hover:text-zinc-400 transition-colors">
-              {lang === "ru" ? "Нажмите, чтобы continue" : "Click to continue"}
+              {lang === "ru" ? "Click to continue" : "Click to continue"}
             </div>
           </div>
         </button>
@@ -279,8 +279,8 @@ export function GatewayPortal({
         <div className="mt-24 text-center max-w-lg px-4">
           <p className="text-zinc-400 text-sm italic leading-relaxed">
             {lang === "ru"
-              ? "«Ты loginишь in общее пространство, где each знает свой дом, уважает чужой, и развивается вместе с другими.»"
-              : '"You enter a shared space where everyone knows their home, respects others\', and grows together."'}
+              ? "\"You are entering a shared space where everyone knows their home, respects others, and grows together.\""
+              : "\"You enter a shared space where everyone knows their home, respects others, and grows together.\""}
           </p>
         </div>
       </div>

@@ -264,7 +264,7 @@ export default function HierarchyPage() {
 
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm mb-4">
             <strong>Tumens do not merge</strong> — they can only cooperate.
-            Each Tumen remains a sovereign unit с собственным leaderом и governanceм.
+            Each Tumen remains a sovereign unit with its own leader and governance.
           </div>
 
           {tumens.map((tumen: any) => {
@@ -302,7 +302,7 @@ export default function HierarchyPage() {
 
           {tumens.every((t: any) => (t.cooperationsAsA?.length || 0) + (t.cooperationsAsB?.length || 0) === 0) && (
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-              ℹ️ Not yet actивных cooperations between Tumenами.
+              ℹ️ No active cooperations between Tumens yet.
             </div>
           )}
         </TabsContent>
@@ -314,20 +314,20 @@ export default function HierarchyPage() {
           <DialogHeader>
             <DialogTitle>Propose cooperation</DialogTitle>
             <DialogDescription>
-              Cooperation — это an agreement between two Tumenами. Tumens remain independent.
+              Cooperation is an agreement between two Tumens. Tumens remain independent.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>ID целевого Tumenа</Label>
+              <Label>Target Tumen ID</Label>
               <Input
                 value={coopForm.targetTumenId}
                 onChange={e => setCoopForm({ ...coopForm, targetTumenId: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Title соглашения</Label>
+              <Label>Agreement Title</Label>
               <Input
                 value={coopForm.title}
                 onChange={e => setCoopForm({ ...coopForm, title: e.target.value })}

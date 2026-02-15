@@ -381,9 +381,9 @@ export default function RegistrationPage() {
                           'Russian': 'Russian', 'Buryat': 'Buryat', 'Tuvan': 'Tuvan',
                           'Yakut (Sakha)': 'Yakut (Sakha)', 'Altai': 'Altai', 'Khakas': 'Khakas',
                           'Chechen': 'Chechen', 'Avar': 'Avar', 'Dargin': 'Dargwa',
-                          'Лезгинский': 'Lezgian', 'Ossetian': 'Ossetian', 'Ингушский': 'Ingush',
-                          'Кабардинский': 'Kabardian', 'Adyghe': 'Adyghe', 'Карачаевский': 'Karachay',
-                          'Balkar': 'Balkar', 'Кумыкский': 'Kumyk', 'Лакский': 'Lak', 'Табасаранский': 'Tabasaran'
+                          'Lezgian': 'Lezgian', 'Ossetian': 'Ossetian', 'Ingush': 'Ingush',
+                          'Kabardian': 'Kabardian', 'Adyghe': 'Adyghe', 'Karachay': 'Karachay',
+                          'Balkar': 'Balkar', 'Kumyk': 'Kumyk', 'Lak': 'Lak', 'Tabasaran': 'Tabasaran'
                         };
                         return (
                           <span key={lang} className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">

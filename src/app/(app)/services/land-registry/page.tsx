@@ -41,9 +41,9 @@ export default function LandRegistryPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Land Cadastre и registry</h1>
+        <h1 className="text-2xl font-bold">Land Cadastre and Registry</h1>
         <p className="text-muted-foreground mt-1">
-          Ownership, registration земли и кадастровая map
+          Ownership, land registration and cadastral map
         </p>
       </div>
 
@@ -79,14 +79,14 @@ export default function LandRegistryPage() {
         >
           <CardContent className="pt-6 text-center">
             <div className="text-4xl mb-2">🏠</div>
-            <h3 className="font-semibold">Оформить ownership</h3>
-            <p className="text-xs text-muted-foreground mt-1">{isCitizen ? 'Заявить right' : 'Only for citizens'}</p>
+            <h3 className="font-semibold">Register Ownership</h3>
+            <p className="text-xs text-muted-foreground mt-1">{isCitizen ? 'Claim rights' : 'Only for citizens'}</p>
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/services/land-registry/register/lease')}>
           <CardContent className="pt-6 text-center">
             <div className="text-4xl mb-2">📄</div>
-            <h3 className="font-semibold">Оформить аренду</h3>
+            <h3 className="font-semibold">Register Lease</h3>
             <p className="text-xs text-muted-foreground mt-1">Lease properties</p>
           </CardContent>
         </Card>
@@ -97,8 +97,8 @@ export default function LandRegistryPage() {
         <Tabs defaultValue="ownerships" value={tab} onValueChange={setTab}>
           <div className="border-b border-border px-4 pt-4">
             <TabsList>
-              <TabsTrigger value="ownerships">Yourа ownership ({ownerships.length})</TabsTrigger>
-              <TabsTrigger value="leases">Yourи аренды ({leases.length})</TabsTrigger>
+              <TabsTrigger value="ownerships">Your Ownership ({ownerships.length})</TabsTrigger>
+              <TabsTrigger value="leases">Your Leases ({leases.length})</TabsTrigger>
             </TabsList>
           </div>
 
@@ -112,10 +112,10 @@ export default function LandRegistryPage() {
                 <TabsContent value="ownerships" className="mt-0">
                   {ownerships.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-3">У вас no registeredной собственности</p>
+                      <p className="text-muted-foreground mb-3">You have no registered ownership</p>
                       {isCitizen && (
                         <Button variant="outline" onClick={() => router.push('/services/land-registry/register/ownership')}>
-                          + Оформить ownership
+                          + Register Ownership
                         </Button>
                       )}
                     </div>
@@ -132,12 +132,12 @@ export default function LandRegistryPage() {
                               Type: {ownership.ownershipType} ({ownership.sharePercentage}%)
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Выдано: {new Date(ownership.issuedAt).toLocaleDateString('en-US')}
+                              Issued: {new Date(ownership.issuedAt).toLocaleDateString('en-US')}
                             </p>
                           </div>
                           <div className="text-right space-y-2">
                             <Badge variant={ownership.isActive ? 'default' : 'secondary'}>
-                              {ownership.isActive ? 'Activа' : 'Неactивна'}
+                              {ownership.isActive ? 'Active' : 'Inactive'}
                             </Badge>
                             <div>
                               <Button size="sm" variant="outline" onClick={() => router.push(`/services/land-registry/properties/${ownership.id}`)}>
@@ -154,9 +154,9 @@ export default function LandRegistryPage() {
                 <TabsContent value="leases" className="mt-0">
                   {leases.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-3">No actивных аренд</p>
+                      <p className="text-muted-foreground mb-3">No active leases</p>
                       <Button variant="outline" onClick={() => router.push('/services/land-registry/register/lease')}>
-                        + Оформить аренду
+                        + Register Lease
                       </Button>
                     </div>
                   ) : (
@@ -165,16 +165,16 @@ export default function LandRegistryPage() {
                         <div key={lease.id} className="border border-border rounded-lg p-4 flex items-start justify-between">
                           <div>
                             <p className="font-semibold">{lease.leaseType} lease</p>
-                            <p className="text-sm text-muted-foreground">Leaseтор: {lease.lesseeName}</p>
+                            <p className="text-sm text-muted-foreground">Lessee: {lease.lesseeName}</p>
                             <p className="text-sm text-muted-foreground">
-                              Плата: {lease.monthlyRent} {lease.currency}/мес
+                              Rate: {lease.monthlyRent} {lease.currency}/mo
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(lease.startDate).toLocaleDateString('en-US')} — {new Date(lease.endDate).toLocaleDateString('en-US')}
                             </p>
                           </div>
                           <Badge variant={lease.isActive ? 'default' : 'secondary'}>
-                            {lease.isActive ? 'Activа' : 'Истекла'}
+                            {lease.isActive ? 'Active' : 'Expired'}
                           </Badge>
                         </div>
                       ))}
@@ -190,14 +190,14 @@ export default function LandRegistryPage() {
       {/* Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader><CardTitle>🏛️ Правила собственности</CardTitle></CardHeader>
+          <CardHeader><CardTitle>🏛️ Ownership Rules</CardTitle></CardHeader>
           <CardContent>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Only citizens могут владеть землёй</li>
-              <li>• Foreigners могут only арендовать</li>
-              <li>• All совладельцы должны быть citizenми</li>
-              <li>• Citizenship проверяется автоматически</li>
-              <li>• Witnessства на blockchain</li>
+              <li>• Only citizens can own land</li>
+              <li>• Foreigners can only lease</li>
+              <li>• All co-owners must be citizens</li>
+              <li>• Citizenship is verified automatically</li>
+              <li>• Certificates on blockchain</li>
             </ul>
           </CardContent>
         </Card>
@@ -205,11 +205,11 @@ export default function LandRegistryPage() {
           <CardHeader><CardTitle>🔄 Ownership Transfer</CardTitle></CardHeader>
           <CardContent>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Инициация transfers онлайн</li>
-              <li>• Byкупатель подтверждает оплату через blockchain</li>
-              <li>• Регистратор завершает передачу</li>
-              <li>• New certificate выдаётся автоматически</li>
-              <li>• Full history транзакций</li>
+              <li>• Initiating transfers online</li>
+              <li>• Buyer confirms payment via blockchain</li>
+              <li>• Registrar completes transfer</li>
+              <li>• New certificate issued automatically</li>
+              <li>• Full transaction history</li>
             </ul>
           </CardContent>
         </Card>

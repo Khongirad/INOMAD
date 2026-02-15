@@ -30,13 +30,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
   DRAFTED: { label: 'Draft', color: 'text-zinc-400 bg-zinc-500/10', icon: Clock },
-  SUBMITTED: { label: 'On проверке', color: 'text-blue-400 bg-blue-500/10', icon: FileCheck },
-  REVIEWED: { label: 'Проверен', color: 'text-purple-400 bg-purple-500/10', icon: CheckCircle2 },
-  SIGNED_BY_CONTRACTOR: { label: 'Signed подрядчиком', color: 'text-amber-400 bg-amber-500/10', icon: PenTool },
-  SIGNED_BY_CLIENT: { label: 'Signed clientом', color: 'text-emerald-400 bg-emerald-500/10', icon: PenTool },
-  COMPLETED: { label: 'Выgenderнен', color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
-  DISPUTED: { label: 'Оdisputeен', color: 'text-red-500 bg-red-500/10', icon: AlertTriangle },
-  CANCELLED: { label: 'Отменён', color: 'text-zinc-500 bg-zinc-500/10', icon: XCircle },
+  SUBMITTED: { label: 'Under Review', color: 'text-blue-400 bg-blue-500/10', icon: FileCheck },
+  REVIEWED: { label: 'Reviewed', color: 'text-purple-400 bg-purple-500/10', icon: CheckCircle2 },
+  SIGNED_BY_CONTRACTOR: { label: 'Signed by Contractor', color: 'text-amber-400 bg-amber-500/10', icon: PenTool },
+  SIGNED_BY_CLIENT: { label: 'Signed by Client', color: 'text-emerald-400 bg-emerald-500/10', icon: PenTool },
+  COMPLETED: { label: 'Completed', color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
+  DISPUTED: { label: 'Disputed', color: 'text-red-500 bg-red-500/10', icon: AlertTriangle },
+  CANCELLED: { label: 'Cancelled', color: 'text-zinc-500 bg-zinc-500/10', icon: XCircle },
 };
 
 export default function WorkActsPage() {
@@ -84,7 +84,7 @@ export default function WorkActsPage() {
       });
 
       if (res.ok) {
-        toast.success('Action выgenderнено');
+        toast.success('Action completed');
         fetchData();
       } else {
         const err = await res.json();
@@ -107,10 +107,10 @@ export default function WorkActsPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
             <FileCheck className="text-emerald-500 w-8 h-8" />
-            Acts comgenderненных work
+            Completed Work Acts
           </h2>
           <p className="text-zinc-400 mt-1">
-            Создавайте, подписывайте и отслеживайте acts. Оплата после подписания обеими partyми.
+            Create, sign, and track work acts. Payment after signing by both parties.
           </p>
         </div>
         <Button className="bg-emerald-600 hover:bg-emerald-700">
@@ -128,7 +128,7 @@ export default function WorkActsPage() {
                 <FileCheck className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Total actов</div>
+                <div className="text-xs text-zinc-500 uppercase">Total Acts</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {myActs.length + reviewActs.length}
                 </div>
@@ -160,7 +160,7 @@ export default function WorkActsPage() {
                 <Clock className="h-5 w-5 text-amber-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Ожидают подписи</div>
+                <div className="text-xs text-zinc-500 uppercase">Awaiting Signature</div>
                 <div className="text-lg font-mono font-bold text-amber-500">
                   {activeActs.filter((a) => ['SUBMITTED', 'REVIEWED', 'SIGNED_BY_CONTRACTOR'].includes(a.status)).length}
                 </div>
@@ -208,7 +208,7 @@ export default function WorkActsPage() {
               : "border-transparent text-zinc-500 hover:text-zinc-300"
           )}
         >
-          On проверку ({reviewActs.length})
+          For Review ({reviewActs.length})
         </button>
       </div>
 
@@ -220,8 +220,8 @@ export default function WorkActsPage() {
           <Card className="border-white/5 bg-zinc-900/30">
             <CardContent className="p-8 text-center">
               <FileCheck className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
-              <h3 className="text-white font-semibold mb-1">No actов</h3>
-              <p className="text-zinc-500 text-sm">Создайте первый act выgenderненных work</p>
+              <h3 className="text-white font-semibold mb-1">No acts</h3>
+              <p className="text-zinc-500 text-sm">Create your first completed work act</p>
             </CardContent>
           </Card>
         ) : (
@@ -285,7 +285,7 @@ export default function WorkActsPage() {
                           onClick={() => handleAction(act.id, 'review')}
                           className="bg-purple-600 hover:bg-purple-700 h-7 text-xs"
                         >
-                          Проверить
+                          Review
                         </Button>
                       )}
                       {['REVIEWED', 'SIGNED_BY_CONTRACTOR', 'SIGNED_BY_CLIENT'].includes(act.status) && (

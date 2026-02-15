@@ -38,7 +38,7 @@ export default function MarriageConsentPage() {
 
   const handleConsent = async (approve: boolean) => {
     if (approve && !signature.trim()) {
-      toast.error('Enter yourу цифровую signature');
+      toast.error('Enter your digital signature');
       return;
     }
     try {
@@ -124,9 +124,9 @@ export default function MarriageConsentPage() {
           {/* Digital Signature */}
           <div className="pt-4">
             <h3 className="text-lg font-semibold mb-2">Digital Signature</h3>
-            <p className="text-sm text-muted-foreground mb-3">Enter yourе full name as digital signature for consent</p>
+            <p className="text-sm text-muted-foreground mb-3">Enter your full name as a digital signature for consent</p>
             <div>
-              <Label>Yourе full name (digital signature)</Label>
+              <Label>Your Full Name (Digital Signature)</Label>
               <Input value={signature} onChange={(e) => setSignature(e.target.value)} placeholder="Enter name exactly as in document" />
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function MarriageConsentPage() {
 
       <div className="bg-yellow-500/10 text-yellow-400 rounded-lg p-4 text-sm">
         <p className="font-semibold">⚠️ Important Legal Notice</p>
-        <p>By giving consent, вы agree на legally binding marriage. Это action impossible cancel без marriageоdivorceного process.</p>
+        <p>By giving consent, you agree to a legally binding marriage. This action cannot be undone without a divorce process.</p>
       </div>
     </div>
   );

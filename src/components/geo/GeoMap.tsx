@@ -53,7 +53,7 @@ interface RegionGeoJSON {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GENERATION GEOJSON ИЗ BOUNDS (упрощённые прямоугольники)
+// Generate GeoJSON from bounds (simplified rectangles)
 // Replace with real data in production GeoJSON borders regions
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -134,13 +134,13 @@ export function GeoMap({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
 
-  // Initialization карты
+  // Map initialization
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      // Исgenderьзуем тёмный стиль for соresponseствия дизайну
+      // Use dark style to match design
       style: "mapbox://styles/mapbox/dark-v11",
       center: [initialCenter.lng, initialCenter.lat],
       zoom: initialZoom,
@@ -170,26 +170,26 @@ export function GeoMap({
     };
   }, [initialCenter.lat, initialCenter.lng, initialZoom, interactive]);
 
-  // Добавление слоёin regions
+  // Add region layers
   useEffect(() => {
     if (!map.current || !mapLoaded || !showRegionLayers) return;
 
     const mapInstance = map.current;
 
-    // Создаём GeoJSON for all regions
+    // Create GeoJSON for all regions
     const regionsGeoJSON: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
       features: DOCTRINAL_REGIONS.map(regionToGeoJSON) as GeoJSON.Feature[],
     };
 
-    // Adding source данных
+    // Add data source
     if (!mapInstance.getSource("regions")) {
       mapInstance.addSource("regions", {
         type: "geojson",
         data: regionsGeoJSON,
       });
 
-      // Слой заливки regions
+      // Region fill layer
       mapInstance.addLayer({
         id: "regions-fill",
         type: "fill",
@@ -207,7 +207,7 @@ export function GeoMap({
         },
       });
 
-      // Слой границ regions
+      // Region border layer
       mapInstance.addLayer({
         id: "regions-border",
         type: "line",
@@ -224,7 +224,7 @@ export function GeoMap({
         },
       });
 
-      // Слой названий regions
+      // Region label layer
       mapInstance.addLayer({
         id: "regions-labels",
         type: "symbol",
@@ -243,7 +243,7 @@ export function GeoMap({
       });
     }
 
-    // Handlers событий for regions
+    // Region event handlers
     mapInstance.on("mouseenter", "regions-fill", () => {
       mapInstance.getCanvas().style.cursor = "pointer";
     });
@@ -273,7 +273,7 @@ export function GeoMap({
     });
   }, [mapLoaded, showRegionLayers, selectedRegionId, hoveredRegion, onRegionClick]);
 
-  // Добавление подregions Сибири
+  // Add Siberian sub-regions
   useEffect(() => {
     if (!map.current || !mapLoaded || !showSubRegions) return;
 
@@ -339,7 +339,7 @@ export function GeoMap({
         minzoom: 4,
       });
 
-      // Клики по подthe region ofм
+      // Sub-region clicks
       mapInstance.on("click", "subregions-fill", (e) => {
         if (e.features && e.features[0] && onSubRegionClick) {
           const id = e.features[0].properties?.id;
@@ -352,7 +352,7 @@ export function GeoMap({
     }
   }, [mapLoaded, showSubRegions, selectedSubRegionId, onSubRegionClick]);
 
-  // Режим выбора тpoints на карте
+  // Map point selection mode
   useEffect(() => {
     if (!map.current || !mapLoaded || selectionMode !== "point") return;
 
@@ -364,19 +364,19 @@ export function GeoMap({
         lng: e.lngLat.lng,
       };
 
-      // Remove previous маркер
+      // Remove previous marker
       if (marker.current) {
         marker.current.remove();
       }
 
-      // Adding new маркер
+      // Add new marker
       marker.current = new mapboxgl.Marker({
         color: "#D4AF37", // gold
       })
         .setLngLat([coords.lng, coords.lat])
         .addTo(mapInstance);
 
-      // Пытаемся genderучить название места через Mapbox Geocoding API
+      // Try to get place name via Mapbox Geocoding API
       let placeName: string | undefined;
       try {
         const response = await fetch(
@@ -404,7 +404,7 @@ export function GeoMap({
     };
   }, [mapLoaded, selectionMode, onLocationSelect]);
 
-  // Update стилей при изменении выбранного the region of
+  // Update styles when selected region changes
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
@@ -429,7 +429,7 @@ export function GeoMap({
     }
   }, [mapLoaded, selectedRegionId, hoveredRegion]);
 
-  // Перелёт к regionу
+  // Fly to region
   const flyToRegion = useCallback(
     (regionId: string) => {
       if (!map.current || !mapLoaded) return;
@@ -446,7 +446,7 @@ export function GeoMap({
     [mapLoaded]
   );
 
-  // Экdisputeтируем flyToRegion через ref if нужно
+  // Export flyToRegion via ref if needed
   useEffect(() => {
     if (selectedRegionId) {
       flyToRegion(selectedRegionId);
@@ -461,10 +461,10 @@ export function GeoMap({
         style={{ height: "100%" }}
       />
 
-      {/* Легенда */}
+      {/* Legend */}
       {showRegionLayers && (
         <div className="absolute bottom-4 left-4 glass-panel rounded-lg p-3 text-xs space-y-1.5 max-w-[200px]">
-          <div className="text-zinc-400 font-medium mb-2">Regionы responseственности</div>
+          <div className="text-zinc-400 font-medium mb-2">Regions of Responsibility</div>
           {DOCTRINAL_REGIONS.slice(0, 5).map((region) => (
             <div key={region.id} className="flex items-center gap-2">
               <div
@@ -477,7 +477,7 @@ export function GeoMap({
         </div>
       )}
 
-      {/* Индикатор загрузки */}
+      {/* Loading indicator */}
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/80 rounded-xl">
           <div className="text-zinc-400">Loading map...</div>

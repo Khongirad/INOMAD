@@ -117,7 +117,7 @@ export default function IdentityCreatePage() {
     return getEthnicitiesByRegion(draft.territory.macroRegion);
   }, [draft.territory.macroRegion]);
 
-  // Geo-state for interactive карты
+  // Geo-state for interactive map
   const [geoSelectedRegion, setGeoSelectedRegion] = useState<DoctrinalRegion | null>(null);
   const [geoSelectedSubRegion, setGeoSelectedSubRegion] = useState<SubRegion | null>(null);
   const [geoSelectedCoords, setGeoSelectedCoords] = useState<GeoCoordinates | null>(null);
@@ -562,7 +562,7 @@ export default function IdentityCreatePage() {
                   }}
                   className="mt-2 w-full rounded-lg bg-gold-border py-2 text-sm font-medium text-black hover:bg-gold-text transition"
                 >
-                  Select точку на карте
+                  Select a point on the map
                 </button>
               </div>
             )}
@@ -582,7 +582,7 @@ export default function IdentityCreatePage() {
 
           {/* Place of birth (auto-filled from map or manual) */}
           <div className="glass-card rounded-lg p-4">
-            <Field label="Seat birth (как in passport)" required>
+            <Field label="Place of Birth (as in passport)" required>
               <input
                 value={draft.basic.placeOfBirth.label}
                 onChange={(e) =>
@@ -604,7 +604,7 @@ export default function IdentityCreatePage() {
 
           {/* Nation selection */}
           <div className="glass-card rounded-lg p-4 space-y-3">
-            <Field label="Национальная принадлежность">
+            <Field label="National Identity">
               <input
                 value={geoNationSearch}
                 onChange={(e) => setGeoNationSearch(e.target.value)}
@@ -664,7 +664,7 @@ export default function IdentityCreatePage() {
           {/* Legacy fallback: ethnicity select */}
           {!geoSelectedNation && (
             <div className="glass-card rounded-lg p-4">
-              <Field label="Или select из спclaimа (legacy)">
+              <Field label="Or select from list (legacy)">
                 <select
                   className="input-field"
                   value={draft.ethnicity.primary?.code ?? ""}

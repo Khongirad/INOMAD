@@ -109,7 +109,7 @@ export default function LeaseRegistrationPage() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Object Selection</h3><hr />
               <div className="space-y-2">
-                <Label>ID участка / cadastral number</Label>
+                <Label>Plot ID / cadastral number</Label>
                 <Input placeholder="Lease object" value={landPlotId} onChange={(e) => setLandPlotId(e.target.value)} />
               </div>
               <div className="space-y-2">

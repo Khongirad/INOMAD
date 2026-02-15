@@ -24,18 +24,18 @@ export interface GeoCoordinates {
 }
 
 export interface BirthplaceGeo {
-  label: string; // текст как in passport
-  regionId?: string; // id доктринального the region of
-  subRegionId?: string; // id подthe region of (for Сибири)
-  coordinates?: GeoCoordinates; // точные coordinates
+  label: string; // text as in passport
+  regionId?: string; // id of doctrinal region
+  subRegionId?: string; // id of sub-region (for Siberia)
+  coordinates?: GeoCoordinates; // exact coordinates
 }
 
 export interface NationalIdentity {
-  code: string; // code peopleа
-  label: string; // название
-  nativeName?: string; // название на родном языке
-  isIndigenous?: boolean; // indigenous for выбранного the region of
-  residenceStatus?: ResidenceStatus; // статус проживания
+  code: string; // nation code
+  label: string; // name
+  nativeName?: string; // name in native language
+  isIndigenous?: boolean; // indigenous for selected region
+  residenceStatus?: ResidenceStatus; // residence status
 }
 
 export type EthnicityRecord = {
@@ -84,10 +84,10 @@ export interface IdentityDraft {
     macroRegion: MacroRegion;
   };
 
-  // Национальная идентичность (расширенная)
+  // National identity (extended)
   nationality: NationalIdentity | null;
 
-  // Совместимость с legacy
+  // Legacy compatibility
   ethnicity: {
     primary?: {
       code: string;
@@ -102,7 +102,7 @@ export interface IdentityDraft {
     verifiers: Verifier[];
   };
 
-  // единый технический timestamp (for reducer/storage)
+  // single technical timestamp (for reducer/storage)
   updatedAt: number;
 }
 

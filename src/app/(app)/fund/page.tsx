@@ -39,8 +39,8 @@ const getCategoryColor = (category: string) => {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  INFRASTRUCTURE: 'Инфраstructure',
-  TECHNOLOGY: 'Технологии',
+  INFRASTRUCTURE: 'Infrastructure',
+  TECHNOLOGY: 'Technology',
   EDUCATION: 'Education',
   RESOURCE: 'Resources',
 };
@@ -55,10 +55,10 @@ const getStatusColor = (status: string) => {
 };
 
 const TXN_LABELS: Record<string, { label: string; cls: string }> = {
-  DEPOSIT: { label: 'Bygenderнение', cls: 'text-emerald-400' },
+  DEPOSIT: { label: 'Deposit', cls: 'text-emerald-400' },
   WITHDRAWAL: { label: 'Withdrawal', cls: 'text-rose-400' },
   DIVIDEND: { label: 'Dividend', cls: 'text-blue-400' },
-  REINVEST: { label: 'Реинвестиция', cls: 'text-purple-400' },
+  REINVEST: { label: 'Reinvestment', cls: 'text-purple-400' },
 };
 
 export default function FundPage() {
@@ -82,7 +82,7 @@ export default function FundPage() {
           Sovereign Fund
         </h2>
         <p className="text-zinc-400 mt-1">
-          Governance национальным богатством и инвестициями Конфедерации
+          Management of national wealth and investments of the Confederation
         </p>
       </div>
 
@@ -111,7 +111,7 @@ export default function FundPage() {
                 <PieChart className="h-5 w-5 text-purple-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Инвестиций</div>
+                <div className="text-xs text-zinc-500 uppercase">Investments</div>
                 <div className="text-lg font-mono font-bold text-purple-500">
                   {defaultStats.activeInvestments}
                 </div>
@@ -127,7 +127,7 @@ export default function FundPage() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Средняя incomeность</div>
+                <div className="text-xs text-zinc-500 uppercase">Average Returns</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {defaultStats.avgReturn.toFixed(1)}%
                 </div>
@@ -156,7 +156,7 @@ export default function FundPage() {
       <Tabs defaultValue="investments" className="space-y-6">
         <TabsList className="bg-zinc-900/50 border border-white/5">
           <TabsTrigger value="investments">Investments</TabsTrigger>
-          <TabsTrigger value="transactions">Транзакции</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
         </TabsList>
 
         {/* Investments */}
@@ -168,7 +168,7 @@ export default function FundPage() {
           ) : investments.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
               <PieChart className="h-12 w-12 mx-auto opacity-30 mb-2" />
-              Инвестиций нет
+              No investments
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,13 +181,13 @@ export default function FundPage() {
                         "text-xs font-bold uppercase px-2 py-1 rounded",
                         getStatusColor(inv.status)
                       )}>
-                        {inv.status === 'ACTIVE' ? 'Activа' : inv.status === 'PENDING' ? 'Ожидание' : 'Completed'}
+                        {inv.status === 'ACTIVE' ? 'Active' : inv.status === 'PENDING' ? 'Pending' : 'Completed'}
                       </span>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-400">Сектор</span>
+                      <span className="text-zinc-400">Sector</span>
                       <span className={cn(
                         "text-xs font-bold uppercase px-2 py-0.5 rounded border",
                         getCategoryColor(inv.sector)
@@ -202,7 +202,7 @@ export default function FundPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-400">Incomeность</span>
+                      <span className="text-zinc-400">Returns</span>
                       <span className={cn("font-mono", inv.return >= 0 ? 'text-emerald-400' : 'text-rose-400')}>
                         {inv.return >= 0 ? '+' : ''}{inv.return.toFixed(1)}%
                       </span>
@@ -222,7 +222,7 @@ export default function FundPage() {
             </div>
           ) : transactions.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
-              Транзакций нет
+              No transactions
             </div>
           ) : (
             <Card className="border-white/5 bg-zinc-900/30">
@@ -287,10 +287,10 @@ export default function FundPage() {
               <Coins className="h-4 w-4 text-gold-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-amber-200 mb-1">О Суверенном fundе</h4>
+              <h4 className="font-semibold text-amber-200 mb-1">About the Sovereign Fund</h4>
               <p className="text-sm text-amber-100/70">
-                Sovereign Fund инвестирует taxовые поступления и UBI-излишки in инфраструктуру,
-                технологии, education и resources. Dividends are distributed among citizenми.
+                The Sovereign Fund invests tax revenues and UBI surpluses into infrastructure,
+                technology, education and resources. Dividends are distributed among citizens.
               </p>
             </div>
           </div>

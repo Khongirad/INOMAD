@@ -199,7 +199,7 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
           <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
             <p className="text-sm text-blue-400 flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              Secret voting — results после завершения
+              Secret ballot — results announced after completion
             </p>
             <p className="text-xs text-zinc-500 mt-1">
               Candidates: {election.candidates.length}

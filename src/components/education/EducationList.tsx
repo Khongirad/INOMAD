@@ -24,8 +24,8 @@ interface EducationListProps {
 
 const typeLabels: Record<string, string> = {
   DIPLOMA: 'Diploma',
-  CERTIFICATE: 'Сертификат',
-  RECOMMENDATION: 'Рекомендация',
+  CERTIFICATE: 'Certificate',
+  RECOMMENDATION: 'Recommendation',
 };
 
 const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
@@ -35,7 +35,7 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; class
     className: 'bg-green-600 hover:bg-green-700',
   },
   PENDING: {
-    label: 'On проверке',
+    label: 'Under Review',
     icon: <Clock className="h-3 w-3" />,
     className: 'bg-yellow-600 hover:bg-yellow-700',
   },
@@ -52,7 +52,7 @@ export function EducationList({ educations, onViewDocument }: EducationListProps
       <Card>
         <CardContent className="py-10 text-center">
           <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">No records об образовании</p>
+          <p className="text-muted-foreground">No education records</p>
         </CardContent>
       </Card>
     );
@@ -93,7 +93,7 @@ export function EducationList({ educations, onViewDocument }: EducationListProps
                 )}
                 {edu.verifiedBy && (
                   <span className="text-xs text-muted-foreground">
-                    Проверил: {edu.verifiedBy}
+                    Verified by: {edu.verifiedBy}
                   </span>
                 )}
               </div>
@@ -107,7 +107,7 @@ export function EducationList({ educations, onViewDocument }: EducationListProps
                     onClick={() => onViewDocument(edu.id)}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                    Просмотреть document
+                    View document
                   </Button>
                 </div>
               )}

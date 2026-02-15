@@ -77,7 +77,7 @@ export function BirthplaceSelector({
   const [showRegionCard, setShowRegionCard] = useState(false);
   const [showNationCard, setShowNationCard] = useState(false);
 
-  // Filterация peopleоin по search
+  // Filter nations by search
   const filteredNations = useMemo(() => {
     if (!nationSearch.trim()) return NATIONS;
     const search = nationSearch.toLowerCase();
@@ -196,7 +196,7 @@ export function BirthplaceSelector({
                   : "Specify Birthplace")}
               {step === "nation" &&
                 (lang === "ru"
-                  ? "Укажите nationality"
+                  ? "Specify Nationality"
                   : "Specify Nationality")}
               {step === "status" &&
                 (lang === "ru" ? "Your Status" : "Your Status")}
@@ -320,7 +320,7 @@ export function BirthplaceSelector({
             <div>
               <label className="text-xs text-zinc-500 block mb-2">
                 {lang === "ru"
-                  ? "Или введите вручную (как in passport):"
+                  ? "Or enter manually (as in passport):"
                   : "Or enter manually (as in passport):"}
               </label>
               <input
@@ -434,8 +434,8 @@ export function BirthplaceSelector({
           <div className="glass-panel rounded-xl p-6 text-center border border-gold-border/20 bg-gradient-to-br from-gold-dim/10 to-transparent">
             <p className="text-lg text-zinc-200 italic leading-relaxed">
               {lang === "ru"
-                ? "«Ты loginишь in общее пространство, где each знает свой дом, уважает чужой, и развивается вместе с другими.»"
-                : '"You enter a shared space where everyone knows their home, respects others\', and grows together."'}
+                ? "\"You are entering a shared space where everyone knows their home, respects others, and grows together.\""
+                : "\"You enter a shared space where everyone knows their home, respects others, and grows together.\""}
             </p>
           </div>
 

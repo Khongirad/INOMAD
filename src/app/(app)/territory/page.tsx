@@ -57,7 +57,7 @@ export default function TerritoryPage() {
             Territories
           </h2>
           <p className="text-zinc-400 mt-1">
-            Территориальные единицы и organizations Конфедерации
+            Territorial units and organizations of the Confederation
           </p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function TerritoryPage() {
                 <MapPin className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Total территорий</div>
+                <div className="text-xs text-zinc-500 uppercase">Total territories</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {stats.totalTerritories}
                 </div>
@@ -87,7 +87,7 @@ export default function TerritoryPage() {
                 <Users className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Население</div>
+                <div className="text-xs text-zinc-500 uppercase">Population</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {stats.totalPopulation.toLocaleString()}
                 </div>
@@ -116,7 +116,7 @@ export default function TerritoryPage() {
       {/* Main Content */}
       <Tabs defaultValue="list" className="space-y-6">
         <TabsList className="bg-zinc-900/50 border border-white/5">
-          <TabsTrigger value="list">List территорий</TabsTrigger>
+          <TabsTrigger value="list">List territories</TabsTrigger>
           <TabsTrigger value="map">Map</TabsTrigger>
         </TabsList>
 
@@ -126,7 +126,7 @@ export default function TerritoryPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <Input
-                placeholder="Search территорий..."
+                placeholder="Search territories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -154,7 +154,7 @@ export default function TerritoryPage() {
           ) : orgs.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
               <Globe className="h-12 w-12 mx-auto opacity-30 mb-2" />
-              Территорий не найдено
+              No territories found
             </div>
           ) : (
             <Card className="border-white/5 bg-zinc-900/30">
@@ -163,7 +163,7 @@ export default function TerritoryPage() {
                   <table className="w-full">
                     <thead className="border-b border-white/5">
                       <tr>
-                        {['Territory', 'Type', 'Members', 'Head', 'Рейтинг'].map((h) => (
+                        {['Territory', 'Type', 'Members', 'Head', 'Rating'].map((h) => (
                           <th key={h} className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                             {h}
                           </th>
@@ -216,10 +216,10 @@ export default function TerritoryPage() {
                 <div>
                   <Globe className="h-16 w-16 text-zinc-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
-                    Interactive map — скоро
+                    Interactive map — coming soon
                   </h3>
                   <p className="text-zinc-400 max-w-md">
-                    Visualization of territories with borders, плотностью населения и ресурсами.
+                    Visualization of territories with borders, population density and resources.
                   </p>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function TerritoryPage() {
       {/* Legend */}
       <Card className="border-white/5 bg-zinc-900/30">
         <CardHeader>
-          <CardTitle className="text-sm text-zinc-300">Typeы территорий</CardTitle>
+          <CardTitle className="text-sm text-zinc-300">Territory Types</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">

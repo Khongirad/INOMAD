@@ -42,7 +42,7 @@ export default function TaxPage() {
       const data = await getTaxHistory();
       setRecords(data);
     } catch (err: any) {
-      toast.error(err.message || 'Error загрузки taxовой истории');
+      toast.error(err.message || 'Error loading tax history');
     } finally {
       setLoading(false);
     }
@@ -56,11 +56,11 @@ export default function TaxPage() {
     setGenerating(true);
     try {
       await generateTaxRecord(Number(year));
-      toast.success(`Taxовая record за ${year} год создана`);
+      toast.success(`Tax record for ${year} year created`);
       setGenerateOpen(false);
       fetchRecords();
     } catch (err: any) {
-      toast.error(err.message || 'Error создания records');
+      toast.error(err.message || 'Error creating record');
     } finally {
       setGenerating(false);
     }
@@ -79,7 +79,7 @@ export default function TaxPage() {
   const handlePay = async (id: string) => {
     try {
       await payTax(id);
-      toast.success('Tax оплачен');
+      toast.success('Tax paid');
       fetchRecords();
     } catch (err: any) {
       toast.error(err.message);
@@ -91,8 +91,8 @@ export default function TaxPage() {
       DRAFT: { color: 'bg-zinc-500/10 text-zinc-400', icon: <Clock className="h-3 w-3" />, label: 'Draft' },
       FILED: { color: 'bg-blue-500/10 text-blue-500', icon: <FileCheck className="h-3 w-3" />, label: 'Submitted' },
       PAID: { color: 'bg-emerald-500/10 text-emerald-500', icon: <CheckCircle2 className="h-3 w-3" />, label: 'Paid' },
-      OVERDUE: { color: 'bg-red-500/10 text-red-500', icon: <AlertCircle className="h-3 w-3" />, label: 'Просрочено' },
-      DISPUTED: { color: 'bg-amber-500/10 text-amber-500', icon: <AlertCircle className="h-3 w-3" />, label: 'Оспаривается' },
+      OVERDUE: { color: 'bg-red-500/10 text-red-500', icon: <AlertCircle className="h-3 w-3" />, label: 'Overdue' },
+      DISPUTED: { color: 'bg-amber-500/10 text-amber-500', icon: <AlertCircle className="h-3 w-3" />, label: 'Disputed' },
     };
     const { color, icon, label } = map[status] || map.DRAFT;
     return (
@@ -114,10 +114,10 @@ export default function TaxPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white">
-            Ежегодное taxообложение
+            Annual Taxation
           </h2>
           <p className="text-zinc-400">
-            Republic 7% + Confederation 3% = итого 10% from incomeа за квесты
+            Republic 7% + Confederation 3% = total 10% from quest income
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export default function TaxPage() {
                 <TrendingUp className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Общий income</div>
+                <div className="text-xs text-zinc-500 uppercase">Total Income</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {totalIncome.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   <span className="text-gold-primary text-sm ml-1">ALT</span>
@@ -156,7 +156,7 @@ export default function TaxPage() {
                 <DollarSign className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Tax уплачен</div>
+                <div className="text-xs text-zinc-500 uppercase">Tax Paid</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {totalTaxPaid.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                 </div>
@@ -172,7 +172,7 @@ export default function TaxPage() {
                 <Calendar className="h-5 w-5 text-zinc-400" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Current год</div>
+                <div className="text-xs text-zinc-500 uppercase">Current Year</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {currentYear ? getStatusBadge(currentYear.status) : 'No data'}
                 </div>
@@ -202,15 +202,15 @@ export default function TaxPage() {
       <Card className="border-white/5">
         <CardHeader>
           <CardTitle className="text-base text-zinc-200 flex items-center gap-2">
-            <Receipt className="h-5 w-5" /> Taxовая history
+            <Receipt className="h-5 w-5" /> Tax History
           </CardTitle>
         </CardHeader>
         <CardContent>
           {records.length === 0 ? (
             <div className="text-center text-zinc-500 py-8">
               <Receipt className="h-12 w-12 mx-auto mb-3 text-zinc-700" />
-              <p>No taxовых records</p>
-              <p className="text-xs mt-1">Records генерируются автоматически 1 января or вручную.</p>
+              <p>No tax records</p>
+              <p className="text-xs mt-1">Records are generated automatically on January 1st or manually.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -248,7 +248,7 @@ export default function TaxPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500">Квестов</div>
+                      <div className="text-xs text-zinc-500">Quests</div>
                       <div className="font-mono text-white">{record.totalQuestsCompleted}</div>
                     </div>
                     <div>
@@ -264,7 +264,7 @@ export default function TaxPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500">Итого к оплате</div>
+                      <div className="text-xs text-zinc-500">Total Due</div>
                       <div className={cn(
                         'font-mono font-bold',
                         record.isPaid ? 'text-emerald-500' : 'text-gold-primary'
@@ -288,10 +288,10 @@ export default function TaxPage() {
       </Card>
 
       {/* Generate Sheet */}
-      <Sheet open={generateOpen} onOpenChange={setGenerateOpen} title="Create taxовую record">
+      <Sheet open={generateOpen} onOpenChange={setGenerateOpen} title="Create Tax Record">
         <div className="space-y-6 pt-4">
           <div className="space-y-2">
-            <Label>Taxовый год</Label>
+            <Label>Tax Year</Label>
             <Input
               type="number"
               value={year}
@@ -303,8 +303,8 @@ export default function TaxPage() {
 
           <div className="p-3 rounded-lg bg-zinc-800/50 text-xs text-zinc-400">
             <AlertCircle className="h-3 w-3 inline mr-1" />
-            Systemа автоматически подсчитает income from all квестоin за указанный год
-            и рассчитает tax по ставке 10% (7% republic + 3% confederation).
+            The system will automatically calculate income from all quests for the specified year
+            and calculate tax at a rate of 10% (7% republic + 3% confederation).
           </div>
 
           <Button

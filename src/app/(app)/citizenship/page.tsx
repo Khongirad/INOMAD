@@ -68,7 +68,7 @@ export default function CitizenshipPage() {
       setGovernmentEligible(govCheck.eligible);
       setRightHistory(history);
     } catch (err: any) {
-      toast.error(err.message || 'Error загрузки данных');
+      toast.error(err.message || 'Error loading data');
     } finally {
       setLoading(false);
     }
@@ -82,10 +82,10 @@ export default function CitizenshipPage() {
     if (!user?.userId) return;
     try {
       await voteOnAdmission(admissionId, { voterId: user.userId, vote });
-      toast.success(vote === 'FOR' ? 'Vote «за» принят' : 'Vote «против» принят');
+      toast.success(vote === 'FOR' ? 'Vote accepted' : 'Vote against accepted');
       fetchData();
     } catch (err: any) {
-      toast.error(err.message || 'Error votesания');
+      toast.error(err.message || 'Error voting');
     }
   };
 
@@ -96,7 +96,7 @@ export default function CitizenshipPage() {
     switch (type) {
       case 'INDIGENOUS': return 'Indigenous (Indigenous)';
       case 'CITIZEN': return 'Citizen (Citizen)';
-      default: return 'Житель (Resident)';
+      default: return 'Resident';
     }
   };
 
@@ -111,7 +111,7 @@ export default function CitizenshipPage() {
   const getTransferLabel = (type: string) => {
     switch (type) {
       case 'INITIAL_GRANT': return 'Issuance';
-      case 'INHERITANCE': return 'Наследование';
+      case 'INHERITANCE': return 'Inheritance';
       case 'REVERTED_TO_FUND': return 'Return to fund';
       default: return type;
     }
@@ -135,7 +135,7 @@ export default function CitizenshipPage() {
             Citizenship
           </h2>
           <p className="text-zinc-400 mt-1">
-            Governance citizensским статусом, земельным rightм и admissionом citizens
+            Managing civil status, land rights and citizen admission
           </p>
         </div>
         <Button variant="secondary" size="sm" onClick={() => fetchData()}>
@@ -185,7 +185,7 @@ export default function CitizenshipPage() {
                   {hasExclusiveRight ? (
                     <><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span className="text-emerald-500 font-bold text-sm">Yes</span></>
                   ) : (
-                    <><XCircle className="h-4 w-4 text-zinc-500" /><span className="text-zinc-500 font-bold text-sm">Нет</span></>
+                    <><XCircle className="h-4 w-4 text-zinc-500" /><span className="text-zinc-500 font-bold text-sm">No</span></>
                   )}
                 </div>
               </div>
@@ -209,7 +209,7 @@ export default function CitizenshipPage() {
                   {legislativeEligible ? (
                     <><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span className="text-emerald-500 font-bold text-sm">Admitted</span></>
                   ) : (
-                    <><XCircle className="h-4 w-4 text-zinc-500" /><span className="text-zinc-500 font-bold text-sm">Нет</span></>
+                    <><XCircle className="h-4 w-4 text-zinc-500" /><span className="text-zinc-500 font-bold text-sm">No</span></>
                   )}
                 </div>
               </div>
@@ -228,12 +228,12 @@ export default function CitizenshipPage() {
                 <Shield className={cn("h-5 w-5", governmentEligible ? "text-emerald-500" : "text-zinc-500")} />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Исп. / Court.</div>
+                <div className="text-xs text-zinc-500 uppercase">Exec. / Court</div>
                 <div className="flex items-center gap-1 mt-0.5">
                   {governmentEligible ? (
                     <><CheckCircle2 className="h-4 w-4 text-emerald-500" /><span className="text-emerald-500 font-bold text-sm">Admitted</span></>
                   ) : (
-                    <><XCircle className="h-4 w-4 text-zinc-500" /><span className="text-zinc-500 font-bold text-sm">Нет</span></>
+                    <><XCircle className="h-4 w-4 text-zinc-500" /><span className="text-zinc-500 font-bold text-sm">No</span></>
                   )}
                 </div>
               </div>
@@ -263,9 +263,9 @@ export default function CitizenshipPage() {
                     <Crown className="h-4 w-4 text-amber-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-amber-200 mb-1">Only for коренных</h4>
+                    <h4 className="font-semibold text-amber-200 mb-1">Only for indigenous</h4>
                     <p className="text-sm text-amber-100/70">
-                      Voting за приём new citizens accessно only коренным (INDIGENOUS).
+                      Voting for admission of new citizens is only available to indigenous (INDIGENOUS).
                     </p>
                   </div>
                 </div>
@@ -274,13 +274,13 @@ export default function CitizenshipPage() {
           )}
 
           {loading ? (
-            <div className="text-center text-zinc-500 py-12 animate-pulse">Загрузка applications...</div>
+            <div className="text-center text-zinc-500 py-12 animate-pulse">Loading applications...</div>
           ) : admissions.length === 0 ? (
             <Card className="border-white/5 bg-zinc-900/30">
               <CardContent className="p-8 text-center">
                 <Users className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-1">No applications</h3>
-                <p className="text-zinc-400 text-sm">Ожидающих applications на citizenship нет</p>
+                <p className="text-zinc-400 text-sm">No pending citizenship applications</p>
               </CardContent>
             </Card>
           ) : (
@@ -306,13 +306,13 @@ export default function CitizenshipPage() {
 
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold uppercase px-2 py-1 rounded bg-emerald-500/10 text-emerald-500">
-                          За: {admission.votesFor}
+                          For: {admission.votesFor}
                         </span>
                         <span className="text-xs font-bold uppercase px-2 py-1 rounded bg-red-500/10 text-red-500">
                           Against: {admission.votesAgainst}
                         </span>
                         <span className="text-xs font-bold uppercase px-2 py-1 rounded bg-zinc-500/10 text-zinc-400">
-                          Нужно: {admission.votesRequired}
+                          Required: {admission.votesRequired}
                         </span>
                       </div>
                     </div>
@@ -337,7 +337,7 @@ export default function CitizenshipPage() {
                           className="bg-emerald-600 hover:bg-emerald-700"
                           onClick={() => handleVote(admission.id, 'FOR')}
                         >
-                          <ThumbsUp className="mr-2 h-4 w-4" /> За
+                          <ThumbsUp className="mr-2 h-4 w-4" /> For
                         </Button>
                         <Button
                           variant="secondary"
@@ -363,7 +363,7 @@ export default function CitizenshipPage() {
               <CardContent className="p-8 text-center">
                 <ScrollText className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-1">No records</h3>
-                <p className="text-zinc-400 text-sm">History transfers земельного rights пуста</p>
+                <p className="text-zinc-400 text-sm">Land rights transfer history is empty</p>
               </CardContent>
             </Card>
           ) : (
@@ -389,7 +389,7 @@ export default function CitizenshipPage() {
                       <div className="text-sm text-zinc-300">
                         {transfer.fromUser?.username || '—'}
                         <ArrowRight className="inline h-4 w-4 mx-2 text-zinc-600" />
-                        {transfer.toUser?.username || 'Landый fund'}
+                        {transfer.toUser?.username || 'Land Fund'}
                       </div>
                     </div>
                     <div className="text-xs text-zinc-500">
@@ -411,11 +411,11 @@ export default function CitizenshipPage() {
               <Flag className="h-4 w-4 text-gold-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-gold-primary mb-1">Принципы citizenship</h4>
+              <h4 className="font-semibold text-gold-primary mb-1">Citizenship Principles</h4>
               <p className="text-sm text-zinc-300">
-                Indigenous people — source власти на своей земле. Claimлючительное земельное right
-                передаётся по male линии. Khural формируется из держателей земельного rights.
-                Приём new citizens осуществляется votingм коренных.
+                Indigenous people are the source of authority on their land. Exclusive land rights
+                are passed down through the male line. Khural is formed from land rights holders.
+                Admission of new citizens is done by voting of indigenous people.
               </p>
             </div>
           </div>

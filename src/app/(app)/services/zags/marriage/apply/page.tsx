@@ -49,7 +49,7 @@ export default function MarriageApplicationPage() {
   const handleNext = async () => {
     if (activeStep === 0) {
       if (!formData.partnerId || !formData.spouse1FullName || !formData.spouse2FullName) {
-        setError('Заgenderните all field информации о partnerе');
+        setError('Fill in all partner information fields');
         return;
       }
       try {

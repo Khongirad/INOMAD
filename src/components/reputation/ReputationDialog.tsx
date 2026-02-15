@@ -86,7 +86,7 @@ export default function ReputationDialog({
         {loading ? (
           <div className="p-12 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-primary mx-auto"></div>
-            <p className="text-zinc-400 mt-4">Loading dataх...</p>
+            <p className="text-zinc-400 mt-4">Loading data...</p>
           </div>
         ) : data ? (
           <div className="p-6 space-y-6">
@@ -95,9 +95,9 @@ export default function ReputationDialog({
               <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                 <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-yellow-500">Low показатель successfullyсти</h3>
+                  <h3 className="font-semibold text-yellow-500">Low success rate</h3>
                   <p className="text-sm text-yellow-400/80 mt-1">
-                    Percent успешных сcaseк ниже нормы. Рекомендуется осторожность.
+                    Success rate is below normal. Caution is recommended.
                   </p>
                 </div>
               </div>
@@ -110,15 +110,15 @@ export default function ReputationDialog({
                 <div className="text-2xl font-bold text-white">
                   {data.successRate}%
                 </div>
-                <div className="text-xs text-zinc-400 mt-1">Успешных сcaseк</div>
+                <div className="text-xs text-zinc-400 mt-1">Successful deals</div>
                 <div className={`text-xs mt-2 ${
                   data.successRate >= 95 ? 'text-green-400' :
                   data.successRate >= 80 ? 'text-yellow-400' :
                   'text-red-400'
                 }`}>
-                  {data.successRate >= 95 ? '✓ Отлично' :
-                   data.successRate >= 80 ? '~ Нормально' :
-                   '! Требует внимания'}
+                  {data.successRate >= 95 ? '✓ Excellent' :
+                   data.successRate >= 80 ? '~ Normal' :
+                   '! Needs attention'}
                 </div>
               </div>
 
@@ -150,9 +150,9 @@ export default function ReputationDialog({
                 <div className="text-2xl font-bold text-white">
                   {data.totalDeals}
                 </div>
-                <div className="text-xs text-zinc-400 mt-1">Total сcaseк</div>
+                <div className="text-xs text-zinc-400 mt-1">Total deals</div>
                 <div className="text-xs text-blue-400 mt-2">
-                  {data.totalDeals > 50 ? 'Experienceный' : 'Стандартно'}
+                  {data.totalDeals > 50 ? 'Experienced' : 'Standard'}
                 </div>
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function ReputationDialog({
                       <div className="flex-1">
                         <div className="text-sm font-medium text-white">{badge.name}</div>
                         <div className="text-xs text-zinc-400">
-                          Genderучено: {new Date(badge.earnedAt).toLocaleDateString('en-US')}
+                          Received: {new Date(badge.earnedAt).toLocaleDateString('en-US')}
                         </div>
                       </div>
                     </div>
@@ -189,7 +189,7 @@ export default function ReputationDialog({
             {showDetails && data.transactions && (
               <div>
                 <h3 className="text-sm font-semibold text-white mb-3">
-                  History транзакций
+                  Transaction History
                 </h3>
                 <div className="space-y-2">
                   {data.transactions.map((tx) => (
@@ -214,14 +214,14 @@ export default function ReputationDialog({
                   ))}
                 </div>
                 <p className="text-xs text-zinc-500 mt-3">
-                  Detailed Information accessна only при подписании соглашений о cooperationsе
+                  Detailed information is available only upon signing cooperation agreements
                 </p>
               </div>
             )}
           </div>
         ) : (
           <div className="p-12 text-center">
-            <p className="text-zinc-400">Failed to load data репутации</p>
+            <p className="text-zinc-400">Failed to load reputation data</p>
           </div>
         )}
 

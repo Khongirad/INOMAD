@@ -13,7 +13,7 @@ import { registerOwnership } from '@/lib/api/land-registry';
 import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Send, Home, Loader2, Info, AlertTriangle } from 'lucide-react';
 
-const STEPS = ['Election участка', 'Ownership Details', 'Verification and Submission'];
+const STEPS = ['Select Plot', 'Ownership Details', 'Verification and Submission'];
 const OWNERSHIP_TYPES = ['FULL', 'PARTIAL', 'JOINT', 'USUFRUCT'];
 
 export default function PropertyOwnershipRegistrationPage() {
@@ -37,7 +37,7 @@ export default function PropertyOwnershipRegistrationPage() {
     try {
       setSubmitting(true);
       await registerOwnership({ landPlotId, ownershipType: ownershipType as any, sharePercentage: parseFloat(ownershipShare) });
-      toast.success('Right собственности registeredо!');
+      toast.success('Ownership rights registered!');
       router.push('/services/land-registry');
     } catch (err: any) {
       toast.error(err.message || 'Registration error');
@@ -56,7 +56,7 @@ export default function PropertyOwnershipRegistrationPage() {
     return (
       <div className="p-6 max-w-[900px] mx-auto">
         <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-lg p-4">
-          Only citizens могут регистрировать right собственности.
+          Only citizens can register ownership rights.
         </div>
       </div>
     );
@@ -72,14 +72,14 @@ export default function PropertyOwnershipRegistrationPage() {
           <Home className="h-10 w-10 text-blue-500" />
           <div>
             <h1 className="text-3xl font-bold">Registration property rights</h1>
-            <p className="text-muted-foreground mt-1">Зарегистрируйте right на земельный plot</p>
+            <p className="text-muted-foreground mt-1">Register an ownership right for a land plot</p>
           </div>
         </div>
       </div>
 
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex gap-2">
         <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-        <p className="text-sm text-muted-foreground">Registration связывает вас с registeredным участком.</p>
+        <p className="text-sm text-muted-foreground">Registration links you to a registered plot.</p>
       </div>
 
       {/* Stepper */}
@@ -103,15 +103,15 @@ export default function PropertyOwnershipRegistrationPage() {
         <CardContent className="pt-6 space-y-6">
           {activeStep === 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Election земельного участка</h3><hr />
+              <h3 className="text-lg font-semibold">Select Land Plot</h3><hr />
               <div className="space-y-2">
-                <Label>ID участка or cadastral number</Label>
+                <Label>Plot ID or cadastral number</Label>
                 <Input placeholder="Enter ID" value={landPlotId} onChange={(e) => setLandPlotId(e.target.value)} />
-                <p className="text-xs text-muted-foreground">Plot должен быть in кадастровой systemе</p>
+                <p className="text-xs text-muted-foreground">The plot must be in the cadastral system</p>
               </div>
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-                <p className="text-sm"><strong>Note:</strong> Search участкоin будет добавлен позже.</p>
+                <p className="text-sm"><strong>Note:</strong> Plot search will be added later.</p>
               </div>
             </div>
           )}
@@ -131,12 +131,12 @@ export default function PropertyOwnershipRegistrationPage() {
                 <Input type="number" value={ownershipShare} onChange={(e) => setOwnershipShare(e.target.value)} disabled={ownershipType === 'FULL'} />
               </div>
               <div className="space-y-2">
-                <Label>Date приобретения</Label>
+                <Label>Acquisition Date</Label>
                 <Input type="date" value={acquisitionDate} onChange={(e) => setAcquisitionDate(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Способ приобретения</Label>
-                <Input placeholder="Byкупка, Наследование, Gift..." value={acquisitionMethod} onChange={(e) => setAcquisitionMethod(e.target.value)} />
+                <Label>Acquisition Method</Label>
+                <Input placeholder="Purchase, Inheritance, Gift..." value={acquisitionMethod} onChange={(e) => setAcquisitionMethod(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Price (ALTAN) — optional</Label>
@@ -156,8 +156,8 @@ export default function PropertyOwnershipRegistrationPage() {
               <div><p className="text-xs text-muted-foreground">Type</p><Badge>{ownershipType}</Badge></div>
               <div><p className="text-xs text-muted-foreground">Share</p><p>{ownershipShare}%</p></div>
               <div>
-                <p className="text-xs text-muted-foreground">Приобретение</p>
-                <p className="text-sm">Способ: {acquisitionMethod}</p>
+                <p className="text-xs text-muted-foreground">Acquisition</p>
+                <p className="text-sm">Method: {acquisitionMethod}</p>
                 <p className="text-sm">Date: {acquisitionDate ? new Date(acquisitionDate).toLocaleDateString('en-US') : '—'}</p>
                 {purchasePrice && <p className="text-sm">Price: {purchasePrice} ALTAN</p>}
               </div>

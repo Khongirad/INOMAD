@@ -581,7 +581,7 @@ export default function UnifiedOrgDashboard() {
         <TabsContent value="permissions">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="font-semibold mb-1">🛡️ Матрица Genderномочий</h3>
+              <h3 className="font-semibold mb-1">🛡️ Authority Matrix</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Each role has a specific set of permissions in the organization
               </p>

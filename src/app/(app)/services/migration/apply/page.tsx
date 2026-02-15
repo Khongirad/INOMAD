@@ -11,10 +11,10 @@ import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Send, Info } from 'lucide-react';
 
 const steps = [
-  'Личная information',
+  'Personal Information',
   'Biographical Data',
-  'Загрузка documentов',
-  'Verification и confirmation',
+  'Document Upload',
+  'Verification and Confirmation',
 ];
 
 export default function PassportApplicationPage() {
@@ -48,7 +48,7 @@ export default function PassportApplicationPage() {
   const handleNext = async () => {
     if (activeStep === 0) {
       if (!formData.fullName || !formData.dateOfBirth || !formData.sex) {
-        setError('Please, fill in all обязательные genderя');
+        setError('Please fill in all required fields');
         return;
       }
     }
@@ -120,7 +120,7 @@ export default function PassportApplicationPage() {
         </Button>
         <h1 className="text-3xl font-bold">Passport Application</h1>
         <p className="text-muted-foreground mt-1">
-          {passportLabel} passport — Заgenderните all stepи to submit applications
+          {passportLabel} passport — Complete all steps to submit application
         </p>
       </div>
 
@@ -202,8 +202,8 @@ export default function PassportApplicationPage() {
             <p className="text-sm font-semibold mb-1">Important Information</p>
             <p className="text-sm text-muted-foreground">
               • All information must be accurate and verifiable<br />
-              • Необходимые documents: Фото (passportного размера), Signature, Certificate о рождении<br />
-              • Срок обworkки: 5–10 рабочих days<br />
+              • Required documents: Photo (passport-sized), Signature, Birth Certificate<br />
+              • Processing time: 5-10 business days<br />
               • You will be notified by email when your application status changes
             </p>
           </div>

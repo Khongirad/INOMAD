@@ -60,7 +60,7 @@ export default function DisputesPage() {
   const handleOpen = async () => {
     try {
       await openMutation.mutateAsync(form);
-      toast.success('Dispute открыт');
+      toast.success('Dispute opened');
       setDialogOpen(false);
       setForm({ partyBId: '', sourceType: 'CONTRACT', sourceId: '', title: '', description: '' });
     } catch (e: any) {
@@ -104,7 +104,7 @@ export default function DisputesPage() {
           Disputes
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Negotiations по disputeным вопросам. Each dispute is linked to a contract, task, or work act.
+          Negotiations on disputed matters. Each dispute is linked to a contract, task, or work act.
         </p>
       </div>
 
@@ -112,8 +112,8 @@ export default function DisputesPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: 'Total Disputes', value: stats.total, icon: FileText, cls: 'text-blue-400' },
-          { label: 'Openedых', value: stats.open, icon: Clock, cls: 'text-amber-400' },
-          { label: 'Settledо', value: stats.settled, icon: CheckCircle, cls: 'text-emerald-400' },
+          { label: 'Open', value: stats.open, icon: Clock, cls: 'text-amber-400' },
+          { label: 'Settled', value: stats.settled, icon: CheckCircle, cls: 'text-emerald-400' },
           { label: 'Escalated', value: stats.escalated, icon: ArrowUpRight, cls: 'text-rose-400' },
         ].map((s) => (
           <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">

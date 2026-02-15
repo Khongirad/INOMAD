@@ -40,7 +40,7 @@ export default function InvitationsPage() {
       setReceived(data.received || []);
       setSent(data.sent || []);
     } catch {
-      toast.error('Error загрузки приглашений');
+      toast.error('Error loading invitations');
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export default function InvitationsPage() {
       toast.success('Invitation accepted');
       fetchInvitations();
     } catch {
-      toast.error('Error при принятии');
+      toast.error('Error accepting invitation');
     }
   };
 
@@ -74,7 +74,7 @@ export default function InvitationsPage() {
       toast.success('Invitation rejected');
       fetchInvitations();
     } catch {
-      toast.error('Error при отклонении');
+      toast.error('Error declining invitation');
     }
   };
 
@@ -88,7 +88,7 @@ export default function InvitationsPage() {
       toast.success('Invitation cancelled');
       fetchInvitations();
     } catch {
-      toast.error('Error при отмене');
+      toast.error('Error cancelling invitation');
     }
   };
 
@@ -114,7 +114,7 @@ export default function InvitationsPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="received" className="gap-2">
             <Inbox className="h-4 w-4" />
-            Genderученные
+            Received
             {pendingReceivedCount > 0 && (
               <Badge className="ml-1 h-5 min-w-[20px] text-[10px] bg-red-500">
                 {pendingReceivedCount}
@@ -123,7 +123,7 @@ export default function InvitationsPage() {
           </TabsTrigger>
           <TabsTrigger value="sent" className="gap-2">
             <Send className="h-4 w-4" />
-            Отправленные
+            Sent
             {pendingSentCount > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] text-[10px]">
                 {pendingSentCount}
@@ -136,7 +136,7 @@ export default function InvitationsPage() {
           {received.length === 0 ? (
             <div className="text-center py-16">
               <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No receivedных приглашений</p>
+              <p className="text-muted-foreground">No received invitations</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -156,7 +156,7 @@ export default function InvitationsPage() {
           {sent.length === 0 ? (
             <div className="text-center py-16">
               <Send className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No отправленных приглашений</p>
+              <p className="text-muted-foreground">No sent invitations</p>
             </div>
           ) : (
             <div className="space-y-3">

@@ -55,8 +55,8 @@ export default function ZAGSOfficerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Панель сотрудника Civil Registry</h1>
-        <p className="text-muted-foreground mt-1">Рассмотрение и одобрение registrations marriageа</p>
+        <h1 className="text-2xl font-bold">Civil Registry Officer Panel</h1>
+        <p className="text-muted-foreground mt-1">Review and approval of marriage registrations</p>
       </div>
 
       {error && (
@@ -73,7 +73,7 @@ export default function ZAGSOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total заявлений</p>
+                <p className="text-sm text-muted-foreground">Total Applications</p>
               </div>
               <span className="text-4xl opacity-30">💍</span>
             </div>
@@ -106,7 +106,7 @@ export default function ZAGSOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-green-500">{stats.registered}</p>
-                <p className="text-sm text-muted-foreground">Registeredо</p>
+                <p className="text-sm text-muted-foreground">Registered</p>
               </div>
               <span className="text-4xl opacity-30">📜</span>
             </div>
@@ -121,19 +121,19 @@ export default function ZAGSOfficerPage() {
             <TabsList>
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="pending">Under Review</TabsTrigger>
-              <TabsTrigger value="approved">Approved/Зарег.</TabsTrigger>
+              <TabsTrigger value="approved">Approved/Reg.</TabsTrigger>
               <TabsTrigger value="rejected">Rejected</TabsTrigger>
             </TabsList>
           </div>
           <CardContent className="pt-4">
-            <h3 className="text-lg font-semibold mb-3">Applications на marriage</h3>
+            <h3 className="text-lg font-semibold mb-3">Marriage Applications</h3>
 
             {loading ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
               </div>
             ) : filteredMarriages.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">Applications не найдены</div>
+              <div className="text-center py-8 text-muted-foreground">No applications found</div>
             ) : (
               <div className="border border-border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
@@ -156,13 +156,13 @@ export default function ZAGSOfficerPage() {
                         </td>
                         <td className="p-3">{new Date(marriage.marriageDate).toLocaleDateString('en-US')}</td>
                         <td className="p-3">
-                          <Badge variant="outline">{marriage.ceremonyType || 'Citizenский'}</Badge>
+                          <Badge variant="outline">{marriage.ceremonyType || 'Civil'}</Badge>
                         </td>
                         <td className="p-3">
                           <Badge variant={statusVariant(marriage.status)}>{marriage.status}</Badge>
                         </td>
                         <td className="p-3 text-xs text-muted-foreground">
-                          {marriage.certificateNumber || 'Не issuedо'}
+                          {marriage.certificateNumber || 'Not issued'}
                         </td>
                         <td className="p-3 text-right space-x-1">
                           <Button
@@ -170,7 +170,7 @@ export default function ZAGSOfficerPage() {
                             variant="outline"
                             onClick={() => router.push(`/services/zags/officer/review/${marriage.id}`)}
                           >
-                            👁️ Просмотр
+                            👁️ View
                           </Button>
                         </td>
                       </tr>

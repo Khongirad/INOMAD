@@ -65,7 +65,7 @@ export function RateOrganizationDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-500" />
-            Rate Организацию
+            Rate Organization
           </DialogTitle>
           <DialogDescription>{organizationName}</DialogDescription>
         </DialogHeader>
@@ -76,7 +76,7 @@ export function RateOrganizationDialog({
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-green-600" />
-                Финансовая надёжность
+                Financial Reliability
               </Label>
               <span className={`text-lg font-bold ${getScoreColor(financialScore)}`}>
                 {financialScore.toFixed(1)}
@@ -154,7 +154,7 @@ export function RateOrganizationDialog({
 
           {/* Overall */}
           <div className="bg-muted/50 rounded-lg p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Общая rating</p>
+            <p className="text-xs text-muted-foreground mb-1">Overall Rating</p>
             <p className={`text-3xl font-bold ${getScoreColor(parseFloat(overallScore))}`}>
               {overallScore}
             </p>
@@ -167,7 +167,7 @@ export function RateOrganizationDialog({
           </Button>
           <Button onClick={handleSubmit} disabled={submitting} className="gap-2">
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {submitting ? 'Submitting...' : 'Send Оценку'}
+            {submitting ? 'Submitting...' : 'Submit Rating'}
           </Button>
         </DialogFooter>
       </DialogContent>

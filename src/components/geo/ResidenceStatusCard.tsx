@@ -70,21 +70,21 @@ export function ResidenceStatusCard({
 
   const intro = {
     home: {
-      ru: `How представитель peopleа ${nationName}, вы являетесь коренным жителем the region of ${regionName}.`,
+      ru: `As a representative of the ${nationName}, you are an indigenous resident of the region ${regionName}.`,
       en: `As a member of the ${nationName} people, you are indigenous to the ${regionName} region.`,
     },
     resident: {
-      ru: `How представитель peopleа ${nationName}, вы проживаете in regionе ${regionName} in статусе жителя.`,
+      ru: `As a representative of the ${nationName}, you reside in the region ${regionName} as a resident.`,
       en: `As a member of the ${nationName} people, you reside in the ${regionName} region as a resident.`,
     },
     guest: {
-      ru: `How представитель peopleа ${nationName}, вы проживаете in regionе ${regionName} in статусе гостя.`,
+      ru: `As a representative of the ${nationName}, you reside in the region ${regionName} as a guest.`,
       en: `As a member of the ${nationName} people, you live in the ${regionName} region as a guest.`,
     },
   };
 
   const clarification = {
-    ru: "Это не ограничение yourих прав. Это определяет distribution responseственности за землю.",
+    ru: "This is not a restriction of your rights. It determines the distribution of responsibility for the land.",
     en: "This is not a limitation of your rights. It defines the distribution of responsibility for the land.",
   };
 

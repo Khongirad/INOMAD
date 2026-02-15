@@ -76,7 +76,7 @@ export default function CooperativesPage() {
             Cooperatives
           </h2>
           <p className="text-zinc-400 mt-1">
-            Guilds, clanы, professional unions и state organizations
+            Guilds, clans, professional unions and state organizations
           </p>
         </div>
         <Button className="bg-purple-600 hover:bg-purple-700">
@@ -169,7 +169,7 @@ export default function CooperativesPage() {
           className="px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white"
         >
           <option value="all">All Types</option>
-          <option value="CLAN">Clanы</option>
+          <option value="CLAN">Clans</option>
           <option value="PROFESSION">Guilds</option>
           <option value="ORGANIZATION">Organizations</option>
           <option value="GOVERNMENT">State</option>
@@ -266,8 +266,8 @@ export default function CooperativesPage() {
             <div>
               <h4 className="font-semibold text-purple-200 mb-1">About Cooperatives</h4>
               <p className="text-sm text-purple-100/70">
-                Cooperatives — self-governing organizations, где memberи pool resources
-                and skills. Clanы — ancestral unions, Guilds are professional, Organizations are hierarchical structures.
+                Cooperatives are self-governing organizations where members pool resources
+                and skills. Clans are ancestral unions, Guilds are professional, Organizations are hierarchical structures.
               </p>
             </div>
           </div>

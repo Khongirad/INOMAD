@@ -38,7 +38,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
     setError(null);
 
     if (!formData.institution || !formData.fieldOfStudy) {
-      setError('Заgenderните обязательные genderя');
+      setError('Fill in required fields');
       return;
     }
 
@@ -46,7 +46,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
       setUploading(true);
       await onSubmit(formData);
     } catch (err: any) {
-      setError(err.message || 'Error при отправке');
+      setError(err.message || 'Error submitting');
     } finally {
       setUploading(false);
     }
@@ -57,7 +57,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
       <CardContent className="pt-6">
         <div className="flex items-center gap-2 mb-6">
           <GraduationCap className="h-6 w-6" />
-          <h3 className="text-lg font-semibold">Confirmation Образования</h3>
+          <h3 className="text-lg font-semibold">Education Verification</h3>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -68,7 +68,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
           )}
 
           <div className="space-y-2">
-            <Label>Type Documentа</Label>
+            <Label>Document Type</Label>
             <Select
               value={formData.type}
               onValueChange={(v) => setFormData({ ...formData, type: v as EducationType })}
@@ -78,8 +78,8 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="DIPLOMA">Diploma</SelectItem>
-                <SelectItem value="CERTIFICATE">Сертификат</SelectItem>
-                <SelectItem value="RECOMMENDATION">Рекомендация Специалиста</SelectItem>
+                <SelectItem value="CERTIFICATE">Certificate</SelectItem>
+                <SelectItem value="RECOMMENDATION">Specialist Recommendation</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -90,7 +90,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
               id="institution"
               value={formData.institution}
               onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-              placeholder="Title учебного заведения"
+              placeholder="Name of educational institution"
             />
           </div>
 
@@ -100,7 +100,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
               id="fieldOfStudy"
               value={formData.fieldOfStudy}
               onChange={(e) => setFormData({ ...formData, fieldOfStudy: e.target.value })}
-              placeholder="Направление обучения"
+              placeholder="Field of study"
             />
           </div>
 
@@ -145,7 +145,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
             )}
             <Button type="submit" disabled={uploading} className="gap-2">
               {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Send на Проверку
+              Submit for Verification
             </Button>
           </div>
         </form>

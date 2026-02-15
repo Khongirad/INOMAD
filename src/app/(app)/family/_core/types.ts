@@ -16,9 +16,9 @@ export type CousinDegree = 2 | 3 | 4 | 5 | 6 | 7;
 
 export type PersonRef = {
   id: string;
-  fullName: string; // MVP: одной строкой
+  fullName: string; // MVP: single string
   sex?: Sex;
-  birthYear?: number; // MVP: год
+  birthYear?: number; // MVP: year
 };
 
 export type FamilyMember = PersonRef & {
@@ -26,7 +26,7 @@ export type FamilyMember = PersonRef & {
 };
 
 /**
- * Худанар — сваты (семейно-союзные связи, не кровные)
+ * Khudanar — in-laws (family-alliance ties, not blood)
  */
 export type KhudanarSlot = {
   slotId: string;
@@ -39,7 +39,7 @@ export type CousinRef = {
   person: FamilyMember;
   degree: CousinDegree; // 2..7
   side: Side;
-  lineHint?: string; // "через дядю/тетю ...", текстом
+  lineHint?: string; // "through uncle/aunt ...", as text
 };
 
 export type FamilyDraft = {
@@ -47,22 +47,22 @@ export type FamilyDraft = {
   createdAt: number;
   updatedAt: number;
 
-  // кровное ядро (слоты)
+  // blood core (slots)
   slots: Partial<Record<FamilySlot, FamilyMember>>;
 
-  // горизонталь
+  // horizontal
   spouse?: FamilyMember;
   children: FamilyMember[];
   siblings: Array<FamilyMember & { kind: SiblingKind }>;
 
-  // боковые ветви
+  // lateral branches
   paternalUnclesAunts: Array<FamilyMember & { kind: UncleAuntKind }>;
   maternalUnclesAunts: Array<FamilyMember & { kind: UncleAuntKind }>;
 
-  // ХУДАНАР (сваты)
+  // KHUDANAR (in-laws)
   khudanarSlots: KhudanarSlot[];
 
-  // 2–7 колено (как list)
+  // 2-7 generations (as list)
   cousins: CousinRef[];
 };
 
@@ -81,8 +81,8 @@ export function createEmptyFamilyDraft(): FamilyDraft {
     paternalUnclesAunts: [],
     maternalUnclesAunts: [],
     khudanarSlots: [
-      { slotId: "wife_side", label: "Худанар (сваты со parties жены)" },
-      { slotId: "husband_side", label: "Худанар (сваты со parties мужа)" },
+      { slotId: "wife_side", label: "Khudanar (in-laws from wife side)" },
+      { slotId: "husband_side", label: "Khudanar (in-laws from husband side)" },
     ],
     cousins: [],
   };

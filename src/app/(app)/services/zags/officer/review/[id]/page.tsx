@@ -88,7 +88,7 @@ export default function MarriageReviewPage() {
     return (
       <div className="p-4">
         <div className="bg-destructive/10 text-destructive rounded-lg p-4">
-          {error || 'Marriage не найден'}
+          {error || 'Marriage not found'}
         </div>
       </div>
     );
@@ -101,11 +101,11 @@ export default function MarriageReviewPage() {
       {/* Header */}
       <div>
         <Button variant="ghost" onClick={() => router.push('/services/zags/officer')} className="mb-2">
-          ← Back к панели
+          ← Back to Panel
         </Button>
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">Рассмотрение applications на marriage</h1>
+            <h1 className="text-2xl font-bold">Marriage Application Review</h1>
             <p className="text-muted-foreground mt-1">{marriage.spouse1FullName} & {marriage.spouse2FullName}</p>
           </div>
           <Badge variant={marriage.status === 'REGISTERED' ? 'default' : 'secondary'}>
@@ -116,23 +116,23 @@ export default function MarriageReviewPage() {
 
       {/* Consent Status */}
       <Card>
-        <CardHeader><CardTitle>Status согласий</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Consent Status</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between items-center">
             <span>{marriage.spouse1FullName}</span>
             <Badge variant={marriage.spouse1ConsentGranted ? 'default' : 'secondary'}>
-              {marriage.spouse1ConsentGranted ? '✓ Consent дано' : '⏳ Ожидание'}
+              {marriage.spouse1ConsentGranted ? '✓ Consent given' : '⏳ Pending'}
             </Badge>
           </div>
           <div className="flex justify-between items-center">
             <span>{marriage.spouse2FullName}</span>
             <Badge variant={marriage.spouse2ConsentGranted ? 'default' : 'secondary'}>
-              {marriage.spouse2ConsentGranted ? '✓ Consent дано' : '⏳ Ожидание'}
+              {marriage.spouse2ConsentGranted ? '✓ Consent given' : '⏳ Pending'}
             </Badge>
           </div>
           {!consentComplete && (
             <div className="bg-yellow-500/10 text-yellow-400 rounded-lg p-3 text-sm mt-2">
-              Необходимо двустороннее consent for рассмотрения.
+              Both parties must consent before review.
             </div>
           )}
         </CardContent>
@@ -162,7 +162,7 @@ export default function MarriageReviewPage() {
 
         {/* Spouse Info */}
         <Card>
-          <CardHeader><CardTitle>Data spouseов</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Spouse Data</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div>
               <p className="text-xs text-muted-foreground">Spouse 1</p>
@@ -203,7 +203,7 @@ export default function MarriageReviewPage() {
             <div className="flex items-center gap-3">
               <span className="text-2xl">📜</span>
               <div>
-                <p className="text-xs text-muted-foreground">Number witnessства</p>
+                <p className="text-xs text-muted-foreground">Certificate Number</p>
                 <p className="font-semibold">{marriage.certificateNumber}</p>
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function MarriageReviewPage() {
           <CardContent>
             <div className="flex gap-3">
               <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => openReviewDialog('APPROVE')}>
-                ✓ Approve и выgive certificate
+                ✓ Approve and Issue Certificate
               </Button>
               <Button variant="outline" className="flex-1 border-destructive text-destructive hover:bg-destructive/10" onClick={() => openReviewDialog('REJECT')}>
                 ✕ Decline
@@ -237,17 +237,17 @@ export default function MarriageReviewPage() {
             </DialogTitle>
             <DialogDescription>
               {reviewAction === 'APPROVE'
-                ? 'Это зарегистрирует marriage и выдаст certificate'
-                : 'Specify reason отклонения'}
+                ? 'This will register the marriage and issue a certificate'
+                : 'Specify reason for rejection'}
             </DialogDescription>
           </DialogHeader>
           {reviewAction === 'APPROVE' ? (
             <div className="space-y-3">
               <div className="bg-green-500/10 text-green-400 rounded-lg p-3 text-sm">
-                Marriage будет registered и issuedо официальное certificate
+                Marriage will be registered and an official certificate will be issued
               </div>
               <div>
-                <Label>Number witnessства</Label>
+                <Label>Certificate Number</Label>
                 <Input placeholder="MC-XXXX-XXXX" value={certificateNumber} onChange={(e) => setCertificateNumber(e.target.value)} />
               </div>
             </div>
@@ -268,7 +268,7 @@ export default function MarriageReviewPage() {
                 (reviewAction === 'REJECT' && !notes.trim())
               }
             >
-              {submitting ? 'Processing…' : `Confirm ${reviewAction === 'APPROVE' ? 'одобрение' : 'отклонение'}`}
+              {submitting ? 'Processing…' : `Confirm ${reviewAction === 'APPROVE' ? 'approval' : 'rejection'}`}
             </Button>
           </DialogFooter>
         </DialogContent>

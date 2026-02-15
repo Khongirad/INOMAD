@@ -24,7 +24,7 @@ export default function MarriageCertificatePage() {
       setLoading(true);
       const data = await getMarriage(marriageId);
       if (data.status !== 'REGISTERED') {
-        setError('Certificate неaccessно. Marriage должен быть registered.');
+        setError('Certificate unavailable. Marriage must be registered.');
         return;
       }
       setMarriage(data);
@@ -48,7 +48,7 @@ export default function MarriageCertificatePage() {
       <div className="max-w-3xl mx-auto space-y-4">
         <Button variant="ghost" onClick={() => router.push('/services/zags')}>← Back to Civil Registry</Button>
         <div className="bg-destructive/10 text-destructive rounded-lg p-4">
-          {error || 'Marriage не найден'}
+          {error || 'Marriage not found'}
         </div>
       </div>
     );

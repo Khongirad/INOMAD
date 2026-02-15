@@ -55,7 +55,7 @@ export default function MigrationServicePage() {
       <div>
         <h1 className="text-2xl font-bold">Migration Service</h1>
         <p className="text-muted-foreground mt-1">
-          Оформление passportов, governance applicationsми и verification documentов
+          Processing passports, managing applications and document verification
         </p>
       </div>
 
@@ -72,7 +72,7 @@ export default function MigrationServicePage() {
           <CardHeader><CardTitle>📘 Standard passport</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              For citizens. Valid 10 лет. Betweenpeopleные поездки во all страны-partnerы.
+              For citizens. Valid 10 years. International travel to all partner countries.
             </p>
             <Button className="w-full" onClick={() => router.push('/services/migration/apply?type=STANDARD')}>
               + Submit application
@@ -83,10 +83,10 @@ export default function MigrationServicePage() {
           <CardHeader><CardTitle>🎖️ Diplomatic passport</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              For гос. служащих и diplomaатов. Особые привилегии и иммунитеты.
+              For government officials and diplomats. Special privileges and immunities.
             </p>
             <Button variant="outline" className="w-full" disabled>
-              Required номинация
+              Nomination required
             </Button>
           </CardContent>
         </Card>
@@ -94,10 +94,10 @@ export default function MigrationServicePage() {
           <CardHeader><CardTitle>🛂 Official passport</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              For служащих in командировках за рубежом.
+              For officials on business trips abroad.
             </p>
             <Button variant="outline" className="w-full" disabled>
-              Required авторизация
+              Authorization required
             </Button>
           </CardContent>
         </Card>
@@ -107,7 +107,7 @@ export default function MigrationServicePage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Yourи applications</CardTitle>
+            <CardTitle>Your Applications</CardTitle>
             <Button onClick={() => router.push('/services/migration/apply')}>
               + New application
             </Button>
@@ -120,7 +120,7 @@ export default function MigrationServicePage() {
             </div>
           ) : applications.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground mb-3">You ещё не подавали заявлений</p>
+              <p className="text-muted-foreground mb-3">You have not submitted any applications yet</p>
               <Button variant="outline" onClick={() => router.push('/services/migration/apply')}>
                 + Apply for Passport
               </Button>
@@ -142,11 +142,11 @@ export default function MigrationServicePage() {
       {/* Passport Lookup */}
       <Card>
         <CardHeader>
-          <CardTitle>Verification passportа</CardTitle>
+          <CardTitle>Passport Verification</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Проверьте действительность passportа (публичный поclaim)
+            Verify passport validity (public lookup)
           </p>
           <div className="flex gap-3 mb-3">
             <Input
@@ -160,7 +160,7 @@ export default function MigrationServicePage() {
               disabled={lookupLoading || !lookupNumber.trim()}
               className="min-w-[120px]"
             >
-              {lookupLoading ? '…' : '🔍 Проверить'}
+              {lookupLoading ? '…' : '🔍 Verify'}
             </Button>
           </div>
 
@@ -168,14 +168,14 @@ export default function MigrationServicePage() {
             <div className={`rounded-lg p-4 ${lookupResult.exists ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
               {lookupResult.exists ? (
                 <>
-                  <p className="font-semibold">✅ Valid padisputeт</p>
+                  <p className="font-semibold">✅ Valid Passport</p>
                   <p className="text-sm">Owner: {lookupResult.fullName}</p>
                   {lookupResult.expiresAt && (
-                    <p className="text-sm">Истекает: {new Date(lookupResult.expiresAt).toLocaleDateString('en-US')}</p>
+                    <p className="text-sm">Expires: {new Date(lookupResult.expiresAt).toLocaleDateString('en-US')}</p>
                   )}
                 </>
               ) : (
-                <p>{lookupResult.error || 'Паdisputeт не найден or недействителен'}</p>
+                <p>{lookupResult.error || 'Passport not found or invalid'}</p>
               )}
             </div>
           )}

@@ -45,8 +45,8 @@ interface PendingVerificationCardProps {
 
 const typeLabels: Record<string, string> = {
   DIPLOMA: 'Diploma',
-  CERTIFICATE: 'Сертификат',
-  RECOMMENDATION: 'Рекомендация',
+  CERTIFICATE: 'Certificate',
+  RECOMMENDATION: 'Recommendation',
 };
 
 export function PendingVerificationCard({
@@ -99,7 +99,7 @@ export function PendingVerificationCard({
 
             <Badge className="bg-yellow-600 hover:bg-yellow-700 gap-1">
               <Clock className="h-3 w-3" />
-              On проверке
+              Under Review
             </Badge>
           </div>
 
@@ -122,7 +122,7 @@ export function PendingVerificationCard({
           {verification.documentUrl && (
             <div className="bg-muted/50 rounded-lg p-3 mb-4">
               <p className="text-sm text-muted-foreground">
-                📄 Document прикреплён
+                📄 Document attached
               </p>
             </div>
           )}
@@ -152,9 +152,9 @@ export function PendingVerificationCard({
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Decline верификацию</DialogTitle>
+            <DialogTitle>Decline Verification</DialogTitle>
             <DialogDescription>
-              Specify reason отклонения for {verification.institution}
+              Specify rejection reason for {verification.institution}
             </DialogDescription>
           </DialogHeader>
 
@@ -168,7 +168,7 @@ export function PendingVerificationCard({
           </div>
 
           <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300">
-            ⚠️ Это action нельзя cancel. Genderьзователь genderучит notification с причиной отклонения.
+            ⚠️ This action cannot be undone. The user will receive a notification with the rejection reason.
           </div>
 
           <DialogFooter>

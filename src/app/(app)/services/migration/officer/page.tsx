@@ -57,7 +57,7 @@ export default function MigrationOfficerPage() {
       case 'REJECTED':
         return <Badge variant="destructive">Rejected</Badge>;
       case 'ISSUED':
-        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Выдано</Badge>;
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Issued</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -67,15 +67,15 @@ export default function MigrationOfficerPage() {
     <div className="overflow-x-auto">
       {apps.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          Applications не найдены
+          No applications found
         </div>
       ) : (
         <table className="w-full">
           <thead>
             <tr className="border-b">
               <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Applicant</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type passportа</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date подачи</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Passport Type</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Submission Date</th>
               <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
               <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
             </tr>
@@ -86,7 +86,7 @@ export default function MigrationOfficerPage() {
                 <td className="py-3 px-4">
                   <p className="font-medium text-sm">{app.fullName}</p>
                   <p className="text-xs text-muted-foreground">
-                    Д.Р.: {new Date(app.dateOfBirth).toLocaleDateString('en-US')}
+                    DOB: {new Date(app.dateOfBirth).toLocaleDateString('en-US')}
                   </p>
                 </td>
                 <td className="py-3 px-4">
@@ -131,8 +131,8 @@ export default function MigrationOfficerPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Officer Panel миграции</h1>
-        <p className="text-muted-foreground mt-1">Рассмотрение и обworkка заявлений на passport</p>
+        <h1 className="text-3xl font-bold">Migration Officer Panel</h1>
+        <p className="text-muted-foreground mt-1">Review and process passport applications</p>
       </div>
 
       {error && (
@@ -149,7 +149,7 @@ export default function MigrationOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total заявлений</p>
+                <p className="text-sm text-muted-foreground">Total Applications</p>
               </div>
               <BarChart3 className="h-10 w-10 text-primary opacity-30" />
             </div>
@@ -182,7 +182,7 @@ export default function MigrationOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-green-600">{stats.approved + stats.issued}</p>
-                <p className="text-sm text-muted-foreground">Approved / Выдано</p>
+                <p className="text-sm text-muted-foreground">Approved / Issued</p>
               </div>
               <CheckCircle className="h-10 w-10 text-green-500 opacity-30" />
             </div>
@@ -194,9 +194,9 @@ export default function MigrationOfficerPage() {
       <Tabs defaultValue="ALL" onValueChange={setStatusFilter}>
         <TabsList>
           <TabsTrigger value="ALL">All applications</TabsTrigger>
-          <TabsTrigger value="SUBMITTED">Ожидают</TabsTrigger>
+          <TabsTrigger value="SUBMITTED">Pending</TabsTrigger>
           <TabsTrigger value="UNDER_REVIEW">Under Review</TabsTrigger>
-          <TabsTrigger value="PROCESSED">Обworkанные</TabsTrigger>
+          <TabsTrigger value="PROCESSED">Processed</TabsTrigger>
         </TabsList>
 
         <Card className="mt-4">

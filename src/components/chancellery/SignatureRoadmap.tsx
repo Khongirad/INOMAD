@@ -18,10 +18,10 @@ interface SignatureRoadmapProps {
 export default function SignatureRoadmap({ signers, currentUserId }: SignatureRoadmapProps) {
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'CREATOR': return 'Создатель';
-      case 'RECIPIENT': return 'Genderучатель';
+      case 'CREATOR': return 'Creator';
+      case 'RECIPIENT': return 'Recipient';
       case 'WITNESS': return 'Witness';
-      case 'AUTHORITY': return 'Уin the floorоченное лицо';
+      case 'AUTHORITY': return 'Authorized Person';
       default: return role;
     }
   };
@@ -45,9 +45,9 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
       {/* Progress Header */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-white">Progress подписания</h3>
+          <h3 className="text-sm font-semibold text-white">Signing Progress</h3>
           <span className="text-sm text-zinc-400">
-            {signedCount} из {totalSigners}
+            {signedCount} of {totalSigners}
           </span>
         </div>
         <div className="w-full bg-zinc-700 rounded-full h-2">
@@ -96,7 +96,7 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
                     <span className="font-medium text-white">{signer.username}</span>
                     {currentUserId === signer.id && (
                       <span className="text-xs px-2 py-0.5 bg-gold-primary/20 text-gold-primary rounded">
-                        Вы
+                        You
                       </span>
                     )}
                   </div>
@@ -119,9 +119,9 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
                       )}
                     </div>
                   ) : currentUserId === signer.id ? (
-                    <span className="text-xs font-medium text-gold-primary">Pending yourей подписи</span>
+                    <span className="text-xs font-medium text-gold-primary">Awaiting your signature</span>
                   ) : (
-                    <span className="text-xs text-zinc-500">Pendingся</span>
+                    <span className="text-xs text-zinc-500">Pending</span>
                   )}
                 </div>
               </div>
@@ -135,20 +135,20 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
         <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
           <div className="flex items-center gap-2 text-green-400">
             <Check className="w-5 h-5" />
-            <span className="font-medium">All подписи собраны! Document будет заarchiveирован.</span>
+            <span className="font-medium">All signatures collected! Document will be archived.</span>
           </div>
         </div>
       ) : currentUserId && signers.find(s => s.id === currentUserId && !s.signed) ? (
         <div className="p-4 bg-gold-primary/10 border border-gold-primary/30 rounded-lg">
           <div className="flex items-center gap-2 text-gold-primary">
             <User className="w-5 h-5" />
-            <span className="font-medium">Required yourа signature for продолжения</span>
+            <span className="font-medium">Your signature is required to continue</span>
           </div>
         </div>
       ) : (
         <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
           <div className="text-sm text-zinc-400">
-            Pending подписей from других members...
+            Awaiting signatures from other members...
           </div>
         </div>
       )}

@@ -109,7 +109,7 @@ function migrateDraft(input: unknown): IdentityDraft {
     base.ethnicity.selfDeclaredText
   );
 
-  // updatedAt (if был ISO string in meta.updatedAt — тоже конвертируем)
+  // updatedAt (if ISO string in meta.updatedAt — also convert)
   const updatedAtNumber = asNumber(input["updatedAt"], 0);
 
   let updatedAt = updatedAtNumber;
@@ -227,7 +227,7 @@ export function saveDraft(draft: IdentityDraft): void {
   if (typeof window === "undefined") return;
 
   try {
-    // сохраняем уже “чистый” MVP-format
+    // save already clean MVP format
     const normalized = migrateDraft(draft);
     window.localStorage.setItem(KEY, JSON.stringify(normalized));
   } catch {

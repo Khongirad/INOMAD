@@ -41,7 +41,7 @@ export default function EducationPage() {
         setIsAdmin(true);
       }
     } catch {
-      toast.error('Error загрузки данных');
+      toast.error('Error loading data');
     } finally {
       setLoading(false);
     }
@@ -60,8 +60,8 @@ export default function EducationPage() {
       },
       body: JSON.stringify(formData),
     });
-    if (!res.ok) throw new Error('Error при отправке');
-    toast.success('Education sent на проверку');
+    if (!res.ok) throw new Error('Error submitting');
+    toast.success('Education sent for verification');
     setShowForm(false);
     fetchData();
   };
@@ -108,7 +108,7 @@ export default function EducationPage() {
         {!showForm && (
           <Button onClick={() => setShowForm(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Добавить
+            Add
           </Button>
         )}
       </div>
@@ -126,7 +126,7 @@ export default function EducationPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="my-education" className="gap-2">
             <BookOpen className="h-4 w-4" />
-            Моё Education
+            My Education
           </TabsTrigger>
           {isAdmin && (
             <TabsTrigger value="verification" className="gap-2">
@@ -150,7 +150,7 @@ export default function EducationPage() {
             {pendingVerifications.length === 0 ? (
               <div className="text-center py-16">
                 <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No applications на верификацию</p>
+                <p className="text-muted-foreground">No verification applications</p>
               </div>
             ) : (
               <div className="space-y-3">

@@ -70,7 +70,7 @@ export default function ApplicationReviewPage() {
       setReviewDialog(false);
       router.push('/services/migration/officer');
     } catch (err: any) {
-      setError(err.message || 'Failed to process рассмотрение');
+      setError(err.message || 'Failed to process review');
     } finally {
       setSubmitting(false);
     }
@@ -112,7 +112,7 @@ export default function ApplicationReviewPage() {
       case 'REJECTED':
         return <Badge variant="destructive">Rejected</Badge>;
       case 'ISSUED':
-        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Выдано</Badge>;
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Issued</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -128,11 +128,11 @@ export default function ApplicationReviewPage() {
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back к панели
+          Back to Panel
         </Button>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Рассмотрение applications</h1>
+            <h1 className="text-3xl font-bold">Application Review</h1>
             <p className="text-muted-foreground mt-1">
               {application.passportType} passport — {application.fullName}
             </p>
@@ -145,11 +145,11 @@ export default function ApplicationReviewPage() {
         {/* Personal Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Личная information</CardTitle>
+            <CardTitle>Personal Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-xs text-muted-foreground">ФИО</p>
+              <p className="text-xs text-muted-foreground">Full Name</p>
               <p className="font-semibold">{application.fullName}</p>
             </div>
             <div>
@@ -166,13 +166,13 @@ export default function ApplicationReviewPage() {
             </div>
             {application.height && (
               <div>
-                <p className="text-xs text-muted-foreground">Рост</p>
-                <p>{application.height} см</p>
+                <p className="text-xs text-muted-foreground">Height</p>
+                <p>{application.height} cm</p>
               </div>
             )}
             {application.eyeColor && (
               <div>
-                <p className="text-xs text-muted-foreground">Цвет глаз</p>
+                <p className="text-xs text-muted-foreground">Eye Color</p>
                 <p>{application.eyeColor}</p>
               </div>
             )}
@@ -191,13 +191,13 @@ export default function ApplicationReviewPage() {
             </div>
             {application.fatherName && (
               <div>
-                <p className="text-xs text-muted-foreground">Name отца</p>
+                <p className="text-xs text-muted-foreground">Father's Name</p>
                 <p>{application.fatherName}</p>
               </div>
             )}
             {application.motherName && (
               <div>
-                <p className="text-xs text-muted-foreground">Name матери</p>
+                <p className="text-xs text-muted-foreground">Mother's Name</p>
                 <p>{application.motherName}</p>
               </div>
             )}
@@ -214,17 +214,17 @@ export default function ApplicationReviewPage() {
         {/* Documents */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Uploaded documents (зашифрованы)</CardTitle>
+            <CardTitle>Uploaded Documents (encrypted)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4 flex gap-2">
               <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                All documents зашифрованы алгоритмом AES-256-GCM. Access регистрируется и проверяется.
+                All documents are encrypted with AES-256-GCM. Access is logged and verified.
               </p>
             </div>
             {documents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Documents ещё не загружены</p>
+              <p className="text-sm text-muted-foreground">Documents not yet uploaded</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {documents.map((doc) => (
@@ -232,11 +232,11 @@ export default function ApplicationReviewPage() {
                     <CardContent className="pt-4">
                       <p className="font-medium text-sm mb-1">{doc.type.replace('_', ' ')}</p>
                       <p className="text-xs text-muted-foreground mb-3">
-                        Загружено: {new Date(doc.uploadedAt).toLocaleDateString('en-US')}
+                        Uploaded: {new Date(doc.uploadedAt).toLocaleDateString('en-US')}
                       </p>
                       <Button variant="outline" size="sm" className="w-full">
                         <Download className="h-3 w-3 mr-2" />
-                        Просмотр (Расшифровать)
+                        View (Decrypt)
                       </Button>
                     </CardContent>
                   </Card>
@@ -250,7 +250,7 @@ export default function ApplicationReviewPage() {
         {application.reviewNotes && (
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Предыдущие замечания</CardTitle>
+              <CardTitle>Previous Comments</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm">{application.reviewNotes}</p>
@@ -262,7 +262,7 @@ export default function ApplicationReviewPage() {
         {application.status !== 'APPROVED' && application.status !== 'REJECTED' && (
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Actions рассмотрения</CardTitle>
+              <CardTitle>Review Actions</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex gap-4">
@@ -298,29 +298,29 @@ export default function ApplicationReviewPage() {
             </DialogTitle>
             <DialogDescription>
               {reviewAction === 'APPROVE'
-                ? 'Byдтвердите одобрение и назначьте number passportа'
-                : 'Specify reason отклонения'}
+                ? 'Confirm approval and assign passport number'
+                : 'Specify rejection reason'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {reviewAction === 'APPROVE' && (
               <div className="space-y-2">
-                <Label>Number passportа</Label>
+                <Label>Passport Number</Label>
                 <Input
                   placeholder="SC-XXXX-XXXX"
                   value={passportNumber}
                   onChange={(e) => setPassportNumber(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">Сгенерируйте и назначьте number passportа</p>
+                <p className="text-xs text-muted-foreground">Generate and assign a passport number</p>
               </div>
             )}
             <div className="space-y-2">
-              <Label>Замечания</Label>
+              <Label>Comments</Label>
               <Textarea
                 placeholder={
                   reviewAction === 'APPROVE'
-                    ? 'Необязательные замечания к одобрению'
+                    ? 'Optional comments for approval'
                     : 'Required: Rejection Reason'
                 }
                 value={reviewNotes}
@@ -345,7 +345,7 @@ export default function ApplicationReviewPage() {
                   Processing...
                 </>
               ) : (
-                `Confirm ${reviewAction === 'APPROVE' ? 'одобрение' : 'отклонение'}`
+                `Confirm ${reviewAction === 'APPROVE' ? 'approval' : 'rejection'}`
               )}
             </Button>
           </DialogFooter>

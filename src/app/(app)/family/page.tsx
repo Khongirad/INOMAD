@@ -170,7 +170,7 @@ export default function FamilyPage() {
     next.khudanarSlots = next.khudanarSlots.map((s) => {
       if (s.slotId !== slotId) return s;
       if (!trimmed) return { ...s, personId: undefined };
-      return { ...s, personId: trimmed }; // MVP: personId хранит name
+      return { ...s, personId: trimmed }; // MVP: personId stores name
     });
     touch(next);
   };
@@ -215,7 +215,7 @@ export default function FamilyPage() {
             active={tab === "khudanar"}
             onClick={() => setTab("khudanar")}
           >
-            Худанар (Сваты)
+            Khudanar (In-Laws)
           </TabButton>
           <TabButton
             active={tab === "cousins"}
@@ -341,7 +341,7 @@ export default function FamilyPage() {
 
       {tab === "khudanar" && (
         <Section
-          title="Худанар (Сваты)"
+          title="Khudanar (In-Laws)"
           subtitle="Alliance connections between families (not blood)."
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -595,7 +595,7 @@ function CousinAdder({
             className="w-full rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm outline-none"
             value={hint}
             onChange={(e) => setHint(e.target.value)}
-            placeholder='Example: "через дядю ..."'
+            placeholder='Example: "through uncle ..."'
           />
         </div>
       </div>

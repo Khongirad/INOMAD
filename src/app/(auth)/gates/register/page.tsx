@@ -162,7 +162,7 @@ export default function RegisterPage() {
           </div>
           
           <h1 className="text-4xl font-bold text-gold-primary mb-2">
-            РЕGISТРАЦИЯ / REGISTRATION
+            REGISTRATION
           </h1>
           <p className="text-zinc-400">Gates of Khural • Gates Khural</p>
         </div>
@@ -268,7 +268,7 @@ export default function RegisterPage() {
                 onChange={(e) => setTosAccepted(e.target.checked)}
                 className="w-5 h-5"
               />
-              <span>Я accept Terms of Use / I accept the Terms of Service</span>
+              <span>I accept the Terms of Service</span>
             </label>
 
             {error && (
@@ -307,7 +307,7 @@ export default function RegisterPage() {
                 ⚖️ IMPORTANT: Legal Status
               </p>
               <p className="text-zinc-300">
-                By accepting the Constitution INOMAD KHURAL, вы становитесь <span className="text-green-400 font-bold">legal entity</span> с genderными rights и obligations in our sovereign systemе.
+                By accepting the Constitution of INOMAD KHURAL, you become a <span className="text-green-400 font-bold">legal entity</span> with full rights and obligations in our sovereign system.
               </p>
             </div>
 

@@ -148,7 +148,7 @@ export default function ParliamentPage() {
           <div>
             <h1 className="text-2xl font-bold">Parliament / Parliament</h1>
             <p className="text-sm text-muted-foreground">
-              Khural — sessions и voting leaderоin Tumenов
+              Khural — sessions and voting by Tumen leaders
             </p>
           </div>
         </div>
@@ -193,14 +193,14 @@ export default function ParliamentPage() {
       )}
 
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm mb-4">
-        <strong>Only leaderы Tumenов</strong> have right voteа in Khuralе.
-        В Republicнском Khuralе voteуют leaderы Tumenоin of this Republics.
+        <strong>Only Tumen leaders</strong> have the right to vote in Khural.
+        In the Republican Khural, Tumen leaders of the Republic vote.
       </div>
 
       {/* Empty state */}
       {sessions.length === 0 && !loading && (
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-          ℹ️ No запланированных сессий. Convene the first сессию Khural!
+          ℹ️ No scheduled sessions. Convene the first Khural session!
         </div>
       )}
 
@@ -324,7 +324,7 @@ export default function ParliamentPage() {
             <div className="border-t border-border my-4" />
 
             <p className="text-xs font-medium text-muted-foreground mb-2">
-              Voteа ({results.votes?.length || 0})
+              Votes ({results.votes?.length || 0})
             </p>
             {results.votes?.map((v: any) => (
               <div key={v.id} className="flex items-center gap-2 p-1.5 rounded-md bg-muted/30 mb-1">
@@ -356,13 +356,13 @@ export default function ParliamentPage() {
               <Select value={createForm.level} onValueChange={v => setCreateForm({ ...createForm, level: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="REPUBLICAN">Republicнский Khural</SelectItem>
+                  <SelectItem value="REPUBLICAN">Republican Khural</SelectItem>
                   <SelectItem value="CONFEDERATIVE">Confederation Khural</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>ID Republics/Конфедерации</Label>
+              <Label>Republic/Confederation ID</Label>
               <Input value={createForm.entityId} onChange={e => setCreateForm({ ...createForm, entityId: e.target.value })} />
             </div>
             <div className="space-y-2">
@@ -378,7 +378,7 @@ export default function ParliamentPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Date и время</Label>
+              <Label>Date and Time</Label>
               <Input type="datetime-local" value={createForm.sessionDate} onChange={e => setCreateForm({ ...createForm, sessionDate: e.target.value })} />
             </div>
             <div className="space-y-2">
@@ -402,7 +402,7 @@ export default function ParliamentPage() {
           </DialogHeader>
 
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-sm mb-2">
-            ⚠️ You voteуете как leader Tumenа. One vote на сессию.
+            ⚠️ You are voting as a Tumen leader. One vote per session.
           </div>
 
           <div className="space-y-4">
