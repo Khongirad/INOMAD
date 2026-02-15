@@ -53,7 +53,7 @@ export default function DivorceApplicationPage() {
         reason,
         propertyDivision: propertyDivision || undefined,
       });
-      toast.success('Application на divorce подано');
+      toast.success('Divorce Application подано');
       router.push('/services/zags');
     } catch (err: any) {
       toast.error(err.message || 'Failed to submit application');

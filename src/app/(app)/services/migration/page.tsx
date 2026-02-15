@@ -122,7 +122,7 @@ export default function MigrationServicePage() {
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-3">You ещё не подавали заявлений</p>
               <Button variant="outline" onClick={() => router.push('/services/migration/apply')}>
-                + Submit на passport
+                + Apply for Passport
               </Button>
             </div>
           ) : (

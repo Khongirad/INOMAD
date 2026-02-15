@@ -130,7 +130,7 @@ export default function ReputationDialog({
                   </div>
                   <Star className="w-5 h-5 text-gold-primary fill-gold-primary" />
                 </div>
-                <div className="text-xs text-zinc-400 mt-1">Medium рейтинг</div>
+                <div className="text-xs text-zinc-400 mt-1">Medium rating</div>
                 <div className="flex gap-0.5 mt-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star

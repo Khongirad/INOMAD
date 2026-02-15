@@ -68,9 +68,9 @@ export default function ZAGSPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Civil Registry — Bureau citizensской registration</h1>
+        <h1 className="text-2xl font-bold">Civil Registry — Bureau of Civil Registration</h1>
         <p className="text-muted-foreground mt-1">
-          Registration marriageа, divorce и governance citizensским статусом
+          Registration of marriages, divorces, and civil status management
         </p>
       </div>
 
@@ -86,17 +86,17 @@ export default function ZAGSPage() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Your citizensский статус</h3>
+              <h3 className="text-lg font-semibold mb-2">Your Civil Status</h3>
               <CivilStatusBadge status={civilStatus} />
             </div>
             {civilStatus === 'SINGLE' && (
               <Button onClick={() => router.push('/services/zags/marriage/apply')}>
-                + Submit application на marriage
+                + Submit Marriage Application
               </Button>
             )}
             {civilStatus === 'MARRIED' && (
               <Button variant="destructive" onClick={() => router.push('/services/zags/divorce/apply')}>
-                Submit на divorce
+                Submit for Divorce
               </Button>
             )}
           </div>
@@ -107,17 +107,17 @@ export default function ZAGSPage() {
       {pendingConsents.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Ожидают yourего consent</CardTitle>
+            <CardTitle>Awaiting Your Consent</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="bg-blue-500/10 text-blue-400 rounded-lg p-3 mb-4 text-sm">
-              У вас {pendingConsents.length} application(й) на marriage, ожидающих yourего consent
+              You have {pendingConsents.length} marriage application(s) awaiting your consent
             </div>
             <div className="space-y-3">
               {pendingConsents.map((consent) => (
                 <div key={consent.id} className="border border-border rounded-lg p-4 flex items-center justify-between">
                   <div>
-                    <p className="font-semibold">Application на marriage</p>
+                    <p className="font-semibold">Marriage Application</p>
                     <p className="text-sm text-muted-foreground">
                       Filed: {new Date(consent.createdAt).toLocaleDateString('en-US')}
                     </p>
@@ -135,7 +135,7 @@ export default function ZAGSPage() {
       {/* Marriages */}
       <Card>
         <CardHeader>
-          <CardTitle>Records о marriageе</CardTitle>
+          <CardTitle>Marriage Records</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -144,7 +144,7 @@ export default function ZAGSPage() {
             </div>
           ) : marriages.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground mb-3">Records о marriageе не найдены</p>
+              <p className="text-muted-foreground mb-3">No marriage records found</p>
               {civilStatus === 'SINGLE' && (
                 <Button variant="outline" onClick={() => router.push('/services/zags/marriage/apply')}>
                   + Submit application
@@ -192,11 +192,11 @@ export default function ZAGSPage() {
       {/* Certificate Verification */}
       <Card>
         <CardHeader>
-          <CardTitle>Verification witnessства</CardTitle>
+          <CardTitle>Certificate Verification</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Проверьте подлинность witnessства о marriageе or divorceе (публичный поclaim)
+            Verify the authenticity of a marriage or divorce certificate (public lookup)
           </p>
           <div className="flex gap-3 mb-3">
             <Input
@@ -210,7 +210,7 @@ export default function ZAGSPage() {
               disabled={certLoading || !certNumber.trim()}
               className="min-w-[120px]"
             >
-              {certLoading ? '…' : '🔍 Проверить'}
+              {certLoading ? '…' : '🔍 Verify'}
             </Button>
           </div>
 
@@ -218,17 +218,17 @@ export default function ZAGSPage() {
             <div className={`rounded-lg p-4 ${certResult.isValid ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
               {certResult.isValid ? (
                 <>
-                  <p className="font-semibold">✅ Действительное certificate ({certResult.type})</p>
+                  <p className="font-semibold">✅ Valid Certificate ({certResult.type})</p>
                   {certResult.details && (
                     <>
                       <p className="text-sm">Spouses: {certResult.details.spouse1Name} & {certResult.details.spouse2Name}</p>
                       <p className="text-sm">Marriage Date: {new Date(certResult.details.marriageDate).toLocaleDateString('en-US')}</p>
                     </>
                   )}
-                  <p className="text-xs opacity-70">Выдано: {new Date(certResult.issuedDate).toLocaleDateString('en-US')}</p>
+                  <p className="text-xs opacity-70">Issued: {new Date(certResult.issuedDate).toLocaleDateString('en-US')}</p>
                 </>
               ) : (
-                <p>{certResult.error || 'Certificate не найдено or недействительно'}</p>
+                <p>{certResult.error || 'Certificate not found or invalid'}</p>
               )}
             </div>
           )}
@@ -238,26 +238,26 @@ export default function ZAGSPage() {
       {/* Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader><CardTitle>📋 Requirements к marriageу</CardTitle></CardHeader>
+          <CardHeader><CardTitle>📋 Marriage Requirements</CardTitle></CardHeader>
           <CardContent>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Обоим partnerм должно быть 18+ лет</li>
-              <li>• Оба должны быть холосты</li>
-              <li>• Required обоюдное consent</li>
-              <li>• Verification и одобрение сотрудником Civil Registry</li>
-              <li>• Witnessства на blockchain</li>
+              <li>• Both partners must be 18+ years old</li>
+              <li>• Both must be single</li>
+              <li>• Mutual consent required</li>
+              <li>• Verification and approval by Civil Registry officer</li>
+              <li>• Certificates on blockchain</li>
             </ul>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>⚖️ Process divorceа</CardTitle></CardHeader>
+          <CardHeader><CardTitle>⚖️ Divorce Process</CardTitle></CardHeader>
           <CardContent>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Byдача applications онлайн</li>
-              <li>• Agreement о разделе properties (опционально)</li>
-              <li>• Рассмотрение сотрудником Civil Registry</li>
-              <li>• Certificate после завершения</li>
-              <li>• Status обновляется автоматически</li>
+              <li>• Online application submission</li>
+              <li>• Property division agreement (optional)</li>
+              <li>• Review by Civil Registry officer</li>
+              <li>• Certificate upon completion</li>
+              <li>• Status updated automatically</li>
             </ul>
           </CardContent>
         </Card>

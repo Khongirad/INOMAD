@@ -134,7 +134,7 @@ export function GeoMap({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
 
-  // Инициализация карты
+  // Initialization карты
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
@@ -364,7 +364,7 @@ export function GeoMap({
         lng: e.lngLat.lng,
       };
 
-      // Удаляем previous маркер
+      // Remove previous маркер
       if (marker.current) {
         marker.current.remove();
       }
@@ -404,7 +404,7 @@ export function GeoMap({
     };
   }, [mapLoaded, selectionMode, onLocationSelect]);
 
-  // Обновление стилей при изменении выбранного the region of
+  // Update стилей при изменении выбранного the region of
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 

@@ -295,7 +295,7 @@ export default function ParliamentPage() {
               <div className="text-center">
                 <CheckCircle className="h-6 w-6 text-green-500 mx-auto" />
                 <p className="text-2xl font-bold text-green-500">{results.results?.for || 0}</p>
-                <p className="text-xs text-muted-foreground">За</p>
+                <p className="text-xs text-muted-foreground">For</p>
               </div>
               <div className="text-center">
                 <XCircle className="h-6 w-6 text-red-500 mx-auto" />
@@ -411,7 +411,7 @@ export default function ParliamentPage() {
               <Select value={voteForm.vote} onValueChange={v => setVoteForm({ ...voteForm, vote: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="FOR">✅ За</SelectItem>
+                  <SelectItem value="FOR">✅ For</SelectItem>
                   <SelectItem value="AGAINST">❌ Against</SelectItem>
                   <SelectItem value="ABSTAIN">⚪ Abstain</SelectItem>
                 </SelectContent>

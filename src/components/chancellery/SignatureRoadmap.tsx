@@ -148,7 +148,7 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
       ) : (
         <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
           <div className="text-sm text-zinc-400">
-            Ожидание подписей from других members...
+            Pending подписей from других members...
           </div>
         </div>
       )}
