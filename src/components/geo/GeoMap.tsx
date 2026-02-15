@@ -176,7 +176,7 @@ export function GeoMap({
 
     const mapInstance = map.current;
 
-    // Создаём GeoJSON for всех regions
+    // Создаём GeoJSON for all regions
     const regionsGeoJSON: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
       features: DOCTRINAL_REGIONS.map(regionToGeoJSON) as GeoJSON.Feature[],

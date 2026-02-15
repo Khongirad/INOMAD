@@ -96,17 +96,17 @@ export default function MarriageConsentPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Date of Birth of Spouse 1</p>
-              <p>{new Date(marriage.spouse1DateOfBirth).toLocaleDateString('ru-RU')}</p>
+              <p>{new Date(marriage.spouse1DateOfBirth).toLocaleDateString('en-US')}</p>
             </div>
             <div className="border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Date of Birth of Spouse 2</p>
-              <p>{new Date(marriage.spouse2DateOfBirth).toLocaleDateString('ru-RU')}</p>
+              <p>{new Date(marriage.spouse2DateOfBirth).toLocaleDateString('en-US')}</p>
             </div>
           </div>
 
           <div className="border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Desired Marriage Date</p>
-            <p>{new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}</p>
+            <p>{new Date(marriage.marriageDate).toLocaleDateString('en-US')}</p>
           </div>
 
           {marriage.ceremonyLocation && (

@@ -154,7 +154,7 @@ export default function ApplicationReviewPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Date birth</p>
-              <p>{new Date(application.dateOfBirth).toLocaleDateString('ru-RU')}</p>
+              <p>{new Date(application.dateOfBirth).toLocaleDateString('en-US')}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Gender</p>
@@ -214,17 +214,17 @@ export default function ApplicationReviewPage() {
         {/* Documents */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Uploaded documentы (зашифрованы)</CardTitle>
+            <CardTitle>Uploaded documents (зашифрованы)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4 flex gap-2">
               <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                All documentы зашифрованы алгоритмом AES-256-GCM. Access регистрируется и проверяется.
+                All documents зашифрованы алгоритмом AES-256-GCM. Access регистрируется и проверяется.
               </p>
             </div>
             {documents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Documentы ещё не загружены</p>
+              <p className="text-sm text-muted-foreground">Documents ещё не загружены</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {documents.map((doc) => (
@@ -232,7 +232,7 @@ export default function ApplicationReviewPage() {
                     <CardContent className="pt-4">
                       <p className="font-medium text-sm mb-1">{doc.type.replace('_', ' ')}</p>
                       <p className="text-xs text-muted-foreground mb-3">
-                        Загружено: {new Date(doc.uploadedAt).toLocaleDateString('ru-RU')}
+                        Загружено: {new Date(doc.uploadedAt).toLocaleDateString('en-US')}
                       </p>
                       <Button variant="outline" size="sm" className="w-full">
                         <Download className="h-3 w-3 mr-2" />

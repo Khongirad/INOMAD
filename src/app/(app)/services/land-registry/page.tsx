@@ -132,12 +132,12 @@ export default function LandRegistryPage() {
                               Type: {ownership.ownershipType} ({ownership.sharePercentage}%)
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Выдано: {new Date(ownership.issuedAt).toLocaleDateString('ru-RU')}
+                              Выдано: {new Date(ownership.issuedAt).toLocaleDateString('en-US')}
                             </p>
                           </div>
                           <div className="text-right space-y-2">
                             <Badge variant={ownership.isActive ? 'default' : 'secondary'}>
-                              {ownership.isActive ? 'Activа' : 'Неактивна'}
+                              {ownership.isActive ? 'Activа' : 'Неactивна'}
                             </Badge>
                             <div>
                               <Button size="sm" variant="outline" onClick={() => router.push(`/services/land-registry/properties/${ownership.id}`)}>
@@ -154,7 +154,7 @@ export default function LandRegistryPage() {
                 <TabsContent value="leases" className="mt-0">
                   {leases.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-3">No активных аренд</p>
+                      <p className="text-muted-foreground mb-3">No actивных аренд</p>
                       <Button variant="outline" onClick={() => router.push('/services/land-registry/register/lease')}>
                         + Оформить аренду
                       </Button>
@@ -170,7 +170,7 @@ export default function LandRegistryPage() {
                               Плата: {lease.monthlyRent} {lease.currency}/мес
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {new Date(lease.startDate).toLocaleDateString('ru-RU')} — {new Date(lease.endDate).toLocaleDateString('ru-RU')}
+                              {new Date(lease.startDate).toLocaleDateString('en-US')} — {new Date(lease.endDate).toLocaleDateString('en-US')}
                             </p>
                           </div>
                           <Badge variant={lease.isActive ? 'default' : 'secondary'}>

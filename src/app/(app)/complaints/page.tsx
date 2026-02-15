@@ -107,14 +107,14 @@ export default function ComplaintsPage() {
           Complaints
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Systemа complaints с иерархической эскалацией. Each complaint привязана к contract, task or акту work.
+          Hierarchical complaint escalation system. Each complaint is linked to a contract, task, or work act.
         </p>
       </div>
 
       {/* Hierarchy levels */}
       <Card className="bg-zinc-900/60 border-zinc-800">
         <CardContent className="p-4">
-          <p className="text-sm font-semibold text-zinc-200 mb-2">📊 Complaints по уровням иерархии</p>
+          <p className="text-sm font-semibold text-zinc-200 mb-2">📊 Complaints by hierarchy level</p>
           <div className="flex flex-wrap gap-1.5">
             {defaultStats.byLevel.map((level) => (
               <span
@@ -164,7 +164,7 @@ export default function ComplaintsPage() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-zinc-300">
-        ⚠️ Complaint должна быть привязана к конкретному contract, task or акту work.
+        ⚠️ A complaint must be linked to a specific contract, task, or work act.
         If the issue can be resolved through negotiation — first open a <strong>dispute</strong>.
       </div>
 

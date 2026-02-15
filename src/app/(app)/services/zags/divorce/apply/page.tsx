@@ -129,7 +129,7 @@ export default function DivorceApplicationPage() {
                     <SelectContent>
                       {marriages.map((m) => (
                         <SelectItem key={m.id} value={m.id}>
-                          {m.spouse1FullName} & {m.spouse2FullName} — {new Date(m.marriageDate).toLocaleDateString('ru-RU')}
+                          {m.spouse1FullName} & {m.spouse2FullName} — {new Date(m.marriageDate).toLocaleDateString('en-US')}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -138,7 +138,7 @@ export default function DivorceApplicationPage() {
                     <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4 text-sm space-y-1">
                       <p className="font-semibold">Selected marriage</p>
                       <p><strong>Spouses:</strong> {selectedMarriage.spouse1FullName} & {selectedMarriage.spouse2FullName}</p>
-                      <p><strong>Date:</strong> {new Date(selectedMarriage.marriageDate).toLocaleDateString('ru-RU')}</p>
+                      <p><strong>Date:</strong> {new Date(selectedMarriage.marriageDate).toLocaleDateString('en-US')}</p>
                       <p><strong>Property Regime:</strong> {selectedMarriage.propertyRegime || 'Не указано'}</p>
                     </div>
                   )}
@@ -205,7 +205,7 @@ export default function DivorceApplicationPage() {
                     <p className="font-semibold">⚠️ Confirmation</p>
                     <ul className="list-disc ml-4 mt-1 space-y-1">
                       <li>All provided information is correct</li>
-                      <li>You понимаете, что это начнёт marriageоdivorceный process</li>
+                      <li>You пtheyмаете, что это начнёт marriageоdivorceный process</li>
                       <li>Spouse(а) будет уведомлён(а) официально</li>
                       <li>Action сложно cancel</li>
                     </ul>

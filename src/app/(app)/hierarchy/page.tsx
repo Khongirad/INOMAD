@@ -180,9 +180,9 @@ export default function HierarchyPage() {
       {/* Stats */}
       <div className="flex gap-3 flex-wrap mb-6">
         <StatCard label="Republics" value={totalRepublics} colorClass="text-blue-500" />
-        <StatCard label="Tumenы" value={totalTumens} colorClass="text-purple-500" />
-        <StatCard label="Myanganы" value={totalMyangans} colorClass="text-green-500" />
-        <StatCard label="Сотрудничества" value={Math.floor(totalCoops)} colorClass="text-orange-500" />
+        <StatCard label="Tumens" value={totalTumens} colorClass="text-purple-500" />
+        <StatCard label="Myangans" value={totalMyangans} colorClass="text-green-500" />
+        <StatCard label="Cooperations" value={Math.floor(totalCoops)} colorClass="text-orange-500" />
       </div>
 
       {loading && (
@@ -195,7 +195,7 @@ export default function HierarchyPage() {
       <Tabs defaultValue="tree">
         <TabsList className="mb-4">
           <TabsTrigger value="tree">🌳 Hierarchy Tree</TabsTrigger>
-          <TabsTrigger value="cooperation">🤝 Cooperation Tumenов</TabsTrigger>
+          <TabsTrigger value="cooperation">🤝 Tumen Cooperation</TabsTrigger>
         </TabsList>
 
         {/* Tab: Tree */}
@@ -204,7 +204,7 @@ export default function HierarchyPage() {
             {tree?.confederation && (
               <TreeNode
                 level="confederation"
-                name={tree.confederation.name || 'Confederatый Khural'}
+                name={tree.confederation.name || 'Confederation Khural'}
                 count={tree.confederation.totalMembers}
               >
                 {tree.republics?.map((republic: any) => (
@@ -246,7 +246,7 @@ export default function HierarchyPage() {
 
             {!tree?.confederation && !loading && (
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-                ℹ️ Hierarchy ещё не создана. Start by creating Arbanоin и Zuunов.
+                ℹ️ Hierarchy not yet created. Start by creating Arbans and Zuuns.
               </div>
             )}
           </Card>
@@ -255,7 +255,7 @@ export default function HierarchyPage() {
         {/* Tab: Cooperation */}
         <TabsContent value="cooperation">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">🤝 Cooperation Tumenов</h2>
+            <h2 className="text-lg font-semibold">🤝 Tumen Cooperation</h2>
             <Button onClick={() => setCoopDialog(true)} className="gap-2 bg-purple-600 hover:bg-purple-700">
               <Plus className="h-4 w-4" />
               Propose
@@ -263,7 +263,7 @@ export default function HierarchyPage() {
           </div>
 
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm mb-4">
-            <strong>Tumenы do not merge</strong> — они can only cooperate.
+            <strong>Tumens do not merge</strong> — they can only cooperate.
             Each Tumen remains a sovereign unit с собственным leaderом и governanceм.
           </div>
 
@@ -302,7 +302,7 @@ export default function HierarchyPage() {
 
           {tumens.every((t: any) => (t.cooperationsAsA?.length || 0) + (t.cooperationsAsB?.length || 0) === 0) && (
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-              ℹ️ Not yet активных cooperations between Tumenами.
+              ℹ️ Not yet actивных cooperations between Tumenами.
             </div>
           )}
         </TabsContent>
@@ -314,7 +314,7 @@ export default function HierarchyPage() {
           <DialogHeader>
             <DialogTitle>Propose cooperation</DialogTitle>
             <DialogDescription>
-              Cooperation — это an agreement between two Tumenами. Tumenы remain independent.
+              Cooperation — это an agreement between two Tumenами. Tumens remain independent.
             </DialogDescription>
           </DialogHeader>
 

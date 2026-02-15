@@ -197,7 +197,7 @@ export default function LandRegistrationPage() {
               <div><p className="text-xs text-muted-foreground">Area</p><p>{area} ha</p><p className="text-sm text-muted-foreground">GPS: {coordinates}</p></div>
               {boundaries && <div><p className="text-xs text-muted-foreground">Borders</p><p className="text-sm">{boundaries}</p></div>}
               <div><p className="text-xs text-muted-foreground">Ownership</p><p>{ownershipType === 'FULL' ? 'Full' : `Proportional (${ownershipShare}%)`}</p></div>
-              {documents && <div><p className="text-xs text-muted-foreground">Documentы</p><p className="text-sm">{documents}</p></div>}
+              {documents && <div><p className="text-xs text-muted-foreground">Documents</p><p className="text-sm">{documents}</p></div>}
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                 <p className="text-sm font-semibold mb-1">Confirmation</p>
                 <p className="text-sm text-muted-foreground">By submitting this application, you confirm that:</p>

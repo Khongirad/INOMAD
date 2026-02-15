@@ -458,7 +458,7 @@ export default function UnifiedOrgDashboard() {
                         <p className="text-xs text-muted-foreground">"{r.comment}"</p>
                       )}
                       <p className="text-xs text-muted-foreground">
-                        — @{r.rater.username} • {new Date(r.createdAt).toLocaleDateString('ru-RU')}
+                        — @{r.rater.username} • {new Date(r.createdAt).toLocaleDateString('en-US')}
                       </p>
                     </div>
                   ))
@@ -556,7 +556,7 @@ export default function UnifiedOrgDashboard() {
 
                     {/* Date */}
                     <div className="col-span-2 text-sm text-muted-foreground">
-                      {new Date(member.joinedAt).toLocaleDateString('ru-RU')}
+                      {new Date(member.joinedAt).toLocaleDateString('en-US')}
                     </div>
 
                     {/* Actions */}
@@ -636,7 +636,7 @@ export default function UnifiedOrgDashboard() {
                     <h4 className="font-semibold">{ach.title}</h4>
                     <p className="text-sm text-muted-foreground">{ach.description}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(ach.awardedAt).toLocaleDateString('ru-RU')}
+                      {new Date(ach.awardedAt).toLocaleDateString('en-US')}
                     </p>
                   </CardContent>
                 </Card>
@@ -666,8 +666,8 @@ export default function UnifiedOrgDashboard() {
                               {el.status}
                             </Badge>
                           </div>
-                          <div className="text-sm">{new Date(el.startDate).toLocaleDateString('ru-RU')}</div>
-                          <div className="text-sm">{new Date(el.endDate).toLocaleDateString('ru-RU')}</div>
+                          <div className="text-sm">{new Date(el.startDate).toLocaleDateString('en-US')}</div>
+                          <div className="text-sm">{new Date(el.endDate).toLocaleDateString('en-US')}</div>
                           <div className="text-sm">{el.candidates.length}</div>
                         </div>
                       ))}

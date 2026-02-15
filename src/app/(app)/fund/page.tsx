@@ -245,7 +245,7 @@ export default function FundPage() {
                         return (
                           <tr key={txn.id} className="hover:bg-zinc-800/50 transition-colors">
                             <td className="px-6 py-4 text-sm text-zinc-400">
-                              {new Date(txn.createdAt).toLocaleDateString('ru-RU')}
+                              {new Date(txn.createdAt).toLocaleDateString('en-US')}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-1">

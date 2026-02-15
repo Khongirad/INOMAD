@@ -194,7 +194,7 @@ export default function DisputesPage() {
                         {dispute.partyA?.username} ↔ {dispute.partyB?.username}
                       </span>
                       <span className="text-zinc-600">
-                        {new Date(dispute.createdAt).toLocaleDateString('ru-RU')}
+                        {new Date(dispute.createdAt).toLocaleDateString('en-US')}
                       </span>
                     </div>
 

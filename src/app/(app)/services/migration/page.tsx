@@ -171,7 +171,7 @@ export default function MigrationServicePage() {
                   <p className="font-semibold">✅ Valid padisputeт</p>
                   <p className="text-sm">Owner: {lookupResult.fullName}</p>
                   {lookupResult.expiresAt && (
-                    <p className="text-sm">Истекает: {new Date(lookupResult.expiresAt).toLocaleDateString('ru-RU')}</p>
+                    <p className="text-sm">Истекает: {new Date(lookupResult.expiresAt).toLocaleDateString('en-US')}</p>
                   )}
                 </>
               ) : (

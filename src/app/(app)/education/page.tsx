@@ -150,7 +150,7 @@ export default function EducationPage() {
             {pendingVerifications.length === 0 ? (
               <div className="text-center py-16">
                 <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No заявок на верификацию</p>
+                <p className="text-muted-foreground">No applications на верификацию</p>
               </div>
             ) : (
               <div className="space-y-3">

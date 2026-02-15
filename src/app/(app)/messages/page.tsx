@@ -96,7 +96,7 @@ export default function MessagesPage() {
         toast.error('Submission error');
       }
     } catch (e) {
-      toast.error('Error сети');
+      toast.error('Network error');
     }
   };
 
@@ -155,8 +155,8 @@ export default function MessagesPage() {
           ) : filteredConvs.length === 0 ? (
             <div className="p-8 text-center">
               <MessageSquare className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-500 text-sm">No сообщений</p>
-              <p className="text-zinc-600 text-xs mt-1">Начните разговор</p>
+              <p className="text-zinc-500 text-sm">No messages</p>
+              <p className="text-zinc-600 text-xs mt-1">Start a conversation</p>
             </div>
           ) : (
             filteredConvs.map((conv) => (
@@ -239,7 +239,7 @@ export default function MessagesPage() {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
-                        {msg.isEdited && ' (ред.)'}
+                        {msg.isEdited && ' (edited)'}
                       </div>
                     </div>
                   </div>
@@ -252,7 +252,7 @@ export default function MessagesPage() {
             <div className="border-t border-white/5 p-3">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Написать сообщение..."
+                  placeholder="Write a message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
@@ -272,10 +272,10 @@ export default function MessagesPage() {
           <div className="flex-1 flex items-center justify-center text-center p-8">
             <div>
               <MessageSquare className="h-16 w-16 text-zinc-700 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Select чат</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Select a chat</h3>
               <p className="text-zinc-400 max-w-sm">
-                Select существующий разговор or начните new.
-                Чаты workают for организаций, квестов, courtбных дел и прямых сообщений.
+                Select an existing conversation or start a new one.
+                Chats work for organizations, quests, court cases, and direct messages.
               </p>
             </div>
           </div>

@@ -177,7 +177,7 @@ export default function LeaseRegistrationPage() {
               <div><p className="text-xs text-muted-foreground">Lessor</p><p>{lessorName}</p></div>
               <div>
                 <p className="text-xs text-muted-foreground">Period</p>
-                <p>{startDate ? new Date(startDate).toLocaleDateString('ru-RU') : ''} → {endDate ? new Date(endDate).toLocaleDateString('ru-RU') : ''}</p>
+                <p>{startDate ? new Date(startDate).toLocaleDateString('en-US') : ''} → {endDate ? new Date(endDate).toLocaleDateString('en-US') : ''}</p>
                 <p className="text-sm text-muted-foreground">{calcDuration()}</p>
               </div>
               <div>

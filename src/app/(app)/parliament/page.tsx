@@ -357,7 +357,7 @@ export default function ParliamentPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="REPUBLICAN">Republicнский Khural</SelectItem>
-                  <SelectItem value="CONFEDERATIVE">Confederatый Khural</SelectItem>
+                  <SelectItem value="CONFEDERATIVE">Confederation Khural</SelectItem>
                 </SelectContent>
               </Select>
             </div>

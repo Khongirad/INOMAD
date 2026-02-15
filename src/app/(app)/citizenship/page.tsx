@@ -274,13 +274,13 @@ export default function CitizenshipPage() {
           )}
 
           {loading ? (
-            <div className="text-center text-zinc-500 py-12 animate-pulse">Загрузка заявок...</div>
+            <div className="text-center text-zinc-500 py-12 animate-pulse">Загрузка applications...</div>
           ) : admissions.length === 0 ? (
             <Card className="border-white/5 bg-zinc-900/30">
               <CardContent className="p-8 text-center">
                 <Users className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-1">No заявок</h3>
-                <p className="text-zinc-400 text-sm">Ожидающих заявок на citizenship нет</p>
+                <h3 className="text-lg font-semibold text-white mb-1">No applications</h3>
+                <p className="text-zinc-400 text-sm">Ожидающих applications на citizenship нет</p>
               </CardContent>
             </Card>
           ) : (
@@ -299,7 +299,7 @@ export default function CitizenshipPage() {
                           </div>
                           <div className="text-xs text-zinc-500 flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {new Date(admission.createdAt).toLocaleDateString('ru-RU')}
+                            {new Date(admission.createdAt).toLocaleDateString('en-US')}
                           </div>
                         </div>
                       </div>
@@ -362,7 +362,7 @@ export default function CitizenshipPage() {
             <Card className="border-white/5 bg-zinc-900/30">
               <CardContent className="p-8 text-center">
                 <ScrollText className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-1">No записей</h3>
+                <h3 className="text-lg font-semibold text-white mb-1">No records</h3>
                 <p className="text-zinc-400 text-sm">History transfers земельного rights пуста</p>
               </CardContent>
             </Card>
@@ -393,7 +393,7 @@ export default function CitizenshipPage() {
                       </div>
                     </div>
                     <div className="text-xs text-zinc-500">
-                      {new Date(transfer.createdAt).toLocaleDateString('ru-RU')}
+                      {new Date(transfer.createdAt).toLocaleDateString('en-US')}
                     </div>
                   </div>
                 ))}

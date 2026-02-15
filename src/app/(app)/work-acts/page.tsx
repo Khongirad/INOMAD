@@ -32,8 +32,8 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
   DRAFTED: { label: 'Draft', color: 'text-zinc-400 bg-zinc-500/10', icon: Clock },
   SUBMITTED: { label: 'On проверке', color: 'text-blue-400 bg-blue-500/10', icon: FileCheck },
   REVIEWED: { label: 'Проверен', color: 'text-purple-400 bg-purple-500/10', icon: CheckCircle2 },
-  SIGNED_BY_CONTRACTOR: { label: 'Byдписан подрядчиком', color: 'text-amber-400 bg-amber-500/10', icon: PenTool },
-  SIGNED_BY_CLIENT: { label: 'Byдписан clientом', color: 'text-emerald-400 bg-emerald-500/10', icon: PenTool },
+  SIGNED_BY_CONTRACTOR: { label: 'Signed подрядчиком', color: 'text-amber-400 bg-amber-500/10', icon: PenTool },
+  SIGNED_BY_CLIENT: { label: 'Signed clientом', color: 'text-emerald-400 bg-emerald-500/10', icon: PenTool },
   COMPLETED: { label: 'Выgenderнен', color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
   DISPUTED: { label: 'Оdisputeен', color: 'text-red-500 bg-red-500/10', icon: AlertTriangle },
   CANCELLED: { label: 'Отменён', color: 'text-zinc-500 bg-zinc-500/10', icon: XCircle },
@@ -91,7 +91,7 @@ export default function WorkActsPage() {
         toast.error(err.message || 'Error');
       }
     } catch (e) {
-      toast.error('Error сети');
+      toast.error('Network error');
     }
   };
 
@@ -110,12 +110,12 @@ export default function WorkActsPage() {
             Acts comgenderненных work
           </h2>
           <p className="text-zinc-400 mt-1">
-            Создавайте, подписывайте и отслеживайте акты. Оплата после подписания обеими partyми.
+            Создавайте, подписывайте и отслеживайте acts. Оплата после подписания обеими partyми.
           </p>
         </div>
         <Button className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="mr-2 h-4 w-4" />
-          Create акт
+          Create act
         </Button>
       </div>
 
@@ -128,7 +128,7 @@ export default function WorkActsPage() {
                 <FileCheck className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Total актов</div>
+                <div className="text-xs text-zinc-500 uppercase">Total actов</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {myActs.length + reviewActs.length}
                 </div>
@@ -197,7 +197,7 @@ export default function WorkActsPage() {
               : "border-transparent text-zinc-500 hover:text-zinc-300"
           )}
         >
-          My акты ({myActs.length})
+          My acts ({myActs.length})
         </button>
         <button
           onClick={() => setTab('review')}
@@ -220,8 +220,8 @@ export default function WorkActsPage() {
           <Card className="border-white/5 bg-zinc-900/30">
             <CardContent className="p-8 text-center">
               <FileCheck className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
-              <h3 className="text-white font-semibold mb-1">No актов</h3>
-              <p className="text-zinc-500 text-sm">Создайте первый акт выgenderненных work</p>
+              <h3 className="text-white font-semibold mb-1">No actов</h3>
+              <p className="text-zinc-500 text-sm">Создайте первый act выgenderненных work</p>
             </CardContent>
           </Card>
         ) : (
@@ -262,7 +262,7 @@ export default function WorkActsPage() {
                             {isContractor ? act.client.username : act.contractor.username}
                           </span>
                           <span>
-                            {new Date(act.createdAt).toLocaleDateString('ru-RU')}
+                            {new Date(act.createdAt).toLocaleDateString('en-US')}
                           </span>
                         </div>
                       </div>

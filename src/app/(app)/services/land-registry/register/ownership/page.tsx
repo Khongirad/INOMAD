@@ -158,7 +158,7 @@ export default function PropertyOwnershipRegistrationPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Приобретение</p>
                 <p className="text-sm">Способ: {acquisitionMethod}</p>
-                <p className="text-sm">Date: {acquisitionDate ? new Date(acquisitionDate).toLocaleDateString('ru-RU') : '—'}</p>
+                <p className="text-sm">Date: {acquisitionDate ? new Date(acquisitionDate).toLocaleDateString('en-US') : '—'}</p>
                 {purchasePrice && <p className="text-sm">Price: {purchasePrice} ALTAN</p>}
               </div>
               {notes && <div><p className="text-xs text-muted-foreground">Notes</p><p className="text-sm">{notes}</p></div>}

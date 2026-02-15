@@ -237,7 +237,7 @@ export default function CooperativesPage() {
                   </div>
                   <div className="pt-3 border-t border-white/5 flex justify-between items-center">
                     <span className="text-xs text-zinc-500">
-                      {new Date(guild.createdAt).toLocaleDateString('ru-RU')}
+                      {new Date(guild.createdAt).toLocaleDateString('en-US')}
                     </span>
                     <Button
                       size="sm"

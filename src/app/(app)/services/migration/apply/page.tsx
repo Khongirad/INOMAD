@@ -202,7 +202,7 @@ export default function PassportApplicationPage() {
             <p className="text-sm font-semibold mb-1">Important Information</p>
             <p className="text-sm text-muted-foreground">
               • All information must be accurate and verifiable<br />
-              • Необходимые documentы: Фото (passportного размера), Signature, Certificate о рождении<br />
+              • Необходимые documents: Фото (passportного размера), Signature, Certificate о рождении<br />
               • Срок обworkки: 5–10 рабочих days<br />
               • You will be notified by email when your application status changes
             </p>

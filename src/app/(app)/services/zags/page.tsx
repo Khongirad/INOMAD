@@ -119,7 +119,7 @@ export default function ZAGSPage() {
                   <div>
                     <p className="font-semibold">Application на marriage</p>
                     <p className="text-sm text-muted-foreground">
-                      Filed: {new Date(consent.createdAt).toLocaleDateString('ru-RU')}
+                      Filed: {new Date(consent.createdAt).toLocaleDateString('en-US')}
                     </p>
                   </div>
                   <Button onClick={() => router.push(`/services/zags/marriage/consent/${consent.marriageId}`)}>
@@ -135,7 +135,7 @@ export default function ZAGSPage() {
       {/* Marriages */}
       <Card>
         <CardHeader>
-          <CardTitle>Записи о marriageе</CardTitle>
+          <CardTitle>Records о marriageе</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -144,7 +144,7 @@ export default function ZAGSPage() {
             </div>
           ) : marriages.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground mb-3">Записи о marriageе не найдены</p>
+              <p className="text-muted-foreground mb-3">Records о marriageе не найдены</p>
               {civilStatus === 'SINGLE' && (
                 <Button variant="outline" onClick={() => router.push('/services/zags/marriage/apply')}>
                   + Submit application
@@ -160,7 +160,7 @@ export default function ZAGSPage() {
                       {marriage.spouse1FullName} & {marriage.spouse2FullName}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Marriage Date: {new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}
+                      Marriage Date: {new Date(marriage.marriageDate).toLocaleDateString('en-US')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Certificate: {marriage.certificateNumber}
@@ -222,10 +222,10 @@ export default function ZAGSPage() {
                   {certResult.details && (
                     <>
                       <p className="text-sm">Spouses: {certResult.details.spouse1Name} & {certResult.details.spouse2Name}</p>
-                      <p className="text-sm">Marriage Date: {new Date(certResult.details.marriageDate).toLocaleDateString('ru-RU')}</p>
+                      <p className="text-sm">Marriage Date: {new Date(certResult.details.marriageDate).toLocaleDateString('en-US')}</p>
                     </>
                   )}
-                  <p className="text-xs opacity-70">Выдано: {new Date(certResult.issuedDate).toLocaleDateString('ru-RU')}</p>
+                  <p className="text-xs opacity-70">Выдано: {new Date(certResult.issuedDate).toLocaleDateString('en-US')}</p>
                 </>
               ) : (
                 <p>{certResult.error || 'Certificate не найдено or недействительно'}</p>

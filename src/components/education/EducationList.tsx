@@ -52,7 +52,7 @@ export function EducationList({ educations, onViewDocument }: EducationListProps
       <Card>
         <CardContent className="py-10 text-center">
           <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">No записей об образовании</p>
+          <p className="text-muted-foreground">No records об образовании</p>
         </CardContent>
       </Card>
     );

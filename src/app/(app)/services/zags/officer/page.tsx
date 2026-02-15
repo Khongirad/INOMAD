@@ -154,7 +154,7 @@ export default function ZAGSOfficerPage() {
                           <p className="font-semibold">{marriage.spouse1FullName}</p>
                           <p className="text-muted-foreground">{marriage.spouse2FullName}</p>
                         </td>
-                        <td className="p-3">{new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}</td>
+                        <td className="p-3">{new Date(marriage.marriageDate).toLocaleDateString('en-US')}</td>
                         <td className="p-3">
                           <Badge variant="outline">{marriage.ceremonyType || 'Citizenский'}</Badge>
                         </td>
@@ -162,7 +162,7 @@ export default function ZAGSOfficerPage() {
                           <Badge variant={statusVariant(marriage.status)}>{marriage.status}</Badge>
                         </td>
                         <td className="p-3 text-xs text-muted-foreground">
-                          {marriage.certificateNumber || 'Не выдано'}
+                          {marriage.certificateNumber || 'Не issuedо'}
                         </td>
                         <td className="p-3 text-right space-x-1">
                           <Button

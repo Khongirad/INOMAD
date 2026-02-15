@@ -14,7 +14,7 @@ export default function LandRegistryOfficerPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Панель officer land registry</h1>
+        <h1 className="text-3xl font-bold">Officer Panel land registry</h1>
         <p className="text-muted-foreground mt-1">
           Approval of registrations, governance transfers и ведение cadastral records
         </p>
@@ -51,7 +51,7 @@ export default function LandRegistryOfficerPage() {
               <Mountain className="h-10 w-10 text-green-500" />
               <h3 className="text-lg font-semibold">Pending участки</h3>
               <p className="text-sm text-muted-foreground">
-                Review and approval заявок на регистрацию land plots
+                Review and approval applications на registration land plots
               </p>
               <Button variant="outline" className="w-full">Pending (0)</Button>
             </CardContent>

@@ -110,7 +110,7 @@ export function identityReducer(
       return touch({
         ...state,
         nationality: action.value,
-        // Синхронизируем с legacy ethnicity genderем
+        // Синхрtheyзируем с legacy ethnicity genderем
         ethnicity: action.value
           ? {
               primary: { code: action.value.code, label: action.value.label },

@@ -85,7 +85,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="institution">Учебное Заведение *</Label>
+            <Label htmlFor="institution">Educational Institution *</Label>
             <Input
               id="institution"
               value={formData.institution}

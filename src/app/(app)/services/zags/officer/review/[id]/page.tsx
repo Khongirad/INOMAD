@@ -145,7 +145,7 @@ export default function MarriageReviewPage() {
           <CardContent className="space-y-3">
             <div>
               <p className="text-xs text-muted-foreground">Marriage Date</p>
-              <p className="font-semibold">{new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}</p>
+              <p className="font-semibold">{new Date(marriage.marriageDate).toLocaleDateString('en-US')}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Ceremony Type</p>
@@ -167,13 +167,13 @@ export default function MarriageReviewPage() {
             <div>
               <p className="text-xs text-muted-foreground">Spouse 1</p>
               <p className="font-semibold">{marriage.spouse1FullName}</p>
-              <p className="text-xs text-muted-foreground">Date birth: {new Date(marriage.spouse1DateOfBirth).toLocaleDateString('ru-RU')}</p>
+              <p className="text-xs text-muted-foreground">Date birth: {new Date(marriage.spouse1DateOfBirth).toLocaleDateString('en-US')}</p>
             </div>
             <hr className="border-border" />
             <div>
               <p className="text-xs text-muted-foreground">Spouse 2</p>
               <p className="font-semibold">{marriage.spouse2FullName}</p>
-              <p className="text-xs text-muted-foreground">Date birth: {new Date(marriage.spouse2DateOfBirth).toLocaleDateString('ru-RU')}</p>
+              <p className="text-xs text-muted-foreground">Date birth: {new Date(marriage.spouse2DateOfBirth).toLocaleDateString('en-US')}</p>
             </div>
           </CardContent>
         </Card>
@@ -244,7 +244,7 @@ export default function MarriageReviewPage() {
           {reviewAction === 'APPROVE' ? (
             <div className="space-y-3">
               <div className="bg-green-500/10 text-green-400 rounded-lg p-3 text-sm">
-                Marriage будет registered и выдано официальное certificate
+                Marriage будет registered и issuedо официальное certificate
               </div>
               <div>
                 <Label>Number witnessства</Label>

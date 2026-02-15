@@ -176,7 +176,7 @@ export default function ReputationDialog({
                       <div className="flex-1">
                         <div className="text-sm font-medium text-white">{badge.name}</div>
                         <div className="text-xs text-zinc-400">
-                          Genderучено: {new Date(badge.earnedAt).toLocaleDateString('ru-RU')}
+                          Genderучено: {new Date(badge.earnedAt).toLocaleDateString('en-US')}
                         </div>
                       </div>
                     </div>
@@ -200,7 +200,7 @@ export default function ReputationDialog({
                       <div>
                         <div className="text-sm text-white">{tx.title}</div>
                         <div className="text-xs text-zinc-400">
-                          {tx.type} • {new Date(tx.date).toLocaleDateString('ru-RU')}
+                          {tx.type} • {new Date(tx.date).toLocaleDateString('en-US')}
                         </div>
                       </div>
                       <span className={`px-2 py-1 rounded text-xs ${

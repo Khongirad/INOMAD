@@ -60,7 +60,7 @@ export default function TaxPage() {
       setGenerateOpen(false);
       fetchRecords();
     } catch (err: any) {
-      toast.error(err.message || 'Error создания записи');
+      toast.error(err.message || 'Error создания records');
     } finally {
       setGenerating(false);
     }
@@ -209,8 +209,8 @@ export default function TaxPage() {
           {records.length === 0 ? (
             <div className="text-center text-zinc-500 py-8">
               <Receipt className="h-12 w-12 mx-auto mb-3 text-zinc-700" />
-              <p>No taxовых записей</p>
-              <p className="text-xs mt-1">Записи генерируются автоматически 1 января or вручную.</p>
+              <p>No taxовых records</p>
+              <p className="text-xs mt-1">Records генерируются автоматически 1 января or вручную.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -229,7 +229,7 @@ export default function TaxPage() {
                     <div className="flex gap-2">
                       {record.status === 'DRAFT' && (
                         <Button size="sm" variant="secondary" onClick={() => handleFile(record.id)}>
-                          <Send className="mr-1 h-3 w-3" /> Submit декларацию
+                          <Send className="mr-1 h-3 w-3" /> Submit declaration
                         </Button>
                       )}
                       {record.status === 'FILED' && (
@@ -276,7 +276,7 @@ export default function TaxPage() {
 
                   {record.isPaid && record.paidAt && (
                     <div className="mt-2 text-xs text-zinc-600">
-                      Paid: {new Date(record.paidAt).toLocaleDateString('ru-RU')}
+                      Paid: {new Date(record.paidAt).toLocaleDateString('en-US')}
                       {record.paymentTxHash && ` · TX: ${record.paymentTxHash.slice(0, 12)}...`}
                     </div>
                   )}
@@ -303,7 +303,7 @@ export default function TaxPage() {
 
           <div className="p-3 rounded-lg bg-zinc-800/50 text-xs text-zinc-400">
             <AlertCircle className="h-3 w-3 inline mr-1" />
-            Systemа автоматически подсчитает income from всех квестоin за указанный год
+            Systemа автоматически подсчитает income from all квестоin за указанный год
             и рассчитает tax по ставке 10% (7% republic + 3% confederation).
           </div>
 

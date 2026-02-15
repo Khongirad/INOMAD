@@ -25,10 +25,10 @@ const STAGE_COLORS: Record<string, string> = {
 
 const STAGE_LABELS: Record<string, string> = {
   DRAFT: 'Draft',
-  PENDING_SIGNATURES: 'On подписании',
-  SIGNED: 'Byдписан',
-  NOTARIZED: 'Нотариально заверен',
-  LEGALLY_CERTIFIED: 'Юридически проверен',
+  PENDING_SIGNATURES: 'Pending Signatures',
+  SIGNED: 'Signed',
+  NOTARIZED: 'Notarized',
+  LEGALLY_CERTIFIED: 'Legally Certified',
   ARCHIVED: 'Archive',
 };
 
@@ -56,19 +56,19 @@ export default function ChancelleryPage() {
           Chancellery
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Registry contractов. Access only for нотариусоin и юристов.
+          Contract registry. Access only for notaries and lawyers.
         </p>
       </div>
 
       <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-4 py-3 text-sm text-zinc-300 flex items-center gap-2">
         <Shield className="h-4 w-4 text-cyan-400 flex-shrink-0" />
-        🔒 Chancellery — официальный registry всех contracts systemы.
+        🔒 Chancellery — the official registry of all contracts in the system.
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: 'Total contractов', value: defaultStats.totalContracts, icon: FileText, cls: 'text-blue-400' },
+          { label: 'Total Contracts', value: defaultStats.totalContracts, icon: FileText, cls: 'text-blue-400' },
           { label: 'Active', value: defaultStats.activeContracts, icon: CheckCircle, cls: 'text-emerald-400' },
           { label: 'Under Review', value: defaultStats.pendingReview, icon: Clock, cls: 'text-amber-400' },
           { label: 'Disputes', value: defaultStats.totalDisputes, icon: AlertTriangle, cls: 'text-orange-400' },
@@ -158,7 +158,7 @@ export default function ChancelleryPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-xs text-zinc-500">
-                            {new Date(contract.createdAt).toLocaleDateString('ru-RU')}
+                            {new Date(contract.createdAt).toLocaleDateString('en-US')}
                           </td>
                         </tr>
                       ))}

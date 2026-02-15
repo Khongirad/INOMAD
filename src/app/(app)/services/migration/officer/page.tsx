@@ -86,7 +86,7 @@ export default function MigrationOfficerPage() {
                 <td className="py-3 px-4">
                   <p className="font-medium text-sm">{app.fullName}</p>
                   <p className="text-xs text-muted-foreground">
-                    Д.Р.: {new Date(app.dateOfBirth).toLocaleDateString('ru-RU')}
+                    Д.Р.: {new Date(app.dateOfBirth).toLocaleDateString('en-US')}
                   </p>
                 </td>
                 <td className="py-3 px-4">
@@ -131,7 +131,7 @@ export default function MigrationOfficerPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Панель officer миграции</h1>
+        <h1 className="text-3xl font-bold">Officer Panel миграции</h1>
         <p className="text-muted-foreground mt-1">Рассмотрение и обworkка заявлений на passport</p>
       </div>
 

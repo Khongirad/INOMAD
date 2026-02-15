@@ -97,7 +97,7 @@ export default function QuestDetailsPage() {
     return (
       <div className="container max-w-4xl py-12 text-center">
         <AlertCircle className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-white mb-2">Task не найдено</h2>
+        <h2 className="text-xl font-semibold text-white mb-2">Task not found</h2>
         <Link href="/quests" className="text-purple-400 hover:underline">
           ← Return to quest board
         </Link>
@@ -117,7 +117,7 @@ export default function QuestDetailsPage() {
       {/* Back Button */}
       <Link href="/quests" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition">
         <ArrowLeft className="w-4 h-4" />
-        Back к доске заданий
+        Back to quest board
       </Link>
 
       {/* Header */}
@@ -135,7 +135,7 @@ export default function QuestDetailsPage() {
               from <span className="text-purple-400">{quest.giver.username}</span>
             </button>
             <span className="text-sm text-zinc-500">
-              {new Date(quest.createdAt).toLocaleDateString('ru-RU')}
+              {new Date(quest.createdAt).toLocaleDateString('en-US')}
             </span>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function QuestDetailsPage() {
           <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
             <div className="flex items-center gap-2 text-gold-primary mb-1">
               <Coins className="w-5 h-5" />
-              <span className="text-sm font-medium">Награда</span>
+              <span className="text-sm font-medium">Reward</span>
             </div>
             <div className="text-2xl font-bold text-white">{quest.rewardAltan} ALTAN</div>
           </div>
@@ -176,7 +176,7 @@ export default function QuestDetailsPage() {
               <span className="text-sm font-medium">Deadline</span>
             </div>
             <div className="text-lg font-semibold text-white">
-              {new Date(quest.deadline).toLocaleDateString('ru-RU')}
+              {new Date(quest.deadline).toLocaleDateString('en-US')}
             </div>
           </div>
         )}
@@ -208,7 +208,7 @@ export default function QuestDetailsPage() {
             onClick={handleSubmit}
             className="flex-1 px-6 py-3 bg-gold-primary text-black rounded-lg hover:bg-gold-primary/90 transition font-medium"
           >
-            Send на проверку
+            Submit for review
           </button>
         )}
         {canApprove && (

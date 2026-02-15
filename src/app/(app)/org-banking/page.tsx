@@ -409,7 +409,7 @@ export default function OrgBankingPage() {
                           <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-zinc-400" />
                             <span className="font-medium text-zinc-200">
-                              {new Date(report.reportDate).toLocaleDateString('ru-RU')}
+                              {new Date(report.reportDate).toLocaleDateString('en-US')}
                             </span>
                           </div>
                           <span className="text-xs text-zinc-500">

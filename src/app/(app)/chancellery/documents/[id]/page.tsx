@@ -52,9 +52,9 @@ export default function DocumentDetailsPage() {
     return (
       <div className="container max-w-4xl py-12 text-center">
         <FileText className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-white mb-2">Document не найден</h2>
+        <h2 className="text-xl font-semibold text-white mb-2">Document not found</h2>
         <Link href="/chancellery/documents" className="text-gold-primary hover:underline">
-          ← Return to documentам
+          ← Back to documents
         </Link>
       </div>
     );
@@ -91,7 +91,7 @@ export default function DocumentDetailsPage() {
     <div className="container max-w-4xl py-8 space-y-8 animate-in fade-in">
       <Link href="/chancellery/documents" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition">
         <ArrowLeft className="w-4 h-4" />
-        Back к documentам
+        Back to documents
       </Link>
 
       {/* Header */}
@@ -102,7 +102,7 @@ export default function DocumentDetailsPage() {
         </div>
         <div className="text-right">
           <div className="text-sm text-zinc-500">
-            Создано: {new Date(document.createdAt).toLocaleDateString('ru-RU')}
+            Created: {new Date(document.createdAt).toLocaleDateString('en-US')}
           </div>
           <div className={`inline-block px-3 py-1 rounded text-xs font-medium mt-2 ${
             document.status === 'FULLY_SIGNED' ? 'bg-green-400/20 text-green-400' :
@@ -123,7 +123,7 @@ export default function DocumentDetailsPage() {
 
       {/* Signature Roadmap */}
       <div className="bg-zinc-800/30 border border-zinc-700 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-6">Process подписания</h2>
+        <h2 className="text-xl font-semibold text-white mb-6">Signing Process</h2>
         <SignatureRoadmap signers={signers} currentUserId={currentUserId} />
       </div>
 

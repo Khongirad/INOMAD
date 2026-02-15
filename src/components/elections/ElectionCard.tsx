@@ -119,9 +119,9 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
         <div className="flex flex-wrap gap-3 text-xs text-zinc-500">
           <span className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {new Date(election.startDate).toLocaleDateString('ru-RU')}
+            {new Date(election.startDate).toLocaleDateString('en-US')}
             {' — '}
-            {new Date(election.endDate).toLocaleDateString('ru-RU')}
+            {new Date(election.endDate).toLocaleDateString('en-US')}
           </span>
           {election.termMonths && (
             <span className="px-2 py-0.5 rounded border border-white/10 text-zinc-400">
