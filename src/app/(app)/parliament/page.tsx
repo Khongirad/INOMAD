@@ -37,10 +37,10 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  SCHEDULED: 'Запланирована',
-  IN_PROGRESS: 'Идёт',
-  COMPLETED: 'Завершена',
-  CANCELLED: 'Отменена',
+  SCHEDULED: 'Scheduled',
+  IN_PROGRESS: 'In Progress',
+  COMPLETED: 'Completed',
+  CANCELLED: 'Cancelled',
 };
 
 export default function ParliamentPage() {
@@ -146,15 +146,15 @@ export default function ParliamentPage() {
         <div className="flex items-center gap-3">
           <Landmark className="h-7 w-7 text-yellow-500" />
           <div>
-            <h1 className="text-2xl font-bold">Парламент / Parliament</h1>
+            <h1 className="text-2xl font-bold">Parliament / Parliament</h1>
             <p className="text-sm text-muted-foreground">
-              Хурал — сессии и голосование лидеров Тумэнов
+              Khural — sessions и voting leaderов Tumenов
             </p>
           </div>
         </div>
         <Button onClick={() => setCreateDialog(true)} className="gap-2 bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4" />
-          Созвать сессию
+          Convene Session
         </Button>
       </div>
 
@@ -162,25 +162,25 @@ export default function ParliamentPage() {
       <div className="flex gap-3 flex-wrap mb-6">
         <Card className="flex-1 min-w-[140px]">
           <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Запланировано</p>
+            <p className="text-xs text-muted-foreground">Scheduled</p>
             <p className="text-2xl font-bold text-blue-500">{scheduled.length}</p>
           </CardContent>
         </Card>
         <Card className="flex-1 min-w-[140px]">
           <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Идут сейчас</p>
+            <p className="text-xs text-muted-foreground">In Progress</p>
             <p className="text-2xl font-bold text-orange-500">{inProgress.length}</p>
           </CardContent>
         </Card>
         <Card className="flex-1 min-w-[140px]">
           <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Завершено</p>
+            <p className="text-xs text-muted-foreground">Completed</p>
             <p className="text-2xl font-bold text-green-500">{completed.length}</p>
           </CardContent>
         </Card>
         <Card className="flex-1 min-w-[140px]">
           <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Всего</p>
+            <p className="text-xs text-muted-foreground">Total</p>
             <p className="text-2xl font-bold">{sessions.length}</p>
           </CardContent>
         </Card>
@@ -193,14 +193,14 @@ export default function ParliamentPage() {
       )}
 
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm mb-4">
-        <strong>Только лидеры Тумэнов</strong> имеют право голоса в Хурале.
-        В Республиканском Хурале голосуют лидеры Тумэнов данной Республики.
+        <strong>Only leaderы Tumenов</strong> have right voteа в Khuralе.
+        В Republicнском Khuralе voteуют leaderы Tumenов of this Republics.
       </div>
 
       {/* Empty state */}
       {sessions.length === 0 && !loading && (
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-          ℹ️ Нет запланированных сессий. Созовите первую сессию Хурала!
+          ℹ️ No запланированных сессий. Convene the first сессию Khuralа!
         </div>
       )}
 
@@ -218,7 +218,7 @@ export default function ParliamentPage() {
               <Badge className={`text-[10px] font-bold text-white ${
                 session.level === 'REPUBLICAN' ? 'bg-blue-600' : 'bg-yellow-600'
               }`}>
-                {session.level === 'REPUBLICAN' ? 'Республика' : 'Конфедерация'}
+                {session.level === 'REPUBLICAN' ? 'Republic' : 'Confederation'}
               </Badge>
               <span className="font-semibold flex-1">{session.title}</span>
               <Badge className={`text-[10px] text-white ${STATUS_COLORS[session.status]}`}>
@@ -235,12 +235,12 @@ export default function ParliamentPage() {
               </span>
               <span className="flex items-center gap-1">
                 <Vote className="h-3.5 w-3.5" />
-                {session._count?.votes || 0} голосов
+                {session._count?.votes || 0} votes
               </span>
               {session.convenedBy && (
                 <span className="flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" />
-                  Созвал: {session.convenedBy.username}
+                  Convened by: {session.convenedBy.username}
                 </span>
               )}
             </div>
@@ -254,7 +254,7 @@ export default function ParliamentPage() {
                   onClick={e => { e.stopPropagation(); handleAction(session.id, 'start'); }}
                 >
                   <Play className="h-3.5 w-3.5" />
-                  Начать
+                  Start
                 </Button>
               )}
               {session.status === 'IN_PROGRESS' && (
@@ -265,7 +265,7 @@ export default function ParliamentPage() {
                     onClick={e => { e.stopPropagation(); setSelectedSession(session); setVoteDialog(true); }}
                   >
                     <Vote className="h-3.5 w-3.5" />
-                    Голосовать
+                    Vote
                   </Button>
                   <Button
                     size="sm"
@@ -274,7 +274,7 @@ export default function ParliamentPage() {
                     onClick={e => { e.stopPropagation(); handleAction(session.id, 'complete'); }}
                   >
                     <Square className="h-3.5 w-3.5" />
-                    Завершить
+                    Complete
                   </Button>
                 </>
               )}
@@ -288,7 +288,7 @@ export default function ParliamentPage() {
         <Card className="mt-6 border-yellow-500">
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold text-yellow-500 mb-4">
-              📊 Результаты: {results.session?.title}
+              📊 Results: {results.session?.title}
             </h3>
 
             <div className="flex gap-8 mb-4">
@@ -300,31 +300,31 @@ export default function ParliamentPage() {
               <div className="text-center">
                 <XCircle className="h-6 w-6 text-red-500 mx-auto" />
                 <p className="text-2xl font-bold text-red-500">{results.results?.against || 0}</p>
-                <p className="text-xs text-muted-foreground">Против</p>
+                <p className="text-xs text-muted-foreground">Against</p>
               </div>
               <div className="text-center">
                 <MinusCircle className="h-6 w-6 text-orange-500 mx-auto" />
                 <p className="text-2xl font-bold text-orange-500">{results.results?.abstain || 0}</p>
-                <p className="text-xs text-muted-foreground">Воздержался</p>
+                <p className="text-xs text-muted-foreground">Abstained</p>
               </div>
             </div>
 
             <Badge className={`text-sm font-bold mb-4 ${
               results.results?.passed ? 'bg-green-800' : 'bg-red-800'
             }`}>
-              {results.results?.passed ? '✅ ПРИНЯТО' : '❌ НЕ ПРИНЯТО'}
+              {results.results?.passed ? '✅ PASSED' : '❌ NOT PASSED'}
             </Badge>
 
             {results.session?.resolution && (
               <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-sm mt-3">
-                <strong>Резолюция:</strong> {results.session.resolution}
+                <strong>Resolution:</strong> {results.session.resolution}
               </div>
             )}
 
             <div className="border-t border-border my-4" />
 
             <p className="text-xs font-medium text-muted-foreground mb-2">
-              Голоса ({results.votes?.length || 0})
+              Voteа ({results.votes?.length || 0})
             </p>
             {results.votes?.map((v: any) => (
               <div key={v.id} className="flex items-center gap-2 p-1.5 rounded-md bg-muted/30 mb-1">
@@ -347,30 +347,30 @@ export default function ParliamentPage() {
       <Dialog open={createDialog} onOpenChange={setCreateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Созвать сессию Хурала</DialogTitle>
+            <DialogTitle>Convene Session Khuralа</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Уровень</Label>
+              <Label>Level</Label>
               <Select value={createForm.level} onValueChange={v => setCreateForm({ ...createForm, level: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="REPUBLICAN">Республиканский Хурал</SelectItem>
-                  <SelectItem value="CONFEDERATIVE">Конфедеративный Хурал</SelectItem>
+                  <SelectItem value="REPUBLICAN">Republicнский Khural</SelectItem>
+                  <SelectItem value="CONFEDERATIVE">Confederatый Khural</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>ID Республики/Конфедерации</Label>
+              <Label>ID Republics/Конфедерации</Label>
               <Input value={createForm.entityId} onChange={e => setCreateForm({ ...createForm, entityId: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Тема сессии</Label>
+              <Label>Topic sessions</Label>
               <Input value={createForm.title} onChange={e => setCreateForm({ ...createForm, title: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Описание</Label>
+              <Label>Description</Label>
               <textarea
                 className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[60px]"
                 value={createForm.description}
@@ -378,18 +378,18 @@ export default function ParliamentPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Дата и время</Label>
+              <Label>Date и время</Label>
               <Input type="datetime-local" value={createForm.sessionDate} onChange={e => setCreateForm({ ...createForm, sessionDate: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Кворум (мин. голосов)</Label>
+              <Label>Quorum (мин. votes)</Label>
               <Input type="number" value={createForm.quorumRequired} onChange={e => setCreateForm({ ...createForm, quorumRequired: parseInt(e.target.value) || 1 })} />
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateDialog(false)}>Отмена</Button>
-            <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700">Созвать</Button>
+            <Button variant="outline" onClick={() => setCreateDialog(false)}>Cancel</Button>
+            <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700">Convene</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -398,27 +398,27 @@ export default function ParliamentPage() {
       <Dialog open={voteDialog} onOpenChange={setVoteDialog}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Голосование</DialogTitle>
+            <DialogTitle>Voting</DialogTitle>
           </DialogHeader>
 
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-sm mb-2">
-            ⚠️ Вы голосуете как лидер Тумэна. Один голос на сессию.
+            ⚠️ You voteуете как leader Tumenа. One vote на сессию.
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Ваш голос</Label>
+              <Label>Your vote</Label>
               <Select value={voteForm.vote} onValueChange={v => setVoteForm({ ...voteForm, vote: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="FOR">✅ За</SelectItem>
-                  <SelectItem value="AGAINST">❌ Против</SelectItem>
-                  <SelectItem value="ABSTAIN">⚪ Воздержаться</SelectItem>
+                  <SelectItem value="AGAINST">❌ Against</SelectItem>
+                  <SelectItem value="ABSTAIN">⚪ Abstain</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Комментарий (необязательно)</Label>
+              <Label>Comment (optional)</Label>
               <textarea
                 className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[60px]"
                 value={voteForm.comment}
@@ -428,12 +428,12 @@ export default function ParliamentPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setVoteDialog(false)}>Отмена</Button>
+            <Button variant="outline" onClick={() => setVoteDialog(false)}>Cancel</Button>
             <Button
               className="bg-green-600 hover:bg-green-700"
               onClick={() => selectedSession && handleVote(selectedSession.id)}
             >
-              Проголосовать
+              Проvotesать
             </Button>
           </DialogFooter>
         </DialogContent>

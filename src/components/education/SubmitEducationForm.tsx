@@ -38,7 +38,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
     setError(null);
 
     if (!formData.institution || !formData.fieldOfStudy) {
-      setError('Заполните обязательные поля');
+      setError('Заgenderните обязательные genderя');
       return;
     }
 
@@ -46,7 +46,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
       setUploading(true);
       await onSubmit(formData);
     } catch (err: any) {
-      setError(err.message || 'Ошибка при отправке');
+      setError(err.message || 'Error при отправке');
     } finally {
       setUploading(false);
     }
@@ -57,7 +57,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
       <CardContent className="pt-6">
         <div className="flex items-center gap-2 mb-6">
           <GraduationCap className="h-6 w-6" />
-          <h3 className="text-lg font-semibold">Подтверждение Образования</h3>
+          <h3 className="text-lg font-semibold">Byдтверждение Образования</h3>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -68,7 +68,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
           )}
 
           <div className="space-y-2">
-            <Label>Тип Документа</Label>
+            <Label>Type Documentа</Label>
             <Select
               value={formData.type}
               onValueChange={(v) => setFormData({ ...formData, type: v as EducationType })}
@@ -77,7 +77,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="DIPLOMA">Диплом</SelectItem>
+                <SelectItem value="DIPLOMA">Diploma</SelectItem>
                 <SelectItem value="CERTIFICATE">Сертификат</SelectItem>
                 <SelectItem value="RECOMMENDATION">Рекомендация Специалиста</SelectItem>
               </SelectContent>
@@ -90,12 +90,12 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
               id="institution"
               value={formData.institution}
               onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-              placeholder="Название учебного заведения"
+              placeholder="Title учебного заведения"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fieldOfStudy">Специальность *</Label>
+            <Label htmlFor="fieldOfStudy">Specialty *</Label>
             <Input
               id="fieldOfStudy"
               value={formData.fieldOfStudy}
@@ -105,7 +105,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="graduationYear">Год Выпуска</Label>
+            <Label htmlFor="graduationYear">Year of Graduation</Label>
             <Input
               id="graduationYear"
               type="number"
@@ -121,10 +121,10 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
           </div>
 
           <div className="space-y-2">
-            <Label>Документ</Label>
+            <Label>Document</Label>
             <label className="flex items-center justify-center gap-2 w-full h-10 px-4 rounded-md border border-input bg-background text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors">
               <Upload className="h-4 w-4" />
-              {formData.documentFile ? formData.documentFile.name : 'Загрузить документ'}
+              {formData.documentFile ? formData.documentFile.name : 'Upload document'}
               <input
                 type="file"
                 className="hidden"
@@ -140,12 +140,12 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
           <div className="flex gap-3 justify-end pt-2">
             {onCancel && (
               <Button type="button" variant="outline" onClick={onCancel}>
-                Отмена
+                Cancel
               </Button>
             )}
             <Button type="submit" disabled={uploading} className="gap-2">
               {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Отправить на Проверку
+              Send на Проверку
             </Button>
           </div>
         </form>

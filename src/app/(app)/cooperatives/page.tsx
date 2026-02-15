@@ -22,9 +22,9 @@ const getTypeColor = (type: string) => {
 
 const TYPE_LABELS: Record<string, string> = {
   CLAN: 'Клан',
-  PROFESSION: 'Гильдия',
-  ORGANIZATION: 'Организация',
-  GOVERNMENT: 'Государственный',
+  PROFESSION: 'Guild',
+  ORGANIZATION: 'Organization',
+  GOVERNMENT: 'Гоcourtарственный',
 };
 
 const getTypeIcon = (type: string) => {
@@ -60,9 +60,9 @@ export default function CooperativesPage() {
   const handleJoin = async (id: string) => {
     try {
       await joinMutation.mutateAsync(id);
-      toast.success('Вы вступили в кооператив');
+      toast.success('You вступor в cooperative');
     } catch (e: any) {
-      toast.error(e.message || 'Ошибка');
+      toast.error(e.message || 'Error');
     }
   };
 
@@ -73,15 +73,15 @@ export default function CooperativesPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
             <Users className="text-purple-500 w-8 h-8" />
-            Кооперативы
+            Cooperatives
           </h2>
           <p className="text-zinc-400 mt-1">
-            Гильдии, кланы, профессиональные объединения и государственные организации
+            Guilds, кланы, профессиональные объединения и гоcourtарственные organizations
           </p>
         </div>
         <Button className="bg-purple-600 hover:bg-purple-700">
           <Plus className="mr-2 h-4 w-4" />
-          Создать кооператив
+          Create cooperative
         </Button>
       </div>
 
@@ -94,7 +94,7 @@ export default function CooperativesPage() {
                 <Building2 className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Всего</div>
+                <div className="text-xs text-zinc-500 uppercase">Total</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {stats.totalCooperatives}
                 </div>
@@ -110,7 +110,7 @@ export default function CooperativesPage() {
                 <Users className="h-5 w-5 text-purple-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Участников</div>
+                <div className="text-xs text-zinc-500 uppercase">Members</div>
                 <div className="text-lg font-mono font-bold text-purple-500">
                   {stats.totalMembers}
                 </div>
@@ -126,7 +126,7 @@ export default function CooperativesPage() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Активных</div>
+                <div className="text-xs text-zinc-500 uppercase">Activых</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {stats.activeGuilds}
                 </div>
@@ -142,7 +142,7 @@ export default function CooperativesPage() {
                 <TrendingUp className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Казна</div>
+                <div className="text-xs text-zinc-500 uppercase">Treasury</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {(stats.totalTreasury / 1000).toFixed(0)}K ALT
                 </div>
@@ -157,7 +157,7 @@ export default function CooperativesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
-            placeholder="Поиск кооперативов..."
+            placeholder="Search cooperativeов..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -168,11 +168,11 @@ export default function CooperativesPage() {
           onChange={(e) => setFilterType(e.target.value)}
           className="px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white"
         >
-          <option value="all">Все типы</option>
+          <option value="all">All типы</option>
           <option value="CLAN">Кланы</option>
-          <option value="PROFESSION">Гильдии</option>
-          <option value="ORGANIZATION">Организации</option>
-          <option value="GOVERNMENT">Государственные</option>
+          <option value="PROFESSION">Guilds</option>
+          <option value="ORGANIZATION">Organizations</option>
+          <option value="GOVERNMENT">State</option>
         </select>
       </div>
 
@@ -184,7 +184,7 @@ export default function CooperativesPage() {
       ) : filteredGuilds.length === 0 ? (
         <div className="text-center py-12 text-zinc-500">
           <Building2 className="h-12 w-12 mx-auto opacity-30 mb-2" />
-          Кооперативов нет
+          Cooperativeов нет
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -217,20 +217,20 @@ export default function CooperativesPage() {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1 text-zinc-400">
                       <Users className="h-3 w-3" />
-                      <span>Участников</span>
+                      <span>Members</span>
                     </div>
                     <span className="font-mono text-white">
                       {guild.memberCount} / {guild.maxMembers}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400">Казна</span>
+                    <span className="text-zinc-400">Treasury</span>
                     <span className="font-mono text-gold-primary">
                       {(guild.treasury / 1000).toFixed(0)}K ALT
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400">Глава</span>
+                    <span className="text-zinc-400">Head</span>
                     <span className="text-zinc-300">
                       {guild.leader?.username || '—'}
                     </span>
@@ -246,7 +246,7 @@ export default function CooperativesPage() {
                       onClick={() => handleJoin(guild.id)}
                       disabled={joinMutation.isPending}
                     >
-                      Вступить
+                      Join
                     </Button>
                   </div>
                 </CardContent>
@@ -264,10 +264,10 @@ export default function CooperativesPage() {
               <Users className="h-4 w-4 text-purple-500" />
             </div>
             <div>
-              <h4 className="font-semibold text-purple-200 mb-1">О кооперативах</h4>
+              <h4 className="font-semibold text-purple-200 mb-1">О cooperativeах</h4>
               <p className="text-sm text-purple-100/70">
-                Кооперативы — самоуправляемые организации, где участники объединяют ресурсы
-                и навыки. Кланы — родовые объединения, Гильдии — профессиональные, Организации — иерархические структуры.
+                Cooperatives — самоуправляемые organizations, где memberи объединяют resources
+                и навыки. Кланы — родовые объединения, Guilds — профессиональные, Organizations — иерархические структуры.
               </p>
             </div>
           </div>

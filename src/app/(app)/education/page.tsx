@@ -41,7 +41,7 @@ export default function EducationPage() {
         setIsAdmin(true);
       }
     } catch {
-      toast.error('Ошибка загрузки данных');
+      toast.error('Error загрузки данных');
     } finally {
       setLoading(false);
     }
@@ -60,8 +60,8 @@ export default function EducationPage() {
       },
       body: JSON.stringify(formData),
     });
-    if (!res.ok) throw new Error('Ошибка при отправке');
-    toast.success('Образование отправлено на проверку');
+    if (!res.ok) throw new Error('Error при отправке');
+    toast.success('Education sent на проверку');
     setShowForm(false);
     fetchData();
   };
@@ -72,7 +72,7 @@ export default function EducationPage() {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Failed');
-    toast.success('Образование подтверждено');
+    toast.success('Education confirmed');
     fetchData();
   };
 
@@ -86,7 +86,7 @@ export default function EducationPage() {
       body: JSON.stringify({ reason }),
     });
     if (!res.ok) throw new Error('Failed');
-    toast.success('Образование отклонено');
+    toast.success('Education rejected');
     fetchData();
   };
 
@@ -103,7 +103,7 @@ export default function EducationPage() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <GraduationCap className="h-7 w-7 text-primary" />
-          <h1 className="text-2xl font-bold">Образование</h1>
+          <h1 className="text-2xl font-bold">Education</h1>
         </div>
         {!showForm && (
           <Button onClick={() => setShowForm(true)} className="gap-2">
@@ -126,12 +126,12 @@ export default function EducationPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="my-education" className="gap-2">
             <BookOpen className="h-4 w-4" />
-            Моё Образование
+            Моё Education
           </TabsTrigger>
           {isAdmin && (
             <TabsTrigger value="verification" className="gap-2">
               <ShieldCheck className="h-4 w-4" />
-              Верификация
+              Verification
               {pendingVerifications.length > 0 && (
                 <span className="ml-1 bg-red-500 text-white text-[10px] rounded-full h-5 min-w-[20px] inline-flex items-center justify-center px-1">
                   {pendingVerifications.length}
@@ -150,7 +150,7 @@ export default function EducationPage() {
             {pendingVerifications.length === 0 ? (
               <div className="text-center py-16">
                 <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">Нет заявок на верификацию</p>
+                <p className="text-muted-foreground">No заявок на верификацию</p>
               </div>
             ) : (
               <div className="space-y-3">

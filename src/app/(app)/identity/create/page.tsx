@@ -117,7 +117,7 @@ export default function IdentityCreatePage() {
     return getEthnicitiesByRegion(draft.territory.macroRegion);
   }, [draft.territory.macroRegion]);
 
-  // Geo-state для интерактивной карты
+  // Geo-state for интерактивной карты
   const [geoSelectedRegion, setGeoSelectedRegion] = useState<DoctrinalRegion | null>(null);
   const [geoSelectedSubRegion, setGeoSelectedSubRegion] = useState<SubRegion | null>(null);
   const [geoSelectedCoords, setGeoSelectedCoords] = useState<GeoCoordinates | null>(null);
@@ -125,7 +125,7 @@ export default function IdentityCreatePage() {
   const [geoShowRegionCard, setGeoShowRegionCard] = useState(false);
   const [geoShowNationDetail, setGeoShowNationDetail] = useState(false);
   const [geoNationSearch, setGeoNationSearch] = useState("");
-  const [geoMapMode, setGeoMapMode] = useState<"region" | "point">("region");
+  const [geoMapMode, setGeoMapMode] = useState<"Region" | "point">("Region");
 
   const geoFilteredNations = useMemo(() => {
     if (!geoNationSearch.trim()) return NATIONS;
@@ -283,7 +283,7 @@ export default function IdentityCreatePage() {
         subtitle="Like passport: Last Name, First Name, Patronymic (if applicable)"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Field label="Last Name (Фамилия)" required>
+          <Field label="Last Name (Last Name)" required>
             <input
               value={draft.basic.lastName}
               onChange={(e) =>
@@ -301,7 +301,7 @@ export default function IdentityCreatePage() {
             />
           </Field>
 
-          <Field label="First Name (Имя)" required>
+          <Field label="First Name (Name)" required>
             <input
               value={draft.basic.firstName}
               onChange={(e) =>
@@ -319,7 +319,7 @@ export default function IdentityCreatePage() {
             />
           </Field>
 
-          <Field label="Patronymic (Отчество)">
+          <Field label="Patronymic (Middle Name)">
             <input
               value={draft.basic.patronymic || ""}
               onChange={(e) =>
@@ -562,7 +562,7 @@ export default function IdentityCreatePage() {
                   }}
                   className="mt-2 w-full rounded-lg bg-gold-border py-2 text-sm font-medium text-black hover:bg-gold-text transition"
                 >
-                  Выбрать точку на карте
+                  Select точку на карте
                 </button>
               </div>
             )}
@@ -582,7 +582,7 @@ export default function IdentityCreatePage() {
 
           {/* Place of birth (auto-filled from map or manual) */}
           <div className="glass-card rounded-lg p-4">
-            <Field label="Место рождения (как в паспорте)" required>
+            <Field label="Seat рождения (как в паdisputeте)" required>
               <input
                 value={draft.basic.placeOfBirth.label}
                 onChange={(e) =>
@@ -591,13 +591,13 @@ export default function IdentityCreatePage() {
                     value: e.target.value,
                   })
                 }
-                placeholder="г. Иркутск, Иркутская область"
+                placeholder="г. Иркутск, Иркутская oblast"
                 className="input-field"
               />
             </Field>
             {geoSelectedCoords && (
               <div className="mt-2 text-xs text-zinc-500">
-                Координаты: {geoSelectedCoords.lat.toFixed(4)}, {geoSelectedCoords.lng.toFixed(4)}
+                Coordinates: {geoSelectedCoords.lat.toFixed(4)}, {geoSelectedCoords.lng.toFixed(4)}
               </div>
             )}
           </div>
@@ -608,7 +608,7 @@ export default function IdentityCreatePage() {
               <input
                 value={geoNationSearch}
                 onChange={(e) => setGeoNationSearch(e.target.value)}
-                placeholder="Поиск народа..."
+                placeholder="Search peopleа..."
                 className="input-field"
               />
             </Field>
@@ -630,7 +630,7 @@ export default function IdentityCreatePage() {
                 >
                   <div className="font-medium truncate">{nation.nameRu}</div>
                   {nation.isIndigenous && (
-                    <div className="text-xs text-emerald-400 mt-0.5">Коренной</div>
+                    <div className="text-xs text-emerald-400 mt-0.5">Indigenous</div>
                   )}
                 </button>
               ))}
@@ -664,7 +664,7 @@ export default function IdentityCreatePage() {
           {/* Legacy fallback: ethnicity select */}
           {!geoSelectedNation && (
             <div className="glass-card rounded-lg p-4">
-              <Field label="Или выберите из списка (legacy)">
+              <Field label="Или select из спclaimа (legacy)">
                 <select
                   className="input-field"
                   value={draft.ethnicity.primary?.code ?? ""}

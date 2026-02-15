@@ -16,7 +16,7 @@ import {
 import { getMyMarriages, fileDivorce, type Marriage } from '@/lib/api/zags';
 import { toast } from 'sonner';
 
-const STEPS = ['Выбор брака', 'Причины развода', 'Раздел имущества', 'Проверка и подача'];
+const STEPS = ['Election marriageа', 'Причины divorceа', 'Раздел имущества', 'Verification и подача'];
 
 export default function DivorceApplicationPage() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function DivorceApplicationPage() {
       const data = await getMyMarriages();
       setMarriages(data.filter((m) => m.status === 'REGISTERED'));
     } catch (err: any) {
-      toast.error(err.message || 'Не удалось загрузить данные');
+      toast.error(err.message || 'Не удалось upload data');
     } finally {
       setLoading(false);
     }
@@ -53,10 +53,10 @@ export default function DivorceApplicationPage() {
         reason,
         propertyDivision: propertyDivision || undefined,
       });
-      toast.success('Заявление на развод подано');
+      toast.success('Application на divorce подано');
       router.push('/services/zags');
     } catch (err: any) {
-      toast.error(err.message || 'Не удалось подать заявление');
+      toast.error(err.message || 'Не удалось поgive application');
     } finally {
       setSubmitting(false);
     }
@@ -84,20 +84,20 @@ export default function DivorceApplicationPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <Button variant="ghost" onClick={() => router.push('/services/zags')} className="mb-2">
-          ← Назад в ЗАГС
+          ← Back в Civil Registry
         </Button>
         <div className="flex items-center gap-3">
           <span className="text-4xl">💔</span>
           <div>
-            <h1 className="text-2xl font-bold">Подача заявления на развод</h1>
-            <p className="text-muted-foreground">Подайте заявление на расторжение брака</p>
+            <h1 className="text-2xl font-bold">Byдача applications на divorce</h1>
+            <p className="text-muted-foreground">Byдайте application на расторжение marriageа</p>
           </div>
         </div>
       </div>
 
       {marriages.length === 0 ? (
         <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4">
-          У вас нет зарегистрированных браков. Развод возможен только для зарегистрированных браков.
+          У вас no registeredных marriageов. Divorce возможен only for registeredных marriageов.
         </div>
       ) : (
         <>
@@ -123,9 +123,9 @@ export default function DivorceApplicationPage() {
               {/* Step 0 */}
               {activeStep === 0 && (
                 <>
-                  <h3 className="text-lg font-semibold">Выберите брак для расторжения</h3>
+                  <h3 className="text-lg font-semibold">Select marriage for расторжения</h3>
                   <Select value={selectedMarriageId} onValueChange={setSelectedMarriageId}>
-                    <SelectTrigger><SelectValue placeholder="Выберите брак" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select marriage" /></SelectTrigger>
                     <SelectContent>
                       {marriages.map((m) => (
                         <SelectItem key={m.id} value={m.id}>
@@ -136,9 +136,9 @@ export default function DivorceApplicationPage() {
                   </Select>
                   {selectedMarriage && (
                     <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4 text-sm space-y-1">
-                      <p className="font-semibold">Выбранный брак</p>
-                      <p><strong>Супруги:</strong> {selectedMarriage.spouse1FullName} & {selectedMarriage.spouse2FullName}</p>
-                      <p><strong>Дата:</strong> {new Date(selectedMarriage.marriageDate).toLocaleDateString('ru-RU')}</p>
+                      <p className="font-semibold">Selected marriage</p>
+                      <p><strong>Spouseи:</strong> {selectedMarriage.spouse1FullName} & {selectedMarriage.spouse2FullName}</p>
+                      <p><strong>Date:</strong> {new Date(selectedMarriage.marriageDate).toLocaleDateString('ru-RU')}</p>
                       <p><strong>Режим имущества:</strong> {selectedMarriage.propertyRegime || 'Не указано'}</p>
                     </div>
                   )}
@@ -148,15 +148,15 @@ export default function DivorceApplicationPage() {
               {/* Step 1 */}
               {activeStep === 1 && (
                 <>
-                  <h3 className="text-lg font-semibold">Причины развода</h3>
+                  <h3 className="text-lg font-semibold">Причины divorceа</h3>
                   <div>
-                    <Label>Причина развода *</Label>
-                    <Textarea rows={6} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Подробно опишите причины…" />
-                    <p className="text-xs text-muted-foreground mt-1">Эта информация будет рассмотрена сотрудником ЗАГС</p>
+                    <Label>Причина divorceа *</Label>
+                    <Textarea rows={6} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Byдробно опишите причины…" />
+                    <p className="text-xs text-muted-foreground mt-1">Эта information будет рассмотрена сотрудником Civil Registry</p>
                   </div>
                   <div className="bg-yellow-500/10 text-yellow-400 rounded-lg p-4 text-sm">
-                    <p className="font-semibold">⚠️ Важное уведомление</p>
-                    <p>Подача заявления на развод — серьёзное юридическое действие. Ваш супруг(а) будет уведомлён(а).</p>
+                    <p className="font-semibold">⚠️ Важное notification</p>
+                    <p>Byдача applications на divorce — серьёзное юридическое action. Your spouse(а) будет уведомлён(а).</p>
                   </div>
                 </>
               )}
@@ -164,12 +164,12 @@ export default function DivorceApplicationPage() {
               {/* Step 2 */}
               {activeStep === 2 && (
                 <>
-                  <h3 className="text-lg font-semibold">Раздел имущества (необязательно)</h3>
+                  <h3 className="text-lg font-semibold">Раздел имущества (optional)</h3>
                   {selectedMarriage?.propertyRegime && (
                     <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4 text-sm">
-                      <p><strong>Текущий режим:</strong> {selectedMarriage.propertyRegime}</p>
+                      <p><strong>Current режим:</strong> {selectedMarriage.propertyRegime}</p>
                       {selectedMarriage.propertyAgreement && (
-                        <p><strong>Договор:</strong> {selectedMarriage.propertyAgreement}</p>
+                        <p><strong>Contract:</strong> {selectedMarriage.propertyAgreement}</p>
                       )}
                     </div>
                   )}
@@ -183,12 +183,12 @@ export default function DivorceApplicationPage() {
               {/* Step 3: Review */}
               {activeStep === 3 && (
                 <>
-                  <h3 className="text-lg font-semibold">Проверка заявления</h3>
+                  <h3 className="text-lg font-semibold">Verification applications</h3>
                   <div className="space-y-3">
                     <div className="border border-border rounded-lg p-4">
-                      <p className="text-sm text-muted-foreground">Брак</p>
+                      <p className="text-sm text-muted-foreground">Marriage</p>
                       <p className="font-semibold">{selectedMarriage?.spouse1FullName} & {selectedMarriage?.spouse2FullName}</p>
-                      <p className="text-xs text-muted-foreground">Свидетельство: {selectedMarriage?.certificateNumber}</p>
+                      <p className="text-xs text-muted-foreground">Certificate: {selectedMarriage?.certificateNumber}</p>
                     </div>
                     <div className="border border-border rounded-lg p-4">
                       <p className="text-sm text-muted-foreground">Причина</p>
@@ -202,12 +202,12 @@ export default function DivorceApplicationPage() {
                     )}
                   </div>
                   <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">
-                    <p className="font-semibold">⚠️ Подтверждение</p>
+                    <p className="font-semibold">⚠️ Byдтверждение</p>
                     <ul className="list-disc ml-4 mt-1 space-y-1">
-                      <li>Вся предоставленная информация верна</li>
-                      <li>Вы понимаете, что это начнёт бракоразводный процесс</li>
-                      <li>Супруг(а) будет уведомлён(а) официально</li>
-                      <li>Действие сложно отменить</li>
+                      <li>All provided information is correct</li>
+                      <li>You понимаете, что это начнёт marriageоdivorceный process</li>
+                      <li>Spouse(а) будет уведомлён(а) официально</li>
+                      <li>Action сложно отменить</li>
                     </ul>
                   </div>
                 </>
@@ -216,15 +216,15 @@ export default function DivorceApplicationPage() {
               {/* Navigation */}
               <div className="flex justify-between pt-4">
                 <Button variant="outline" onClick={() => setActiveStep((p) => p - 1)} disabled={activeStep === 0}>
-                  ← Назад
+                  ← Back
                 </Button>
                 {activeStep === STEPS.length - 1 ? (
                   <Button variant="destructive" onClick={handleSubmit} disabled={!canProceed() || submitting}>
-                    {submitting ? 'Отправка…' : '📤 Подать заявление'}
+                    {submitting ? 'Отправка…' : '📤 Bygive application'}
                   </Button>
                 ) : (
                   <Button onClick={() => setActiveStep((p) => p + 1)} disabled={!canProceed()}>
-                    Далее →
+                    Next →
                   </Button>
                 )}
               </div>

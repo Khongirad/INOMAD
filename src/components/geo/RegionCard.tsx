@@ -33,10 +33,10 @@ export interface RegionCardProps {
 function getStatusLabel(status: TerritoryStatus, lang: "en" | "ru"): string {
   const labels: Record<TerritoryStatus, { en: string; ru: string }> = {
     core: { en: "Core Territory", ru: "Ядро" },
-    state: { en: "State Region", ru: "Государственная зона" },
-    indigenous: { en: "Indigenous Region", ru: "Коренной регион" },
-    city_state: { en: "City-State", ru: "Город-государство" },
-    special: { en: "Special Status", ru: "Особый статус" },
+    state: { en: "State Region", ru: "State zone" },
+    indigenous: { en: "Indigenous Region", ru: "Indigenous Region" },
+    city_state: { en: "City-State", ru: "City-state" },
+    special: { en: "Special Status", ru: "Special статус" },
   };
   return labels[status][lang];
 }
@@ -161,7 +161,7 @@ export function RegionCard({
               : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
-          {lang === "ru" ? "Обзор" : "Overview"}
+          {lang === "ru" ? "Overview" : "Overview"}
         </button>
         <button
           onClick={() => setActiveTab("peoples")}
@@ -171,7 +171,7 @@ export function RegionCard({
               : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
-          {lang === "ru" ? "Народы" : "Peoples"}
+          {lang === "ru" ? "Peopleы" : "Peoples"}
         </button>
         <button
           onClick={() => setActiveTab("culture")}
@@ -193,7 +193,7 @@ export function RegionCard({
             <div>
               <h3 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                {lang === "ru" ? "О регионе" : "About"}
+                {lang === "ru" ? "О regionе" : "About"}
               </h3>
               <p className="text-sm text-zinc-400 leading-relaxed">
                 {subRegion
@@ -231,7 +231,7 @@ export function RegionCard({
             <div className="glass-card rounded-lg p-4 border border-gold-border/20 bg-gold-dim/5">
               <h3 className="text-sm font-medium text-gold-text mb-2 flex items-center gap-2">
                 <Heart className="w-4 h-4" />
-                {lang === "ru" ? "Принцип ответственности" : "Responsibility"}
+                {lang === "ru" ? "Принцип responseственности" : "Responsibility"}
               </h3>
               <p className="text-sm text-zinc-300 italic leading-relaxed">
                 «{responsibility}»
@@ -246,7 +246,7 @@ export function RegionCard({
             <div>
               <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                {lang === "ru" ? "Коренные народы" : "Indigenous Peoples"}
+                {lang === "ru" ? "Коренные peopleы" : "Indigenous Peoples"}
               </h3>
               {indigenousNations.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2">
@@ -275,7 +275,7 @@ export function RegionCard({
               ) : (
                 <p className="text-sm text-zinc-500">
                   {lang === "ru"
-                    ? "Нет данных о коренных народах"
+                    ? "No data о коренных peopleах"
                     : "No indigenous peoples data"}
                 </p>
               )}
@@ -285,7 +285,7 @@ export function RegionCard({
             {allNations.length > indigenousNations.length && (
               <div>
                 <h3 className="text-sm font-medium text-zinc-400 mb-2">
-                  {lang === "ru" ? "Другие народы" : "Other Peoples"}
+                  {lang === "ru" ? "Другие peopleы" : "Other Peoples"}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {allNations
@@ -323,7 +323,7 @@ export function RegionCard({
             ) && (
               <div>
                 <h3 className="text-sm font-medium text-zinc-300 mb-2">
-                  {lang === "ru" ? "Традиции народов" : "Traditions"}
+                  {lang === "ru" ? "Традиции peopleов" : "Traditions"}
                 </h3>
                 <div className="space-y-3">
                   {indigenousNations

@@ -24,7 +24,7 @@ interface ReceivedInvitationCardProps {
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ReactNode; className: string }> = {
   PENDING: {
-    label: 'Ожидает',
+    label: 'Pending',
     variant: 'default',
     icon: <Clock className="h-3 w-3" />,
     className: 'bg-yellow-600 hover:bg-yellow-700',
@@ -36,7 +36,7 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
     className: 'bg-green-600 hover:bg-green-700',
   },
   REJECTED: {
-    label: 'Отклонено',
+    label: 'Rejected',
     variant: 'destructive',
     icon: <XCircle className="h-3 w-3" />,
     className: '',
@@ -85,7 +85,7 @@ export function ReceivedInvitationCard({
         <div className="space-y-2 mb-4">
           <div className="flex items-center gap-2 text-sm">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <span>Роль: <strong>{invitation.role}</strong></span>
+            <span>Role: <strong>{invitation.role}</strong></span>
           </div>
           <p className="text-xs text-muted-foreground">
             {new Date(invitation.createdAt).toLocaleDateString()}
@@ -108,7 +108,7 @@ export function ReceivedInvitationCard({
               onClick={handleAccept}
             >
               <CheckCircle className="h-4 w-4" />
-              Принять
+              Accept
             </Button>
             <Button
               variant="outline"
@@ -116,7 +116,7 @@ export function ReceivedInvitationCard({
               onClick={handleReject}
             >
               <XCircle className="h-4 w-4" />
-              Отклонить
+              Decline
             </Button>
           </div>
         )}

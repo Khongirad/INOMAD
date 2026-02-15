@@ -17,7 +17,7 @@ import {
 import { createMarriageApplication, checkMarriageEligibility } from '@/lib/api/zags';
 import { toast } from 'sonner';
 
-const STEPS = ['Данные партнёра', 'Детали брака', 'Имущественный режим', 'Проверка и подача'];
+const STEPS = ['Data partner', 'Details marriageа', 'Property режим', 'Verification и подача'];
 
 export default function MarriageApplicationPage() {
   const router = useRouter();
@@ -49,7 +49,7 @@ export default function MarriageApplicationPage() {
   const handleNext = async () => {
     if (activeStep === 0) {
       if (!formData.partnerId || !formData.spouse1FullName || !formData.spouse2FullName) {
-        setError('Заполните все поля информации о партнёре');
+        setError('Заgenderните all genderя информации о partnerе');
         return;
       }
       try {
@@ -57,7 +57,7 @@ export default function MarriageApplicationPage() {
         await checkMarriageEligibility('current-user');
         setLoading(false);
       } catch (err: any) {
-        setError(err.message || 'Вы не имеете права на заключение брака');
+        setError(err.message || 'You не имеете права на заkeyение marriageа');
         setLoading(false);
         return;
       }
@@ -75,10 +75,10 @@ export default function MarriageApplicationPage() {
     try {
       setLoading(true);
       await createMarriageApplication(formData);
-      toast.success('Заявление подано! Ожидается согласие партнёра…');
+      toast.success('Application подано! Pendingся consent partner…');
       router.push('/services/zags');
     } catch (err: any) {
-      setError(err.message || 'Не удалось подать заявление');
+      setError(err.message || 'Не удалось поgive application');
     } finally {
       setLoading(false);
     }
@@ -88,10 +88,10 @@ export default function MarriageApplicationPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <Button variant="ghost" onClick={() => router.push('/services/zags')} className="mb-2">
-          ← Назад в ЗАГС
+          ← Back в Civil Registry
         </Button>
-        <h1 className="text-2xl font-bold">Заявление на регистрацию брака</h1>
-        <p className="text-muted-foreground mt-1">Оба партнёра должны дать согласие</p>
+        <h1 className="text-2xl font-bold">Application на регистрацию marriageа</h1>
+        <p className="text-muted-foreground mt-1">Оба partner должны give consent</p>
       </div>
 
       {/* Stepper */}
@@ -114,7 +114,7 @@ export default function MarriageApplicationPage() {
       {error && (
         <div className="bg-destructive/10 text-destructive rounded-lg p-4 flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-sm underline">Закрыть</button>
+          <button onClick={() => setError(null)} className="text-sm underline">Close</button>
         </div>
       )}
 
@@ -123,29 +123,29 @@ export default function MarriageApplicationPage() {
           {/* Step 0: Partner Info */}
           {activeStep === 0 && (
             <>
-              <h3 className="text-lg font-semibold">Данные партнёра</h3>
+              <h3 className="text-lg font-semibold">Data partner</h3>
               <div className="space-y-3">
                 <div>
-                  <Label>ID партнёра *</Label>
-                  <Input value={formData.partnerId} onChange={(e) => handleChange('partnerId', e.target.value)} placeholder="Имя пользователя или ID" />
+                  <Label>Partner ID *</Label>
+                  <Input value={formData.partnerId} onChange={(e) => handleChange('partnerId', e.target.value)} placeholder="Name genderьзователя or ID" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <Label>ФИО супруга 1 *</Label>
+                    <Label>ФИО spouseа 1 *</Label>
                     <Input value={formData.spouse1FullName} onChange={(e) => handleChange('spouse1FullName', e.target.value)} />
                   </div>
                   <div>
-                    <Label>ФИО супруга 2 *</Label>
+                    <Label>ФИО spouseа 2 *</Label>
                     <Input value={formData.spouse2FullName} onChange={(e) => handleChange('spouse2FullName', e.target.value)} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <Label>Дата рождения супруга 1 *</Label>
+                    <Label>Date рождения spouseа 1 *</Label>
                     <Input type="date" value={formData.spouse1DateOfBirth} onChange={(e) => handleChange('spouse1DateOfBirth', e.target.value)} />
                   </div>
                   <div>
-                    <Label>Дата рождения супруга 2 *</Label>
+                    <Label>Date рождения spouseа 2 *</Label>
                     <Input type="date" value={formData.spouse2DateOfBirth} onChange={(e) => handleChange('spouse2DateOfBirth', e.target.value)} />
                   </div>
                 </div>
@@ -156,20 +156,20 @@ export default function MarriageApplicationPage() {
           {/* Step 1: Marriage Details */}
           {activeStep === 1 && (
             <>
-              <h3 className="text-lg font-semibold">Детали брака</h3>
+              <h3 className="text-lg font-semibold">Details marriageа</h3>
               <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <Label>Желаемая дата брака *</Label>
+                    <Label>Desired Date marriageа *</Label>
                     <Input type="date" value={formData.marriageDate} onChange={(e) => handleChange('marriageDate', e.target.value)} />
-                    <p className="text-xs text-muted-foreground mt-1">Минимум 30 дней от сегодня</p>
+                    <p className="text-xs text-muted-foreground mt-1">Минимум 30 days от today</p>
                   </div>
                   <div>
-                    <Label>Тип церемонии</Label>
+                    <Label>Type церемонии</Label>
                     <Select value={formData.ceremonyType} onValueChange={(v) => handleChange('ceremonyType', v)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Civil">Гражданская</SelectItem>
+                        <SelectItem value="Civil">Citizenская</SelectItem>
                         <SelectItem value="Religious">Религиозная</SelectItem>
                         <SelectItem value="Traditional">Традиционная</SelectItem>
                       </SelectContent>
@@ -177,16 +177,16 @@ export default function MarriageApplicationPage() {
                   </div>
                 </div>
                 <div>
-                  <Label>Место церемонии</Label>
+                  <Label>Seat церемонии</Label>
                   <Input value={formData.ceremonyLocation} onChange={(e) => handleChange('ceremonyLocation', e.target.value)} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <Label>Имя свидетеля 1</Label>
+                    <Label>Name свидетеля 1</Label>
                     <Input value={formData.witness1Name} onChange={(e) => handleChange('witness1Name', e.target.value)} />
                   </div>
                   <div>
-                    <Label>Имя свидетеля 2</Label>
+                    <Label>Name свидетеля 2</Label>
                     <Input value={formData.witness2Name} onChange={(e) => handleChange('witness2Name', e.target.value)} />
                   </div>
                 </div>
@@ -197,8 +197,8 @@ export default function MarriageApplicationPage() {
           {/* Step 2: Property Regime */}
           {activeStep === 2 && (
             <>
-              <h3 className="text-lg font-semibold">Имущественный режим</h3>
-              <p className="text-sm text-muted-foreground mb-3">Выберите порядок управления имуществом в браке</p>
+              <h3 className="text-lg font-semibold">Property режим</h3>
+              <p className="text-sm text-muted-foreground mb-3">Select порядок управления имуществом в marriageе</p>
               <div>
                 <Label>Режим имущества</Label>
                 <Select value={formData.propertyRegime} onValueChange={(v) => handleChange('propertyRegime', v)}>
@@ -206,14 +206,14 @@ export default function MarriageApplicationPage() {
                   <SelectContent>
                     <SelectItem value="SEPARATE">Раздельное имущество</SelectItem>
                     <SelectItem value="JOINT">Совместное имущество</SelectItem>
-                    <SelectItem value="CUSTOM">Свой договор</SelectItem>
+                    <SelectItem value="CUSTOM">Свой contract</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {formData.propertyRegime === 'CUSTOM' && (
                 <div>
-                  <Label>Детали договора</Label>
-                  <Textarea rows={4} value={formData.propertyAgreement} onChange={(e) => handleChange('propertyAgreement', e.target.value)} placeholder="Опишите индивидуальные условия…" />
+                  <Label>Details contractа</Label>
+                  <Textarea rows={4} value={formData.propertyAgreement} onChange={(e) => handleChange('propertyAgreement', e.target.value)} placeholder="Опишите индивидуальные terms…" />
                 </div>
               )}
             </>
@@ -222,14 +222,14 @@ export default function MarriageApplicationPage() {
           {/* Step 3: Review */}
           {activeStep === 3 && (
             <>
-              <h3 className="text-lg font-semibold">Проверка и подача</h3>
+              <h3 className="text-lg font-semibold">Verification и подача</h3>
               <div className="space-y-3">
                 <div className="border border-border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Супруги</p>
+                  <p className="text-sm text-muted-foreground">Spouseи</p>
                   <p className="font-semibold">{formData.spouse1FullName} & {formData.spouse2FullName}</p>
                 </div>
                 <div className="border border-border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Дата брака</p>
+                  <p className="text-sm text-muted-foreground">Date marriageа</p>
                   <p className="font-semibold">{formData.marriageDate}</p>
                 </div>
                 <div className="border border-border rounded-lg p-4">
@@ -238,7 +238,7 @@ export default function MarriageApplicationPage() {
                 </div>
               </div>
               <div className="bg-blue-500/10 text-blue-400 rounded-lg p-4 text-sm">
-                После подачи партнёр должен дать согласие. Вы оба получите уведомление.
+                Byсле подачи partner должен give consent. You оба genderучите notification.
               </div>
             </>
           )}
@@ -246,15 +246,15 @@ export default function MarriageApplicationPage() {
           {/* Navigation */}
           <div className="flex justify-between pt-4">
             <Button variant="outline" onClick={handleBack} disabled={activeStep === 0 || loading}>
-              ← Назад
+              ← Back
             </Button>
             {activeStep === STEPS.length - 1 ? (
               <Button onClick={handleSubmit} disabled={loading}>
-                {loading ? 'Отправка…' : '📤 Подать заявление'}
+                {loading ? 'Отправка…' : '📤 Bygive application'}
               </Button>
             ) : (
               <Button onClick={handleNext} disabled={loading}>
-                Далее →
+                Next →
               </Button>
             )}
           </div>

@@ -42,7 +42,7 @@ export default function TaxPage() {
       const data = await getTaxHistory();
       setRecords(data);
     } catch (err: any) {
-      toast.error(err.message || 'Ошибка загрузки налоговой истории');
+      toast.error(err.message || 'Error загрузки taxовой истории');
     } finally {
       setLoading(false);
     }
@@ -56,11 +56,11 @@ export default function TaxPage() {
     setGenerating(true);
     try {
       await generateTaxRecord(Number(year));
-      toast.success(`Налоговая запись за ${year} год создана`);
+      toast.success(`Taxовая record за ${year} год создана`);
       setGenerateOpen(false);
       fetchRecords();
     } catch (err: any) {
-      toast.error(err.message || 'Ошибка создания записи');
+      toast.error(err.message || 'Error создания записи');
     } finally {
       setGenerating(false);
     }
@@ -69,7 +69,7 @@ export default function TaxPage() {
   const handleFile = async (id: string) => {
     try {
       await fileTaxReturn(id);
-      toast.success('Декларация подана');
+      toast.success('Declaration submitted');
       fetchRecords();
     } catch (err: any) {
       toast.error(err.message);
@@ -79,7 +79,7 @@ export default function TaxPage() {
   const handlePay = async (id: string) => {
     try {
       await payTax(id);
-      toast.success('Налог оплачен');
+      toast.success('Tax оплачен');
       fetchRecords();
     } catch (err: any) {
       toast.error(err.message);
@@ -88,9 +88,9 @@ export default function TaxPage() {
 
   const getStatusBadge = (status: TaxRecordStatus) => {
     const map: Record<TaxRecordStatus, { color: string; icon: React.ReactNode; label: string }> = {
-      DRAFT: { color: 'bg-zinc-500/10 text-zinc-400', icon: <Clock className="h-3 w-3" />, label: 'Черновик' },
-      FILED: { color: 'bg-blue-500/10 text-blue-500', icon: <FileCheck className="h-3 w-3" />, label: 'Подана' },
-      PAID: { color: 'bg-emerald-500/10 text-emerald-500', icon: <CheckCircle2 className="h-3 w-3" />, label: 'Оплачено' },
+      DRAFT: { color: 'bg-zinc-500/10 text-zinc-400', icon: <Clock className="h-3 w-3" />, label: 'Draft' },
+      FILED: { color: 'bg-blue-500/10 text-blue-500', icon: <FileCheck className="h-3 w-3" />, label: 'Submitted' },
+      PAID: { color: 'bg-emerald-500/10 text-emerald-500', icon: <CheckCircle2 className="h-3 w-3" />, label: 'Paid' },
       OVERDUE: { color: 'bg-red-500/10 text-red-500', icon: <AlertCircle className="h-3 w-3" />, label: 'Просрочено' },
       DISPUTED: { color: 'bg-amber-500/10 text-amber-500', icon: <AlertCircle className="h-3 w-3" />, label: 'Оспаривается' },
     };
@@ -114,18 +114,18 @@ export default function TaxPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white">
-            Ежегодное налогообложение
+            Ежегодное taxообложение
           </h2>
           <p className="text-zinc-400">
-            Республика 7% + Конфедерация 3% = итого 10% от дохода за квесты
+            Republic 7% + Confederation 3% = итого 10% от incomeа за квесты
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" onClick={fetchRecords} disabled={loading}>
-            <RefreshCcw className="mr-2 h-4 w-4" /> Обновить
+            <RefreshCcw className="mr-2 h-4 w-4" /> Refresh
           </Button>
           <Button size="sm" onClick={() => setGenerateOpen(true)}>
-            <Receipt className="mr-2 h-4 w-4" /> Создать запись
+            <Receipt className="mr-2 h-4 w-4" /> Create record
           </Button>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function TaxPage() {
                 <TrendingUp className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Общий доход</div>
+                <div className="text-xs text-zinc-500 uppercase">Общий income</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {totalIncome.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   <span className="text-gold-primary text-sm ml-1">ALT</span>
@@ -156,7 +156,7 @@ export default function TaxPage() {
                 <DollarSign className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Налог уплачен</div>
+                <div className="text-xs text-zinc-500 uppercase">Tax уплачен</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {totalTaxPaid.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                 </div>
@@ -172,9 +172,9 @@ export default function TaxPage() {
                 <Calendar className="h-5 w-5 text-zinc-400" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Текущий год</div>
+                <div className="text-xs text-zinc-500 uppercase">Current год</div>
                 <div className="text-lg font-mono font-bold text-white">
-                  {currentYear ? getStatusBadge(currentYear.status) : 'Нет данных'}
+                  {currentYear ? getStatusBadge(currentYear.status) : 'No data'}
                 </div>
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function TaxPage() {
                 <Clock className="h-5 w-5 text-amber-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">В ожидании</div>
+                <div className="text-xs text-zinc-500 uppercase">Pending</div>
                 <div className="text-lg font-mono font-bold text-amber-500">
                   {pendingCount}
                 </div>
@@ -202,15 +202,15 @@ export default function TaxPage() {
       <Card className="border-white/5">
         <CardHeader>
           <CardTitle className="text-base text-zinc-200 flex items-center gap-2">
-            <Receipt className="h-5 w-5" /> Налоговая история
+            <Receipt className="h-5 w-5" /> Taxовая history
           </CardTitle>
         </CardHeader>
         <CardContent>
           {records.length === 0 ? (
             <div className="text-center text-zinc-500 py-8">
               <Receipt className="h-12 w-12 mx-auto mb-3 text-zinc-700" />
-              <p>Нет налоговых записей</p>
-              <p className="text-xs mt-1">Записи генерируются автоматически 1 января или вручную.</p>
+              <p>No taxовых записей</p>
+              <p className="text-xs mt-1">Записи генерируются автоматически 1 января or вручную.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -229,12 +229,12 @@ export default function TaxPage() {
                     <div className="flex gap-2">
                       {record.status === 'DRAFT' && (
                         <Button size="sm" variant="secondary" onClick={() => handleFile(record.id)}>
-                          <Send className="mr-1 h-3 w-3" /> Подать декларацию
+                          <Send className="mr-1 h-3 w-3" /> Bygive декларацию
                         </Button>
                       )}
                       {record.status === 'FILED' && (
                         <Button size="sm" onClick={() => handlePay(record.id)}>
-                          <Wallet className="mr-1 h-3 w-3" /> Оплатить
+                          <Wallet className="mr-1 h-3 w-3" /> Pay
                         </Button>
                       )}
                     </div>
@@ -242,7 +242,7 @@ export default function TaxPage() {
 
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div>
-                      <div className="text-xs text-zinc-500">Доход</div>
+                      <div className="text-xs text-zinc-500">Income</div>
                       <div className="font-mono text-white">
                         {Number(record.totalIncome).toLocaleString('en-US', { maximumFractionDigits: 2 })} ALT
                       </div>
@@ -252,13 +252,13 @@ export default function TaxPage() {
                       <div className="font-mono text-white">{record.totalQuestsCompleted}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500">Республика (7%)</div>
+                      <div className="text-xs text-zinc-500">Republic (7%)</div>
                       <div className="font-mono text-blue-400">
                         {Number(record.republicTaxDue).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500">Конфедерация (3%)</div>
+                      <div className="text-xs text-zinc-500">Confederation (3%)</div>
                       <div className="font-mono text-indigo-400">
                         {Number(record.confederationTaxDue).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                       </div>
@@ -276,7 +276,7 @@ export default function TaxPage() {
 
                   {record.isPaid && record.paidAt && (
                     <div className="mt-2 text-xs text-zinc-600">
-                      Оплачено: {new Date(record.paidAt).toLocaleDateString('ru-RU')}
+                      Paid: {new Date(record.paidAt).toLocaleDateString('ru-RU')}
                       {record.paymentTxHash && ` · TX: ${record.paymentTxHash.slice(0, 12)}...`}
                     </div>
                   )}
@@ -288,10 +288,10 @@ export default function TaxPage() {
       </Card>
 
       {/* Generate Sheet */}
-      <Sheet open={generateOpen} onOpenChange={setGenerateOpen} title="Создать налоговую запись">
+      <Sheet open={generateOpen} onOpenChange={setGenerateOpen} title="Create taxовую record">
         <div className="space-y-6 pt-4">
           <div className="space-y-2">
-            <Label>Налоговый год</Label>
+            <Label>Taxовый год</Label>
             <Input
               type="number"
               value={year}
@@ -303,8 +303,8 @@ export default function TaxPage() {
 
           <div className="p-3 rounded-lg bg-zinc-800/50 text-xs text-zinc-400">
             <AlertCircle className="h-3 w-3 inline mr-1" />
-            Система автоматически подсчитает доход от всех квестов за указанный год
-            и рассчитает налог по ставке 10% (7% республика + 3% конфедерация).
+            Systemа автоматически подсчитает income от всех квестов за указанный год
+            и рассчитает tax по ставке 10% (7% republic + 3% confederation).
           </div>
 
           <Button
@@ -312,7 +312,7 @@ export default function TaxPage() {
             onClick={handleGenerate}
             disabled={generating || !year}
           >
-            {generating ? 'Создание...' : 'Создать запись'}
+            {generating ? 'Creation...' : 'Create record'}
           </Button>
         </div>
       </Sheet>

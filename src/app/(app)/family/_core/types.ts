@@ -62,7 +62,7 @@ export type FamilyDraft = {
   // ХУДАНАР (сваты)
   khudanarSlots: KhudanarSlot[];
 
-  // 2–7 колено (как список)
+  // 2–7 колено (как list)
   cousins: CousinRef[];
 };
 
@@ -81,8 +81,8 @@ export function createEmptyFamilyDraft(): FamilyDraft {
     paternalUnclesAunts: [],
     maternalUnclesAunts: [],
     khudanarSlots: [
-      { slotId: "wife_side", label: "Худанар (сваты со стороны жены)" },
-      { slotId: "husband_side", label: "Худанар (сваты со стороны мужа)" },
+      { slotId: "wife_side", label: "Худанар (сваты со parties жены)" },
+      { slotId: "husband_side", label: "Худанар (сваты со parties мужа)" },
     ],
     cousins: [],
   };

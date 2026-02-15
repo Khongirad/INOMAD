@@ -97,9 +97,9 @@ export default function QuestDetailsPage() {
     return (
       <div className="container max-w-4xl py-12 text-center">
         <AlertCircle className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-white mb-2">Задание не найдено</h2>
+        <h2 className="text-xl font-semibold text-white mb-2">Task не найдено</h2>
         <Link href="/quests" className="text-purple-400 hover:underline">
-          ← Вернуться к доске заданий
+          ← Return to quest board
         </Link>
       </div>
     );
@@ -117,7 +117,7 @@ export default function QuestDetailsPage() {
       {/* Back Button */}
       <Link href="/quests" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition">
         <ArrowLeft className="w-4 h-4" />
-        Назад к доске заданий
+        Back к доске заданий
       </Link>
 
       {/* Header */}
@@ -164,7 +164,7 @@ export default function QuestDetailsPage() {
           <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
             <div className="flex items-center gap-2 text-blue-400 mb-1">
               <Trophy className="w-5 h-5" />
-              <span className="text-sm font-medium">Репутация</span>
+              <span className="text-sm font-medium">Reputation</span>
             </div>
             <div className="text-2xl font-bold text-white">+{quest.reputationGain}</div>
           </div>
@@ -173,7 +173,7 @@ export default function QuestDetailsPage() {
           <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
             <div className="flex items-center gap-2 text-yellow-400 mb-1">
               <Clock className="w-5 h-5" />
-              <span className="text-sm font-medium">Дедлайн</span>
+              <span className="text-sm font-medium">Deadline</span>
             </div>
             <div className="text-lg font-semibold text-white">
               {new Date(quest.deadline).toLocaleDateString('ru-RU')}
@@ -200,7 +200,7 @@ export default function QuestDetailsPage() {
             onClick={handleAccept}
             className="flex-1 px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium"
           >
-            Принять задание
+            Accept task
           </button>
         )}
         {canSubmit && (
@@ -208,7 +208,7 @@ export default function QuestDetailsPage() {
             onClick={handleSubmit}
             className="flex-1 px-6 py-3 bg-gold-primary text-black rounded-lg hover:bg-gold-primary/90 transition font-medium"
           >
-            Отправить на проверку
+            Send на проверку
           </button>
         )}
         {canApprove && (
@@ -216,7 +216,7 @@ export default function QuestDetailsPage() {
             onClick={handleApprove}
             className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium"
           >
-            ✓ Подтвердить выполнение
+            ✓ Confirm completion
           </button>
         )}
       </div>

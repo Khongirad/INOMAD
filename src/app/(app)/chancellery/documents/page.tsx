@@ -37,9 +37,9 @@ export default function MyDocumentsPage() {
   return (
     <div className="container max-w-7xl py-8 space-y-6 animate-in fade-in">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-white">Мои Документы</h1>
+        <h1 className="text-2xl font-bold text-white">My Documentы</h1>
         <Link href="/chancellery" className="px-4 py-2 bg-gold-primary text-black rounded-lg hover:bg-gold-primary/90">
-          + Создать
+          + Create
         </Link>
       </div>
 
@@ -53,7 +53,7 @@ export default function MyDocumentsPage() {
               filter === status ? 'bg-gold-primary text-black' : 'bg-zinc-800 text-zinc-400'
             }`}
           >
-            {status === 'all' ? 'Все' : status.replace('_', ' ')}
+            {status === 'all' ? 'All' : status.replace('_', ' ')}
           </button>
         ))}
       </div>
@@ -66,7 +66,7 @@ export default function MyDocumentsPage() {
       ) : documents.length === 0 ? (
         <div className="text-center py-12 bg-zinc-800/50 rounded-lg">
           <FileText className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-          <p className="text-zinc-400">Документов пока нет</p>
+          <p className="text-zinc-400">Documentов not yet</p>
         </div>
       ) : (
         <div className="space-y-3">

@@ -52,9 +52,9 @@ export default function DocumentDetailsPage() {
     return (
       <div className="container max-w-4xl py-12 text-center">
         <FileText className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-white mb-2">Документ не найден</h2>
+        <h2 className="text-xl font-semibold text-white mb-2">Document не найден</h2>
         <Link href="/chancellery/documents" className="text-gold-primary hover:underline">
-          ← Вернуться к документам
+          ← Return to documentам
         </Link>
       </div>
     );
@@ -91,7 +91,7 @@ export default function DocumentDetailsPage() {
     <div className="container max-w-4xl py-8 space-y-8 animate-in fade-in">
       <Link href="/chancellery/documents" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition">
         <ArrowLeft className="w-4 h-4" />
-        Назад к документам
+        Back к documentам
       </Link>
 
       {/* Header */}
@@ -123,7 +123,7 @@ export default function DocumentDetailsPage() {
 
       {/* Signature Roadmap */}
       <div className="bg-zinc-800/30 border border-zinc-700 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-6">Процесс подписания</h2>
+        <h2 className="text-xl font-semibold text-white mb-6">Process подписания</h2>
         <SignatureRoadmap signers={signers} currentUserId={currentUserId} />
       </div>
 
@@ -134,13 +134,13 @@ export default function DocumentDetailsPage() {
             onClick={handleSign}
             className="flex-1 px-6 py-3 bg-gold-primary text-black rounded-lg hover:bg-gold-primary/90 transition font-medium"
           >
-            Подписать документ
+            Sign document
           </button>
         )}
         {document.status === 'FULLY_SIGNED' && (
           <button className="flex items-center gap-2 px-6 py-3 bg-zinc-800 border border-zinc-700 text-white rounded-lg hover:bg-zinc-700 transition">
             <Download className="w-4 h-4" />
-            Скачать PDF
+            Download PDF
           </button>
         )}
       </div>

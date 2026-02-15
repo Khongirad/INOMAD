@@ -26,7 +26,7 @@ export default function MigrationOfficerPage() {
       const data = await getAllPassportApplications();
       setApplications(data);
     } catch (err: any) {
-      setError(err.message || 'Не удалось загрузить заявления');
+      setError(err.message || 'Не удалось upload applications');
     } finally {
       setLoading(false);
     }
@@ -49,13 +49,13 @@ export default function MigrationOfficerPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'SUBMITTED':
-        return <Badge variant="secondary">Подано</Badge>;
+        return <Badge variant="secondary">Filed</Badge>;
       case 'UNDER_REVIEW':
-        return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-500/30">На рассмотрении</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-500/30">Under Review</Badge>;
       case 'APPROVED':
-        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Одобрено</Badge>;
+        return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Approved</Badge>;
       case 'REJECTED':
-        return <Badge variant="destructive">Отклонено</Badge>;
+        return <Badge variant="destructive">Rejected</Badge>;
       case 'ISSUED':
         return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Выдано</Badge>;
       default:
@@ -73,11 +73,11 @@ export default function MigrationOfficerPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b">
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Заявитель</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Тип паспорта</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Дата подачи</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Статус</th>
-              <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Действия</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Applicant</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type паdisputeта</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date подачи</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+              <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -131,8 +131,8 @@ export default function MigrationOfficerPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Панель офицера миграции</h1>
-        <p className="text-muted-foreground mt-1">Рассмотрение и обработка заявлений на паспорт</p>
+        <h1 className="text-3xl font-bold">Панель officerа миграции</h1>
+        <p className="text-muted-foreground mt-1">Рассмотрение и обработка заявлений на паdisputeт</p>
       </div>
 
       {error && (
@@ -149,7 +149,7 @@ export default function MigrationOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Всего заявлений</p>
+                <p className="text-sm text-muted-foreground">Total заявлений</p>
               </div>
               <BarChart3 className="h-10 w-10 text-primary opacity-30" />
             </div>
@@ -171,7 +171,7 @@ export default function MigrationOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-yellow-600">{stats.underReview}</p>
-                <p className="text-sm text-muted-foreground">На рассмотрении</p>
+                <p className="text-sm text-muted-foreground">Under Review</p>
               </div>
               <Clock className="h-10 w-10 text-yellow-500 opacity-30" />
             </div>
@@ -182,7 +182,7 @@ export default function MigrationOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-green-600">{stats.approved + stats.issued}</p>
-                <p className="text-sm text-muted-foreground">Одобрено / Выдано</p>
+                <p className="text-sm text-muted-foreground">Approved / Выдано</p>
               </div>
               <CheckCircle className="h-10 w-10 text-green-500 opacity-30" />
             </div>
@@ -193,9 +193,9 @@ export default function MigrationOfficerPage() {
       {/* Tabs + Table */}
       <Tabs defaultValue="ALL" onValueChange={setStatusFilter}>
         <TabsList>
-          <TabsTrigger value="ALL">Все заявления</TabsTrigger>
+          <TabsTrigger value="ALL">All applications</TabsTrigger>
           <TabsTrigger value="SUBMITTED">Ожидают</TabsTrigger>
-          <TabsTrigger value="UNDER_REVIEW">На рассмотрении</TabsTrigger>
+          <TabsTrigger value="UNDER_REVIEW">Under Review</TabsTrigger>
           <TabsTrigger value="PROCESSED">Обработанные</TabsTrigger>
         </TabsList>
 

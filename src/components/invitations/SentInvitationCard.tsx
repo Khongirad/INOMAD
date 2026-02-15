@@ -23,7 +23,7 @@ interface SentInvitationCardProps {
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ReactNode; className: string }> = {
   PENDING: {
-    label: 'Ожидает',
+    label: 'Pending',
     variant: 'default',
     icon: <Clock className="h-3 w-3" />,
     className: 'bg-yellow-600 hover:bg-yellow-700',
@@ -35,7 +35,7 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
     className: 'bg-green-600 hover:bg-green-700',
   },
   REJECTED: {
-    label: 'Отклонено',
+    label: 'Rejected',
     variant: 'destructive',
     icon: <XCircle className="h-3 w-3" />,
     className: '',
@@ -53,7 +53,7 @@ export function SentInvitationCard({ invitation, onCancel }: SentInvitationCardP
   const config = statusConfig[invitation.status] || statusConfig.PENDING;
 
   const handleCancel = async () => {
-    if (!confirm('Отменить приглашение?')) return;
+    if (!confirm('Отменить invitation?')) return;
     await onCancel(invitation.id);
   };
 
@@ -84,7 +84,7 @@ export function SentInvitationCard({ invitation, onCancel }: SentInvitationCardP
               <button
                 onClick={handleCancel}
                 className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 transition-colors"
-                title="Отменить приглашение"
+                title="Отменить invitation"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -95,7 +95,7 @@ export function SentInvitationCard({ invitation, onCancel }: SentInvitationCardP
         <div className="mt-3 space-y-1">
           <div className="flex items-center gap-2 text-sm">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <span>Роль: <strong>{invitation.role}</strong></span>
+            <span>Role: <strong>{invitation.role}</strong></span>
           </div>
           <p className="text-xs text-muted-foreground">
             {new Date(invitation.createdAt).toLocaleDateString()}

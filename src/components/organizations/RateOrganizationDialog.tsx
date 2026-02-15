@@ -65,7 +65,7 @@ export function RateOrganizationDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-500" />
-            Оценить Организацию
+            Rate Организацию
           </DialogTitle>
           <DialogDescription>{organizationName}</DialogDescription>
         </DialogHeader>
@@ -103,7 +103,7 @@ export function RateOrganizationDialog({
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-2">
                 <Heart className="h-4 w-4 text-red-500" />
-                Доверие
+                Trust
               </Label>
               <span className={`text-lg font-bold ${getScoreColor(trustScore)}`}>
                 {trustScore.toFixed(1)}
@@ -130,7 +130,7 @@ export function RateOrganizationDialog({
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-2">
                 <Award className="h-4 w-4 text-blue-500" />
-                Качество услуг
+                Service Quality
               </Label>
               <span className={`text-lg font-bold ${getScoreColor(qualityScore)}`}>
                 {qualityScore.toFixed(1)}
@@ -154,7 +154,7 @@ export function RateOrganizationDialog({
 
           {/* Overall */}
           <div className="bg-muted/50 rounded-lg p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Общая оценка</p>
+            <p className="text-xs text-muted-foreground mb-1">Общая rating</p>
             <p className={`text-3xl font-bold ${getScoreColor(parseFloat(overallScore))}`}>
               {overallScore}
             </p>
@@ -163,11 +163,11 @@ export function RateOrganizationDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={submitting}>
-            Отмена
+            Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={submitting} className="gap-2">
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {submitting ? 'Отправка...' : 'Отправить Оценку'}
+            {submitting ? 'Отправка...' : 'Send Оценку'}
           </Button>
         </DialogFooter>
       </DialogContent>

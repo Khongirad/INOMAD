@@ -38,23 +38,23 @@ interface MarketStats {
 }
 
 const CATEGORIES = [
-  { value: 'ALL', label: 'Все', emoji: '📋' },
-  { value: 'REPAIR', label: 'Ремонт', emoji: '🔧' },
-  { value: 'CONSTRUCTION', label: 'Строительство', emoji: '🏗️' },
+  { value: 'ALL', label: 'All', emoji: '📋' },
+  { value: 'REPAIR', label: 'Repair', emoji: '🔧' },
+  { value: 'CONSTRUCTION', label: 'Construction', emoji: '🏗️' },
   { value: 'IT', label: 'IT', emoji: '💻' },
-  { value: 'EDUCATION', label: 'Образование', emoji: '📚' },
-  { value: 'DELIVERY', label: 'Доставка', emoji: '📦' },
-  { value: 'LEGAL', label: 'Юридические', emoji: '⚖️' },
-  { value: 'FINANCE', label: 'Финансы', emoji: '💰' },
-  { value: 'HEALTHCARE', label: 'Здоровье', emoji: '🏥' },
-  { value: 'AGRICULTURE', label: 'Сельское хоз.', emoji: '🌾' },
-  { value: 'MANUFACTURING', label: 'Производство', emoji: '🏭' },
-  { value: 'TRADE', label: 'Торговля', emoji: '🛒' },
-  { value: 'DESIGN', label: 'Дизайн', emoji: '🎨' },
-  { value: 'CONSULTING', label: 'Консалтинг', emoji: '💼' },
-  { value: 'CLEANING', label: 'Клининг', emoji: '🧹' },
-  { value: 'TRANSPORT', label: 'Транспорт', emoji: '🚛' },
-  { value: 'OTHER', label: 'Другое', emoji: '📄' },
+  { value: 'EDUCATION', label: 'Education', emoji: '📚' },
+  { value: 'DELIVERY', label: 'Delivery', emoji: '📦' },
+  { value: 'LEGAL', label: 'Legal', emoji: '⚖️' },
+  { value: 'FINANCE', label: 'Finance', emoji: '💰' },
+  { value: 'HEALTHCARE', label: 'Healthcare', emoji: '🏥' },
+  { value: 'AGRICULTURE', label: 'Agriculture', emoji: '🌾' },
+  { value: 'MANUFACTURING', label: 'Manufacturing', emoji: '🏭' },
+  { value: 'TRADE', label: 'Trade', emoji: '🛒' },
+  { value: 'DESIGN', label: 'Design', emoji: '🎨' },
+  { value: 'CONSULTING', label: 'Consulting', emoji: '💼' },
+  { value: 'CLEANING', label: 'Cleaning', emoji: '🧹' },
+  { value: 'TRANSPORT', label: 'Transport', emoji: '🚛' },
+  { value: 'OTHER', label: 'Other', emoji: '📄' },
 ];
 
 // ─── Component ──────────────────────────────────────
@@ -125,7 +125,7 @@ export default function QuestsPage() {
   const acceptQuest = async (questId: string) => {
     try {
       await api.post(`/quests/${questId}/accept`);
-      setSuccess('Задание принято!');
+      setSuccess('Task accepted!');
       fetchMarket();
       setTimeout(() => setSuccess(''), 3000);
     } catch (e: any) {
@@ -137,9 +137,9 @@ export default function QuestsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!form.title.trim()) { setError('Введите название'); return; }
+    if (!form.title.trim()) { setError('Enter title'); return; }
     if (!form.rewardAltan || parseFloat(form.rewardAltan) <= 0) {
-      setError('Оплата в АЛТАН обязательна (минимум > 0)');
+      setError('ALTAN payment is required (minimum > 0)');
       return;
     }
 
@@ -160,7 +160,7 @@ export default function QuestsPage() {
         rewardAltan: '', reputationGain: '', deadline: '', estimatedDuration: '',
         organizationId: '',
       });
-      setSuccess('Задание создано!');
+      setSuccess('Task created!');
       setTab('my');
       setTimeout(() => setSuccess(''), 3000);
     } catch (e: any) {
@@ -233,7 +233,7 @@ export default function QuestsPage() {
               </div>
             ))}
             {quest.objectives.length > 3 && (
-              <p className="text-xs text-zinc-500 ml-6">+{quest.objectives.length - 3} ещё...</p>
+              <p className="text-xs text-zinc-500 ml-6">+{quest.objectives.length - 3} more...</p>
             )}
           </div>
         )}
@@ -264,7 +264,7 @@ export default function QuestsPage() {
               onClick={(e) => { e.preventDefault(); acceptQuest(quest.id); }}
               className="px-4 py-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-medium hover:bg-amber-500/30 transition"
             >
-              Взять работу
+              Accept Task
             </button>
           )}
         </div>
@@ -273,7 +273,7 @@ export default function QuestsPage() {
         {quest.progress > 0 && (
           <div className="mt-3">
             <div className="flex justify-between text-xs text-zinc-500 mb-1">
-              <span>Прогресс</span>
+              <span>Progress</span>
               <span>{quest.progress}%</span>
             </div>
             <div className="w-full bg-zinc-700 rounded-full h-1.5">
@@ -294,10 +294,10 @@ export default function QuestsPage() {
       <div>
         <h1 className="text-3xl font-bold text-white flex items-center gap-3">
           <Hammer className="text-amber-400 w-8 h-8" />
-          Рынок Труда
+          Labor Market
         </h1>
         <p className="text-zinc-400 mt-1">
-          Создавайте и выполняйте задания — оплата в АЛТАН, репутация в республике
+          Create and complete tasks — payment in ALTAN, reputation in your republic
         </p>
       </div>
 
@@ -305,10 +305,10 @@ export default function QuestsPage() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Всего заданий', value: stats.totalQuests, icon: Scroll, color: 'text-zinc-300' },
-            { label: 'Открытые', value: stats.openQuests, icon: Search, color: 'text-green-400' },
-            { label: 'Выполнено', value: stats.completedQuests, icon: CheckCircle2, color: 'text-emerald-400' },
-            { label: 'Оборот (₳)', value: Number(stats.totalVolumeAltan).toLocaleString(), icon: TrendingUp, color: 'text-amber-400' },
+            { label: 'Total Tasks', value: stats.totalQuests, icon: Scroll, color: 'text-zinc-300' },
+            { label: 'Open', value: stats.openQuests, icon: Search, color: 'text-green-400' },
+            { label: 'Completed', value: stats.completedQuests, icon: CheckCircle2, color: 'text-emerald-400' },
+            { label: 'Turnover (₳)', value: Number(stats.totalVolumeAltan).toLocaleString(), icon: TrendingUp, color: 'text-amber-400' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 flex items-center gap-3">
               <Icon className={`w-5 h-5 ${color}`} />
@@ -324,9 +324,9 @@ export default function QuestsPage() {
       {/* ── TABS ── */}
       <div className="flex gap-2 border-b border-zinc-700 pb-2">
         {([
-          { key: 'market', label: 'Рынок', icon: Search },
-          { key: 'my', label: 'Мои задания', icon: Briefcase },
-          { key: 'create', label: 'Создать', icon: Plus },
+          { key: 'market', label: 'Market', icon: Search },
+          { key: 'my', label: 'My tasks', icon: Briefcase },
+          { key: 'create', label: 'Create', icon: Plus },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -367,7 +367,7 @@ export default function QuestsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input
                 type="text"
-                placeholder="Поиск заданий..."
+                placeholder="Search tasks..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-amber-500 focus:border-amber-500 text-sm"
@@ -394,18 +394,18 @@ export default function QuestsPage() {
           {loading ? (
             <div className="text-center py-16">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mx-auto" />
-              <p className="text-zinc-400 mt-4 text-sm">Загрузка заданий...</p>
+              <p className="text-zinc-400 mt-4 text-sm">Loading tasks...</p>
             </div>
           ) : quests.length === 0 ? (
             <div className="text-center py-16 bg-zinc-800/30 rounded-xl border border-zinc-700/50">
               <Hammer className="w-14 h-14 text-zinc-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">Нет доступных заданий</h3>
-              <p className="text-zinc-400 text-sm">Создайте первое задание или проверьте позже</p>
+              <h3 className="text-lg font-semibold text-white mb-2">No available tasks</h3>
+              <p className="text-zinc-400 text-sm">Create your first task or check back later</p>
               <button
                 onClick={() => setTab('create')}
                 className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm hover:bg-amber-600 transition"
               >
-                Создать задание
+                Create task
               </button>
             </div>
           ) : (
@@ -426,8 +426,8 @@ export default function QuestsPage() {
           ) : myQuests.length === 0 ? (
             <div className="text-center py-16 bg-zinc-800/30 rounded-xl border border-zinc-700/50">
               <Briefcase className="w-14 h-14 text-zinc-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">У вас нет заданий</h3>
-              <p className="text-zinc-400 text-sm">Найдите работу на рынке или создайте новое задание</p>
+              <h3 className="text-lg font-semibold text-white mb-2">You have no tasks</h3>
+              <p className="text-zinc-400 text-sm">Find tasks on the market or create a new one</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -443,29 +443,29 @@ export default function QuestsPage() {
           <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6 space-y-5">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Plus className="w-5 h-5 text-amber-400" />
-              Новое задание
+              New task
             </h2>
 
             {/* Title */}
             <div>
-              <label className="text-sm text-zinc-300 mb-1.5 block">Название работы *</label>
+              <label className="text-sm text-zinc-300 mb-1.5 block">Task Title *</label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Например: Ремонт крыши, Разработка сайта, Доставка груза"
+                placeholder="e.g.: Roof repair, Website development, Cargo delivery"
                 className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:ring-amber-500 focus:border-amber-500"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="text-sm text-zinc-300 mb-1.5 block">Описание</label>
+              <label className="text-sm text-zinc-300 mb-1.5 block">Description</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
-                placeholder="Подробное описание работы..."
+                placeholder="Detailed description of work..."
                 className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:ring-amber-500 focus:border-amber-500 resize-none"
               />
             </div>
@@ -475,7 +475,7 @@ export default function QuestsPage() {
               <div>
                 <label className="text-sm text-zinc-300 mb-1.5 block">
                   <Filter className="w-3.5 h-3.5 inline mr-1 text-amber-400" />
-                  Категория
+                  Category
                 </label>
                 <select
                   value={form.category}
@@ -490,7 +490,7 @@ export default function QuestsPage() {
               <div>
                 <label className="text-sm text-zinc-300 mb-1.5 block">
                   <Coins className="w-3.5 h-3.5 inline mr-1 text-amber-400" />
-                  Оплата в АЛТАН *
+                  Payment in ALTAN *
                 </label>
                 <input
                   type="number"
@@ -498,12 +498,12 @@ export default function QuestsPage() {
                   min="0.01"
                   value={form.rewardAltan}
                   onChange={(e) => setForm({ ...form, rewardAltan: e.target.value })}
-                  placeholder="Обязательно"
+                  placeholder="Required"
                   className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500"
                 />
                 {form.rewardAltan && parseFloat(form.rewardAltan) > 0 && (
                   <p className="text-[10px] text-zinc-500 mt-1">
-                    Налог 10%: {(parseFloat(form.rewardAltan) * 0.07).toFixed(2)} ₳ республика + {(parseFloat(form.rewardAltan) * 0.03).toFixed(2)} ₳ конфедерация
+                    Tax 10%: {(parseFloat(form.rewardAltan) * 0.07).toFixed(2)} ₳ republic + {(parseFloat(form.rewardAltan) * 0.03).toFixed(2)} ₳ confederation
                   </p>
                 )}
               </div>
@@ -511,7 +511,7 @@ export default function QuestsPage() {
 
             {/* Objectives */}
             <div>
-              <label className="text-sm text-zinc-300 mb-1.5 block">Этапы работы</label>
+              <label className="text-sm text-zinc-300 mb-1.5 block">Work Stages</label>
               {form.objectives.map((obj, i) => (
                 <div key={i} className="flex gap-2 mb-2">
                   <input
@@ -522,7 +522,7 @@ export default function QuestsPage() {
                       newObj[i] = e.target.value;
                       setForm({ ...form, objectives: newObj });
                     }}
-                    placeholder={`Этап ${i + 1}`}
+                    placeholder={`Stage ${i + 1}`}
                     className="flex-1 px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500"
                   />
                   {form.objectives.length > 1 && (
@@ -539,14 +539,14 @@ export default function QuestsPage() {
                 onClick={() => setForm({ ...form, objectives: [...form.objectives, ''] })}
                 className="text-xs text-amber-400 hover:text-amber-300 mt-1"
               >
-                + Добавить этап
+                + Add Stage
               </button>
             </div>
 
             {/* Deadline + Duration + Reputation */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm text-zinc-300 mb-1.5 block">Дедлайн</label>
+                <label className="text-sm text-zinc-300 mb-1.5 block">Deadline</label>
                 <input
                   type="date"
                   value={form.deadline}
@@ -555,7 +555,7 @@ export default function QuestsPage() {
                 />
               </div>
               <div>
-                <label className="text-sm text-zinc-300 mb-1.5 block">Время (мин)</label>
+                <label className="text-sm text-zinc-300 mb-1.5 block">Time (min)</label>
                 <input
                   type="number"
                   value={form.estimatedDuration}
@@ -567,7 +567,7 @@ export default function QuestsPage() {
               <div>
                 <label className="text-sm text-zinc-300 mb-1.5 block">
                   <Trophy className="w-3.5 h-3.5 inline mr-1 text-blue-400" />
-                  Репутация
+                  Reputation
                 </label>
                 <input
                   type="number"
@@ -583,7 +583,7 @@ export default function QuestsPage() {
               type="submit"
               className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg shadow-amber-500/20"
             >
-              Создать задание
+              Create task
             </button>
           </div>
         </form>

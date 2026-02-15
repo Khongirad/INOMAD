@@ -70,8 +70,8 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
 
   const getStatusLabel = () => {
     switch (election.status) {
-      case 'ACTIVE': return 'Голосование';
-      case 'COMPLETED': return 'Завершено';
+      case 'ACTIVE': return 'Voting';
+      case 'COMPLETED': return 'Completed';
       case 'UPCOMING': return 'Предстоящие';
       case 'CANCELLED': return 'Отменено';
       default: return election.status;
@@ -147,7 +147,7 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
                   {election.winner.firstName} {election.winner.lastName}
                 </div>
                 <div className="text-xs text-zinc-500">
-                  {election.winnerVotes} голосов ({getCandidatePercentage(election.winnerVotes || 0).toFixed(1)}%)
+                  {election.winnerVotes} votes ({getCandidatePercentage(election.winnerVotes || 0).toFixed(1)}%)
                 </div>
               </div>
             </div>
@@ -159,7 +159,7 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
 
         {/* Candidates label */}
         <div className="text-sm font-semibold text-zinc-300">
-          Кандидаты ({election.candidates.length})
+          Candidateы ({election.candidates.length})
         </div>
 
         {/* Voting Mode */}
@@ -199,10 +199,10 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
           <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
             <p className="text-sm text-blue-400 flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              Тайное голосование — результаты после завершения
+              Тайное voting — results после завершения
             </p>
             <p className="text-xs text-zinc-500 mt-1">
-              Кандидатов: {election.candidates.length}
+              Candidates: {election.candidates.length}
             </p>
           </div>
         ) : (
@@ -245,7 +245,7 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
         {/* Stats footer */}
         <div className="pt-2 text-xs text-zinc-500 flex items-center gap-1">
           <TrendingUp className="h-3 w-3" />
-          Голосов: {totalVotes}
+          Voteов: {totalVotes}
           {isCompleted && election.turnoutRate && (
             <> · Явка: {election.turnoutRate.toFixed(1)}%</>
           )}
@@ -259,14 +259,14 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
             disabled={!selectedCandidate || voting}
           >
             <Vote className="mr-2 h-4 w-4" />
-            {voting ? 'Голосование...' : 'Проголосовать'}
+            {voting ? 'Voting...' : 'Проvotesать'}
           </Button>
         )}
 
         {/* Already voted */}
         {hasVoted && isActive && (
           <div className="w-full text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-medium flex items-center justify-center gap-2">
-            <CheckCircle2 className="h-4 w-4" /> Вы проголосовали
+            <CheckCircle2 className="h-4 w-4" /> You проvotesали
           </div>
         )}
       </CardContent>

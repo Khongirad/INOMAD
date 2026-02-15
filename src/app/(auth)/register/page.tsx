@@ -51,7 +51,7 @@ const GeoMap = dynamic(() => import("@/components/geo/GeoMap"), {
 
 const STEPS = [
   { id: "land", title: "The Call of the Land", description: "Declare your territorial origin", icon: MapPin },
-  { id: "region", title: "Land & Peoples", description: "History of the chosen land", icon: BookOpen },
+  { id: "Region", title: "Land & Peoples", description: "History of the chosen land", icon: BookOpen },
   { id: "identity", title: "Blood & Identity", description: "Select your ethnicity and clan", icon: User },
   { id: "proof", title: "Social Proof", description: "Extracting data for verification", icon: ShieldCheck },
   { id: "wallet", title: "Financial Sovereignty", description: "Bank of Siberia Account", icon: Wallet },
@@ -378,12 +378,12 @@ export default function RegistrationPage() {
                       {selectedRegion.languages.slice(0, 5).map(lang => {
                         // Translate Russian language names to English
                         const langMap: Record<string, string> = {
-                          'Русский': 'Russian', 'Бурятский': 'Buryat', 'Тувинский': 'Tuvan',
-                          'Якутский (Саха)': 'Yakut (Sakha)', 'Алтайский': 'Altai', 'Хакасский': 'Khakas',
-                          'Чеченский': 'Chechen', 'Аварский': 'Avar', 'Даргинский': 'Dargwa',
-                          'Лезгинский': 'Lezgian', 'Осетинский': 'Ossetian', 'Ингушский': 'Ingush',
-                          'Кабардинский': 'Kabardian', 'Адыгейский': 'Adyghe', 'Карачаевский': 'Karachay',
-                          'Балкарский': 'Balkar', 'Кумыкский': 'Kumyk', 'Лакский': 'Lak', 'Табасаранский': 'Tabasaran'
+                          'Russian': 'Russian', 'Buryat': 'Buryat', 'Tuvan': 'Tuvan',
+                          'Yakut (Sakha)': 'Yakut (Sakha)', 'Altai': 'Altai', 'Khakas': 'Khakas',
+                          'Chechen': 'Chechen', 'Avar': 'Avar', 'Dargin': 'Dargwa',
+                          'Лезгинский': 'Lezgian', 'Ossetian': 'Ossetian', 'Ингушский': 'Ingush',
+                          'Кабардинский': 'Kabardian', 'Adyghe': 'Adyghe', 'Карачаевский': 'Karachay',
+                          'Balkar': 'Balkar', 'Кумыкский': 'Kumyk', 'Лакский': 'Lak', 'Табасаранский': 'Tabasaran'
                         };
                         return (
                           <span key={lang} className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">

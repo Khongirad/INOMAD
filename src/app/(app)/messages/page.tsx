@@ -93,10 +93,10 @@ export default function MessagesPage() {
         setMessages((prev) => [...prev, msg]);
         setNewMessage('');
       } else {
-        toast.error('Ошибка отправки');
+        toast.error('Error отправки');
       }
     } catch (e) {
-      toast.error('Ошибка сети');
+      toast.error('Error сети');
     }
   };
 
@@ -132,7 +132,7 @@ export default function MessagesPage() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-amber-500" />
-              Сообщения
+              Messages
             </h2>
             <Button size="sm" className="bg-amber-600 hover:bg-amber-700 h-8">
               <Plus className="h-4 w-4" />
@@ -141,7 +141,7 @@ export default function MessagesPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
             <Input
-              placeholder="Поиск..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-zinc-900 border-white/10"
@@ -151,11 +151,11 @@ export default function MessagesPage() {
 
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-8 text-center text-zinc-500">Загрузка...</div>
+            <div className="p-8 text-center text-zinc-500">Loading...</div>
           ) : filteredConvs.length === 0 ? (
             <div className="p-8 text-center">
               <MessageSquare className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-500 text-sm">Нет сообщений</p>
+              <p className="text-zinc-500 text-sm">No сообщений</p>
               <p className="text-zinc-600 text-xs mt-1">Начните разговор</p>
             </div>
           ) : (
@@ -272,10 +272,10 @@ export default function MessagesPage() {
           <div className="flex-1 flex items-center justify-center text-center p-8">
             <div>
               <MessageSquare className="h-16 w-16 text-zinc-700 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Выберите чат</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Select чат</h3>
               <p className="text-zinc-400 max-w-sm">
-                Выберите существующий разговор или начните новый.
-                Чаты работают для организаций, квестов, судебных дел и прямых сообщений.
+                Select существующий разговор or начните new.
+                Чаты работают for организаций, квестов, courtебных дел и прямых сообщений.
               </p>
             </div>
           </div>

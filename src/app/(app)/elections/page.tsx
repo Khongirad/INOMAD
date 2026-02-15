@@ -27,7 +27,7 @@ export default function ElectionsPage() {
       setUpcomingElections(upcomingData);
       setCompletedElections([]);
     } catch (err: any) {
-      toast.error(err.message || 'Ошибка загрузки выборов');
+      toast.error(err.message || 'Failed to load elections');
     } finally {
       setLoading(false);
     }
@@ -42,9 +42,9 @@ export default function ElectionsPage() {
       const result = await castVote(electionId, { candidateId });
       setVotedElections(new Set([...votedElections, electionId]));
       await fetchElections();
-      toast.success(`Голос принят! У кандидата ${result.voteCount} голосов`);
+      toast.success(`Vote accepted! Candidate has ${result.voteCount} votes`);
     } catch (err: any) {
-      toast.error(err.message || 'Ошибка голосования');
+      toast.error(err.message || 'Voting error');
     }
   };
 
@@ -64,14 +64,14 @@ export default function ElectionsPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
             <Vote className="text-blue-500 w-8 h-8" />
-            Выборы
+            Elections
           </h2>
           <p className="text-zinc-400 mt-1">
-            Голосования, кандидаты и результаты выборов
+            Voting, candidates, and election results
           </p>
         </div>
         <Button variant="secondary" size="sm" onClick={fetchElections}>
-          <RefreshCcw className="mr-2 h-4 w-4" /> Обновить
+          <RefreshCcw className="mr-2 h-4 w-4" /> Refresh
         </Button>
       </div>
 
@@ -80,23 +80,23 @@ export default function ElectionsPage() {
         <TabsList className="bg-zinc-900/50 border border-white/5">
           <TabsTrigger value="active" className="gap-1.5">
             <Vote className="h-4 w-4" />
-            Активные ({activeElections.length})
+            Active ({activeElections.length})
           </TabsTrigger>
           <TabsTrigger value="upcoming" className="gap-1.5">
             <Clock className="h-4 w-4" />
-            Предстоящие ({upcomingElections.length})
+            Upcoming ({upcomingElections.length})
           </TabsTrigger>
           <TabsTrigger value="completed" className="gap-1.5">
             <CheckCircle2 className="h-4 w-4" />
-            Завершённые ({completedElections.length})
+            Completed ({completedElections.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="active" className="space-y-4">
           {loading ? (
-            <div className="text-center text-zinc-500 py-12 animate-pulse">Загрузка...</div>
+            <div className="text-center text-zinc-500 py-12 animate-pulse">Loading...</div>
           ) : activeElections.length === 0 ? (
-            <EmptyState text="Нет активных выборов" />
+            <EmptyState text="No active elections" />
           ) : (
             <div className="space-y-4">
               {activeElections.map((election) => (
@@ -113,7 +113,7 @@ export default function ElectionsPage() {
 
         <TabsContent value="upcoming" className="space-y-4">
           {upcomingElections.length === 0 ? (
-            <EmptyState text="Нет предстоящих выборов" />
+            <EmptyState text="No upcoming elections" />
           ) : (
             <div className="space-y-4">
               {upcomingElections.map((election) => (
@@ -125,7 +125,7 @@ export default function ElectionsPage() {
 
         <TabsContent value="completed" className="space-y-4">
           {completedElections.length === 0 ? (
-            <EmptyState text="Нет завершённых выборов" />
+            <EmptyState text="No completed elections" />
           ) : (
             <div className="space-y-4">
               {completedElections.map((election) => (

@@ -128,30 +128,30 @@ interface OrgDashboardData {
 // ========================
 
 const ROLE_CONFIG: Record<string, { label: string; color: string; icon: string; order: number }> = {
-  LEADER: { label: 'Глава', color: 'bg-yellow-500', icon: '👑', order: 0 },
-  DEPUTY: { label: 'Заместитель', color: 'bg-gray-400', icon: '🛡️', order: 1 },
-  TREASURER: { label: 'Казначей', color: 'bg-green-500', icon: '💰', order: 2 },
-  SECRETARY: { label: 'Секретарь', color: 'bg-blue-500', icon: '📋', order: 3 },
-  OFFICER: { label: 'Должностное лицо', color: 'bg-purple-500', icon: '⚔️', order: 4 },
-  MEMBER: { label: 'Участник', color: 'bg-gray-500', icon: '👤', order: 5 },
-  APPRENTICE: { label: 'Стажёр', color: 'bg-orange-500', icon: '📚', order: 6 },
+  LEADER: { label: 'Head', color: 'bg-yellow-500', icon: '👑', order: 0 },
+  DEPUTY: { label: 'Deputy', color: 'bg-gray-400', icon: '🛡️', order: 1 },
+  TREASURER: { label: 'Treasurer', color: 'bg-green-500', icon: '💰', order: 2 },
+  SECRETARY: { label: 'Secretary', color: 'bg-blue-500', icon: '📋', order: 3 },
+  OFFICER: { label: 'Official', color: 'bg-purple-500', icon: '⚔️', order: 4 },
+  MEMBER: { label: 'Member', color: 'bg-gray-500', icon: '👤', order: 5 },
+  APPRENTICE: { label: 'Apprentice', color: 'bg-orange-500', icon: '📚', order: 6 },
 };
 
 const PERMISSION_LABELS: Record<string, string> = {
-  canInviteMembers: 'Приглашать участников',
-  canRemoveMembers: 'Исключать участников',
-  canCreateTasks: 'Создавать задачи',
-  canAssignTasks: 'Назначать задачи',
-  canVote: 'Голосовать',
-  canCreateProposal: 'Вносить предложения',
-  canManageTreasury: 'Управлять казной',
-  canSignDocuments: 'Подписывать документы',
-  canCallElection: 'Назначать выборы',
-  canEditOrgInfo: 'Редактировать информацию',
-  canViewReports: 'Просматривать отчёты',
-  canCreateReports: 'Создавать отчёты',
-  canManageRoles: 'Управлять ролями',
-  canArchive: 'Архивировать',
+  canInviteMembers: 'Invite members',
+  canRemoveMembers: 'Exclude members',
+  canCreateTasks: 'Create tasks',
+  canAssignTasks: 'Assign tasks',
+  canVote: 'Vote',
+  canCreateProposal: 'Make proposals',
+  canManageTreasury: 'Manage treasury',
+  canSignDocuments: 'Sign documents',
+  canCallElection: 'Call elections',
+  canEditOrgInfo: 'Edit information',
+  canViewReports: 'View reports',
+  canCreateReports: 'Create reports',
+  canManageRoles: 'Manage roles',
+  canArchive: 'Archive',
 };
 
 // ========================
@@ -207,7 +207,7 @@ export default function UnifiedOrgDashboard() {
       }
       setInviteOpen(false);
       setInviteUserId('');
-      toast.success('Участник добавлен');
+      toast.success('Member added');
       fetchDashboard();
     } catch (err: any) {
       toast.error(err.message);
@@ -215,7 +215,7 @@ export default function UnifiedOrgDashboard() {
   };
 
   const handleRemoveMember = async (userId: string) => {
-    if (!confirm('Вы уверены, что хотите удалить этого участника?')) return;
+    if (!confirm('Are you sure you want to remove this member?')) return;
     try {
       const res = await fetch(`/api/org/${orgId}/members/${userId}`, {
         method: 'DELETE',
@@ -225,7 +225,7 @@ export default function UnifiedOrgDashboard() {
         const err = await res.json();
         throw new Error(err.message || 'Failed');
       }
-      toast.success('Участник удалён');
+      toast.success('Member removed');
       fetchDashboard();
     } catch (err: any) {
       toast.error(err.message);
@@ -243,7 +243,7 @@ export default function UnifiedOrgDashboard() {
         const err = await res.json();
         throw new Error(err.message || 'Failed');
       }
-      toast.success('Роль обновлена');
+      toast.success('Role updated');
       fetchDashboard();
     } catch (err: any) {
       toast.error(err.message);
@@ -264,25 +264,25 @@ export default function UnifiedOrgDashboard() {
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      GUILD: '🛡️ Гильдия',
-      COMMITTEE: '📋 Комитет',
-      SERVICE: '🏛️ Государственный сервис',
-      ARBAN: '⚔️ Арбан (10)',
-      HUNDRED: '🏘️ Зүн (100)',
-      THOUSAND: '🏙️ Мянган (1000)',
-      REPUBLIC: '🏛️ Республика',
-      CONFEDERATION: '🌍 Конфедерация',
+      GUILD: '🛡️ Guild',
+      COMMITTEE: '📋 Committee',
+      SERVICE: '🏛️ State Service',
+      ARBAN: '⚔️ Arban (10)',
+      HUNDRED: '🏘️ Zuun (100)',
+      THOUSAND: '🏙️ Myangan (1000)',
+      REPUBLIC: '🏛️ Republic',
+      CONFEDERATION: '🌍 Confederation',
     };
     return labels[type] || type;
   };
 
   const getBranchLabel = (branch?: string) => {
     const labels: Record<string, string> = {
-      LEGISLATIVE: '📜 Законодательная',
-      EXECUTIVE: '🏢 Исполнительная',
-      JUSTICE: '⚖️ Судебная',
-      BANKING: '🏦 Банковская',
-      CIVIL_SERVICE: '🏛️ Гражданская служба',
+      LEGISLATIVE: '📜 Legislative',
+      EXECUTIVE: '🏢 Executive',
+      JUSTICE: '⚖️ Judicial',
+      BANKING: '🏦 Banking',
+      CIVIL_SERVICE: '🏛️ Civil Service',
     };
     return branch ? labels[branch] || branch : null;
   };
@@ -291,7 +291,7 @@ export default function UnifiedOrgDashboard() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-2">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Загрузка организации...</p>
+        <p className="text-sm text-muted-foreground">Loading organization...</p>
       </div>
     );
   }
@@ -300,7 +300,7 @@ export default function UnifiedOrgDashboard() {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-sm text-red-400">
-          {error || 'Организация не найдена'}
+          {error || 'Organization not found'}
         </div>
       </div>
     );
@@ -328,7 +328,7 @@ export default function UnifiedOrgDashboard() {
               )}
               <Badge className={`text-white gap-1 ${data.isFull ? 'bg-red-500/30' : 'bg-green-500/30'}`}>
                 <Users className="h-3 w-3" />
-                {data.memberCount}/{data.maxMembers} участников
+                {data.memberCount}/{data.maxMembers} members
               </Badge>
             </div>
             {data.description && (
@@ -343,16 +343,16 @@ export default function UnifiedOrgDashboard() {
             }`}>
               <span className="text-2xl font-bold">{data.overallRating.toFixed(1)}</span>
             </div>
-            <p className="text-xs opacity-70 mt-1">Общий рейтинг</p>
+            <p className="text-xs opacity-70 mt-1">Overall Rating</p>
           </div>
         </div>
 
         {/* Sub-ratings */}
         <div className="grid grid-cols-3 gap-4 mt-4">
           {[
-            { label: 'Доверие', score: data.trustScore, icon: '❤️' },
-            { label: 'Качество', score: data.qualityScore, icon: '⭐' },
-            { label: 'Финансы', score: data.financialScore, icon: '💰' },
+            { label: 'Trust', score: data.trustScore, icon: '❤️' },
+            { label: 'Quality', score: data.qualityScore, icon: '⭐' },
+            { label: 'Finance', score: data.financialScore, icon: '💰' },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-2">
               <span>{item.icon}</span>
@@ -378,11 +378,11 @@ export default function UnifiedOrgDashboard() {
       {/* ==================== NAVIGATION TABS ==================== */}
       <Tabs defaultValue="overview">
         <TabsList className="mb-4">
-          <TabsTrigger value="overview">📊 Обзор</TabsTrigger>
-          <TabsTrigger value="team">👥 Команда</TabsTrigger>
-          <TabsTrigger value="permissions">🛡️ Полномочия</TabsTrigger>
-          <TabsTrigger value="achievements">🏆 Достижения</TabsTrigger>
-          <TabsTrigger value="structure">🏗️ Структура</TabsTrigger>
+          <TabsTrigger value="overview">📊 Overview</TabsTrigger>
+          <TabsTrigger value="team">👥 Team</TabsTrigger>
+          <TabsTrigger value="permissions">🛡️ Authorities</TabsTrigger>
+          <TabsTrigger value="achievements">🏆 Achievements</TabsTrigger>
+          <TabsTrigger value="structure">🏗️ Structure</TabsTrigger>
         </TabsList>
 
         {/* ==================== TAB: OVERVIEW ==================== */}
@@ -391,14 +391,14 @@ export default function UnifiedOrgDashboard() {
             {/* Stats */}
             <Card>
               <CardContent className="pt-6">
-                <h3 className="font-semibold mb-3">📊 Статистика</h3>
+                <h3 className="font-semibold mb-3">📊 Statistics</h3>
                 <div className="border-t border-border mb-3" />
                 {[
-                  { label: 'Контрактов завершено', value: data.contractsCompleted, icon: <CheckCircle className="h-4 w-4" /> },
-                  { label: 'Активные контракты', value: data.contractsActive, icon: <FileText className="h-4 w-4" /> },
-                  { label: 'Общая выручка', value: `${data.totalRevenue.toLocaleString()} ₮`, icon: <DollarSign className="h-4 w-4" /> },
-                  { label: 'Участников', value: `${data.memberCount}/${data.maxMembers}`, icon: <Users className="h-4 w-4" /> },
-                  { label: 'Подразделений', value: data.childCount, icon: <Building2 className="h-4 w-4" /> },
+                  { label: 'Contracts completed', value: data.contractsCompleted, icon: <CheckCircle className="h-4 w-4" /> },
+                  { label: 'Active contracts', value: data.contractsActive, icon: <FileText className="h-4 w-4" /> },
+                  { label: 'Total revenue', value: `${data.totalRevenue.toLocaleString()} ₮`, icon: <DollarSign className="h-4 w-4" /> },
+                  { label: 'Members', value: `${data.memberCount}/${data.maxMembers}`, icon: <Users className="h-4 w-4" /> },
+                  { label: 'Divisions', value: data.childCount, icon: <Building2 className="h-4 w-4" /> },
                 ].map((stat) => (
                   <div key={stat.label} className="flex justify-between items-center py-1.5">
                     <span className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -414,7 +414,7 @@ export default function UnifiedOrgDashboard() {
             {/* Leader & Roles */}
             <Card>
               <CardContent className="pt-6">
-                <h3 className="font-semibold mb-3">👑 Руководство</h3>
+                <h3 className="font-semibold mb-3">👑 Leadership</h3>
                 <div className="border-t border-border mb-3" />
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-12 w-12 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold">
@@ -422,11 +422,11 @@ export default function UnifiedOrgDashboard() {
                   </div>
                   <div>
                     <p className="font-bold">{data.leader.username || data.leader.seatId}</p>
-                    <Badge className="bg-yellow-500 text-black text-xs">Глава</Badge>
+                    <Badge className="bg-yellow-500 text-black text-xs">Head</Badge>
                   </div>
                 </div>
 
-                <p className="text-sm font-semibold mt-3 mb-1">Распределение ролей:</p>
+                <p className="text-sm font-semibold mt-3 mb-1">Role distribution:</p>
                 {Object.entries(data.roleDistribution ?? {}).map(([role, count]) => (
                   <div key={role} className="flex justify-between py-0.5">
                     <span className="text-sm">
@@ -441,10 +441,10 @@ export default function UnifiedOrgDashboard() {
             {/* Recent Ratings */}
             <Card>
               <CardContent className="pt-6">
-                <h3 className="font-semibold mb-3">⭐ Последние оценки</h3>
+                <h3 className="font-semibold mb-3">⭐ Recent ratings</h3>
                 <div className="border-t border-border mb-3" />
                 {data.ratings.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Пока нет оценок</p>
+                  <p className="text-sm text-muted-foreground">Not yet ratings</p>
                 ) : (
                   data.ratings.slice(0, 5).map((r) => (
                     <div key={r.id} className="py-2 border-b border-border/50 last:border-0">
@@ -472,10 +472,10 @@ export default function UnifiedOrgDashboard() {
                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-center justify-between">
                   <span className="flex items-center gap-2 text-sm">
                     <GitBranch className="h-4 w-4" />
-                    Родительская организация: <strong>{data.parent.name}</strong> ({data.parent.type})
+                    Parent Organization: <strong>{data.parent.name}</strong> ({data.parent.type})
                   </span>
                   <Button size="sm" variant="outline" onClick={() => router.push(`/org/${data.parent!.id}`)}>
-                    Перейти
+                    Go to
                   </Button>
                 </div>
               </div>
@@ -488,20 +488,20 @@ export default function UnifiedOrgDashboard() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold">👥 Команда ({data.memberCount}/{data.maxMembers})</h3>
+                <h3 className="font-semibold">👥 Team ({data.memberCount}/{data.maxMembers})</h3>
                 <Button className="gap-2" onClick={() => setInviteOpen(true)} disabled={data.isFull}>
                   <UserPlus className="h-4 w-4" />
-                  Пригласить
+                  Invite
                 </Button>
               </div>
 
               {/* Table header */}
               <div className="hidden md:grid grid-cols-12 gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border">
-                <div className="col-span-3">Участник</div>
-                <div className="col-span-3">Роль</div>
-                <div className="col-span-2">Верификация</div>
-                <div className="col-span-2">Дата вступления</div>
-                <div className="col-span-2 text-right">Действия</div>
+                <div className="col-span-3">Member</div>
+                <div className="col-span-3">Role</div>
+                <div className="col-span-2">Verification</div>
+                <div className="col-span-2">Join Date</div>
+                <div className="col-span-2 text-right">Actions</div>
               </div>
 
               {/* Table rows */}
@@ -565,7 +565,7 @@ export default function UnifiedOrgDashboard() {
                         <button
                           onClick={() => handleRemoveMember(member.userId)}
                           className="p-1.5 rounded-md hover:bg-red-500/20 text-red-500 transition-colors"
-                          title="Удалить участника"
+                          title="Remove member"
                         >
                           <UserMinus className="h-4 w-4" />
                         </button>
@@ -581,15 +581,15 @@ export default function UnifiedOrgDashboard() {
         <TabsContent value="permissions">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="font-semibold mb-1">🛡️ Матрица Полномочий</h3>
+              <h3 className="font-semibold mb-1">🛡️ Матрица Genderномочий</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Каждая роль имеет определённый набор разрешений в организации
+                Each role has a specific set of permissions in the organization
               </p>
 
               <div className="overflow-x-auto">
                 {/* Table header */}
                 <div className="grid gap-1 min-w-[700px]" style={{ gridTemplateColumns: `200px repeat(${Object.keys(ROLE_CONFIG).length}, 1fr)` }}>
-                  <div className="p-2 text-xs font-bold">Полномочие</div>
+                  <div className="p-2 text-xs font-bold">Authority</div>
                   {Object.entries(ROLE_CONFIG).map(([role, cfg]) => (
                     <div key={role} className="p-2 text-center text-xs font-bold">
                       {cfg.icon}<br />{cfg.label}
@@ -626,7 +626,7 @@ export default function UnifiedOrgDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {data.achievements.length === 0 ? (
               <div className="col-span-full bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-                ℹ️ Организация пока не получила достижений
+                ℹ️ Organization has no achievements yet
               </div>
             ) : (
               data.achievements.map((ach) => (
@@ -647,17 +647,17 @@ export default function UnifiedOrgDashboard() {
             <div className="col-span-full">
               <Card>
                 <CardContent className="pt-6">
-                  <h3 className="font-semibold mb-3">🗳️ Выборы</h3>
+                  <h3 className="font-semibold mb-3">🗳️ Elections</h3>
                   {data.elections.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">История выборов пуста</p>
+                    <p className="text-sm text-muted-foreground">Election history is empty</p>
                   ) : (
                     <div className="overflow-x-auto">
                       {/* Table header */}
                       <div className="grid grid-cols-4 gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border">
-                        <div>Статус</div>
-                        <div>Начало</div>
-                        <div>Окончание</div>
-                        <div>Кандидатов</div>
+                        <div>Status</div>
+                        <div>Start</div>
+                        <div>End</div>
+                        <div>Candidates</div>
                       </div>
                       {data.elections.map((el) => (
                         <div key={el.id} className="grid grid-cols-4 gap-2 px-3 py-2 items-center border-b border-border/50 last:border-0">
@@ -692,7 +692,7 @@ export default function UnifiedOrgDashboard() {
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">⬆️</span>
                     <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">Родительская организация</p>
+                      <p className="text-xs text-muted-foreground">Parent Organization</p>
                       <p className="font-semibold text-lg">{data.parent.name}</p>
                       <Badge variant="outline">{data.parent.type}</Badge>
                     </div>
@@ -708,7 +708,7 @@ export default function UnifiedOrgDashboard() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🏛️</span>
                   <div>
-                    <p className="text-xs text-primary">← ВЫ ЗДЕСЬ</p>
+                    <p className="text-xs text-primary">← YOU ARE HERE</p>
                     <p className="font-semibold text-lg">{data.name}</p>
                     <Badge>{getTypeLabel(data.type)}</Badge>
                   </div>
@@ -719,7 +719,7 @@ export default function UnifiedOrgDashboard() {
             {/* Children */}
             {data.children.length > 0 && (
               <>
-                <h3 className="font-semibold">⬇️ Подразделения ({data.childCount})</h3>
+                <h3 className="font-semibold">⬇️ Divisions ({data.childCount})</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {data.children.map((child) => (
                     <Card
@@ -743,7 +743,7 @@ export default function UnifiedOrgDashboard() {
 
             {data.children.length === 0 && (
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-                ℹ️ У этой организации пока нет подразделений.
+                ℹ️ This organization has no divisions yet.
               </div>
             )}
           </div>
@@ -754,7 +754,7 @@ export default function UnifiedOrgDashboard() {
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Пригласить участника</DialogTitle>
+            <DialogTitle>Invite Member</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -766,7 +766,7 @@ export default function UnifiedOrgDashboard() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Роль</Label>
+              <Label>Role</Label>
               <Select value={inviteRole} onValueChange={setInviteRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -783,8 +783,8 @@ export default function UnifiedOrgDashboard() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setInviteOpen(false)}>Отмена</Button>
-            <Button onClick={handleInvite} disabled={!inviteUserId}>Пригласить</Button>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
+            <Button onClick={handleInvite} disabled={!inviteUserId}>Invite</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

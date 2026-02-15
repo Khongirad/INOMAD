@@ -53,51 +53,51 @@ export default function MigrationServicePage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Миграционная служба</h1>
+        <h1 className="text-2xl font-bold">Migration Service</h1>
         <p className="text-muted-foreground mt-1">
-          Оформление паспортов, управление заявлениями и проверка документов
+          Оформление паdisputeтов, governance applicationsми и verification documentов
         </p>
       </div>
 
       {error && (
         <div className="bg-destructive/10 text-destructive rounded-lg p-4 flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-sm underline">Закрыть</button>
+          <button onClick={() => setError(null)} className="text-sm underline">Close</button>
         </div>
       )}
 
       {/* Passport Types */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader><CardTitle>📘 Стандартный паспорт</CardTitle></CardHeader>
+          <CardHeader><CardTitle>📘 Стандартный паdisputeт</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Для граждан. Действителен 10 лет. Международные поездки во все страны-партнёры.
+              For citizens. Valid 10 лет. Betweenpeopleные поездки во all страны-partnerы.
             </p>
             <Button className="w-full" onClick={() => router.push('/services/migration/apply?type=STANDARD')}>
-              + Подать заявление
+              + Bygive application
             </Button>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>🎖️ Дипломатический паспорт</CardTitle></CardHeader>
+          <CardHeader><CardTitle>🎖️ Diplomaатический паdisputeт</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Для гос. служащих и дипломатов. Особые привилегии и иммунитеты.
+              For гос. служащих и diplomaатов. Особые привилегии и иммунитеты.
             </p>
             <Button variant="outline" className="w-full" disabled>
-              Требуется номинация
+              Required номинация
             </Button>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>🛂 Служебный паспорт</CardTitle></CardHeader>
+          <CardHeader><CardTitle>🛂 Служебный паdisputeт</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Для служащих в командировках за рубежом.
+              For служащих в командировках за рубежом.
             </p>
             <Button variant="outline" className="w-full" disabled>
-              Требуется авторизация
+              Required авторизация
             </Button>
           </CardContent>
         </Card>
@@ -107,9 +107,9 @@ export default function MigrationServicePage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Ваши заявления</CardTitle>
+            <CardTitle>Yourи applications</CardTitle>
             <Button onClick={() => router.push('/services/migration/apply')}>
-              + Новое заявление
+              + New application
             </Button>
           </div>
         </CardHeader>
@@ -120,9 +120,9 @@ export default function MigrationServicePage() {
             </div>
           ) : applications.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground mb-3">Вы ещё не подавали заявлений</p>
+              <p className="text-muted-foreground mb-3">You ещё не подавали заявлений</p>
               <Button variant="outline" onClick={() => router.push('/services/migration/apply')}>
-                + Подать на паспорт
+                + Bygive на паdisputeт
               </Button>
             </div>
           ) : (
@@ -142,11 +142,11 @@ export default function MigrationServicePage() {
       {/* Passport Lookup */}
       <Card>
         <CardHeader>
-          <CardTitle>Проверка паспорта</CardTitle>
+          <CardTitle>Verification паdisputeта</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Проверьте действительность паспорта (публичный поиск)
+            Проверьте действительность паdisputeта (публичный поclaim)
           </p>
           <div className="flex gap-3 mb-3">
             <Input
@@ -168,14 +168,14 @@ export default function MigrationServicePage() {
             <div className={`rounded-lg p-4 ${lookupResult.exists ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
               {lookupResult.exists ? (
                 <>
-                  <p className="font-semibold">✅ Действительный паспорт</p>
-                  <p className="text-sm">Владелец: {lookupResult.fullName}</p>
+                  <p className="font-semibold">✅ Valid padisputeт</p>
+                  <p className="text-sm">Owner: {lookupResult.fullName}</p>
                   {lookupResult.expiresAt && (
                     <p className="text-sm">Истекает: {new Date(lookupResult.expiresAt).toLocaleDateString('ru-RU')}</p>
                   )}
                 </>
               ) : (
-                <p>{lookupResult.error || 'Паспорт не найден или недействителен'}</p>
+                <p>{lookupResult.error || 'Паdisputeт не найден or недействителен'}</p>
               )}
             </div>
           )}

@@ -36,7 +36,7 @@ function isMacroRegion(v: unknown): v is MacroRegion {
   );
 }
 
-// миграция: unknown -> IdentityDraft (MVP)
+// migration: unknown -> IdentityDraft (MVP)
 function migrateDraft(input: unknown): IdentityDraft {
   const base = createEmptyDraft();
 
@@ -109,7 +109,7 @@ function migrateDraft(input: unknown): IdentityDraft {
     base.ethnicity.selfDeclaredText
   );
 
-  // updatedAt (если был ISO string в meta.updatedAt — тоже конвертируем)
+  // updatedAt (if был ISO string в meta.updatedAt — тоже конвертируем)
   const updatedAtNumber = asNumber(input["updatedAt"], 0);
 
   let updatedAt = updatedAtNumber;
@@ -227,7 +227,7 @@ export function saveDraft(draft: IdentityDraft): void {
   if (typeof window === "undefined") return;
 
   try {
-    // сохраняем уже “чистый” MVP-формат
+    // сохраняем уже “чистый” MVP-format
     const normalized = migrateDraft(draft);
     window.localStorage.setItem(KEY, JSON.stringify(normalized));
   } catch {

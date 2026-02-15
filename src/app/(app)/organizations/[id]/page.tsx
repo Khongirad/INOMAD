@@ -61,7 +61,7 @@ export default function OrganizationDetailPage() {
       const data = await res.json();
       setOrg(data);
     } catch {
-      toast.error('Ошибка загрузки организации');
+      toast.error('Error loading organization');
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,7 @@ export default function OrganizationDetailPage() {
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed');
-    toast.success('Оценка отправлена');
+    toast.success('Rating submitted');
     fetchOrg();
   };
 
@@ -96,9 +96,9 @@ export default function OrganizationDetailPage() {
   if (!org) {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4 text-center">
-        <p className="text-muted-foreground">Организация не найдена</p>
+        <p className="text-muted-foreground">Organization not found</p>
         <Button variant="outline" className="mt-4" onClick={() => router.back()}>
-          Назад
+          Back
         </Button>
       </div>
     );
@@ -110,7 +110,7 @@ export default function OrganizationDetailPage() {
       <div className="mb-6">
         <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-1 mb-4">
           <ArrowLeft className="h-4 w-4" />
-          Назад
+          Back
         </Button>
 
         <div className="flex justify-between items-start">
@@ -134,7 +134,7 @@ export default function OrganizationDetailPage() {
 
           <Button onClick={() => setRateDialogOpen(true)} className="gap-2">
             <Star className="h-4 w-4" />
-            Оценить
+            Rate
           </Button>
         </div>
       </div>
@@ -145,28 +145,28 @@ export default function OrganizationDetailPage() {
           <CardContent className="pt-4 pb-4 text-center">
             <Star className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
             <p className="text-2xl font-bold">{org.rating?.toFixed(1) || '—'}</p>
-            <p className="text-xs text-muted-foreground">{org.ratingCount || 0} оценок</p>
+            <p className="text-xs text-muted-foreground">{org.ratingCount || 0} ratings</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4 text-center">
             <Users className="h-5 w-5 text-blue-500 mx-auto mb-1" />
             <p className="text-2xl font-bold">{org.memberCount || 0}</p>
-            <p className="text-xs text-muted-foreground">участников</p>
+            <p className="text-xs text-muted-foreground">members</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4 text-center">
             <TrendingUp className="h-5 w-5 text-green-500 mx-auto mb-1" />
             <p className="text-2xl font-bold">{org.financialRating?.toFixed(1) || '—'}</p>
-            <p className="text-xs text-muted-foreground">финансы</p>
+            <p className="text-xs text-muted-foreground">finance</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4 text-center">
             <ShieldCheck className="h-5 w-5 text-purple-500 mx-auto mb-1" />
             <p className="text-2xl font-bold">{org.trustRating?.toFixed(1) || '—'}</p>
-            <p className="text-xs text-muted-foreground">доверие</p>
+            <p className="text-xs text-muted-foreground">trust</p>
           </CardContent>
         </Card>
       </div>
@@ -175,7 +175,7 @@ export default function OrganizationDetailPage() {
       {org.description && (
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <h3 className="font-semibold mb-2">О организации</h3>
+            <h3 className="font-semibold mb-2">About Organization</h3>
             <p className="text-sm text-muted-foreground">{org.description}</p>
           </CardContent>
         </Card>
@@ -187,7 +187,7 @@ export default function OrganizationDetailPage() {
           <CardContent className="pt-6">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <Crown className="h-4 w-4 text-yellow-500" />
-              Руководитель
+              Director
             </h3>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
@@ -208,7 +208,7 @@ export default function OrganizationDetailPage() {
           <CardContent className="pt-6">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Участники ({org.members.length})
+              Members ({org.members.length})
             </h3>
             <div className="space-y-2">
               {org.members.map((member) => (
@@ -234,7 +234,7 @@ export default function OrganizationDetailPage() {
       {org.parentOrganization && (
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <h3 className="font-semibold mb-3">Вышестоящая организация</h3>
+            <h3 className="font-semibold mb-3">Parent Organization</h3>
             <Button
               variant="outline"
               className="gap-2"
@@ -252,7 +252,7 @@ export default function OrganizationDetailPage() {
       {org.childOrganizations && org.childOrganizations.length > 0 && (
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <h3 className="font-semibold mb-3">Дочерние организации ({org.childOrganizations.length})</h3>
+            <h3 className="font-semibold mb-3">Child Organizations ({org.childOrganizations.length})</h3>
             <div className="space-y-2">
               {org.childOrganizations.map((child) => (
                 <button
@@ -282,7 +282,7 @@ export default function OrganizationDetailPage() {
       <div className="text-center py-4">
         <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center">
           <Calendar className="h-3.5 w-3.5" />
-          Создана: {new Date(org.createdAt).toLocaleDateString()}
+          Created: {new Date(org.createdAt).toLocaleDateString()}
         </p>
       </div>
 

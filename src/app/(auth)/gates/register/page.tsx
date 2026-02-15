@@ -112,7 +112,7 @@ export default function RegisterPage() {
           <div className="mb-8">
             <div className="text-8xl mb-6 animate-bounce">🏔️</div>
             <h1 className="text-4xl font-bold text-gold-primary mb-4">
-              Добро пожаловать в Хурал!
+              Welcome в Khural!
             </h1>
             <h2 className="text-2xl text-amber-400/80 mb-6">
               Welcome to the Khural!
@@ -121,13 +121,13 @@ export default function RegisterPage() {
 
           <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-lg p-8 mb-8">
             <p className="text-lg text-zinc-300 mb-4">
-              ✅ Вы успешно зарегистрированы
+              ✅ You successfully registeredы
             </p>
             <p className="text-lg text-zinc-300 mb-4">
-              ✅ Вы приняли Условия использования
+              ✅ You приняли Terms исgenderьзования
             </p>
             <p className="text-lg text-green-400 font-bold mb-6">
-              ✅ Вы приняли Конституцию и стали ПРАВОВЫМ СУБЪЕКТОМ
+              ✅ You приняли Конституцию и стали ПРАВОВЫМ СУБЪЕКТОМ
             </p>
             <div className="text-sm text-zinc-500">
               You are now a legal subject with full rights and responsibilities
@@ -138,7 +138,7 @@ export default function RegisterPage() {
             onClick={() => router.push('/dashboard')}
             className="px-8 py-4 bg-gradient-to-r from-amber-600 to-gold-primary text-zinc-900 font-bold rounded-lg hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all"
           >
-            Войти в систему / Enter the System
+            Sign in / Enter the System
           </button>
         </div>
       </div>
@@ -164,7 +164,7 @@ export default function RegisterPage() {
           <h1 className="text-4xl font-bold text-gold-primary mb-2">
             РЕГИСТРАЦИЯ / REGISTRATION
           </h1>
-          <p className="text-zinc-400">Gates of Khural • Врата Хурала</p>
+          <p className="text-zinc-400">Gates of Khural • Gates Khuralа</p>
         </div>
 
         {/* Progress */}
@@ -187,7 +187,7 @@ export default function RegisterPage() {
         {currentStep === STEPS.ACCOUNT && (
           <form onSubmit={handleAccountSubmit} className="max-w-md mx-auto space-y-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">
-              Шаг 1: Создание аккаунта
+              Step 1: Creation accountа
             </h2>
 
             <div>
@@ -245,7 +245,7 @@ export default function RegisterPage() {
               type="submit"
               className="w-full py-3 bg-amber-600 hover:bg-amber-500 text-zinc-900 font-bold rounded-lg transition-colors"
             >
-              Далее / Next →
+              Next / Next →
             </button>
           </form>
         )}
@@ -254,7 +254,7 @@ export default function RegisterPage() {
         {currentStep === STEPS.TOS && (
           <form onSubmit={handleTOSSubmit} className="space-y-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">
-              Шаг 2: Условия использования
+              Step 2: Terms исgenderьзования
             </h2>
 
             <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 max-h-96 overflow-y-auto prose prose-invert prose-amber max-w-none">
@@ -268,7 +268,7 @@ export default function RegisterPage() {
                 onChange={(e) => setTosAccepted(e.target.checked)}
                 className="w-5 h-5"
               />
-              <span>Я принимаю Условия использования / I accept the Terms of Service</span>
+              <span>Я принимаю Terms исgenderьзования / I accept the Terms of Service</span>
             </label>
 
             {error && (
@@ -283,13 +283,13 @@ export default function RegisterPage() {
                 onClick={() => setCurrentStep(STEPS.ACCOUNT)}
                 className="flex-1 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors"
               >
-                ← Назад / Back
+                ← Back / Back
               </button>
               <button
                 type="submit"
                 className="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-zinc-900 font-bold rounded-lg transition-colors"
               >
-                Далее / Next →
+                Next / Next →
               </button>
             </div>
           </form>
@@ -299,15 +299,15 @@ export default function RegisterPage() {
         {currentStep === STEPS.CONSTITUTION && (
           <form onSubmit={handleConstitutionSubmit} className="space-y-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">
-              Шаг 3: Принятие Конституции
+              Step 3: Принятие Конституции
             </h2>
 
             <div className="bg-amber-950/20 border-2 border-amber-600/50 rounded-lg p-6 mb-6">
               <p className="text-lg font-bold text-amber-400 mb-2">
-                ⚖️ ВАЖНО: Юридический статус
+                ⚖️ IMPORTANT: Юридический статус
               </p>
               <p className="text-zinc-300">
-                Принимая Конституцию ИНОМАД ХУРАЛА, вы становитесь <span className="text-green-400 font-bold">правовым субъектом</span> с полными правами и обязанностями в нашей суверенной системе.
+                Принимая Конституцию ИНОМАД ХУРАЛА, вы становитесь <span className="text-green-400 font-bold">rightвым субъектом</span> с genderными правами и обязанностями в нашей суверенной systemе.
               </p>
             </div>
 
@@ -323,7 +323,7 @@ export default function RegisterPage() {
                 className="w-5 h-5 mt-1"
               />
               <span>
-                Я принимаю Конституцию ИНОМАД ХУРАЛА и становлюсь гражданином с правами и обязанностями правового субъекта<br/>
+                Я принимаю Конституцию ИНОМАД ХУРАЛА и становлюсь citizenом с правами и обязанностями rightвого субъекта<br/>
                 <span className="text-sm text-zinc-400">
                   I accept the INOMAD KHURAL Constitution and become a citizen with rights and responsibilities as a legal subject
                 </span>
@@ -343,14 +343,14 @@ export default function RegisterPage() {
                 className="flex-1 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors"
                 disabled={loading}
               >
-                ← Назад / Back
+                ← Back / Back
               </button>
               <button
                 type="submit"
                 disabled={loading}
                 className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
               >
-                {loading ? 'Processing...' : '✅ Принять и завершить / Accept & Complete'}
+                {loading ? 'Processing...' : '✅ Accept и завершить / Accept & Complete'}
               </button>
             </div>
           </form>

@@ -170,7 +170,7 @@ export default function FamilyPage() {
     next.khudanarSlots = next.khudanarSlots.map((s) => {
       if (s.slotId !== slotId) return s;
       if (!trimmed) return { ...s, personId: undefined };
-      return { ...s, personId: trimmed }; // MVP: personId хранит имя
+      return { ...s, personId: trimmed }; // MVP: personId хранит name
     });
     touch(next);
   };

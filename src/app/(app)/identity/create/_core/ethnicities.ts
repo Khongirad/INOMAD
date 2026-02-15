@@ -12,7 +12,7 @@ export const ETHNICITIES: EthnicityRecord[] = [
   { code: "taj", label: "Таджики", regionHint: "unknown" },
   { code: "kaz", label: "Казахи", regionHint: "unknown", isIndigenous: true },
   { code: "kor", label: "Корейцы", regionHint: "unknown" },
-  { code: "chu", label: "Чуваши", regionHint: "unknown", isIndigenous: true },
+  { code: "chu", label: "Чуyourи", regionHint: "unknown", isIndigenous: true },
   { code: "bash", label: "Башкиры", regionHint: "unknown", isIndigenous: true },
 
   // Siberia
@@ -61,7 +61,7 @@ export const ETHNICITIES: EthnicityRecord[] = [
 
   // North
   { code: "krl", label: "Карелы", regionHint: "north", isIndigenous: true },
-  { code: "kom", label: "Коми", regionHint: "north", isIndigenous: true },
+  { code: "kom", label: "Komi", regionHint: "north", isIndigenous: true },
   { code: "pom", label: "Поморы", regionHint: "north" },
 
   // Kaliningrad

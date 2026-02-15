@@ -18,7 +18,7 @@ import { RegionCard } from "./RegionCard";
 import { NationCard } from "./NationCard";
 import { ResidenceStatusCard } from "./ResidenceStatusCard";
 
-// Динамический импорт карты (для SSR)
+// Динамический импорт карты (for SSR)
 const GeoMap = dynamic(() => import("./GeoMap"), {
   ssr: false,
   loading: () => (
@@ -47,7 +47,7 @@ export interface BirthplaceData {
   nation: Nation;
 }
 
-type Step = "region" | "location" | "nation" | "status" | "complete";
+type Step = "Region" | "location" | "nation" | "status" | "complete";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // КОМПОНЕНТ
@@ -59,7 +59,7 @@ export function BirthplaceSelector({
   className = "",
   lang = "ru",
 }: BirthplaceSelectorProps) {
-  const [step, setStep] = useState<Step>("region");
+  const [step, setStep] = useState<Step>("Region");
   const [selectedRegion, setSelectedRegion] = useState<DoctrinalRegion | null>(
     initialData?.region || null
   );
@@ -77,7 +77,7 @@ export function BirthplaceSelector({
   const [showRegionCard, setShowRegionCard] = useState(false);
   const [showNationCard, setShowNationCard] = useState(false);
 
-  // Фильтрация народов по поиску
+  // Filterация peopleов по поclaimу
   const filteredNations = useMemo(() => {
     if (!nationSearch.trim()) return NATIONS;
     const search = nationSearch.toLowerCase();
@@ -158,15 +158,15 @@ export function BirthplaceSelector({
   ]);
 
   const goBack = useCallback(() => {
-    if (step === "location") setStep("region");
+    if (step === "location") setStep("Region");
     else if (step === "nation") setStep("location");
     else if (step === "status") setStep("nation");
   }, [step]);
 
-  // Прогресс
+  // Progress
   const progress = useMemo(() => {
     switch (step) {
-      case "region":
+      case "Region":
         return 25;
       case "location":
         return 50;
@@ -185,32 +185,32 @@ export function BirthplaceSelector({
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-xs font-mono tracking-widest text-zinc-400 uppercase">
-              {lang === "ru" ? "Регистрация" : "Registration"}
+              {lang === "ru" ? "Registration" : "Registration"}
             </div>
             <h1 className="mt-2 text-2xl font-bold text-white">
-              {step === "region" &&
-                (lang === "ru" ? "Выберите регион рождения" : "Select Birth Region")}
+              {step === "Region" &&
+                (lang === "ru" ? "Select region рождения" : "Select Birth Region")}
               {step === "location" &&
                 (lang === "ru"
-                  ? "Укажите место рождения"
+                  ? "Укажите place of birth"
                   : "Specify Birthplace")}
               {step === "nation" &&
                 (lang === "ru"
                   ? "Укажите национальность"
                   : "Specify Nationality")}
               {step === "status" &&
-                (lang === "ru" ? "Ваш статус" : "Your Status")}
+                (lang === "ru" ? "Your статус" : "Your Status")}
               {step === "complete" &&
-                (lang === "ru" ? "Готово" : "Complete")}
+                (lang === "ru" ? "Done" : "Complete")}
             </h1>
           </div>
-          {step !== "region" && step !== "complete" && (
+          {step !== "Region" && step !== "complete" && (
             <button
               onClick={goBack}
               className="text-sm text-zinc-400 hover:text-white transition flex items-center gap-1"
             >
               <ChevronRight className="w-4 h-4 rotate-180" />
-              {lang === "ru" ? "Назад" : "Back"}
+              {lang === "ru" ? "Back" : "Back"}
             </button>
           )}
         </div>
@@ -225,13 +225,13 @@ export function BirthplaceSelector({
       </div>
 
       {/* STEP 1: Region Selection */}
-      {step === "region" && (
+      {step === "Region" && (
         <div className="relative">
           <GeoMap
             height="450px"
             showRegionLayers
             showSubRegions={selectedRegion?.id === "siberia"}
-            selectionMode="region"
+            selectionMode="Region"
             selectedRegionId={selectedRegion?.id}
             selectedSubRegionId={selectedSubRegion?.id}
             onRegionClick={handleRegionClick}
@@ -252,7 +252,7 @@ export function BirthplaceSelector({
                 onClick={confirmRegion}
                 className="mt-3 w-full rounded-lg bg-gold-border py-3 text-sm font-medium text-black hover:bg-gold-text transition"
               >
-                {lang === "ru" ? "Подтвердить регион" : "Confirm Region"}
+                {lang === "ru" ? "Confirm Region" : "Confirm Region"}
               </button>
             </div>
           )}
@@ -262,7 +262,7 @@ export function BirthplaceSelector({
             <div className="absolute bottom-4 left-4 right-4 z-10">
               <div className="glass-panel rounded-xl p-3">
                 <div className="text-xs text-zinc-500 mb-2">
-                  {lang === "ru" ? "Быстрый выбор:" : "Quick select:"}
+                  {lang === "ru" ? "Quick Select:" : "Quick select:"}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {DOCTRINAL_REGIONS.map((region) => (
@@ -308,7 +308,7 @@ export function BirthplaceSelector({
               </div>
               <div>
                 <div className="text-sm text-zinc-400">
-                  {lang === "ru" ? "Место рождения" : "Birthplace"}
+                  {lang === "ru" ? "Seat рождения" : "Birthplace"}
                 </div>
                 <div className="text-base font-medium text-white">
                   {placeName || (lang === "ru" ? "Нажмите на карту" : "Click on map")}
@@ -320,7 +320,7 @@ export function BirthplaceSelector({
             <div>
               <label className="text-xs text-zinc-500 block mb-2">
                 {lang === "ru"
-                  ? "Или введите вручную (как в паспорте):"
+                  ? "Или введите вручную (как в паdisputeте):"
                   : "Or enter manually (as in passport):"}
               </label>
               <input
@@ -328,7 +328,7 @@ export function BirthplaceSelector({
                 onChange={(e) => setPlaceName(e.target.value)}
                 placeholder={
                   lang === "ru"
-                    ? "г. Иркутск, Иркутская область"
+                    ? "г. Иркутск, Иркутская oblast"
                     : "Irkutsk, Irkutsk Oblast"
                 }
                 className="input-field"
@@ -337,7 +337,7 @@ export function BirthplaceSelector({
 
             {selectedCoords && (
               <div className="text-xs text-zinc-500">
-                {lang === "ru" ? "Координаты" : "Coordinates"}:{" "}
+                {lang === "ru" ? "Coordinates" : "Coordinates"}:{" "}
                 {selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)}
               </div>
             )}
@@ -347,7 +347,7 @@ export function BirthplaceSelector({
               disabled={!placeName.trim()}
               className="w-full rounded-lg bg-gold-border py-3 text-sm font-medium text-black hover:bg-gold-text transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {lang === "ru" ? "Продолжить" : "Continue"}
+              {lang === "ru" ? "Continue" : "Continue"}
             </button>
           </div>
         </div>
@@ -364,7 +364,7 @@ export function BirthplaceSelector({
                 value={nationSearch}
                 onChange={(e) => setNationSearch(e.target.value)}
                 placeholder={
-                  lang === "ru" ? "Поиск народа..." : "Search nation..."
+                  lang === "ru" ? "Search peopleа..." : "Search nation..."
                 }
                 className="input-field pl-10"
               />
@@ -413,7 +413,7 @@ export function BirthplaceSelector({
           {filteredNations.length === 0 && (
             <div className="glass-panel rounded-xl p-8 text-center">
               <div className="text-zinc-500">
-                {lang === "ru" ? "Народ не найден" : "Nation not found"}
+                {lang === "ru" ? "People не найден" : "Nation not found"}
               </div>
             </div>
           )}
@@ -434,7 +434,7 @@ export function BirthplaceSelector({
           <div className="glass-panel rounded-xl p-6 text-center border border-gold-border/20 bg-gradient-to-br from-gold-dim/10 to-transparent">
             <p className="text-lg text-zinc-200 italic leading-relaxed">
               {lang === "ru"
-                ? "«Ты входишь в общее пространство, где каждый знает свой дом, уважает чужой, и развивается вместе с другими.»"
+                ? "«Ты loginишь в общее пространство, где each знает свой дом, уважает чужой, и развивается вместе с другими.»"
                 : '"You enter a shared space where everyone knows their home, respects others\', and grows together."'}
             </p>
           </div>
@@ -443,7 +443,7 @@ export function BirthplaceSelector({
             onClick={confirmStatus}
             className="w-full rounded-lg bg-gold-border py-4 text-base font-medium text-black hover:bg-gold-text transition shadow-[0_0_30px_-10px_var(--gold-glow)]"
           >
-            {lang === "ru" ? "Подтвердить и продолжить" : "Confirm and Continue"}
+            {lang === "ru" ? "Confirm и continue" : "Confirm and Continue"}
           </button>
         </div>
       )}
@@ -468,22 +468,22 @@ export function BirthplaceSelector({
           </div>
           <h2 className="text-xl font-bold text-white">
             {lang === "ru"
-              ? "Географические данные сохранены"
+              ? "Географические data сохранены"
               : "Geographic Data Saved"}
           </h2>
           <div className="text-sm text-zinc-400 space-y-1">
             <div>
-              {lang === "ru" ? "Регион" : "Region"}:{" "}
+              {lang === "ru" ? "Region" : "Region"}:{" "}
               <span className="text-zinc-200">
                 {lang === "ru" ? selectedRegion.nameRu : selectedRegion.name}
               </span>
             </div>
             <div>
-              {lang === "ru" ? "Место рождения" : "Birthplace"}:{" "}
+              {lang === "ru" ? "Seat рождения" : "Birthplace"}:{" "}
               <span className="text-zinc-200">{placeName}</span>
             </div>
             <div>
-              {lang === "ru" ? "Народ" : "Nation"}:{" "}
+              {lang === "ru" ? "People" : "Nation"}:{" "}
               <span className="text-zinc-200">
                 {lang === "ru" ? selectedNation.nameRu : selectedNation.name}
               </span>

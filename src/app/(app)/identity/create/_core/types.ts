@@ -24,17 +24,17 @@ export interface GeoCoordinates {
 }
 
 export interface BirthplaceGeo {
-  label: string; // текст как в паспорте
-  regionId?: string; // id доктринального региона
-  subRegionId?: string; // id подрегиона (для Сибири)
-  coordinates?: GeoCoordinates; // точные координаты
+  label: string; // текст как в паdisputeте
+  regionId?: string; // id доктринального the region of
+  subRegionId?: string; // id подthe region of (for Сибири)
+  coordinates?: GeoCoordinates; // точные coordinates
 }
 
 export interface NationalIdentity {
-  code: string; // код народа
+  code: string; // code peopleа
   label: string; // название
   nativeName?: string; // название на родном языке
-  isIndigenous?: boolean; // коренной для выбранного региона
+  isIndigenous?: boolean; // indigenous for выбранного the region of
   residenceStatus?: ResidenceStatus; // статус проживания
 }
 
@@ -102,7 +102,7 @@ export interface IdentityDraft {
     verifiers: Verifier[];
   };
 
-  // единый технический timestamp (для reducer/storage)
+  // единый технический timestamp (for reducer/storage)
   updatedAt: number;
 }
 

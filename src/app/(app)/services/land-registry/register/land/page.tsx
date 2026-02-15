@@ -13,7 +13,7 @@ import { registerLandPlot } from '@/lib/api/land-registry';
 import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Send, Mountain, Loader2, Info, AlertTriangle } from 'lucide-react';
 
-const STEPS = ['Основная информация', 'Расположение и размер', 'Детали собственности', 'Проверка и подача'];
+const STEPS = ['Основная information', 'Расgenderожение и размер', 'Details собственности', 'Verification и подача'];
 const LAND_USE_TYPES = ['AGRICULTURAL', 'RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'FOREST', 'RECREATIONAL', 'CONSERVATION', 'MIXED_USE'];
 
 export default function LandRegistrationPage() {
@@ -40,10 +40,10 @@ export default function LandRegistrationPage() {
     try {
       setSubmitting(true);
       await registerLandPlot({ cadastralNumber, address, region, landUseType, area: parseFloat(area), coordinates, boundaries } as any);
-      toast.success('Земельный участок зарегистрирован!');
+      toast.success('Landый plot registered!');
       router.push('/services/land-registry');
     } catch (err: any) {
-      toast.error(err.message || 'Ошибка регистрации');
+      toast.error(err.message || 'Error регистрации');
     } finally {
       setSubmitting(false);
     }
@@ -60,11 +60,11 @@ export default function LandRegistrationPage() {
     return (
       <div className="p-6 max-w-[900px] mx-auto">
         <Button variant="ghost" onClick={() => router.push('/services/land-registry')} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />Назад
+          <ArrowLeft className="h-4 w-4 mr-2" />Back
         </Button>
         <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-lg p-4">
-          <p className="font-semibold">Требуется гражданство</p>
-          <p className="text-sm">Только граждане Сибирской Конфедерации могут регистрировать земельные участки. Иностранцы могут оформить аренду.</p>
+          <p className="font-semibold">Required citizenship</p>
+          <p className="text-sm">Only citizensе Сибирской Конфедерации могут регистрировать земельные участки. Иностранцы могут оформить аренду.</p>
         </div>
       </div>
     );
@@ -74,13 +74,13 @@ export default function LandRegistrationPage() {
     <div className="p-6 max-w-[900px] mx-auto space-y-6">
       <div>
         <Button variant="ghost" onClick={() => router.push('/services/land-registry')} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />Назад к реестру
+          <ArrowLeft className="h-4 w-4 mr-2" />Back к registryу
         </Button>
         <div className="flex items-center gap-3">
           <Mountain className="h-10 w-10 text-green-500" />
           <div>
-            <h1 className="text-3xl font-bold">Регистрация земельного участка</h1>
-            <p className="text-muted-foreground mt-1">Зарегистрируйте новый участок в кадастровом реестре</p>
+            <h1 className="text-3xl font-bold">Registration земельного участка</h1>
+            <p className="text-muted-foreground mt-1">Зарегистрируйте new plot в кадастровом registryе</p>
           </div>
         </div>
       </div>
@@ -88,8 +88,8 @@ export default function LandRegistrationPage() {
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex gap-2">
         <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-semibold">Только для граждан</p>
-          <p className="text-sm text-muted-foreground">Все регистрации записываются в блокчейн ALTAN.</p>
+          <p className="text-sm font-semibold">Only for citizens</p>
+          <p className="text-sm text-muted-foreground">All регистрации записываются в блокчейн ALTAN.</p>
         </div>
       </div>
 
@@ -114,23 +114,23 @@ export default function LandRegistrationPage() {
         <CardContent className="pt-6 space-y-6">
           {activeStep === 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Основная информация</h3><hr />
+              <h3 className="text-lg font-semibold">Основная information</h3><hr />
               <div className="space-y-2">
-                <Label>Кадастровый номер</Label>
+                <Label>Cadastral number</Label>
                 <Input placeholder="54:35:123456:78" value={cadastralNumber} onChange={(e) => setCadastralNumber(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Адрес</Label>
-                <Input placeholder="Адрес или описание" value={address} onChange={(e) => setAddress(e.target.value)} />
+                <Label>Address</Label>
+                <Input placeholder="Address or description" value={address} onChange={(e) => setAddress(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Регион</Label>
-                <Input placeholder="Иркутская обл., Бурятия..." value={region} onChange={(e) => setRegion(e.target.value)} />
+                <Label>Region</Label>
+                <Input placeholder="Иркутская обл., Buryatia..." value={region} onChange={(e) => setRegion(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Вид использования земли</Label>
+                <Label>Type ofgenderьзования земли</Label>
                 <Select value={landUseType} onValueChange={setLandUseType}>
-                  <SelectTrigger><SelectValue placeholder="Выберите..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                   <SelectContent>{LAND_USE_TYPES.map((t) => <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -139,87 +139,87 @@ export default function LandRegistrationPage() {
 
           {activeStep === 1 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Расположение и размер</h3><hr />
+              <h3 className="text-lg font-semibold">Расgenderожение и размер</h3><hr />
               <div className="space-y-2">
-                <Label>Площадь (га)</Label>
+                <Label>Area (га)</Label>
                 <Input type="number" placeholder="2.5" value={area} onChange={(e) => setArea(e.target.value)} step="0.01" min="0" />
               </div>
               <div className="space-y-2">
-                <Label>GPS-координаты</Label>
+                <Label>GPS-coordinates</Label>
                 <Input placeholder="52.2897° N, 104.2806° E" value={coordinates} onChange={(e) => setCoordinates(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Описание границ (необязательно)</Label>
-                <Textarea placeholder="Опишите границы..." value={boundaries} onChange={(e) => setBoundaries(e.target.value)} rows={4} />
+                <Label>Description границ (optional)</Label>
+                <Textarea placeholder="Опишите borders..." value={boundaries} onChange={(e) => setBoundaries(e.target.value)} rows={4} />
               </div>
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex gap-2">
                 <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground"><strong>ГИС скоро:</strong> Интерактивная карта для рисования границ будет доступна в следующем обновлении.</p>
+                <p className="text-sm text-muted-foreground"><strong>GIS coming soon:</strong> Интерактивная map for рисования границ будет accessна в следующем обновлении.</p>
               </div>
             </div>
           )}
 
           {activeStep === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Детали собственности</h3><hr />
+              <h3 className="text-lg font-semibold">Details собственности</h3><hr />
               <div className="space-y-2">
-                <Label>Тип собственности</Label>
+                <Label>Type собственности</Label>
                 <Select value={ownershipType} onValueChange={(v) => setOwnershipType(v as 'FULL' | 'PARTIAL')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="FULL">Полная (100%)</SelectItem>
-                    <SelectItem value="PARTIAL">Долевая</SelectItem>
+                    <SelectItem value="FULL">Genderная (100%)</SelectItem>
+                    <SelectItem value="PARTIAL">Proportional</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Доля (%)</Label>
+                <Label>Share (%)</Label>
                 <Input type="number" value={ownershipShare} onChange={(e) => setOwnershipShare(e.target.value)} disabled={ownershipType === 'FULL'} />
-                <p className="text-xs text-muted-foreground">{ownershipType === 'FULL' ? 'Полная = 100%' : 'Введите вашу долю'}</p>
+                <p className="text-xs text-muted-foreground">{ownershipType === 'FULL' ? 'Genderная = 100%' : 'Enter yourу долю'}</p>
               </div>
               <div className="space-y-2">
-                <Label>Подтверждающие документы (необязательно)</Label>
-                <Textarea placeholder="Перечислите документы..." value={documents} onChange={(e) => setDocuments(e.target.value)} rows={3} />
+                <Label>I confirmщие documentы (optional)</Label>
+                <Textarea placeholder="Перечислите documentы..." value={documents} onChange={(e) => setDocuments(e.target.value)} rows={3} />
               </div>
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-                <p className="text-sm"><strong>Примечание:</strong> Регистрация будет проверена кадастровым офицером.</p>
+                <p className="text-sm"><strong>Примечание:</strong> Registration будет проверена кадастровым officerом.</p>
               </div>
             </div>
           )}
 
           {activeStep === 3 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Проверка регистрации</h3><hr />
-              <div><p className="text-xs text-muted-foreground">Кадастровый номер</p><p className="font-semibold">{cadastralNumber}</p></div>
-              <div><p className="text-xs text-muted-foreground">Адрес / Регион</p><p>{address}</p><p className="text-sm text-muted-foreground">{region}</p></div>
-              <div><p className="text-xs text-muted-foreground">Вид использования</p><Badge>{landUseType.replace(/_/g, ' ')}</Badge></div>
-              <div><p className="text-xs text-muted-foreground">Площадь</p><p>{area} га</p><p className="text-sm text-muted-foreground">GPS: {coordinates}</p></div>
-              {boundaries && <div><p className="text-xs text-muted-foreground">Границы</p><p className="text-sm">{boundaries}</p></div>}
-              <div><p className="text-xs text-muted-foreground">Собственность</p><p>{ownershipType === 'FULL' ? 'Полная' : `Долевая (${ownershipShare}%)`}</p></div>
-              {documents && <div><p className="text-xs text-muted-foreground">Документы</p><p className="text-sm">{documents}</p></div>}
+              <h3 className="text-lg font-semibold">Verification регистрации</h3><hr />
+              <div><p className="text-xs text-muted-foreground">Cadastral number</p><p className="font-semibold">{cadastralNumber}</p></div>
+              <div><p className="text-xs text-muted-foreground">Address / Region</p><p>{address}</p><p className="text-sm text-muted-foreground">{region}</p></div>
+              <div><p className="text-xs text-muted-foreground">Type ofgenderьзования</p><Badge>{landUseType.replace(/_/g, ' ')}</Badge></div>
+              <div><p className="text-xs text-muted-foreground">Area</p><p>{area} га</p><p className="text-sm text-muted-foreground">GPS: {coordinates}</p></div>
+              {boundaries && <div><p className="text-xs text-muted-foreground">Borders</p><p className="text-sm">{boundaries}</p></div>}
+              <div><p className="text-xs text-muted-foreground">Ownership</p><p>{ownershipType === 'FULL' ? 'Genderная' : `Proportional (${ownershipShare}%)`}</p></div>
+              {documents && <div><p className="text-xs text-muted-foreground">Documentы</p><p className="text-sm">{documents}</p></div>}
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                <p className="text-sm font-semibold mb-1">Подтверждение</p>
-                <p className="text-sm text-muted-foreground">Подавая заявку, вы подтверждаете что:</p>
+                <p className="text-sm font-semibold mb-1">Byдтверждение</p>
+                <p className="text-sm text-muted-foreground">Byдавая application, вы confirm что:</p>
                 <ul className="text-sm text-muted-foreground list-disc ml-4 mt-1 space-y-1">
-                  <li>Вся информация точна и достоверна</li>
-                  <li>Вы имеете законные права на этот участок</li>
-                  <li>Регистрация будет проверена кадастровым офицером</li>
-                  <li>Запись будет внесена в блокчейн ALTAN</li>
+                  <li>All information is accurate and reliable</li>
+                  <li>You имеете законные права на этот plot</li>
+                  <li>Registration будет проверена кадастровым officerом</li>
+                  <li>Record будет внесена в блокчейн ALTAN</li>
                 </ul>
               </div>
             </div>
           )}
 
           <div className="flex justify-between pt-4">
-            <Button variant="outline" onClick={handleBack} disabled={activeStep === 0}><ArrowLeft className="h-4 w-4 mr-2" />Назад</Button>
+            <Button variant="outline" onClick={handleBack} disabled={activeStep === 0}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
             {activeStep === STEPS.length - 1 ? (
               <Button className="bg-green-600 hover:bg-green-700" onClick={handleSubmit} disabled={!canProceed() || submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                {submitting ? 'Регистрация...' : 'Подать заявку'}
+                {submitting ? 'Registration...' : 'Submit Application'}
               </Button>
             ) : (
-              <Button onClick={handleNext} disabled={!canProceed()}>Далее<ArrowRight className="h-4 w-4 ml-2" /></Button>
+              <Button onClick={handleNext} disabled={!canProceed()}>Next<ArrowRight className="h-4 w-4 ml-2" /></Button>
             )}
           </div>
         </CardContent>

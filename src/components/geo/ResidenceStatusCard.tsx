@@ -70,21 +70,21 @@ export function ResidenceStatusCard({
 
   const intro = {
     home: {
-      ru: `Как представитель народа ${nationName}, вы являетесь коренным жителем региона ${regionName}.`,
+      ru: `How представитель peopleа ${nationName}, вы являетесь коренным жителем the region of ${regionName}.`,
       en: `As a member of the ${nationName} people, you are indigenous to the ${regionName} region.`,
     },
     resident: {
-      ru: `Как представитель народа ${nationName}, вы проживаете в регионе ${regionName} в статусе жителя.`,
+      ru: `How представитель peopleа ${nationName}, вы проживаете в regionе ${regionName} в статусе жителя.`,
       en: `As a member of the ${nationName} people, you reside in the ${regionName} region as a resident.`,
     },
     guest: {
-      ru: `Как представитель народа ${nationName}, вы проживаете в регионе ${regionName} в статусе гостя.`,
+      ru: `How представитель peopleа ${nationName}, вы проживаете в regionе ${regionName} в статусе гостя.`,
       en: `As a member of the ${nationName} people, you live in the ${regionName} region as a guest.`,
     },
   };
 
   const clarification = {
-    ru: "Это не ограничение ваших прав. Это определяет распределение ответственности за землю.",
+    ru: "Это не ограничение yourих прав. Это определяет распределение responseственности за землю.",
     en: "This is not a limitation of your rights. It defines the distribution of responsibility for the land.",
   };
 
@@ -101,7 +101,7 @@ export function ResidenceStatusCard({
         </div>
         <div>
           <div className="text-xs text-zinc-500 uppercase tracking-wider mb-1">
-            {lang === "ru" ? "Ваш статус" : "Your Status"}
+            {lang === "ru" ? "Your статус" : "Your Status"}
           </div>
           <h3 className="text-xl font-bold text-white">{label}</h3>
         </div>

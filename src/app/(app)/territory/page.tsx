@@ -10,14 +10,14 @@ import { useOrganizations } from '@/lib/api';
 import type { HierarchyNode, OrganizationType } from '@/lib/types/models';
 
 const TYPE_LABELS: Record<string, string> = {
-  ARBAN: 'Арбан',
-  ZUN: 'Цзун',
-  MYANGAN: 'Мянган',
-  TUMEN: 'Тумен',
-  REPUBLIC: 'Республика',
-  CONFEDERATION: 'Конфедерация',
-  GUILD: 'Гильдия',
-  COOPERATIVE: 'Кооператив',
+  ARBAN: 'Arban',
+  ZUN: 'Zuun',
+  MYANGAN: 'Myangan',
+  TUMEN: 'Tumen',
+  REPUBLIC: 'Republic',
+  CONFEDERATION: 'Confederation',
+  GUILD: 'Guild',
+  COOPERATIVE: 'Cooperative',
 };
 
 const getTypeColor = (type: string) => {
@@ -57,7 +57,7 @@ export default function TerritoryPage() {
             Территории
           </h2>
           <p className="text-zinc-400 mt-1">
-            Территориальные единицы и организации Конфедерации
+            Территориальные единицы и organizations Конфедерации
           </p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function TerritoryPage() {
                 <MapPin className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Всего территорий</div>
+                <div className="text-xs text-zinc-500 uppercase">Total территорий</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {stats.totalTerritories}
                 </div>
@@ -103,7 +103,7 @@ export default function TerritoryPage() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Активных</div>
+                <div className="text-xs text-zinc-500 uppercase">Activых</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {stats.activeTerritories}
                 </div>
@@ -116,8 +116,8 @@ export default function TerritoryPage() {
       {/* Main Content */}
       <Tabs defaultValue="list" className="space-y-6">
         <TabsList className="bg-zinc-900/50 border border-white/5">
-          <TabsTrigger value="list">Список территорий</TabsTrigger>
-          <TabsTrigger value="map">Карта</TabsTrigger>
+          <TabsTrigger value="list">List территорий</TabsTrigger>
+          <TabsTrigger value="map">Map</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
@@ -126,7 +126,7 @@ export default function TerritoryPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <Input
-                placeholder="Поиск территорий..."
+                placeholder="Search территорий..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -137,12 +137,12 @@ export default function TerritoryPage() {
               onChange={(e) => setFilterType(e.target.value)}
               className="px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white"
             >
-              <option value="all">Все типы</option>
-              <option value="ARBAN">Арбан</option>
-              <option value="ZUN">Цзун</option>
-              <option value="MYANGAN">Мянган</option>
-              <option value="TUMEN">Тумен</option>
-              <option value="REPUBLIC">Республика</option>
+              <option value="all">All типы</option>
+              <option value="ARBAN">Arban</option>
+              <option value="ZUN">Zuun</option>
+              <option value="MYANGAN">Myangan</option>
+              <option value="TUMEN">Tumen</option>
+              <option value="REPUBLIC">Republic</option>
             </select>
           </div>
 
@@ -163,7 +163,7 @@ export default function TerritoryPage() {
                   <table className="w-full">
                     <thead className="border-b border-white/5">
                       <tr>
-                        {['Территория', 'Тип', 'Участников', 'Глава', 'Рейтинг'].map((h) => (
+                        {['Territory', 'Type', 'Members', 'Head', 'Рейтинг'].map((h) => (
                           <th key={h} className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                             {h}
                           </th>
@@ -216,10 +216,10 @@ export default function TerritoryPage() {
                 <div>
                   <Globe className="h-16 w-16 text-zinc-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
-                    Интерактивная карта — скоро
+                    Интерактивная map — скоро
                   </h3>
                   <p className="text-zinc-400 max-w-md">
-                    Визуализация территорий с границами, плотностью населения и ресурсами.
+                    Visualization of territories with borders, плотностью населения и ресурсами.
                   </p>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function TerritoryPage() {
       {/* Legend */}
       <Card className="border-white/5 bg-zinc-900/30">
         <CardHeader>
-          <CardTitle className="text-sm text-zinc-300">Типы территорий</CardTitle>
+          <CardTitle className="text-sm text-zinc-300">Typeы территорий</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">

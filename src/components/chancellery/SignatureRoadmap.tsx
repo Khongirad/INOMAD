@@ -19,9 +19,9 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'CREATOR': return 'Создатель';
-      case 'RECIPIENT': return 'Получатель';
-      case 'WITNESS': return 'Свидетель';
-      case 'AUTHORITY': return 'Уполномоченное лицо';
+      case 'RECIPIENT': return 'Genderучатель';
+      case 'WITNESS': return 'Witness';
+      case 'AUTHORITY': return 'Уgenderномоченное лицо';
       default: return role;
     }
   };
@@ -45,7 +45,7 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
       {/* Progress Header */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-white">Прогресс подписания</h3>
+          <h3 className="text-sm font-semibold text-white">Progress подписания</h3>
           <span className="text-sm text-zinc-400">
             {signedCount} из {totalSigners}
           </span>
@@ -111,7 +111,7 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
                 <div className="text-right">
                   {signer.signed ? (
                     <div>
-                      <span className="text-xs font-medium text-green-400">✓ Подписано</span>
+                      <span className="text-xs font-medium text-green-400">✓ Signed</span>
                       {signer.signedAt && (
                         <div className="text-xs text-zinc-500 mt-1">
                           {new Date(signer.signedAt).toLocaleString('ru-RU')}
@@ -119,9 +119,9 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
                       )}
                     </div>
                   ) : currentUserId === signer.id ? (
-                    <span className="text-xs font-medium text-gold-primary">Ожидает вашей подписи</span>
+                    <span className="text-xs font-medium text-gold-primary">Pending yourей подписи</span>
                   ) : (
-                    <span className="text-xs text-zinc-500">Ожидается</span>
+                    <span className="text-xs text-zinc-500">Pendingся</span>
                   )}
                 </div>
               </div>
@@ -135,20 +135,20 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
         <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
           <div className="flex items-center gap-2 text-green-400">
             <Check className="w-5 h-5" />
-            <span className="font-medium">Все подписи собраны! Документ будет заархивирован.</span>
+            <span className="font-medium">All подписи собраны! Document будет заarchiveирован.</span>
           </div>
         </div>
       ) : currentUserId && signers.find(s => s.id === currentUserId && !s.signed) ? (
         <div className="p-4 bg-gold-primary/10 border border-gold-primary/30 rounded-lg">
           <div className="flex items-center gap-2 text-gold-primary">
             <User className="w-5 h-5" />
-            <span className="font-medium">Требуется ваша подпись для продолжения</span>
+            <span className="font-medium">Required yourа signature for продолжения</span>
           </div>
         </div>
       ) : (
         <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
           <div className="text-sm text-zinc-400">
-            Ожидание подписей от других участников...
+            Ожидание подписей от других members...
           </div>
         </div>
       )}

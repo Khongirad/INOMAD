@@ -37,7 +37,7 @@ export function NationCard({
   const culture = lang === "ru" ? nation.cultureRu : nation.culture;
   const traditions = lang === "ru" ? nation.traditionsRu : nation.traditions;
 
-  // Получаем названия регионов
+  // Genderучаем названия regions
   const regionNames = nation.regions
     .map((regionId) => {
       const region = getRegionById(regionId);
@@ -61,7 +61,7 @@ export function NationCard({
               <h3 className="text-base font-semibold text-white">{name}</h3>
               {nation.isIndigenous && (
                 <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  {lang === "ru" ? "Коренной" : "Indigenous"}
+                  {lang === "ru" ? "Indigenous" : "Indigenous"}
                 </span>
               )}
             </div>
@@ -119,7 +119,7 @@ export function NationCard({
             <div className="flex items-center gap-2 mb-2">
               {nation.isIndigenous && (
                 <span className="text-xs font-medium px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  {lang === "ru" ? "Коренной народ" : "Indigenous People"}
+                  {lang === "ru" ? "Indigenous people" : "Indigenous People"}
                 </span>
               )}
               {nation.population && (
@@ -178,7 +178,7 @@ export function NationCard({
         <div>
           <h3 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
-            {lang === "ru" ? "История" : "History"}
+            {lang === "ru" ? "History" : "History"}
           </h3>
           <p className="text-sm text-zinc-400 leading-relaxed">{history}</p>
         </div>
@@ -226,7 +226,7 @@ export function NationCard({
                 ? "Выбрано"
                 : "Selected"
               : lang === "ru"
-              ? "Выбрать народ"
+              ? "Select people"
               : "Select Nation"}
           </button>
         )}

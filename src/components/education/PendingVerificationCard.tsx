@@ -44,7 +44,7 @@ interface PendingVerificationCardProps {
 }
 
 const typeLabels: Record<string, string> = {
-  DIPLOMA: 'Диплом',
+  DIPLOMA: 'Diploma',
   CERTIFICATE: 'Сертификат',
   RECOMMENDATION: 'Рекомендация',
 };
@@ -99,14 +99,14 @@ export function PendingVerificationCard({
 
             <Badge className="bg-yellow-600 hover:bg-yellow-700 gap-1">
               <Clock className="h-3 w-3" />
-              На проверке
+              On проверке
             </Badge>
           </div>
 
           <div className="space-y-2 mb-4">
             <div className="flex items-center gap-2 text-sm">
               <User className="h-4 w-4 text-muted-foreground" />
-              <span>Заявитель: <strong>{verification.userName || verification.userId}</strong></span>
+              <span>Applicant: <strong>{verification.userName || verification.userId}</strong></span>
             </div>
             <div className="flex items-center gap-3">
               <Badge variant="outline">{typeLabels[verification.type] || verification.type}</Badge>
@@ -115,14 +115,14 @@ export function PendingVerificationCard({
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Подано: {new Date(verification.createdAt).toLocaleDateString()}
+              Filed: {new Date(verification.createdAt).toLocaleDateString()}
             </p>
           </div>
 
           {verification.documentUrl && (
             <div className="bg-muted/50 rounded-lg p-3 mb-4">
               <p className="text-sm text-muted-foreground">
-                📄 Документ прикреплён
+                📄 Document прикреплён
               </p>
             </div>
           )}
@@ -134,7 +134,7 @@ export function PendingVerificationCard({
               disabled={loading}
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-              Подтвердить
+              Confirm
             </Button>
             <Button
               variant="outline"
@@ -143,7 +143,7 @@ export function PendingVerificationCard({
               disabled={loading}
             >
               <XCircle className="h-4 w-4" />
-              Отклонить
+              Decline
             </Button>
           </div>
         </CardContent>
@@ -152,9 +152,9 @@ export function PendingVerificationCard({
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Отклонить верификацию</DialogTitle>
+            <DialogTitle>Decline верификацию</DialogTitle>
             <DialogDescription>
-              Укажите причину отклонения для {verification.institution}
+              Укажите причину отклонения for {verification.institution}
             </DialogDescription>
           </DialogHeader>
 
@@ -168,12 +168,12 @@ export function PendingVerificationCard({
           </div>
 
           <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300">
-            ⚠️ Это действие нельзя отменить. Пользователь получит уведомление с причиной отклонения.
+            ⚠️ Это action нельзя отменить. Genderьзователь genderучит notification с причиной отклонения.
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
-              Отмена
+              Cancel
             </Button>
             <Button
               variant="destructive"
@@ -182,7 +182,7 @@ export function PendingVerificationCard({
               className="gap-2"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Отклонить
+              Decline
             </Button>
           </DialogFooter>
         </DialogContent>

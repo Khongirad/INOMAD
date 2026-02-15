@@ -20,10 +20,10 @@ const LEVEL_COLORS: Record<string, string> = {
 };
 
 const LEVEL_LABELS: Record<string, string> = {
-  ARBAN: 'Арбан (10)',
-  ZUUN: 'Цзун (100)',
-  MYANGAN: 'Мянган (1 000)',
-  TUMEN: 'Тумен (10 000)',
+  ARBAN: 'Arban (10)',
+  ZUUN: 'Zuun (100)',
+  MYANGAN: 'Myangan (1 000)',
+  TUMEN: 'Tumen (10 000)',
 };
 
 const LEVEL_SIZES: Record<string, number> = {
@@ -87,7 +87,7 @@ function GroupCard({ group }: { group: KhuralGroup }) {
             {group.seats.slice(0, 10).map((seat, i) => (
               <span
                 key={i}
-                title={seat.user?.username || `Место ${seat.index + 1}`}
+                title={seat.user?.username || `Seat ${seat.index + 1}`}
                 className={cn(
                   'w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold',
                   seat.userId
@@ -116,7 +116,7 @@ function GroupCard({ group }: { group: KhuralGroup }) {
               <ChevronRight
                 className={cn('h-3 w-3 transition-transform', expanded && 'rotate-90')}
               />
-              {group.children.length} подгрупп
+              {group.children.length} subgroups
             </button>
             {expanded && (
               <div className="ml-4 mt-2 space-y-2 border-l border-zinc-800 pl-3">
@@ -154,10 +154,10 @@ export default function KhuralPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
             <Building2 className="text-amber-500 w-8 h-8" />
-            Хурал
+            Khural
           </h2>
           <p className="text-zinc-400 mt-1">
-            Иерархическая система самоуправления: Арбан → Цзун → Мянган → Тумен
+            Hierarchical self-governance system: Arban → Zuun → Myangan → Tumen
           </p>
         </div>
       </div>
@@ -165,7 +165,7 @@ export default function KhuralPage() {
       {/* Hierarchy visual */}
       <Card className="bg-zinc-900/60 border-zinc-800">
         <CardContent className="p-4">
-          <p className="text-sm font-semibold text-zinc-200 mb-3">🏛️ Структура Хурала</p>
+          <p className="text-sm font-semibold text-zinc-200 mb-3">🏛️ Structure Khuralа</p>
           <div className="flex items-center justify-between">
             {(['ARBAN', 'ZUUN', 'MYANGAN', 'TUMEN'] as const).map((level, i) => {
               const count =
@@ -193,7 +193,7 @@ export default function KhuralPage() {
           </div>
           <div className="mt-3 text-center">
             <span className="text-sm text-zinc-400">
-              Всего участников: <strong className="text-white">{stats.totalMembers}</strong>
+              Total members: <strong className="text-white">{stats.totalMembers}</strong>
             </span>
           </div>
         </CardContent>
@@ -202,10 +202,10 @@ export default function KhuralPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Всего групп', value: stats.total, cls: 'text-blue-400' },
-          { label: 'Арбанов', value: stats.arbans, cls: 'text-emerald-400' },
-          { label: 'Цзунов', value: stats.zuuns, cls: 'text-blue-400' },
-          { label: 'Мянганов / Туменов', value: stats.myangans + stats.tumens, cls: 'text-purple-400' },
+          { label: 'Total groups', value: stats.total, cls: 'text-blue-400' },
+          { label: 'Arbanов', value: stats.arbans, cls: 'text-emerald-400' },
+          { label: 'Zuunов', value: stats.zuuns, cls: 'text-blue-400' },
+          { label: 'Myanganов / Tumenов', value: stats.myangans + stats.tumens, cls: 'text-purple-400' },
         ].map((s) => (
           <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">
             <CardContent className="p-3 flex justify-between items-center">
@@ -232,7 +232,7 @@ export default function KhuralPage() {
             )}
             onClick={() => setFilterLevel(level)}
           >
-            {level === 'ALL' ? 'Все' : LEVEL_LABELS[level]}
+            {level === 'ALL' ? 'All' : LEVEL_LABELS[level]}
           </Button>
         ))}
       </div>
@@ -245,7 +245,7 @@ export default function KhuralPage() {
       ) : groups.length === 0 ? (
         <div className="text-center py-12 text-zinc-500">
           <Building2 className="h-12 w-12 mx-auto opacity-30 mb-2" />
-          Групп пока нет
+          Groups not yet
         </div>
       ) : (
         <div className="space-y-3">
@@ -263,11 +263,11 @@ export default function KhuralPage() {
               <Building2 className="h-4 w-4 text-amber-500" />
             </div>
             <div>
-              <h4 className="font-semibold text-amber-200 mb-1">О системе Хурала</h4>
+              <h4 className="font-semibold text-amber-200 mb-1">About the Khural Systemа</h4>
               <p className="text-sm text-amber-100/70">
-                Хурал — основа самоуправления. 10 граждан формируют Арбан, 10 Арбанов — Цзун (100),
-                10 Цзунов — Мянган (1 000), 10 Мянганов — Тумен (10 000). Каждый уровень
-                избирает своего лидера-десятника.
+                Khural — the foundation of self-governance. 10 citizens form Arban, 10 Arbanов — Zuun (100),
+                10 Zuunов — Myangan (1 000), 10 Myanganов — Tumen (10 000). Each уровень
+                elects its leaderа-decurion.
               </p>
             </div>
           </div>

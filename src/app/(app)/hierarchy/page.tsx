@@ -57,12 +57,12 @@ const LEVEL_TEXT_COLORS: Record<string, string> = {
 };
 
 const LEVEL_LABELS: Record<string, string> = {
-  confederation: 'Конфедерация',
-  republic: 'Республика',
-  tumen: 'Тумэн (10 000)',
-  myangan: 'Мянган (1 000)',
-  zun: 'Цзун (100)',
-  arban: 'Арбан (10)',
+  confederation: 'Confederation',
+  republic: 'Republic',
+  tumen: 'Tumen (10 000)',
+  myangan: 'Myangan (1 000)',
+  zun: 'Zuun (100)',
+  arban: 'Arban (10)',
 };
 
 // Collapsible tree node
@@ -96,7 +96,7 @@ function TreeNode({ level, name, children: childNodes, count, leader, extra }: {
         <span className="text-sm font-semibold flex-1">{name}</span>
 
         {count !== undefined && (
-          <Badge variant="outline" className="text-[10px] h-5">{count} чел.</Badge>
+          <Badge variant="outline" className="text-[10px] h-5">{count} members</Badge>
         )}
 
         {leader && (
@@ -170,18 +170,18 @@ export default function HierarchyPage() {
       <div className="mb-6 flex items-center gap-3">
         <TreePine className="h-7 w-7 text-yellow-500" />
         <div>
-          <h1 className="text-2xl font-bold">Иерархия / Hierarchy</h1>
+          <h1 className="text-2xl font-bold">Hierarchy / Hierarchy</h1>
           <p className="text-sm text-muted-foreground">
-            Арбан(10) → Цзун(100) → Мянган(1000) → Тумэн(10 000) → Республика → Конфедерация
+            Arban(10) → Zuun(100) → Myangan(1000) → Tumen(10 000) → Republic → Confederation
           </p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="flex gap-3 flex-wrap mb-6">
-        <StatCard label="Республики" value={totalRepublics} colorClass="text-blue-500" />
-        <StatCard label="Тумэны" value={totalTumens} colorClass="text-purple-500" />
-        <StatCard label="Мянганы" value={totalMyangans} colorClass="text-green-500" />
+        <StatCard label="Republics" value={totalRepublics} colorClass="text-blue-500" />
+        <StatCard label="Tumenы" value={totalTumens} colorClass="text-purple-500" />
+        <StatCard label="Myanganы" value={totalMyangans} colorClass="text-green-500" />
         <StatCard label="Сотрудничества" value={Math.floor(totalCoops)} colorClass="text-orange-500" />
       </div>
 
@@ -194,8 +194,8 @@ export default function HierarchyPage() {
       {/* Tabs */}
       <Tabs defaultValue="tree">
         <TabsList className="mb-4">
-          <TabsTrigger value="tree">🌳 Дерево иерархии</TabsTrigger>
-          <TabsTrigger value="cooperation">🤝 Сотрудничество Тумэнов</TabsTrigger>
+          <TabsTrigger value="tree">🌳 Hierarchy Tree</TabsTrigger>
+          <TabsTrigger value="cooperation">🤝 Cooperation Tumenов</TabsTrigger>
         </TabsList>
 
         {/* Tab: Tree */}
@@ -204,7 +204,7 @@ export default function HierarchyPage() {
             {tree?.confederation && (
               <TreeNode
                 level="confederation"
-                name={tree.confederation.name || 'Конфедеративный Хурал'}
+                name={tree.confederation.name || 'Confederatый Khural'}
                 count={tree.confederation.totalMembers}
               >
                 {tree.republics?.map((republic: any) => (
@@ -231,7 +231,7 @@ export default function HierarchyPage() {
                             {myangan.memberZuns?.map((zun: any) => (
                               <TreeNode key={zun.id} level="zun" name={zun.name} count={zun.memberArbans?.length ? zun.memberArbans.length * 10 : 0}>
                                 {zun.memberArbans?.map((arban: any) => (
-                                  <TreeNode key={arban.id} level="arban" name={`Арбан #${arban.arbanId}`} count={10} />
+                                  <TreeNode key={arban.id} level="arban" name={`Arban #${arban.arbanId}`} count={10} />
                                 ))}
                               </TreeNode>
                             ))}
@@ -246,7 +246,7 @@ export default function HierarchyPage() {
 
             {!tree?.confederation && !loading && (
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-                ℹ️ Иерархия ещё не создана. Начните с создания Арбанов и Цзунов.
+                ℹ️ Hierarchy ещё не создана. Start by creating Arbanов и Zuunов.
               </div>
             )}
           </Card>
@@ -255,16 +255,16 @@ export default function HierarchyPage() {
         {/* Tab: Cooperation */}
         <TabsContent value="cooperation">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">🤝 Сотрудничество Тумэнов</h2>
+            <h2 className="text-lg font-semibold">🤝 Cooperation Tumenов</h2>
             <Button onClick={() => setCoopDialog(true)} className="gap-2 bg-purple-600 hover:bg-purple-700">
               <Plus className="h-4 w-4" />
-              Предложить
+              Propose
             </Button>
           </div>
 
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm mb-4">
-            <strong>Тумэны не объединяются</strong> — они могут только сотрудничать.
-            Каждый Тумэн остаётся суверенной единицей с собственным лидером и управлением.
+            <strong>Tumenы do not merge</strong> — они can only cooperate.
+            Each Tumen remains a sovereign unit с собственным leaderом и governanceм.
           </div>
 
           {tumens.map((tumen: any) => {
@@ -302,7 +302,7 @@ export default function HierarchyPage() {
 
           {tumens.every((t: any) => (t.cooperationsAsA?.length || 0) + (t.cooperationsAsB?.length || 0) === 0) && (
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-              ℹ️ Пока нет активных сотрудничеств между Тумэнами.
+              ℹ️ Not yet активных cooperations between Tumenами.
             </div>
           )}
         </TabsContent>
@@ -312,29 +312,29 @@ export default function HierarchyPage() {
       <Dialog open={coopDialog} onOpenChange={setCoopDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Предложить сотрудничество</DialogTitle>
+            <DialogTitle>Propose cooperation</DialogTitle>
             <DialogDescription>
-              Сотрудничество — это договор между двумя Тумэнами. Тумэны остаются независимыми.
+              Cooperation — это an agreement between two Tumenами. Tumenы remain independent.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>ID целевого Тумэна</Label>
+              <Label>ID целевого Tumenа</Label>
               <Input
                 value={coopForm.targetTumenId}
                 onChange={e => setCoopForm({ ...coopForm, targetTumenId: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Название соглашения</Label>
+              <Label>Title соглашения</Label>
               <Input
                 value={coopForm.title}
                 onChange={e => setCoopForm({ ...coopForm, title: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Описание</Label>
+              <Label>Description</Label>
               <textarea
                 className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[80px]"
                 value={coopForm.description}
@@ -344,8 +344,8 @@ export default function HierarchyPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCoopDialog(false)}>Отмена</Button>
-            <Button className="bg-purple-600 hover:bg-purple-700">Предложить</Button>
+            <Button variant="outline" onClick={() => setCoopDialog(false)}>Cancel</Button>
+            <Button className="bg-purple-600 hover:bg-purple-700">Propose</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

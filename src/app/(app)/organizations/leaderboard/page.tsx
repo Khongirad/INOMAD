@@ -56,7 +56,7 @@ export default function LeaderboardPage() {
       const data = await res.json();
       setEntries(data.data || data || []);
     } catch {
-      toast.error('Ошибка загрузки рейтинга');
+      toast.error('Error loading ratings');
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function LeaderboardPage() {
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed');
-    toast.success('Оценка отправлена');
+    toast.success('Rating submitted');
     fetchLeaderboard();
   };
 
@@ -110,7 +110,7 @@ export default function LeaderboardPage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <Trophy className="h-7 w-7 text-yellow-500" />
-        <h1 className="text-2xl font-bold">Рейтинг Организаций</h1>
+        <h1 className="text-2xl font-bold">Organization Ratings</h1>
       </div>
 
       {/* Filters */}
@@ -118,7 +118,7 @@ export default function LeaderboardPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск организации..."
+            placeholder="Search organizations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -126,14 +126,14 @@ export default function LeaderboardPage() {
         </div>
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Сортировать по" />
+            <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="rating">Общий рейтинг</SelectItem>
-            <SelectItem value="financial">Финансы</SelectItem>
-            <SelectItem value="trust">Доверие</SelectItem>
-            <SelectItem value="quality">Качество</SelectItem>
-            <SelectItem value="members">Участники</SelectItem>
+            <SelectItem value="rating">Overall Rating</SelectItem>
+            <SelectItem value="financial">Finance</SelectItem>
+            <SelectItem value="trust">Trust</SelectItem>
+            <SelectItem value="quality">Quality</SelectItem>
+            <SelectItem value="members">Members</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -146,7 +146,7 @@ export default function LeaderboardPage() {
       ) : filteredEntries.length === 0 ? (
         <div className="text-center py-16">
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Организации не найдены</p>
+          <p className="text-muted-foreground">No organizations found</p>
         </div>
       ) : (
         /* Leaderboard Table */
@@ -154,13 +154,13 @@ export default function LeaderboardPage() {
           {/* Header row */}
           <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2 text-xs font-medium text-muted-foreground">
             <div className="col-span-1">#</div>
-            <div className="col-span-4">Организация</div>
+            <div className="col-span-4">Organization</div>
             <div className="col-span-1 text-center">⭐</div>
             <div className="col-span-1 text-center">💰</div>
             <div className="col-span-1 text-center">🤝</div>
             <div className="col-span-1 text-center">📊</div>
             <div className="col-span-1 text-center">👥</div>
-            <div className="col-span-2 text-center">Действие</div>
+            <div className="col-span-2 text-center">Action</div>
           </div>
 
           {filteredEntries.map((entry) => (
@@ -220,7 +220,7 @@ export default function LeaderboardPage() {
                       onClick={() => openRateDialog({ id: entry.id, name: entry.name })}
                     >
                       <Star className="h-3.5 w-3.5" />
-                      Оценить
+                      Rate
                     </Button>
                   </div>
                 </div>

@@ -55,14 +55,14 @@ export default function ZAGSOfficerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Панель сотрудника ЗАГС</h1>
-        <p className="text-muted-foreground mt-1">Рассмотрение и одобрение регистраций брака</p>
+        <h1 className="text-2xl font-bold">Панель сотрудника Civil Registry</h1>
+        <p className="text-muted-foreground mt-1">Рассмотрение и одобрение регистраций marriageа</p>
       </div>
 
       {error && (
         <div className="bg-destructive/10 text-destructive rounded-lg p-4 flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-sm underline">Закрыть</button>
+          <button onClick={() => setError(null)} className="text-sm underline">Close</button>
         </div>
       )}
 
@@ -73,7 +73,7 @@ export default function ZAGSOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Всего заявлений</p>
+                <p className="text-sm text-muted-foreground">Total заявлений</p>
               </div>
               <span className="text-4xl opacity-30">💍</span>
             </div>
@@ -84,7 +84,7 @@ export default function ZAGSOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-yellow-500">{stats.pendingReview}</p>
-                <p className="text-sm text-muted-foreground">На рассмотрении</p>
+                <p className="text-sm text-muted-foreground">Under Review</p>
               </div>
               <span className="text-4xl opacity-30">⏳</span>
             </div>
@@ -95,7 +95,7 @@ export default function ZAGSOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-green-500">{stats.approved}</p>
-                <p className="text-sm text-muted-foreground">Одобрено</p>
+                <p className="text-sm text-muted-foreground">Approved</p>
               </div>
               <span className="text-4xl opacity-30">✅</span>
             </div>
@@ -106,7 +106,7 @@ export default function ZAGSOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-green-500">{stats.registered}</p>
-                <p className="text-sm text-muted-foreground">Зарегистрировано</p>
+                <p className="text-sm text-muted-foreground">Registeredо</p>
               </div>
               <span className="text-4xl opacity-30">📜</span>
             </div>
@@ -119,14 +119,14 @@ export default function ZAGSOfficerPage() {
         <Tabs defaultValue="all" value={tab} onValueChange={setTab}>
           <div className="border-b border-border px-4 pt-4">
             <TabsList>
-              <TabsTrigger value="all">Все</TabsTrigger>
-              <TabsTrigger value="pending">На рассмотрении</TabsTrigger>
-              <TabsTrigger value="approved">Одобрено/Зарег.</TabsTrigger>
-              <TabsTrigger value="rejected">Отклонено</TabsTrigger>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="pending">Under Review</TabsTrigger>
+              <TabsTrigger value="approved">Approved/Зарег.</TabsTrigger>
+              <TabsTrigger value="rejected">Rejected</TabsTrigger>
             </TabsList>
           </div>
           <CardContent className="pt-4">
-            <h3 className="text-lg font-semibold mb-3">Заявления на брак</h3>
+            <h3 className="text-lg font-semibold mb-3">Заявления на marriage</h3>
 
             {loading ? (
               <div className="flex justify-center py-8">
@@ -139,12 +139,12 @@ export default function ZAGSOfficerPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-3 font-medium">Супруги</th>
-                      <th className="text-left p-3 font-medium">Дата брака</th>
-                      <th className="text-left p-3 font-medium">Тип церемонии</th>
-                      <th className="text-left p-3 font-medium">Статус</th>
-                      <th className="text-left p-3 font-medium">Свидетельство</th>
-                      <th className="text-right p-3 font-medium">Действия</th>
+                      <th className="text-left p-3 font-medium">Spouseи</th>
+                      <th className="text-left p-3 font-medium">Date marriageа</th>
+                      <th className="text-left p-3 font-medium">Type церемонии</th>
+                      <th className="text-left p-3 font-medium">Status</th>
+                      <th className="text-left p-3 font-medium">Certificate</th>
+                      <th className="text-right p-3 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -156,7 +156,7 @@ export default function ZAGSOfficerPage() {
                         </td>
                         <td className="p-3">{new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}</td>
                         <td className="p-3">
-                          <Badge variant="outline">{marriage.ceremonyType || 'Гражданский'}</Badge>
+                          <Badge variant="outline">{marriage.ceremonyType || 'Citizenский'}</Badge>
                         </td>
                         <td className="p-3">
                           <Badge variant={statusVariant(marriage.status)}>{marriage.status}</Badge>

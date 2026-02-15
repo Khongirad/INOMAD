@@ -24,12 +24,12 @@ export default function MarriageCertificatePage() {
       setLoading(true);
       const data = await getMarriage(marriageId);
       if (data.status !== 'REGISTERED') {
-        setError('Свидетельство недоступно. Брак должен быть зарегистрирован.');
+        setError('Certificate неaccessно. Marriage должен быть registered.');
         return;
       }
       setMarriage(data);
     } catch (err: any) {
-      setError(err.message || 'Не удалось загрузить свидетельство');
+      setError(err.message || 'Не удалось upload certificate');
     } finally {
       setLoading(false);
     }
@@ -46,9 +46,9 @@ export default function MarriageCertificatePage() {
   if (error || !marriage) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <Button variant="ghost" onClick={() => router.push('/services/zags')}>← Назад в ЗАГС</Button>
+        <Button variant="ghost" onClick={() => router.push('/services/zags')}>← Back в Civil Registry</Button>
         <div className="bg-destructive/10 text-destructive rounded-lg p-4">
-          {error || 'Брак не найден'}
+          {error || 'Marriage не найден'}
         </div>
       </div>
     );
@@ -57,7 +57,7 @@ export default function MarriageCertificatePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       <Button variant="ghost" onClick={() => router.push('/services/zags')} className="no-print">
-        ← Назад в ЗАГС
+        ← Back в Civil Registry
       </Button>
       <CertificateViewer marriage={marriage} type="MARRIAGE" />
     </div>

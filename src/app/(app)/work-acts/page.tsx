@@ -29,13 +29,13 @@ interface WorkAct {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
-  DRAFTED: { label: 'Черновик', color: 'text-zinc-400 bg-zinc-500/10', icon: Clock },
-  SUBMITTED: { label: 'На проверке', color: 'text-blue-400 bg-blue-500/10', icon: FileCheck },
+  DRAFTED: { label: 'Draft', color: 'text-zinc-400 bg-zinc-500/10', icon: Clock },
+  SUBMITTED: { label: 'On проверке', color: 'text-blue-400 bg-blue-500/10', icon: FileCheck },
   REVIEWED: { label: 'Проверен', color: 'text-purple-400 bg-purple-500/10', icon: CheckCircle2 },
-  SIGNED_BY_CONTRACTOR: { label: 'Подписан подрядчиком', color: 'text-amber-400 bg-amber-500/10', icon: PenTool },
-  SIGNED_BY_CLIENT: { label: 'Подписан заказчиком', color: 'text-emerald-400 bg-emerald-500/10', icon: PenTool },
-  COMPLETED: { label: 'Выполнен', color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
-  DISPUTED: { label: 'Оспорен', color: 'text-red-500 bg-red-500/10', icon: AlertTriangle },
+  SIGNED_BY_CONTRACTOR: { label: 'Byдписан подрядчиком', color: 'text-amber-400 bg-amber-500/10', icon: PenTool },
+  SIGNED_BY_CLIENT: { label: 'Byдписан заказчиком', color: 'text-emerald-400 bg-emerald-500/10', icon: PenTool },
+  COMPLETED: { label: 'Выgenderнен', color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
+  DISPUTED: { label: 'Оdisputeен', color: 'text-red-500 bg-red-500/10', icon: AlertTriangle },
   CANCELLED: { label: 'Отменён', color: 'text-zinc-500 bg-zinc-500/10', icon: XCircle },
 };
 
@@ -84,14 +84,14 @@ export default function WorkActsPage() {
       });
 
       if (res.ok) {
-        toast.success('Действие выполнено');
+        toast.success('Action выgenderнено');
         fetchData();
       } else {
         const err = await res.json();
-        toast.error(err.message || 'Ошибка');
+        toast.error(err.message || 'Error');
       }
     } catch (e) {
-      toast.error('Ошибка сети');
+      toast.error('Error сети');
     }
   };
 
@@ -107,15 +107,15 @@ export default function WorkActsPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
             <FileCheck className="text-emerald-500 w-8 h-8" />
-            Акты выполненных работ
+            Acts comgenderненных работ
           </h2>
           <p className="text-zinc-400 mt-1">
-            Создавайте, подписывайте и отслеживайте акты. Оплата после подписания обеими сторонами.
+            Создавайте, подписывайте и отслеживайте акты. Оплата после подписания обеими partyми.
           </p>
         </div>
         <Button className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="mr-2 h-4 w-4" />
-          Создать акт
+          Create акт
         </Button>
       </div>
 
@@ -128,7 +128,7 @@ export default function WorkActsPage() {
                 <FileCheck className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Всего актов</div>
+                <div className="text-xs text-zinc-500 uppercase">Total актов</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {myActs.length + reviewActs.length}
                 </div>
@@ -144,7 +144,7 @@ export default function WorkActsPage() {
                 <DollarSign className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Выполнено ALTN</div>
+                <div className="text-xs text-zinc-500 uppercase">Completed ALTN</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {totalAmount.toLocaleString()}
                 </div>
@@ -176,7 +176,7 @@ export default function WorkActsPage() {
                 <AlertTriangle className="h-5 w-5 text-red-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Споры</div>
+                <div className="text-xs text-zinc-500 uppercase">Disputes</div>
                 <div className="text-lg font-mono font-bold text-red-500">
                   {activeActs.filter((a) => a.status === 'DISPUTED').length}
                 </div>
@@ -197,7 +197,7 @@ export default function WorkActsPage() {
               : "border-transparent text-zinc-500 hover:text-zinc-300"
           )}
         >
-          Мои акты ({myActs.length})
+          My акты ({myActs.length})
         </button>
         <button
           onClick={() => setTab('review')}
@@ -208,20 +208,20 @@ export default function WorkActsPage() {
               : "border-transparent text-zinc-500 hover:text-zinc-300"
           )}
         >
-          На проверку ({reviewActs.length})
+          On проверку ({reviewActs.length})
         </button>
       </div>
 
       {/* Work Acts List */}
       <div className="space-y-3">
         {loading ? (
-          <div className="text-center py-8 text-zinc-500">Загрузка...</div>
+          <div className="text-center py-8 text-zinc-500">Loading...</div>
         ) : activeActs.length === 0 ? (
           <Card className="border-white/5 bg-zinc-900/30">
             <CardContent className="p-8 text-center">
               <FileCheck className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
-              <h3 className="text-white font-semibold mb-1">Нет актов</h3>
-              <p className="text-zinc-500 text-sm">Создайте первый акт выполненных работ</p>
+              <h3 className="text-white font-semibold mb-1">No актов</h3>
+              <p className="text-zinc-500 text-sm">Создайте первый акт выgenderненных работ</p>
             </CardContent>
           </Card>
         ) : (
@@ -276,7 +276,7 @@ export default function WorkActsPage() {
                           onClick={() => handleAction(act.id, 'submit')}
                           className="bg-blue-600 hover:bg-blue-700 h-7 text-xs"
                         >
-                          Отправить
+                          Send
                         </Button>
                       )}
                       {act.status === 'SUBMITTED' && !isContractor && (
@@ -294,7 +294,7 @@ export default function WorkActsPage() {
                           onClick={() => handleAction(act.id, 'sign', { signature: `SIG-${user?.userId}` })}
                           className="bg-emerald-600 hover:bg-emerald-700 h-7 text-xs"
                         >
-                          Подписать
+                          Sign
                         </Button>
                       )}
                       <ChevronRight className="h-5 w-5 text-zinc-600 mt-1" />

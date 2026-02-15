@@ -94,7 +94,7 @@ export function identityReducer(
           ...state.basic,
           placeOfBirth: action.value,
         },
-        // Автоматически обновляем макрорегион на основе regionId
+        // Автоматически обновляем макроregion на основе regionId
         territory: action.value.regionId
           ? { macroRegion: action.value.regionId as MacroRegion }
           : state.territory,
@@ -110,7 +110,7 @@ export function identityReducer(
       return touch({
         ...state,
         nationality: action.value,
-        // Синхронизируем с legacy ethnicity полем
+        // Синхронизируем с legacy ethnicity genderем
         ethnicity: action.value
           ? {
               primary: { code: action.value.code, label: action.value.label },
@@ -125,7 +125,7 @@ export function identityReducer(
         ethnicity: {
           ...state.ethnicity,
           primary: action.value,
-          // если выбрали из списка — selfDeclared очищаем
+          // if выбрали из спclaimа — selfDeclared очищаем
           selfDeclaredText: action.value
             ? ""
             : state.ethnicity.selfDeclaredText,
@@ -139,7 +139,7 @@ export function identityReducer(
         ethnicity: {
           ...state.ethnicity,
           selfDeclaredText: text,
-          // если ввели текст — primary сбрасываем
+          // if ввели текст — primary сбрасываем
           primary: text.trim().length > 0 ? undefined : state.ethnicity.primary,
         },
       });

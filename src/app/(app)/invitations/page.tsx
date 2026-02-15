@@ -40,7 +40,7 @@ export default function InvitationsPage() {
       setReceived(data.received || []);
       setSent(data.sent || []);
     } catch {
-      toast.error('Ошибка загрузки приглашений');
+      toast.error('Error загрузки приглашений');
     } finally {
       setLoading(false);
     }
@@ -57,10 +57,10 @@ export default function InvitationsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed');
-      toast.success('Приглашение принято');
+      toast.success('Invitation принято');
       fetchInvitations();
     } catch {
-      toast.error('Ошибка при принятии');
+      toast.error('Error при принятии');
     }
   };
 
@@ -71,10 +71,10 @@ export default function InvitationsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed');
-      toast.success('Приглашение отклонено');
+      toast.success('Invitation rejected');
       fetchInvitations();
     } catch {
-      toast.error('Ошибка при отклонении');
+      toast.error('Error при отклонении');
     }
   };
 
@@ -85,10 +85,10 @@ export default function InvitationsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed');
-      toast.success('Приглашение отменено');
+      toast.success('Invitation отменено');
       fetchInvitations();
     } catch {
-      toast.error('Ошибка при отмене');
+      toast.error('Error при отмене');
     }
   };
 
@@ -107,14 +107,14 @@ export default function InvitationsPage() {
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="flex items-center gap-3 mb-8">
         <Mail className="h-7 w-7 text-primary" />
-        <h1 className="text-2xl font-bold">Приглашения</h1>
+        <h1 className="text-2xl font-bold">Invitations</h1>
       </div>
 
       <Tabs defaultValue="received">
         <TabsList className="mb-6">
           <TabsTrigger value="received" className="gap-2">
             <Inbox className="h-4 w-4" />
-            Полученные
+            Genderученные
             {pendingReceivedCount > 0 && (
               <Badge className="ml-1 h-5 min-w-[20px] text-[10px] bg-red-500">
                 {pendingReceivedCount}
@@ -136,7 +136,7 @@ export default function InvitationsPage() {
           {received.length === 0 ? (
             <div className="text-center py-16">
               <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">Нет полученных приглашений</p>
+              <p className="text-muted-foreground">No receivedных приглашений</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -156,7 +156,7 @@ export default function InvitationsPage() {
           {sent.length === 0 ? (
             <div className="text-center py-16">
               <Send className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">Нет отправленных приглашений</p>
+              <p className="text-muted-foreground">No отправленных приглашений</p>
             </div>
           ) : (
             <div className="space-y-3">

@@ -24,12 +24,12 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 const STAGE_LABELS: Record<string, string> = {
-  DRAFT: 'Черновик',
-  PENDING_SIGNATURES: 'На подписании',
-  SIGNED: 'Подписан',
+  DRAFT: 'Draft',
+  PENDING_SIGNATURES: 'On подписании',
+  SIGNED: 'Byдписан',
   NOTARIZED: 'Нотариально заверен',
   LEGALLY_CERTIFIED: 'Юридически проверен',
-  ARCHIVED: 'Архив',
+  ARCHIVED: 'Archive',
 };
 
 export default function ChancelleryPage() {
@@ -53,26 +53,26 @@ export default function ChancelleryPage() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Building2 className="h-7 w-7 text-cyan-400" />
-          Канцелярия
+          Chancellery
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Реестр договоров. Доступ только для нотариусов и юристов.
+          Registry contractов. Access only for нотариусов и юристов.
         </p>
       </div>
 
       <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-4 py-3 text-sm text-zinc-300 flex items-center gap-2">
         <Shield className="h-4 w-4 text-cyan-400 flex-shrink-0" />
-        🔒 Канцелярия — официальный реестр всех договоров системы.
+        🔒 Chancellery — официальный registry всех contractов systemы.
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: 'Всего договоров', value: defaultStats.totalContracts, icon: FileText, cls: 'text-blue-400' },
-          { label: 'Активных', value: defaultStats.activeContracts, icon: CheckCircle, cls: 'text-emerald-400' },
-          { label: 'На рассмотрении', value: defaultStats.pendingReview, icon: Clock, cls: 'text-amber-400' },
-          { label: 'Споров', value: defaultStats.totalDisputes, icon: AlertTriangle, cls: 'text-orange-400' },
-          { label: 'Жалоб', value: defaultStats.totalComplaints, icon: Scale, cls: 'text-rose-400' },
+          { label: 'Total contractов', value: defaultStats.totalContracts, icon: FileText, cls: 'text-blue-400' },
+          { label: 'Activых', value: defaultStats.activeContracts, icon: CheckCircle, cls: 'text-emerald-400' },
+          { label: 'Under Review', value: defaultStats.pendingReview, icon: Clock, cls: 'text-amber-400' },
+          { label: 'Disputeов', value: defaultStats.totalDisputes, icon: AlertTriangle, cls: 'text-orange-400' },
+          { label: 'complaints', value: defaultStats.totalComplaints, icon: Scale, cls: 'text-rose-400' },
         ].map((s) => (
           <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">
             <CardContent className="p-3 flex justify-between items-center">
@@ -90,7 +90,7 @@ export default function ChancelleryPage() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
         <Input
-          placeholder="Поиск по номеру, названию..."
+          placeholder="Search по numberу, названию..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10 bg-zinc-900 border-zinc-700"
@@ -101,13 +101,13 @@ export default function ChancelleryPage() {
       <Tabs defaultValue="registry" value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="bg-zinc-900 border border-zinc-800">
           <TabsTrigger value="registry" className="flex items-center gap-1">
-            <FileText className="h-3 w-3" /> Реестр
+            <FileText className="h-3 w-3" /> Registry
           </TabsTrigger>
           <TabsTrigger value="disputes" className="flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> Споры
+            <AlertTriangle className="h-3 w-3" /> Disputes
           </TabsTrigger>
           <TabsTrigger value="complaints" className="flex items-center gap-1">
-            <Scale className="h-3 w-3" /> Жалобы
+            <Scale className="h-3 w-3" /> Complaints
           </TabsTrigger>
         </TabsList>
 
@@ -120,7 +120,7 @@ export default function ChancelleryPage() {
           ) : contracts.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
               <FileText className="h-12 w-12 mx-auto opacity-30 mb-2" />
-              Договоров нет
+              Contractов нет
             </div>
           ) : (
             <Card className="bg-zinc-900/30 border-zinc-800">
@@ -129,7 +129,7 @@ export default function ChancelleryPage() {
                   <table className="w-full">
                     <thead className="border-b border-zinc-800">
                       <tr>
-                        {['Название', 'Стороны', 'Стадия', 'Статус', 'Дата'].map((h) => (
+                        {['Title', 'Parties', 'Стадия', 'Status', 'Date'].map((h) => (
                           <th key={h} className="px-4 py-3 text-left text-xs font-medium text-zinc-400 uppercase">
                             {h}
                           </th>
@@ -173,14 +173,14 @@ export default function ChancelleryPage() {
         {/* Disputes */}
         <TabsContent value="disputes" className="mt-4">
           <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-zinc-300">
-            Споры по договорам. Используйте раздел «Споры» для полного управления.
+            Disputes по contractам. Исgenderьзуйте раздел «Disputes» for genderного управления.
           </div>
         </TabsContent>
 
         {/* Complaints */}
         <TabsContent value="complaints" className="mt-4">
           <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-zinc-300">
-            Жалобы по договорам. Используйте раздел «Жалобы» для полного управления.
+            Complaints по contractам. Исgenderьзуйте раздел «Complaints» for genderного управления.
           </div>
         </TabsContent>
       </Tabs>

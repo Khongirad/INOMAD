@@ -125,7 +125,7 @@ export default function NotificationBell() {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
-    if (minutes < 1) return 'сейчас';
+    if (minutes < 1) return 'now';
     if (minutes < 60) return `${minutes} мин.`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours} ч.`;
@@ -152,7 +152,7 @@ export default function NotificationBell() {
         <div className="absolute right-0 top-full mt-2 w-96 bg-popover border rounded-xl shadow-xl z-50 overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 flex justify-between items-center border-b">
-            <h3 className="font-semibold text-sm">🔔 Уведомления</h3>
+            <h3 className="font-semibold text-sm">🔔 Notifications</h3>
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" className="text-xs gap-1 h-7" onClick={handleMarkAllRead}>
                 <CheckCheck className="h-3.5 w-3.5" />
@@ -165,7 +165,7 @@ export default function NotificationBell() {
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="py-10 text-center">
-                <p className="text-sm text-muted-foreground">Нет уведомлений</p>
+                <p className="text-sm text-muted-foreground">No уведомлений</p>
               </div>
             ) : (
               notifications.map((n) => (

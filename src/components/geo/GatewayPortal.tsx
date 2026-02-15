@@ -17,8 +17,8 @@ export interface GatewayPortalProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// КОМПОНЕНТ "ВРАТА" — визуальный портальный эффект
-// Создаёт ощущение входа в новое пространство (как в WoW)
+// КОМПОНЕНТ "GATES" — визуальный portalьный эффект
+// Создаёт ощущение loginа в new пространство (как в WoW)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function GatewayPortal({
@@ -47,7 +47,7 @@ export function GatewayPortal({
 
   if (!isOpen) return null;
 
-  // Показываем контент после анимации входа
+  // Byказываем контент после анимации loginа
   if (showContent) {
     return (
       <div
@@ -58,11 +58,11 @@ export function GatewayPortal({
     );
   }
 
-  // Анимация входа
+  // Animation loginа
   if (entered) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
-        {/* Портальный эффект */}
+        {/* Byртальный эффект */}
         <div className="relative">
           {/* Внешнее свечение */}
           <div className="absolute inset-0 animate-pulse">
@@ -76,33 +76,33 @@ export function GatewayPortal({
             />
           </div>
 
-          {/* Кольца портала */}
+          {/* Кольца portalа */}
           <div className="relative w-[300px] h-[300px]">
-            {/* Внешнее кольцо */}
+            {/* Outer ring */}
             <div
               className="absolute inset-0 rounded-full border-4 border-gold-border/50 animate-spin"
               style={{ animationDuration: "3s" }}
             />
 
-            {/* Среднее кольцо */}
+            {/* Secondary кольцо */}
             <div
               className="absolute inset-4 rounded-full border-2 border-gold-text/30 animate-spin"
               style={{ animationDuration: "4s", animationDirection: "reverse" }}
             />
 
-            {/* Внутреннее кольцо */}
+            {/* Inner ring */}
             <div
               className="absolute inset-8 rounded-full border border-gold-border/40 animate-spin"
               style={{ animationDuration: "2s" }}
             />
 
-            {/* Центр портала — схлопывающийся */}
+            {/* Center portalа — схлопывающийся */}
             <div
               className="absolute inset-12 rounded-full bg-gradient-to-br from-gold-border/20 to-transparent animate-ping"
               style={{ animationDuration: "1.5s" }}
             />
 
-            {/* Центральная точка */}
+            {/* Centerальная точка */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-4 h-4 rounded-full bg-gold-text animate-pulse" />
             </div>
@@ -111,7 +111,7 @@ export function GatewayPortal({
           {/* Текст */}
           <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
             <div className="text-gold-text text-sm font-medium animate-pulse">
-              {lang === "ru" ? "Вход в пространство..." : "Entering space..."}
+              {lang === "ru" ? "Login в пространство..." : "Entering space..."}
             </div>
           </div>
         </div>
@@ -140,7 +140,7 @@ export function GatewayPortal({
 
       {/* Основной контент */}
       <div className="relative z-10 flex flex-col items-center">
-        {/* Заголовок */}
+        {/* Title */}
         {title && (
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-white mb-3">{title}</h1>
@@ -150,7 +150,7 @@ export function GatewayPortal({
           </div>
         )}
 
-        {/* Портал / Врата */}
+        {/* Byртал / Gates */}
         <button
           onClick={handleEnter}
           className="group relative cursor-pointer focus:outline-none"
@@ -167,7 +167,7 @@ export function GatewayPortal({
             />
           </div>
 
-          {/* Арка врат */}
+          {/* Gate Arch */}
           <div className="relative w-[250px] h-[350px]">
             {/* Каменная арка (внешний контур) */}
             <svg
@@ -195,7 +195,7 @@ export function GatewayPortal({
                 </linearGradient>
               </defs>
 
-              {/* Внешняя арка */}
+              {/* Outer arch */}
               <path
                 d="M30 350 L30 150 Q30 30 125 30 Q220 30 220 150 L220 350"
                 fill="none"
@@ -224,7 +224,7 @@ export function GatewayPortal({
                 <text x="195" y="280" fontSize="16" fontFamily="serif">ᛚ</text>
               </g>
 
-              {/* Ключевой камень (keystone) */}
+              {/* Keyевой камень (keystone) */}
               <path
                 d="M110 35 L125 15 L140 35 Z"
                 fill="#D4AF37"
@@ -232,7 +232,7 @@ export function GatewayPortal({
               />
             </svg>
 
-            {/* Внутреннее пространство портала */}
+            {/* Внутреннее пространство portalа */}
             <div className="absolute inset-x-[50px] top-[60px] bottom-[10px] overflow-hidden rounded-t-full">
               {/* Градиент-вихрь */}
               <div
@@ -254,7 +254,7 @@ export function GatewayPortal({
                 ))}
               </div>
 
-              {/* Центральное свечение */}
+              {/* Centerальное свечение */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div
                   className="w-8 h-8 rounded-full bg-gold-text/30 group-hover:bg-gold-text/50 group-hover:w-12 group-hover:h-12 transition-all duration-500 animate-pulse"
@@ -267,19 +267,19 @@ export function GatewayPortal({
           {/* Надпись под вратами */}
           <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-center">
             <div className="text-gold-text text-lg font-medium group-hover:text-gold-border transition-colors">
-              {lang === "ru" ? "Войти" : "Enter"}
+              {lang === "ru" ? "Sign in" : "Enter"}
             </div>
             <div className="text-zinc-500 text-xs mt-1 group-hover:text-zinc-400 transition-colors">
-              {lang === "ru" ? "Нажмите, чтобы продолжить" : "Click to continue"}
+              {lang === "ru" ? "Нажмите, чтобы continue" : "Click to continue"}
             </div>
           </div>
         </button>
 
-        {/* Ключевая фраза */}
+        {/* Keyевая фраза */}
         <div className="mt-24 text-center max-w-lg px-4">
           <p className="text-zinc-400 text-sm italic leading-relaxed">
             {lang === "ru"
-              ? "«Ты входишь в общее пространство, где каждый знает свой дом, уважает чужой, и развивается вместе с другими.»"
+              ? "«Ты loginишь в общее пространство, где each знает свой дом, уважает чужой, и развивается вместе с другими.»"
               : '"You enter a shared space where everyone knows their home, respects others\', and grows together."'}
           </p>
         </div>

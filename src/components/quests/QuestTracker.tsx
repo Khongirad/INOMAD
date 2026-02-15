@@ -26,7 +26,7 @@ export default function QuestTracker({
       {/* Progress Bar */}
       <div>
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-white font-medium">Прогресс</span>
+          <span className="text-white font-medium">Progress</span>
           <span className="text-gold-primary">{progress}%</span>
         </div>
         <div className="w-full bg-zinc-700 rounded-full h-3">
@@ -78,7 +78,7 @@ export default function QuestTracker({
                     rel="noopener noreferrer"
                     className="text-xs text-blue-400 hover:underline mt-1 inline-block"
                   >
-                    Доказательство →
+                    Evidence →
                   </a>
                 )}
               </div>

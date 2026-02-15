@@ -115,14 +115,14 @@ export default function OrgBankingPage() {
         description: txDesc,
         recipientAccount: txRecipient || undefined,
       });
-      toast.success('Транзакция инициирована');
+      toast.success('Transaction инициирована');
       setTxOpen(false);
       setTxAmount('');
       setTxDesc('');
       setTxRecipient('');
       fetchTransactions();
     } catch (err: any) {
-      toast.error(err.message || 'Ошибка');
+      toast.error(err.message || 'Error');
     } finally {
       setTxLoading(false);
     }
@@ -131,7 +131,7 @@ export default function OrgBankingPage() {
   const handleSign = async (txId: string) => {
     try {
       await signTransaction(txId);
-      toast.success('Подпись добавлена');
+      toast.success('Signature добавлена');
       fetchTransactions();
     } catch (err: any) {
       toast.error(err.message);
@@ -142,7 +142,7 @@ export default function OrgBankingPage() {
     const note = approved ? undefined : prompt('Причина отклонения:') || undefined;
     try {
       await bankApproveTransaction(txId, { approved, note });
-      toast.success(approved ? 'Одобрено банком' : 'Отклонено');
+      toast.success(approved ? 'Approved bankом' : 'Rejected');
       fetchTransactions();
     } catch (err: any) {
       toast.error(err.message);
@@ -152,7 +152,7 @@ export default function OrgBankingPage() {
   const handleCancel = async (txId: string) => {
     try {
       await cancelTransaction(txId);
-      toast.success('Транзакция отменена');
+      toast.success('Transaction отменена');
       fetchTransactions();
     } catch (err: any) {
       toast.error(err.message);
@@ -161,11 +161,11 @@ export default function OrgBankingPage() {
 
   const getStatusBadge = (status: OrgBankTxStatus) => {
     const map: Record<OrgBankTxStatus, { color: string; label: string }> = {
-      PENDING: { color: 'bg-amber-500/10 text-amber-500', label: 'Ожидает' },
+      PENDING: { color: 'bg-amber-500/10 text-amber-500', label: 'Pending' },
       CLIENT_APPROVED: { color: 'bg-blue-500/10 text-blue-500', label: 'Клиент одобрил' },
-      BANK_APPROVED: { color: 'bg-indigo-500/10 text-indigo-500', label: 'Банк одобрил' },
-      COMPLETED: { color: 'bg-emerald-500/10 text-emerald-500', label: 'Выполнено' },
-      REJECTED: { color: 'bg-red-500/10 text-red-500', label: 'Отклонено' },
+      BANK_APPROVED: { color: 'bg-indigo-500/10 text-indigo-500', label: 'Bank одобрил' },
+      COMPLETED: { color: 'bg-emerald-500/10 text-emerald-500', label: 'Completed' },
+      REJECTED: { color: 'bg-red-500/10 text-red-500', label: 'Rejected' },
       CANCELLED: { color: 'bg-zinc-500/10 text-zinc-500', label: 'Отменено' },
     };
     const { color, label } = map[status] || map.PENDING;
@@ -188,22 +188,22 @@ export default function OrgBankingPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white">
-            Банковские операции организации
+            Bankовские операции organizations
           </h2>
           <p className="text-zinc-400">
-            Двойная авторизация — клиент + банковский офицер
+            Dual Authorization — клиент + bankовский officer
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Input
-            placeholder="ID организации"
+            placeholder="ID organizations"
             value={orgId}
             onChange={(e) => setOrgId(e.target.value)}
             className="max-w-[200px]"
           />
           <Button variant="secondary" size="sm" onClick={fetchAccounts} disabled={!orgId || loading}>
             <RefreshCcw className="mr-2 h-4 w-4" />
-            Загрузить
+            Upload
           </Button>
         </div>
       </div>
@@ -218,9 +218,9 @@ export default function OrgBankingPage() {
         <Card className="border-white/10 bg-zinc-900/50">
           <CardContent className="p-8 text-center">
             <Building2 className="h-12 w-12 mx-auto text-zinc-600 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Нет счетов</h3>
+            <h3 className="text-xl font-bold text-white mb-2">No accountов</h3>
             <p className="text-zinc-400 text-sm">
-              Введите ID организации и нажмите «Загрузить» для просмотра банковских счетов.
+              Enter ID organizations и нажмите «Upload» for просмотра bankовских accountов.
             </p>
           </CardContent>
         </Card>
@@ -249,7 +249,7 @@ export default function OrgBankingPage() {
                   <div className="flex items-center gap-1 mt-2">
                     <Shield className="h-3 w-3 text-zinc-500" />
                     <span className="text-xs text-zinc-500">
-                      {acc.clientSignaturesRequired} подпись · {acc.bankApprovalLevel}
+                      {acc.clientSignaturesRequired} signature · {acc.bankApprovalLevel}
                     </span>
                   </div>
                 </CardContent>
@@ -262,17 +262,17 @@ export default function OrgBankingPage() {
               <div className="flex items-center justify-between">
                 <TabsList className="bg-zinc-900/50 border border-white/5">
                   <TabsTrigger value="pending">
-                    Ожидающие ({pendingTxs.length})
+                    Pending ({pendingTxs.length})
                   </TabsTrigger>
                   <TabsTrigger value="history">
-                    История
+                    History
                   </TabsTrigger>
                   <TabsTrigger value="reports">
-                    Отчёты ({reports.length})
+                    Reportы ({reports.length})
                   </TabsTrigger>
                 </TabsList>
                 <Button size="sm" onClick={() => setTxOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Новая транзакция
+                  <Plus className="mr-2 h-4 w-4" /> New transaction
                 </Button>
               </div>
 
@@ -282,7 +282,7 @@ export default function OrgBankingPage() {
                   <Card className="border-white/5">
                     <CardContent className="p-8 text-center text-zinc-500">
                       <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-500" />
-                      Нет ожидающих транзакций
+                      No ожидающих транзакций
                     </CardContent>
                   </Card>
                 ) : (
@@ -317,17 +317,17 @@ export default function OrgBankingPage() {
                               {tx.status === 'PENDING' && (
                                 <>
                                   <Button size="sm" variant="secondary" onClick={() => handleSign(tx.id)}>
-                                    <PenLine className="mr-1 h-3 w-3" /> Подписать
+                                    <PenLine className="mr-1 h-3 w-3" /> Sign
                                   </Button>
                                   <Button size="sm" variant="ghost" className="text-red-400" onClick={() => handleCancel(tx.id)}>
-                                    Отмена
+                                    Cancel
                                   </Button>
                                 </>
                               )}
                               {tx.status === 'CLIENT_APPROVED' && (
                                 <div className="flex gap-1">
                                   <Button size="sm" onClick={() => handleBankApprove(tx.id, true)}>
-                                    <CheckCircle2 className="mr-1 h-3 w-3" /> Одобрить
+                                    <CheckCircle2 className="mr-1 h-3 w-3" /> Approve
                                   </Button>
                                   <Button size="sm" variant="ghost" className="text-red-400" onClick={() => handleBankApprove(tx.id, false)}>
                                     <XCircle className="mr-1 h-3 w-3" />
@@ -340,8 +340,8 @@ export default function OrgBankingPage() {
                         {/* Signature progress */}
                         <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
                           <PenLine className="h-3 w-3" />
-                          Подписи: {tx.clientSignatures?.length || 0} / {selectedAccount.clientSignaturesRequired}
-                          {tx.bankApproved && <span className="text-emerald-500">· Банк ✓</span>}
+                          Byдписи: {tx.clientSignatures?.length || 0} / {selectedAccount.clientSignaturesRequired}
+                          {tx.bankApproved && <span className="text-emerald-500">· Bank ✓</span>}
                         </div>
                       </CardContent>
                     </Card>
@@ -354,7 +354,7 @@ export default function OrgBankingPage() {
                 {transactions.length === 0 ? (
                   <Card className="border-white/5">
                     <CardContent className="p-8 text-center text-zinc-500">
-                      Нет транзакций
+                      No транзакций
                     </CardContent>
                   </Card>
                 ) : (
@@ -398,7 +398,7 @@ export default function OrgBankingPage() {
                   <Card className="border-white/5">
                     <CardContent className="p-8 text-center text-zinc-500">
                       <FileText className="h-8 w-8 mx-auto mb-2" />
-                      Нет ежедневных отчётов
+                      No ежедневных reportов
                     </CardContent>
                   </Card>
                 ) : (
@@ -418,7 +418,7 @@ export default function OrgBankingPage() {
                         </div>
                         <div className="grid grid-cols-4 gap-4">
                           <div>
-                            <div className="text-xs text-zinc-500">Нач. баланс</div>
+                            <div className="text-xs text-zinc-500">Нач. balance</div>
                             <div className="font-mono text-sm text-white">
                               {Number(report.openingBalance).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                             </div>
@@ -430,13 +430,13 @@ export default function OrgBankingPage() {
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs text-zinc-500">Расход</div>
+                            <div className="text-xs text-zinc-500">Expense</div>
                             <div className="font-mono text-sm text-red-400">
                               -{Number(report.totalOutgoing).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs text-zinc-500">Кон. баланс</div>
+                            <div className="text-xs text-zinc-500">Кон. balance</div>
                             <div className="font-mono text-sm font-bold text-gold-primary">
                               {Number(report.closingBalance).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                             </div>
@@ -453,23 +453,23 @@ export default function OrgBankingPage() {
       )}
 
       {/* New Transaction Sheet */}
-      <Sheet open={txOpen} onOpenChange={setTxOpen} title="Новая транзакция">
+      <Sheet open={txOpen} onOpenChange={setTxOpen} title="New transaction">
         <div className="space-y-6 pt-4">
           <div className="space-y-2">
-            <Label>Тип операции</Label>
+            <Label>Type операции</Label>
             <Select value={txType} onValueChange={(v) => setTxType(v as OrgBankTxType)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="OUTGOING">Исходящий платёж</SelectItem>
-                <SelectItem value="INCOMING">Входящий платёж</SelectItem>
-                <SelectItem value="INTERNAL">Внутренний перевод</SelectItem>
-                <SelectItem value="TAX_PAYMENT">Налоговый платёж</SelectItem>
+                <SelectItem value="OUTGOING">Исходящий payment</SelectItem>
+                <SelectItem value="INCOMING">Loginящий payment</SelectItem>
+                <SelectItem value="INTERNAL">Inner transfer</SelectItem>
+                <SelectItem value="TAX_PAYMENT">Taxовый payment</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>Сумма (АЛТАН)</Label>
+            <Label>Amount (ALTAN)</Label>
             <Input
               type="number"
               placeholder="0.00"
@@ -479,9 +479,9 @@ export default function OrgBankingPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Описание</Label>
+            <Label>Description</Label>
             <Textarea
-              placeholder="Назначение платежа..."
+              placeholder="Purpose платежа..."
               value={txDesc}
               onChange={(e) => setTxDesc(e.target.value)}
             />
@@ -489,9 +489,9 @@ export default function OrgBankingPage() {
 
           {txType === 'OUTGOING' && (
             <div className="space-y-2">
-              <Label>Счёт получателя</Label>
+              <Label>Account genderучателя</Label>
               <Input
-                placeholder="Номер счёта получателя"
+                placeholder="Number accountа genderучателя"
                 value={txRecipient}
                 onChange={(e) => setTxRecipient(e.target.value)}
               />
@@ -500,8 +500,8 @@ export default function OrgBankingPage() {
 
           <div className="p-3 rounded-lg bg-zinc-800/50 text-xs text-zinc-400">
             <Shield className="h-3 w-3 inline mr-1" />
-            Требуется: {selectedAccount?.clientSignaturesRequired || 1} подпись(и) клиента
-            + одобрение банка ({selectedAccount?.bankApprovalLevel || 'MANAGER'})
+            Required: {selectedAccount?.clientSignaturesRequired || 1} signature(и) клиента
+            + одобрение bankа ({selectedAccount?.bankApprovalLevel || 'MANAGER'})
           </div>
 
           <Button
@@ -509,7 +509,7 @@ export default function OrgBankingPage() {
             onClick={handleInitiate}
             disabled={txLoading || !txAmount || !txDesc}
           >
-            {txLoading ? 'Отправка...' : 'Инициировать транзакцию'}
+            {txLoading ? 'Отправка...' : 'Initiate транзакцию'}
           </Button>
         </div>
       </Sheet>

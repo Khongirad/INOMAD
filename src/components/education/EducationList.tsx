@@ -23,24 +23,24 @@ interface EducationListProps {
 }
 
 const typeLabels: Record<string, string> = {
-  DIPLOMA: 'Диплом',
+  DIPLOMA: 'Diploma',
   CERTIFICATE: 'Сертификат',
   RECOMMENDATION: 'Рекомендация',
 };
 
 const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   VERIFIED: {
-    label: 'Подтверждено',
+    label: 'Confirmed',
     icon: <CheckCircle className="h-3 w-3" />,
     className: 'bg-green-600 hover:bg-green-700',
   },
   PENDING: {
-    label: 'На проверке',
+    label: 'On проверке',
     icon: <Clock className="h-3 w-3" />,
     className: 'bg-yellow-600 hover:bg-yellow-700',
   },
   REJECTED: {
-    label: 'Отклонено',
+    label: 'Rejected',
     icon: <XCircle className="h-3 w-3" />,
     className: 'bg-red-600 hover:bg-red-700',
   },
@@ -52,7 +52,7 @@ export function EducationList({ educations, onViewDocument }: EducationListProps
       <Card>
         <CardContent className="py-10 text-center">
           <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Нет записей об образовании</p>
+          <p className="text-muted-foreground">No записей об образовании</p>
         </CardContent>
       </Card>
     );
@@ -107,7 +107,7 @@ export function EducationList({ educations, onViewDocument }: EducationListProps
                     onClick={() => onViewDocument(edu.id)}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                    Просмотреть документ
+                    Просмотреть document
                   </Button>
                 </div>
               )}

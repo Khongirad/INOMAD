@@ -11,10 +11,10 @@ import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Send, Info } from 'lucide-react';
 
 const steps = [
-  'Личная информация',
-  'Биографические данные',
-  'Загрузка документов',
-  'Проверка и подтверждение',
+  'Личная information',
+  'Биографические data',
+  'Загрузка documentов',
+  'Verification и confirmation',
 ];
 
 export default function PassportApplicationPage() {
@@ -48,14 +48,14 @@ export default function PassportApplicationPage() {
   const handleNext = async () => {
     if (activeStep === 0) {
       if (!formData.fullName || !formData.dateOfBirth || !formData.sex) {
-        setError('Пожалуйста, заполните все обязательные поля');
+        setError('Byжалуйста, заgenderните all обязательные genderя');
         return;
       }
     }
 
     if (activeStep === 1) {
       if (!formData.placeOfBirth) {
-        setError('Пожалуйста, заполните биографические данные');
+        setError('Byжалуйста, заgenderните биографические data');
         return;
       }
     }
@@ -65,9 +65,9 @@ export default function PassportApplicationPage() {
         setLoading(true);
         const application = await createPassportApplication(formData);
         setApplicationId(application.id);
-        toast.success('Черновик заявления создан');
+        toast.success('Draft applications создан');
       } catch (err: any) {
-        setError(err.message || 'Не удалось создать заявление');
+        setError(err.message || 'Не удалось созgive application');
         setLoading(false);
         return;
       } finally {
@@ -86,17 +86,17 @@ export default function PassportApplicationPage() {
 
   const handleSubmit = async () => {
     if (!applicationId) {
-      setError('Заявление не создано');
+      setError('Application не создано');
       return;
     }
 
     try {
       setLoading(true);
       await submitPassportApplication(applicationId);
-      toast.success('Заявление успешно подано!');
+      toast.success('Application successfully подано!');
       router.push(`/services/migration/applications/${applicationId}`);
     } catch (err: any) {
-      setError(err.message || 'Не удалось подать заявление');
+      setError(err.message || 'Не удалось поgive application');
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export default function PassportApplicationPage() {
 
   const passportLabel =
     passportType === 'STANDARD' ? 'Стандартный' :
-    passportType === 'DIPLOMATIC' ? 'Дипломатический' : 'Служебный';
+    passportType === 'DIPLOMATIC' ? 'Diplomaатический' : 'Служебный';
 
   return (
     <div className="p-6 max-w-[900px] mx-auto space-y-6">
@@ -116,11 +116,11 @@ export default function PassportApplicationPage() {
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад к службе миграции
+          Back к службе миграции
         </Button>
-        <h1 className="text-3xl font-bold">Заявление на паспорт</h1>
+        <h1 className="text-3xl font-bold">Application на паdisputeт</h1>
         <p className="text-muted-foreground mt-1">
-          {passportLabel} паспорт — Заполните все шаги для подачи заявления
+          {passportLabel} паdisputeт — Заgenderните all stepи for подачи applications
         </p>
       </div>
 
@@ -176,17 +176,17 @@ export default function PassportApplicationPage() {
               disabled={activeStep === 0 || loading}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Назад
+              Back
             </Button>
 
             {activeStep === steps.length - 1 ? (
               <Button onClick={handleSubmit} disabled={loading}>
                 <Send className="h-4 w-4 mr-2" />
-                {loading ? 'Отправка...' : 'Подать заявление'}
+                {loading ? 'Отправка...' : 'Bygive application'}
               </Button>
             ) : (
               <Button onClick={handleNext} disabled={loading}>
-                {loading ? 'Сохранение...' : 'Далее'}
+                {loading ? 'Соstorage...' : 'Next'}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             )}
@@ -199,12 +199,12 @@ export default function PassportApplicationPage() {
         <div className="flex gap-2 items-start">
           <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-semibold mb-1">Важная информация</p>
+            <p className="text-sm font-semibold mb-1">Important Information</p>
             <p className="text-sm text-muted-foreground">
-              • Вся информация должна быть точной и проверяемой<br />
-              • Необходимые документы: Фото (паспортного размера), Подпись, Свидетельство о рождении<br />
-              • Срок обработки: 5–10 рабочих дней<br />
-              • Вы получите уведомление по email при изменении статуса заявления
+              • Вся information должна быть точной и проверяемой<br />
+              • Необходимые documentы: Фото (паdisputeтного размера), Signature, Certificate о рождении<br />
+              • Срок обработки: 5–10 рабочих days<br />
+              • You genderучите notification по email при изменении статуса applications
             </p>
           </div>
         </div>

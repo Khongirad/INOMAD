@@ -39,10 +39,10 @@ const getCategoryColor = (category: string) => {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  INFRASTRUCTURE: 'Инфраструктура',
+  INFRASTRUCTURE: 'Инфраstructure',
   TECHNOLOGY: 'Технологии',
-  EDUCATION: 'Образование',
-  RESOURCE: 'Ресурсы',
+  EDUCATION: 'Education',
+  RESOURCE: 'Resources',
 };
 
 const getStatusColor = (status: string) => {
@@ -55,9 +55,9 @@ const getStatusColor = (status: string) => {
 };
 
 const TXN_LABELS: Record<string, { label: string; cls: string }> = {
-  DEPOSIT: { label: 'Пополнение', cls: 'text-emerald-400' },
-  WITHDRAWAL: { label: 'Вывод', cls: 'text-rose-400' },
-  DIVIDEND: { label: 'Дивиденд', cls: 'text-blue-400' },
+  DEPOSIT: { label: 'Bygenderнение', cls: 'text-emerald-400' },
+  WITHDRAWAL: { label: 'Withdrawal', cls: 'text-rose-400' },
+  DIVIDEND: { label: 'Dividend', cls: 'text-blue-400' },
   REINVEST: { label: 'Реинвестиция', cls: 'text-purple-400' },
 };
 
@@ -79,10 +79,10 @@ export default function FundPage() {
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
           <Coins className="text-gold-primary w-8 h-8" />
-          Суверенный фонд
+          Sovereign Fund
         </h2>
         <p className="text-zinc-400 mt-1">
-          Управление национальным богатством и инвестициями Конфедерации
+          Governance национальным богатством и инвестициями Конфедерации
         </p>
       </div>
 
@@ -95,7 +95,7 @@ export default function FundPage() {
                 <Wallet className="h-5 w-5 text-gold-primary" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Баланс</div>
+                <div className="text-xs text-zinc-500 uppercase">Balance</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {(defaultStats.totalBalance / 1000).toFixed(0)}K ₳
                 </div>
@@ -127,7 +127,7 @@ export default function FundPage() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Средняя доходность</div>
+                <div className="text-xs text-zinc-500 uppercase">Средняя incomeность</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {defaultStats.avgReturn.toFixed(1)}%
                 </div>
@@ -143,7 +143,7 @@ export default function FundPage() {
                 <DollarSign className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Дивиденды</div>
+                <div className="text-xs text-zinc-500 uppercase">Dividends</div>
                 <div className="text-lg font-mono font-bold text-white">
                   {(defaultStats.totalDividends / 1000).toFixed(0)}K ₳
                 </div>
@@ -155,7 +155,7 @@ export default function FundPage() {
 
       <Tabs defaultValue="investments" className="space-y-6">
         <TabsList className="bg-zinc-900/50 border border-white/5">
-          <TabsTrigger value="investments">Инвестиции</TabsTrigger>
+          <TabsTrigger value="investments">Investments</TabsTrigger>
           <TabsTrigger value="transactions">Транзакции</TabsTrigger>
         </TabsList>
 
@@ -181,7 +181,7 @@ export default function FundPage() {
                         "text-xs font-bold uppercase px-2 py-1 rounded",
                         getStatusColor(inv.status)
                       )}>
-                        {inv.status === 'ACTIVE' ? 'Активна' : inv.status === 'PENDING' ? 'Ожидание' : 'Завершена'}
+                        {inv.status === 'ACTIVE' ? 'Activа' : inv.status === 'PENDING' ? 'Ожидание' : 'Completed'}
                       </span>
                     </div>
                   </CardHeader>
@@ -196,13 +196,13 @@ export default function FundPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-400">Сумма</span>
+                      <span className="text-zinc-400">Amount</span>
                       <span className="font-mono text-white">
                         {(inv.amount / 1000).toFixed(0)}K ₳
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-400">Доходность</span>
+                      <span className="text-zinc-400">Incomeность</span>
                       <span className={cn("font-mono", inv.return >= 0 ? 'text-emerald-400' : 'text-rose-400')}>
                         {inv.return >= 0 ? '+' : ''}{inv.return.toFixed(1)}%
                       </span>
@@ -231,7 +231,7 @@ export default function FundPage() {
                   <table className="w-full">
                     <thead className="border-b border-white/5">
                       <tr>
-                        {['Дата', 'Тип', 'Сумма', 'Описание'].map((h) => (
+                        {['Date', 'Type', 'Amount', 'Description'].map((h) => (
                           <th key={h} className="px-6 py-4 text-left text-xs font-medium text-zinc-400 uppercase">
                             {h}
                           </th>
@@ -287,10 +287,10 @@ export default function FundPage() {
               <Coins className="h-4 w-4 text-gold-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-amber-200 mb-1">О Суверенном фонде</h4>
+              <h4 className="font-semibold text-amber-200 mb-1">О Суверенном fundе</h4>
               <p className="text-sm text-amber-100/70">
-                Суверенный фонд инвестирует налоговые поступления и UBI-излишки в инфраструктуру,
-                технологии, образование и ресурсы. Дивиденды распределяются между гражданами.
+                Sovereign Fund инвестирует taxовые поступления и UBI-излишки в инфраструктуру,
+                технологии, education и resources. Dividends are distributed among citizenми.
               </p>
             </div>
           </div>
