@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { X, Star, TrendingUp, Award, AlertTriangle } from 'lucide-react';
+import { reputationApi, ReputationProfile } from '@/lib/api/reputation';
 
 interface ReputationDialogProps {
   userId: string;
@@ -41,25 +42,19 @@ export default function ReputationDialog({
 
   const fetchReputation = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/reputation/${userId}`);
-      // const data = await response.json();
+      const profile = await reputationApi.getProfile(userId);
+      const history = showDetails ? await reputationApi.getHistory(userId) : null;
       setData({
-        successRate: 92,
-        averageRating: 4.6,
-        totalDeals: 47,
-        badges: [
-          { id: 'reliable', name: 'Highly Reliable (95%+)', earnedAt: '2026-01-15' },
-          { id: 'quest_veteran', name: '50 Quests Completed', earnedAt: '2026-01-20' },
-        ],
-        transactions: showDetails ? [
-          { id: '1', type: 'quest', title: 'UI Design Task', date: '2026-02-01', status: 'COMPLETED' },
-          { id: '2', type: 'document', title: 'Service Contract', date: '2026-01-28', status: 'ACTIVE' },
-        ] : undefined,
+        successRate: profile.successRate,
+        averageRating: profile.averageRating,
+        totalDeals: profile.totalDeals,
+        badges: profile.badges || [],
+        transactions: history || undefined,
       });
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch reputation:', error);
+      setData(null);
       setLoading(false);
     }
   };

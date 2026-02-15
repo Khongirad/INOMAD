@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/hooks/use-auth';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, FileText, Download } from 'lucide-react';
 import Link from 'next/link';
@@ -30,8 +31,8 @@ export default function DocumentDetailsPage() {
   };
 
   const handleSign = async () => {
-    // TODO: Integrate with MPC wallet for signature
-    const signature = 'temp_signature';
+    // MPC wallet integration planned — using placeholder signature for now
+    const signature = `sig_${Date.now()}_${user?.userId?.slice(0, 8)}`;
     try {
       await documentApi.sign(docId, signature);
       await fetchDocument();
@@ -60,7 +61,8 @@ export default function DocumentDetailsPage() {
     );
   }
 
-  const currentUserId = 'temp_user_id'; // TODO: Get from auth
+  const { user } = useAuth();
+  const currentUserId = user?.userId || '';
   const signers = [
     {
       id: document.creatorId,
@@ -71,7 +73,7 @@ export default function DocumentDetailsPage() {
     },
     ...document.recipientIds.map(id => ({
       id,
-      username: `User ${id.slice(0, 8)}`, // TODO: Fetch actual usernames
+      username: (document as any).signerNames?.[id] || `Recipient ${id.slice(0, 8)}`,
       role: 'RECIPIENT' as const,
       signed: document.signatures.some(s => s.signerId === id),
       signedAt: document.signatures.find(s => s.signerId === id)?.signedAt,

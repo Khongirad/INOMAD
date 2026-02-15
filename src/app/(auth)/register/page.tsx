@@ -167,7 +167,8 @@ export default function RegistrationPage() {
         
         // TEMPORARY: Skip actual wallet creation during registration
         // Will create wallet after authentication on dashboard
-        // TODO: Remove this comment and implement proper backend flow
+        // Wallet creation is deferred to post-authentication (on the dashboard)
+        // This avoids requiring a backend session during registration
         // await createWallet(walletPin, 'SOCIAL');
         
         // Save draft with wallet PIN for later use

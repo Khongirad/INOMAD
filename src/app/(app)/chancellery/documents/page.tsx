@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Filter, Search } from 'lucide-react';
 import Link from 'next/link';
+import { documentApi } from '@/lib/api/documents';
 
 interface Document {
   id: string;
@@ -19,8 +20,18 @@ export default function MyDocumentsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Fetch from API
-    setLoading(false);
+    const fetchDocs = async () => {
+      try {
+        setLoading(true);
+        const data = await documentApi.getMyDocuments(filter === 'all' ? undefined : { status: filter });
+        setDocuments(data);
+      } catch (error) {
+        console.error('Failed to fetch documents:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocs();
   }, [filter]);
 
   const getStatusColor = (status: string) => {

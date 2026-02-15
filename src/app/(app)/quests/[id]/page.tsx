@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/hooks/use-auth';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Check, Clock, Coins, Trophy, User, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -13,10 +14,12 @@ export default function QuestDetailsPage() {
   const router = useRouter();
   const questId = params.id as string;
 
+  const { user } = useAuth();
   const [quest, setQuest] = useState<Quest | null>(null);
   const [loading, setLoading] = useState(true);
   const [showReputation, setShowReputation] = useState(false);
   const [reputationUserId, setReputationUserId] = useState<string>('');
+  const [approvalRating, setApprovalRating] = useState(5);
 
   useEffect(() => {
     fetchQuest();
@@ -65,7 +68,7 @@ export default function QuestDetailsPage() {
   };
 
   const handleApprove = async () => {
-    const rating = 5; // TODO: Get from modal
+    const rating = approvalRating;
     try {
       await questApi.approve(questId, rating);
       await fetchQuest();
@@ -105,8 +108,8 @@ export default function QuestDetailsPage() {
     );
   }
 
-  const isGiver = true; // TODO: Check if current user is giver
-  const isTaker = true; // TODO: Check if current user is taker
+  const isGiver = user?.userId === quest.giverId;
+  const isTaker = user?.userId === quest.takerId;
   const canAccept = quest.status === 'OPEN' && !isTaker;
   const canUpdate = quest.status === 'ACCEPTED' && isTaker;
   const canSubmit = quest.progress === 100 && quest.status !== 'SUBMITTED' && isTaker;
@@ -212,12 +215,25 @@ export default function QuestDetailsPage() {
           </button>
         )}
         {canApprove && (
-          <button
-            onClick={handleApprove}
-            className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium"
-          >
-            ✓ Confirm completion
-          </button>
+          <div className="flex-1 flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setApprovalRating(star)}
+                  className={`text-xl ${star <= approvalRating ? 'text-gold-primary' : 'text-zinc-600'} hover:text-gold-primary transition`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleApprove}
+              className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium"
+            >
+              ✓ Confirm completion ({approvalRating}/5)
+            </button>
+          </div>
         )}
       </div>
 

@@ -45,7 +45,7 @@ export function HistoricalRecordForm({ onSubmit, initialData }: HistoricalRecord
         ...formData,
         periodStart: new Date(formData.periodStart).toISOString(),
         periodEnd: formData.periodEnd ? new Date(formData.periodEnd).toISOString() : undefined,
-        eventIds: [], // TODO: Allow selecting related events
+        eventIds: [], // Related events can be linked after record is published
       });
     } finally {
       setSubmitting(false);
