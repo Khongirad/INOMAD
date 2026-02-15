@@ -6,7 +6,7 @@ import type { ResidenceStatus } from "@/app/(app)/identity/create/_core/geograph
 import { getResidenceStatusLabel } from "@/app/(app)/identity/create/_core/geography";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ТИПЫ
+// TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ResidenceStatusCardProps {
@@ -18,7 +18,7 @@ export interface ResidenceStatusCardProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// УТИЛИТЫ
+// UTILITIES
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getStatusIcon(status: ResidenceStatus) {
@@ -55,7 +55,7 @@ function getIconStyle(status: ResidenceStatus): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// КОМПОНЕНТ
+// COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ResidenceStatusCard({
@@ -74,17 +74,17 @@ export function ResidenceStatusCard({
       en: `As a member of the ${nationName} people, you are indigenous to the ${regionName} region.`,
     },
     resident: {
-      ru: `How представитель peopleа ${nationName}, вы проживаете в regionе ${regionName} в статусе жителя.`,
+      ru: `How представитель peopleа ${nationName}, вы проживаете in regionе ${regionName} in статусе жителя.`,
       en: `As a member of the ${nationName} people, you reside in the ${regionName} region as a resident.`,
     },
     guest: {
-      ru: `How представитель peopleа ${nationName}, вы проживаете в regionе ${regionName} в статусе гостя.`,
+      ru: `How представитель peopleа ${nationName}, вы проживаете in regionе ${regionName} in статусе гостя.`,
       en: `As a member of the ${nationName} people, you live in the ${regionName} region as a guest.`,
     },
   };
 
   const clarification = {
-    ru: "Это не ограничение yourих прав. Это определяет распределение responseственности за землю.",
+    ru: "Это не ограничение yourих прав. Это определяет distribution responseственности за землю.",
     en: "This is not a limitation of your rights. It defines the distribution of responsibility for the land.",
   };
 
@@ -101,7 +101,7 @@ export function ResidenceStatusCard({
         </div>
         <div>
           <div className="text-xs text-zinc-500 uppercase tracking-wider mb-1">
-            {lang === "ru" ? "Your статус" : "Your Status"}
+            {lang === "ru" ? "Your Status" : "Your Status"}
           </div>
           <h3 className="text-xl font-bold text-white">{label}</h3>
         </div>

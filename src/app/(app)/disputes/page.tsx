@@ -19,11 +19,11 @@ import {
 import type { Dispute, DisputeStatus, DisputeSourceType } from '@/lib/types/models';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  OPENED: { label: 'Открыт', color: 'text-blue-400' },
-  NEGOTIATING: { label: 'Переговоры', color: 'text-amber-400' },
-  SETTLED: { label: 'Урегулирован', color: 'text-emerald-400' },
+  OPENED: { label: 'Opened', color: 'text-blue-400' },
+  NEGOTIATING: { label: 'Negotiations', color: 'text-amber-400' },
+  SETTLED: { label: 'Settled', color: 'text-emerald-400' },
   COMPLAINT_FILED: { label: 'Submitted complaint', color: 'text-rose-400' },
-  COURT_FILED: { label: 'Передано в court', color: 'text-purple-400' },
+  COURT_FILED: { label: 'Referred to Court', color: 'text-purple-400' },
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -69,11 +69,11 @@ export default function DisputesPage() {
   };
 
   const handleSettle = async (id: string) => {
-    const resolution = prompt('Description решения:');
+    const resolution = prompt('Settlement description:');
     if (!resolution) return;
     try {
       await settleMutation.mutateAsync({ id, resolution });
-      toast.success('Dispute урегулирован');
+      toast.success('Dispute settled');
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -82,7 +82,7 @@ export default function DisputesPage() {
   const handleEscalate = async (id: string, target: 'complaint' | 'court') => {
     try {
       await escalateMutation.mutateAsync({ id, target });
-      toast.success(target === 'complaint' ? 'Complaint submitted' : 'Передано в court');
+      toast.success(target === 'complaint' ? 'Complaint submitted' : 'Referred to Court');
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -104,17 +104,17 @@ export default function DisputesPage() {
           Disputes
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Переговоры по disputeным вопросам. Each dispute привязан к contractу, заданию or акту работ.
+          Negotiations по disputeным вопросам. Each dispute is linked to a contract, task, or work act.
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Total disputeов', value: stats.total, icon: FileText, cls: 'text-blue-400' },
-          { label: 'Открытых', value: stats.open, icon: Clock, cls: 'text-amber-400' },
-          { label: 'Урегулировано', value: stats.settled, icon: CheckCircle, cls: 'text-emerald-400' },
-          { label: 'Эскалировано', value: stats.escalated, icon: ArrowUpRight, cls: 'text-rose-400' },
+          { label: 'Total Disputes', value: stats.total, icon: FileText, cls: 'text-blue-400' },
+          { label: 'Openedых', value: stats.open, icon: Clock, cls: 'text-amber-400' },
+          { label: 'Settledо', value: stats.settled, icon: CheckCircle, cls: 'text-emerald-400' },
+          { label: 'Escalated', value: stats.escalated, icon: ArrowUpRight, cls: 'text-rose-400' },
         ].map((s) => (
           <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">
             <CardContent className="p-4 flex justify-between items-center">
@@ -134,13 +134,13 @@ export default function DisputesPage() {
           className="bg-blue-600 hover:bg-blue-700"
           onClick={() => setDialogOpen(true)}
         >
-          <Plus className="h-4 w-4 mr-1" /> Открыть dispute
+          <Plus className="h-4 w-4 mr-1" /> Open a Dispute
         </Button>
       </div>
 
       <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-sm text-zinc-300">
-        💡 Dispute — первый step перед жалобой. Parties пытаются решить вопрос сами.
-        Если не genderучается — можно поgive жалобу or сразу в court.
+        💡 A dispute is the first step before a complaint. Parties try to resolve the issue themselves.
+        If not resolved — you can file a complaint or go to court directly.
       </div>
 
       {/* Tabs */}
@@ -158,7 +158,7 @@ export default function DisputesPage() {
             </div>
           ) : filteredDisputes.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
-              Disputeов нет
+              No disputes
             </div>
           ) : (
             filteredDisputes.map((dispute: Dispute) => {
@@ -202,7 +202,7 @@ export default function DisputesPage() {
                     {['OPENED', 'NEGOTIATING'].includes(dispute.status) && (
                       <div className="flex gap-2 pt-1">
                         <Button size="sm" variant="outline" className="border-zinc-700 text-zinc-300 text-xs">
-                          <MessageSquare className="h-3 w-3 mr-1" /> Переговоры
+                          <MessageSquare className="h-3 w-3 mr-1" /> Negotiations
                         </Button>
                         <Button
                           size="sm"
@@ -210,7 +210,7 @@ export default function DisputesPage() {
                           className="border-emerald-800 text-emerald-400 text-xs"
                           onClick={() => handleSettle(dispute.id)}
                         >
-                          <CheckCircle className="h-3 w-3 mr-1" /> Урегулировать
+                          <CheckCircle className="h-3 w-3 mr-1" /> Settle
                         </Button>
                         <Button
                           size="sm"
@@ -243,10 +243,10 @@ export default function DisputesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <Card className="w-full max-w-md bg-zinc-900 border-zinc-700">
             <CardContent className="p-6 space-y-4">
-              <h2 className="text-lg font-bold text-zinc-100">Открыть dispute</h2>
+              <h2 className="text-lg font-bold text-zinc-100">Open a Dispute</h2>
 
               <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-zinc-300">
-                ⚠️ Dispute всегда привязан к конкретному contractу, заданию or акту работ.
+                ⚠️ A dispute is always linked to a specific contract, task, or work act.
               </div>
 
               <div className="space-y-3">
@@ -269,13 +269,13 @@ export default function DisputesPage() {
                   onChange={(e) => setForm({ ...form, sourceId: e.target.value })}
                 />
                 <Input
-                  placeholder="ID второй parties"
+                  placeholder="Second party ID"
                   className="bg-zinc-800 border-zinc-700"
                   value={form.partyBId}
                   onChange={(e) => setForm({ ...form, partyBId: e.target.value })}
                 />
                 <Input
-                  placeholder="Topic disputeа"
+                  placeholder="Topic dispute"
                   className="bg-zinc-800 border-zinc-700"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -301,7 +301,7 @@ export default function DisputesPage() {
                   {openMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-1" />
                   ) : null}
-                  Открыть dispute
+                  Open a Dispute
                 </Button>
               </div>
             </CardContent>

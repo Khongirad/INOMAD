@@ -107,7 +107,7 @@ export default function ComplaintsPage() {
           Complaints
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Systemа жалоб с иерархической эскалацией. Each complaint привязана к contractу, заданию or акту работ.
+          Systemа complaints с иерархической эскалацией. Each complaint привязана к contract, task or акту work.
         </p>
       </div>
 
@@ -164,7 +164,7 @@ export default function ComplaintsPage() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-zinc-300">
-        ⚠️ Complaint должна быть привязана к конкретному contractу, заданию or акту работ.
+        ⚠️ Complaint должна быть привязана к конкретному contract, task or акту work.
         If the issue can be resolved through negotiation — first open a <strong>dispute</strong>.
       </div>
 

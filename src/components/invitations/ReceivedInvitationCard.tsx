@@ -30,7 +30,7 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
     className: 'bg-yellow-600 hover:bg-yellow-700',
   },
   ACCEPTED: {
-    label: 'Принято',
+    label: 'Accepted',
     variant: 'default',
     icon: <CheckCircle className="h-3 w-3" />,
     className: 'bg-green-600 hover:bg-green-700',
@@ -71,7 +71,7 @@ export function ReceivedInvitationCard({
               <h4 className="font-semibold">{invitation.organizationName}</h4>
               {invitation.invitedByName && (
                 <p className="text-sm text-muted-foreground">
-                  от {invitation.invitedByName}
+                  from {invitation.invitedByName}
                 </p>
               )}
             </div>

@@ -68,7 +68,7 @@ export default function ZAGSPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Civil Registry — Bureau citizensской регистрации</h1>
+        <h1 className="text-2xl font-bold">Civil Registry — Bureau citizensской registration</h1>
         <p className="text-muted-foreground mt-1">
           Registration marriageа, divorce и governance citizensским статусом
         </p>
@@ -91,12 +91,12 @@ export default function ZAGSPage() {
             </div>
             {civilStatus === 'SINGLE' && (
               <Button onClick={() => router.push('/services/zags/marriage/apply')}>
-                + Bygive application на marriage
+                + Submit application на marriage
               </Button>
             )}
             {civilStatus === 'MARRIED' && (
               <Button variant="destructive" onClick={() => router.push('/services/zags/divorce/apply')}>
-                Bygive на divorce
+                Submit на divorce
               </Button>
             )}
           </div>
@@ -107,11 +107,11 @@ export default function ZAGSPage() {
       {pendingConsents.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Ожидают yourего согласия</CardTitle>
+            <CardTitle>Ожидают yourего consent</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="bg-blue-500/10 text-blue-400 rounded-lg p-3 mb-4 text-sm">
-              У вас {pendingConsents.length} application(й) на marriage, ожидающих yourего согласия
+              У вас {pendingConsents.length} application(й) на marriage, ожидающих yourего consent
             </div>
             <div className="space-y-3">
               {pendingConsents.map((consent) => (
@@ -147,7 +147,7 @@ export default function ZAGSPage() {
               <p className="text-muted-foreground mb-3">Записи о marriageе не найдены</p>
               {civilStatus === 'SINGLE' && (
                 <Button variant="outline" onClick={() => router.push('/services/zags/marriage/apply')}>
-                  + Bygive application
+                  + Submit application
                 </Button>
               )}
             </div>
@@ -160,7 +160,7 @@ export default function ZAGSPage() {
                       {marriage.spouse1FullName} & {marriage.spouse2FullName}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Date marriageа: {new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}
+                      Marriage Date: {new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Certificate: {marriage.certificateNumber}
@@ -221,8 +221,8 @@ export default function ZAGSPage() {
                   <p className="font-semibold">✅ Действительное certificate ({certResult.type})</p>
                   {certResult.details && (
                     <>
-                      <p className="text-sm">Spouseи: {certResult.details.spouse1Name} & {certResult.details.spouse2Name}</p>
-                      <p className="text-sm">Date marriageа: {new Date(certResult.details.marriageDate).toLocaleDateString('ru-RU')}</p>
+                      <p className="text-sm">Spouses: {certResult.details.spouse1Name} & {certResult.details.spouse2Name}</p>
+                      <p className="text-sm">Marriage Date: {new Date(certResult.details.marriageDate).toLocaleDateString('ru-RU')}</p>
                     </>
                   )}
                   <p className="text-xs opacity-70">Выдано: {new Date(certResult.issuedDate).toLocaleDateString('ru-RU')}</p>
@@ -245,7 +245,7 @@ export default function ZAGSPage() {
               <li>• Оба должны быть холосты</li>
               <li>• Required обоюдное consent</li>
               <li>• Verification и одобрение сотрудником Civil Registry</li>
-              <li>• Witnessства на блокчейне</li>
+              <li>• Witnessства на blockchain</li>
             </ul>
           </CardContent>
         </Card>
@@ -254,7 +254,7 @@ export default function ZAGSPage() {
           <CardContent>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Byдача applications онлайн</li>
-              <li>• Agreement о разделе имущества (опционально)</li>
+              <li>• Agreement о разделе properties (опционально)</li>
               <li>• Рассмотрение сотрудником Civil Registry</li>
               <li>• Certificate после завершения</li>
               <li>• Status обновляется автоматически</li>

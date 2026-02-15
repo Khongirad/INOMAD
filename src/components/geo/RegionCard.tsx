@@ -14,7 +14,7 @@ import {
 } from "@/app/(app)/identity/create/_core/geography";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ТИПЫ
+// TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface RegionCardProps {
@@ -27,16 +27,16 @@ export interface RegionCardProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// УТИЛИТЫ
+// UTILITIES
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getStatusLabel(status: TerritoryStatus, lang: "en" | "ru"): string {
   const labels: Record<TerritoryStatus, { en: string; ru: string }> = {
-    core: { en: "Core Territory", ru: "Ядро" },
+    core: { en: "Core Territory", ru: "Core" },
     state: { en: "State Region", ru: "State zone" },
     indigenous: { en: "Indigenous Region", ru: "Indigenous Region" },
     city_state: { en: "City-State", ru: "City-state" },
-    special: { en: "Special Status", ru: "Special статус" },
+    special: { en: "Special Status", ru: "Special Status" },
   };
   return labels[status][lang];
 }
@@ -53,7 +53,7 @@ function getStatusColor(status: TerritoryStatus): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// КОМПОНЕНТ
+// COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function RegionCard({
@@ -132,7 +132,7 @@ export function RegionCard({
           <div className="flex items-center gap-2 mt-3 text-sm text-zinc-300">
             <MapPin className="w-4 h-4" />
             <span>
-              {lang === "ru" ? "Столица" : "Capital"}:{" "}
+              {lang === "ru" ? "Capital" : "Capital"}:{" "}
               {lang === "ru" ? subRegion.capitalRu : subRegion.capital}
             </span>
           </div>
@@ -171,7 +171,7 @@ export function RegionCard({
               : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
-          {lang === "ru" ? "Peopleы" : "Peoples"}
+          {lang === "ru" ? "Peoples" : "Peoples"}
         </button>
         <button
           onClick={() => setActiveTab("culture")}
@@ -181,7 +181,7 @@ export function RegionCard({
               : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
-          {lang === "ru" ? "Культура" : "Culture"}
+          {lang === "ru" ? "Culture" : "Culture"}
         </button>
       </div>
 
@@ -193,7 +193,7 @@ export function RegionCard({
             <div>
               <h3 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                {lang === "ru" ? "О regionе" : "About"}
+                {lang === "ru" ? "About" : "About"}
               </h3>
               <p className="text-sm text-zinc-400 leading-relaxed">
                 {subRegion
@@ -208,7 +208,7 @@ export function RegionCard({
             <div>
               <h3 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
                 <Languages className="w-4 h-4" />
-                {lang === "ru" ? "Языки" : "Languages"}
+                {lang === "ru" ? "Languages" : "Languages"}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {region.languages.slice(0, 6).map((language) => (
@@ -231,7 +231,7 @@ export function RegionCard({
             <div className="glass-card rounded-lg p-4 border border-gold-border/20 bg-gold-dim/5">
               <h3 className="text-sm font-medium text-gold-text mb-2 flex items-center gap-2">
                 <Heart className="w-4 h-4" />
-                {lang === "ru" ? "Принцип responseственности" : "Responsibility"}
+                {lang === "ru" ? "Responsibility Principle" : "Responsibility"}
               </h3>
               <p className="text-sm text-zinc-300 italic leading-relaxed">
                 «{responsibility}»
@@ -246,7 +246,7 @@ export function RegionCard({
             <div>
               <h3 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                {lang === "ru" ? "Коренные peopleы" : "Indigenous Peoples"}
+                {lang === "ru" ? "Indigenous Peoples" : "Indigenous Peoples"}
               </h3>
               {indigenousNations.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2">
@@ -275,7 +275,7 @@ export function RegionCard({
               ) : (
                 <p className="text-sm text-zinc-500">
                   {lang === "ru"
-                    ? "No data о коренных peopleах"
+                    ? "No data on indigenous peoples"
                     : "No indigenous peoples data"}
                 </p>
               )}
@@ -285,7 +285,7 @@ export function RegionCard({
             {allNations.length > indigenousNations.length && (
               <div>
                 <h3 className="text-sm font-medium text-zinc-400 mb-2">
-                  {lang === "ru" ? "Другие peopleы" : "Other Peoples"}
+                  {lang === "ru" ? "Other Peoples" : "Other Peoples"}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {allNations
@@ -310,7 +310,7 @@ export function RegionCard({
             {/* Cultural notes */}
             <div>
               <h3 className="text-sm font-medium text-zinc-300 mb-2">
-                {lang === "ru" ? "Культурные особенности" : "Cultural Notes"}
+                {lang === "ru" ? "Cultural Notes" : "Cultural Notes"}
               </h3>
               <p className="text-sm text-zinc-400 leading-relaxed">
                 {culturalNotes}
@@ -323,7 +323,7 @@ export function RegionCard({
             ) && (
               <div>
                 <h3 className="text-sm font-medium text-zinc-300 mb-2">
-                  {lang === "ru" ? "Традиции peopleов" : "Traditions"}
+                  {lang === "ru" ? "Traditions of Peoples" : "Traditions"}
                 </h3>
                 <div className="space-y-3">
                   {indigenousNations

@@ -148,7 +148,7 @@ export default function ParliamentPage() {
           <div>
             <h1 className="text-2xl font-bold">Parliament / Parliament</h1>
             <p className="text-sm text-muted-foreground">
-              Khural — sessions и voting leaderов Tumenов
+              Khural — sessions и voting leaderоin Tumenов
             </p>
           </div>
         </div>
@@ -193,14 +193,14 @@ export default function ParliamentPage() {
       )}
 
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm mb-4">
-        <strong>Only leaderы Tumenов</strong> have right voteа в Khuralе.
-        В Republicнском Khuralе voteуют leaderы Tumenов of this Republics.
+        <strong>Only leaderы Tumenов</strong> have right voteа in Khuralе.
+        В Republicнском Khuralе voteуют leaderы Tumenоin of this Republics.
       </div>
 
       {/* Empty state */}
       {sessions.length === 0 && !loading && (
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-          ℹ️ No запланированных сессий. Convene the first сессию Khuralа!
+          ℹ️ No запланированных сессий. Convene the first сессию Khural!
         </div>
       )}
 
@@ -347,7 +347,7 @@ export default function ParliamentPage() {
       <Dialog open={createDialog} onOpenChange={setCreateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Convene Session Khuralа</DialogTitle>
+            <DialogTitle>Convene Session Khural</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -382,7 +382,7 @@ export default function ParliamentPage() {
               <Input type="datetime-local" value={createForm.sessionDate} onChange={e => setCreateForm({ ...createForm, sessionDate: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Quorum (мин. votes)</Label>
+              <Label>Quorum (min. votes)</Label>
               <Input type="number" value={createForm.quorumRequired} onChange={e => setCreateForm({ ...createForm, quorumRequired: parseInt(e.target.value) || 1 })} />
             </div>
           </div>
@@ -433,7 +433,7 @@ export default function ParliamentPage() {
               className="bg-green-600 hover:bg-green-700"
               onClick={() => selectedSession && handleVote(selectedSession.id)}
             >
-              Проvotesать
+              Vote
             </Button>
           </DialogFooter>
         </DialogContent>

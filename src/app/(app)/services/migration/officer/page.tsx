@@ -26,7 +26,7 @@ export default function MigrationOfficerPage() {
       const data = await getAllPassportApplications();
       setApplications(data);
     } catch (err: any) {
-      setError(err.message || 'Не удалось upload applications');
+      setError(err.message || 'Failed to load applications');
     } finally {
       setLoading(false);
     }
@@ -67,14 +67,14 @@ export default function MigrationOfficerPage() {
     <div className="overflow-x-auto">
       {apps.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          Заявления не найдены
+          Applications не найдены
         </div>
       ) : (
         <table className="w-full">
           <thead>
             <tr className="border-b">
               <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Applicant</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type паdisputeта</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type passportа</th>
               <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date подачи</th>
               <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
               <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
@@ -131,8 +131,8 @@ export default function MigrationOfficerPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Панель officerа миграции</h1>
-        <p className="text-muted-foreground mt-1">Рассмотрение и обработка заявлений на паdisputeт</p>
+        <h1 className="text-3xl font-bold">Панель officer миграции</h1>
+        <p className="text-muted-foreground mt-1">Рассмотрение и обworkка заявлений на passport</p>
       </div>
 
       {error && (
@@ -160,7 +160,7 @@ export default function MigrationOfficerPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-blue-600">{stats.pending}</p>
-                <p className="text-sm text-muted-foreground">Ожидают рассмотрения</p>
+                <p className="text-sm text-muted-foreground">Awaiting Review</p>
               </div>
               <Clock className="h-10 w-10 text-blue-500 opacity-30" />
             </div>
@@ -196,7 +196,7 @@ export default function MigrationOfficerPage() {
           <TabsTrigger value="ALL">All applications</TabsTrigger>
           <TabsTrigger value="SUBMITTED">Ожидают</TabsTrigger>
           <TabsTrigger value="UNDER_REVIEW">Under Review</TabsTrigger>
-          <TabsTrigger value="PROCESSED">Обработанные</TabsTrigger>
+          <TabsTrigger value="PROCESSED">Обworkанные</TabsTrigger>
         </TabsList>
 
         <Card className="mt-4">

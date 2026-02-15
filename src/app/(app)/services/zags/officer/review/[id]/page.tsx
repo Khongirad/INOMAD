@@ -48,7 +48,7 @@ export default function MarriageReviewPage() {
       const data = await getMarriage(marriageId);
       setMarriage(data);
     } catch (err: any) {
-      setError(err.message || 'Не удалось upload data');
+      setError(err.message || 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ export default function MarriageReviewPage() {
       setReviewDialog(false);
       router.push('/services/zags/officer');
     } catch (err: any) {
-      setError(err.message || 'Не удалось process');
+      setError(err.message || 'Failed to process');
     } finally {
       setSubmitting(false);
     }
@@ -141,15 +141,15 @@ export default function MarriageReviewPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Marriage Details */}
         <Card>
-          <CardHeader><CardTitle>Details marriageа</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Marriage Details</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-xs text-muted-foreground">Date marriageа</p>
+              <p className="text-xs text-muted-foreground">Marriage Date</p>
               <p className="font-semibold">{new Date(marriage.marriageDate).toLocaleDateString('ru-RU')}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Type церемонии</p>
-              <p>{marriage.ceremonyType || 'Citizenская'}</p>
+              <p className="text-xs text-muted-foreground">Ceremony Type</p>
+              <p>{marriage.ceremonyType || 'Civil'}</p>
             </div>
             {marriage.ceremonyLocation && (
               <div>
@@ -167,13 +167,13 @@ export default function MarriageReviewPage() {
             <div>
               <p className="text-xs text-muted-foreground">Spouse 1</p>
               <p className="font-semibold">{marriage.spouse1FullName}</p>
-              <p className="text-xs text-muted-foreground">Date рождения: {new Date(marriage.spouse1DateOfBirth).toLocaleDateString('ru-RU')}</p>
+              <p className="text-xs text-muted-foreground">Date birth: {new Date(marriage.spouse1DateOfBirth).toLocaleDateString('ru-RU')}</p>
             </div>
             <hr className="border-border" />
             <div>
               <p className="text-xs text-muted-foreground">Spouse 2</p>
               <p className="font-semibold">{marriage.spouse2FullName}</p>
-              <p className="text-xs text-muted-foreground">Date рождения: {new Date(marriage.spouse2DateOfBirth).toLocaleDateString('ru-RU')}</p>
+              <p className="text-xs text-muted-foreground">Date birth: {new Date(marriage.spouse2DateOfBirth).toLocaleDateString('ru-RU')}</p>
             </div>
           </CardContent>
         </Card>
@@ -182,7 +182,7 @@ export default function MarriageReviewPage() {
       {/* Property Regime */}
       {marriage.propertyRegime && (
         <Card>
-          <CardHeader><CardTitle>Режим имущества</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Property Regime</CardTitle></CardHeader>
           <CardContent>
             <Badge>{marriage.propertyRegime}</Badge>
             {marriage.propertyAgreement && (
@@ -238,7 +238,7 @@ export default function MarriageReviewPage() {
             <DialogDescription>
               {reviewAction === 'APPROVE'
                 ? 'Это зарегистрирует marriage и выдаст certificate'
-                : 'Укажите причину отклонения'}
+                : 'Specify reason отклонения'}
             </DialogDescription>
           </DialogHeader>
           {reviewAction === 'APPROVE' ? (
@@ -253,8 +253,8 @@ export default function MarriageReviewPage() {
             </div>
           ) : (
             <div>
-              <Label>Причина отклонения *</Label>
-              <Textarea rows={4} placeholder="Required: причина отклонения" value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <Label>Rejection Reason *</Label>
+              <Textarea rows={4} placeholder="Required: rejection reason" value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
           )}
           <DialogFooter>
@@ -268,7 +268,7 @@ export default function MarriageReviewPage() {
                 (reviewAction === 'REJECT' && !notes.trim())
               }
             >
-              {submitting ? 'Обработка…' : `Confirm ${reviewAction === 'APPROVE' ? 'одобрение' : 'отклонение'}`}
+              {submitting ? 'Processing…' : `Confirm ${reviewAction === 'APPROVE' ? 'одобрение' : 'отклонение'}`}
             </Button>
           </DialogFooter>
         </DialogContent>

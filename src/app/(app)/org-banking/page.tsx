@@ -139,7 +139,7 @@ export default function OrgBankingPage() {
   };
 
   const handleBankApprove = async (txId: string, approved: boolean) => {
-    const note = approved ? undefined : prompt('Причина отклонения:') || undefined;
+    const note = approved ? undefined : prompt('Rejection Reason:') || undefined;
     try {
       await bankApproveTransaction(txId, { approved, note });
       toast.success(approved ? 'Approved bankом' : 'Rejected');
@@ -166,7 +166,7 @@ export default function OrgBankingPage() {
       BANK_APPROVED: { color: 'bg-indigo-500/10 text-indigo-500', label: 'Bank одобрил' },
       COMPLETED: { color: 'bg-emerald-500/10 text-emerald-500', label: 'Completed' },
       REJECTED: { color: 'bg-red-500/10 text-red-500', label: 'Rejected' },
-      CANCELLED: { color: 'bg-zinc-500/10 text-zinc-500', label: 'Отменено' },
+      CANCELLED: { color: 'bg-zinc-500/10 text-zinc-500', label: 'Cancelled' },
     };
     const { color, label } = map[status] || map.PENDING;
     return <span className={cn('text-xs font-bold uppercase px-2 py-1 rounded', color)}>{label}</span>;
@@ -188,7 +188,7 @@ export default function OrgBankingPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white">
-            Bankовские операции organizations
+            Bankовские operations organizations
           </h2>
           <p className="text-zinc-400">
             Dual Authorization — клиент + bankовский officer
@@ -413,7 +413,7 @@ export default function OrgBankingPage() {
                             </span>
                           </div>
                           <span className="text-xs text-zinc-500">
-                            {report.txCount} транзакций · {report.pendingCount} в ожидании
+                            {report.txCount} транзакций · {report.pendingCount} in ожидании
                           </span>
                         </div>
                         <div className="grid grid-cols-4 gap-4">
@@ -456,7 +456,7 @@ export default function OrgBankingPage() {
       <Sheet open={txOpen} onOpenChange={setTxOpen} title="New transaction">
         <div className="space-y-6 pt-4">
           <div className="space-y-2">
-            <Label>Type операции</Label>
+            <Label>Type operations</Label>
             <Select value={txType} onValueChange={(v) => setTxType(v as OrgBankTxType)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -509,7 +509,7 @@ export default function OrgBankingPage() {
             onClick={handleInitiate}
             disabled={txLoading || !txAmount || !txDesc}
           >
-            {txLoading ? 'Отправка...' : 'Initiate транзакцию'}
+            {txLoading ? 'Submitting...' : 'Initiate транзакцию'}
           </Button>
         </div>
       </Sheet>

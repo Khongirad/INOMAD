@@ -6,7 +6,7 @@ import type { Nation } from "@/app/(app)/identity/create/_core/geography";
 import { getRegionById } from "@/app/(app)/identity/create/_core/geography";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ТИПЫ
+// TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface NationCardProps {
@@ -20,7 +20,7 @@ export interface NationCardProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// КОМПОНЕНТ
+// COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function NationCard({
@@ -37,7 +37,7 @@ export function NationCard({
   const culture = lang === "ru" ? nation.cultureRu : nation.culture;
   const traditions = lang === "ru" ? nation.traditionsRu : nation.traditions;
 
-  // Genderучаем названия regions
+  // Getting region names
   const regionNames = nation.regions
     .map((regionId) => {
       const region = getRegionById(regionId);
@@ -187,7 +187,7 @@ export function NationCard({
         <div>
           <h3 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
             <Sparkles className="w-4 h-4" />
-            {lang === "ru" ? "Культура" : "Culture"}
+            {lang === "ru" ? "Culture" : "Culture"}
           </h3>
           <p className="text-sm text-zinc-400 leading-relaxed">{culture}</p>
         </div>
@@ -196,7 +196,7 @@ export function NationCard({
         {traditions && traditions.length > 0 && (
           <div>
             <h3 className="text-sm font-medium text-zinc-300 mb-2">
-              {lang === "ru" ? "Традиции" : "Traditions"}
+              {lang === "ru" ? "Traditions" : "Traditions"}
             </h3>
             <div className="flex flex-wrap gap-2">
               {traditions.map((tradition, idx) => (
@@ -223,7 +223,7 @@ export function NationCard({
           >
             {isSelected
               ? lang === "ru"
-                ? "Выбрано"
+                ? "Selected"
                 : "Selected"
               : lang === "ru"
               ? "Select people"

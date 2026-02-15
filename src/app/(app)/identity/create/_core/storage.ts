@@ -109,7 +109,7 @@ function migrateDraft(input: unknown): IdentityDraft {
     base.ethnicity.selfDeclaredText
   );
 
-  // updatedAt (if был ISO string в meta.updatedAt — тоже конвертируем)
+  // updatedAt (if был ISO string in meta.updatedAt — тоже конвертируем)
   const updatedAtNumber = asNumber(input["updatedAt"], 0);
 
   let updatedAt = updatedAtNumber;

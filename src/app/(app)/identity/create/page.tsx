@@ -31,12 +31,12 @@ import { RegionCard } from "@/components/geo/RegionCard";
 import { NationCard } from "@/components/geo/NationCard";
 import { ResidenceStatusCard } from "@/components/geo/ResidenceStatusCard";
 
-// Динамический импорт карты (без SSR)
+// Dynamic map import (for SSR)
 const GeoMap = dynamic(() => import("@/components/geo/GeoMap"), {
   ssr: false,
   loading: () => (
     <div className="h-[350px] bg-zinc-900/50 rounded-xl flex items-center justify-center">
-      <div className="text-zinc-500">Загрузка карты...</div>
+      <div className="text-zinc-500">Loading map...</div>
     </div>
   ),
 });
@@ -117,7 +117,7 @@ export default function IdentityCreatePage() {
     return getEthnicitiesByRegion(draft.territory.macroRegion);
   }, [draft.territory.macroRegion]);
 
-  // Geo-state for интерактивной карты
+  // Geo-state for interactive карты
   const [geoSelectedRegion, setGeoSelectedRegion] = useState<DoctrinalRegion | null>(null);
   const [geoSelectedSubRegion, setGeoSelectedSubRegion] = useState<SubRegion | null>(null);
   const [geoSelectedCoords, setGeoSelectedCoords] = useState<GeoCoordinates | null>(null);
@@ -582,7 +582,7 @@ export default function IdentityCreatePage() {
 
           {/* Place of birth (auto-filled from map or manual) */}
           <div className="glass-card rounded-lg p-4">
-            <Field label="Seat рождения (как в паdisputeте)" required>
+            <Field label="Seat birth (как in passport)" required>
               <input
                 value={draft.basic.placeOfBirth.label}
                 onChange={(e) =>
@@ -591,7 +591,7 @@ export default function IdentityCreatePage() {
                     value: e.target.value,
                   })
                 }
-                placeholder="г. Иркутск, Иркутская oblast"
+                placeholder="Irkutsk, Irkutsk Oblast"
                 className="input-field"
               />
             </Field>
@@ -608,7 +608,7 @@ export default function IdentityCreatePage() {
               <input
                 value={geoNationSearch}
                 onChange={(e) => setGeoNationSearch(e.target.value)}
-                placeholder="Search peopleа..."
+                placeholder="Search nation..."
                 className="input-field"
               />
             </Field>

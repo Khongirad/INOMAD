@@ -57,7 +57,7 @@ export function SubmitEducationForm({ onSubmit, onCancel }: SubmitEducationFormP
       <CardContent className="pt-6">
         <div className="flex items-center gap-2 mb-6">
           <GraduationCap className="h-6 w-6" />
-          <h3 className="text-lg font-semibold">Byдтверждение Образования</h3>
+          <h3 className="text-lg font-semibold">Confirmation Образования</h3>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

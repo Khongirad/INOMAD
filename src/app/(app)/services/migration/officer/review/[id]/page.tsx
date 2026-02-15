@@ -56,7 +56,7 @@ export default function ApplicationReviewPage() {
       setApplication(appData);
       setDocuments(docsData);
     } catch (err: any) {
-      setError(err.message || 'Не удалось upload application');
+      setError(err.message || 'Failed to load application');
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ export default function ApplicationReviewPage() {
       setReviewDialog(false);
       router.push('/services/migration/officer');
     } catch (err: any) {
-      setError(err.message || 'Не удалось process рассмотрение');
+      setError(err.message || 'Failed to process рассмотрение');
     } finally {
       setSubmitting(false);
     }
@@ -95,7 +95,7 @@ export default function ApplicationReviewPage() {
     return (
       <div className="p-6">
         <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-lg p-4">
-          {error || 'Application не найдено'}
+          {error || 'Application not found'}
         </div>
       </div>
     );
@@ -134,7 +134,7 @@ export default function ApplicationReviewPage() {
           <div>
             <h1 className="text-3xl font-bold">Рассмотрение applications</h1>
             <p className="text-muted-foreground mt-1">
-              {application.passportType} паdisputeт — {application.fullName}
+              {application.passportType} passport — {application.fullName}
             </p>
           </div>
           {getStatusBadge(application.status)}
@@ -153,7 +153,7 @@ export default function ApplicationReviewPage() {
               <p className="font-semibold">{application.fullName}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Date рождения</p>
+              <p className="text-xs text-muted-foreground">Date birth</p>
               <p>{new Date(application.dateOfBirth).toLocaleDateString('ru-RU')}</p>
             </div>
             <div>
@@ -182,11 +182,11 @@ export default function ApplicationReviewPage() {
         {/* Biographical Data */}
         <Card>
           <CardHeader>
-            <CardTitle>Биографические data</CardTitle>
+            <CardTitle>Biographical Data</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-xs text-muted-foreground">Seat рождения</p>
+              <p className="text-xs text-muted-foreground">Seat birth</p>
               <p>{application.placeOfBirth}</p>
             </div>
             {application.fatherName && (
@@ -298,21 +298,21 @@ export default function ApplicationReviewPage() {
             </DialogTitle>
             <DialogDescription>
               {reviewAction === 'APPROVE'
-                ? 'Byдтвердите одобрение и назначьте number паdisputeта'
-                : 'Укажите причину отклонения'}
+                ? 'Byдтвердите одобрение и назначьте number passportа'
+                : 'Specify reason отклонения'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {reviewAction === 'APPROVE' && (
               <div className="space-y-2">
-                <Label>Number паdisputeта</Label>
+                <Label>Number passportа</Label>
                 <Input
                   placeholder="SC-XXXX-XXXX"
                   value={passportNumber}
                   onChange={(e) => setPassportNumber(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">Сгенерируйте и назначьте number паdisputeта</p>
+                <p className="text-xs text-muted-foreground">Сгенерируйте и назначьте number passportа</p>
               </div>
             )}
             <div className="space-y-2">
@@ -321,7 +321,7 @@ export default function ApplicationReviewPage() {
                 placeholder={
                   reviewAction === 'APPROVE'
                     ? 'Необязательные замечания к одобрению'
-                    : 'Required: Причина отклонения'
+                    : 'Required: Rejection Reason'
                 }
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
@@ -342,7 +342,7 @@ export default function ApplicationReviewPage() {
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Обработка...
+                  Processing...
                 </>
               ) : (
                 `Confirm ${reviewAction === 'APPROVE' ? 'одобрение' : 'отклонение'}`

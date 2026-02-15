@@ -54,7 +54,7 @@ export default function TerritoryPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
             <Globe className="text-emerald-500 w-8 h-8" />
-            Территории
+            Territories
           </h2>
           <p className="text-zinc-400 mt-1">
             Территориальные единицы и organizations Конфедерации
@@ -103,7 +103,7 @@ export default function TerritoryPage() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Activых</div>
+                <div className="text-xs text-zinc-500 uppercase">Active</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {stats.activeTerritories}
                 </div>
@@ -137,7 +137,7 @@ export default function TerritoryPage() {
               onChange={(e) => setFilterType(e.target.value)}
               className="px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white"
             >
-              <option value="all">All типы</option>
+              <option value="all">All Types</option>
               <option value="ARBAN">Arban</option>
               <option value="ZUN">Zuun</option>
               <option value="MYANGAN">Myangan</option>
@@ -216,7 +216,7 @@ export default function TerritoryPage() {
                 <div>
                   <Globe className="h-16 w-16 text-zinc-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
-                    Интерактивная map — скоро
+                    Interactive map — скоро
                   </h3>
                   <p className="text-zinc-400 max-w-md">
                     Visualization of territories with borders, плотностью населения и ресурсами.

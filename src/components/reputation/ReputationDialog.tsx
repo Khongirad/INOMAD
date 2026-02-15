@@ -73,7 +73,7 @@ export default function ReputationDialog({
         <div className="flex items-center justify-between p-6 border-b border-zinc-700">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-gold-primary" />
-            Reputation genderьзователя
+            Reputation user
           </h2>
           <button
             onClick={onClose}
@@ -152,7 +152,7 @@ export default function ReputationDialog({
                 </div>
                 <div className="text-xs text-zinc-400 mt-1">Total сcaseк</div>
                 <div className="text-xs text-blue-400 mt-2">
-                  {data.totalDeals > 50 ? 'Опытный' : 'Стандартно'}
+                  {data.totalDeals > 50 ? 'Experienceный' : 'Стандартно'}
                 </div>
               </div>
             </div>
@@ -221,7 +221,7 @@ export default function ReputationDialog({
           </div>
         ) : (
           <div className="p-12 text-center">
-            <p className="text-zinc-400">Не удалось upload data репутации</p>
+            <p className="text-zinc-400">Failed to load data репутации</p>
           </div>
         )}
 

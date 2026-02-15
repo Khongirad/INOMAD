@@ -21,10 +21,10 @@ const getTypeColor = (type: string) => {
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  CLAN: 'Клан',
+  CLAN: 'Clan',
   PROFESSION: 'Guild',
   ORGANIZATION: 'Organization',
-  GOVERNMENT: 'Гоcourtарственный',
+  GOVERNMENT: 'State',
 };
 
 const getTypeIcon = (type: string) => {
@@ -60,7 +60,7 @@ export default function CooperativesPage() {
   const handleJoin = async (id: string) => {
     try {
       await joinMutation.mutateAsync(id);
-      toast.success('You вступor в cooperative');
+      toast.success('You joined the cooperative');
     } catch (e: any) {
       toast.error(e.message || 'Error');
     }
@@ -76,7 +76,7 @@ export default function CooperativesPage() {
             Cooperatives
           </h2>
           <p className="text-zinc-400 mt-1">
-            Guilds, кланы, профессиональные объединения и гоcourtарственные organizations
+            Guilds, clanы, professional unions и state organizations
           </p>
         </div>
         <Button className="bg-purple-600 hover:bg-purple-700">
@@ -126,7 +126,7 @@ export default function CooperativesPage() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <div className="text-xs text-zinc-500 uppercase">Activых</div>
+                <div className="text-xs text-zinc-500 uppercase">Active</div>
                 <div className="text-lg font-mono font-bold text-emerald-500">
                   {stats.activeGuilds}
                 </div>
@@ -157,7 +157,7 @@ export default function CooperativesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
           <Input
-            placeholder="Search cooperativeов..."
+            placeholder="Search cooperatives..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -168,8 +168,8 @@ export default function CooperativesPage() {
           onChange={(e) => setFilterType(e.target.value)}
           className="px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white"
         >
-          <option value="all">All типы</option>
-          <option value="CLAN">Кланы</option>
+          <option value="all">All Types</option>
+          <option value="CLAN">Clanы</option>
           <option value="PROFESSION">Guilds</option>
           <option value="ORGANIZATION">Organizations</option>
           <option value="GOVERNMENT">State</option>
@@ -184,7 +184,7 @@ export default function CooperativesPage() {
       ) : filteredGuilds.length === 0 ? (
         <div className="text-center py-12 text-zinc-500">
           <Building2 className="h-12 w-12 mx-auto opacity-30 mb-2" />
-          Cooperativeов нет
+          No cooperatives
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -264,10 +264,10 @@ export default function CooperativesPage() {
               <Users className="h-4 w-4 text-purple-500" />
             </div>
             <div>
-              <h4 className="font-semibold text-purple-200 mb-1">О cooperativeах</h4>
+              <h4 className="font-semibold text-purple-200 mb-1">About Cooperatives</h4>
               <p className="text-sm text-purple-100/70">
-                Cooperatives — самоуправляемые organizations, где memberи объединяют resources
-                и навыки. Кланы — родовые объединения, Guilds — профессиональные, Organizations — иерархические структуры.
+                Cooperatives — self-governing organizations, где memberи pool resources
+                and skills. Clanы — ancestral unions, Guilds are professional, Organizations are hierarchical structures.
               </p>
             </div>
           </div>

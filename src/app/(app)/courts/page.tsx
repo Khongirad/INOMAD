@@ -13,11 +13,11 @@ import type { CourtCase } from '@/lib/types/models';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   FILED: { label: 'Filed', color: 'text-blue-400' },
-  HEARING_SCHEDULED: { label: 'Заседание назначено', color: 'text-cyan-400' },
-  IN_HEARING: { label: 'Слушание', color: 'text-amber-400' },
+  HEARING_SCHEDULED: { label: 'Hearing Scheduled', color: 'text-cyan-400' },
+  IN_HEARING: { label: 'Hearing', color: 'text-amber-400' },
   VERDICT_ISSUED: { label: 'Verdict rendered', color: 'text-emerald-400' },
-  ENFORCING: { label: 'Исgenderнение', color: 'text-orange-400' },
-  CLOSED: { label: 'Закрыто', color: 'text-zinc-400' },
+  ENFORCING: { label: 'Enforcement', color: 'text-orange-400' },
+  CLOSED: { label: 'Closed', color: 'text-zinc-400' },
   APPEALED: { label: 'Appeal', color: 'text-purple-400' },
 };
 
@@ -44,18 +44,18 @@ export default function CourtsPage() {
           Court
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Разdecision disputeов, механизмы принуждения и рамки легитимности. Совет rightcourtия.
+          Resolution of disputes, enforcement mechanisms, and legitimacy frameworks. Justice Council.
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: 'Total дел', value: defaultStats.total, icon: FileText, cls: 'text-blue-400' },
+          { label: 'Total Cases', value: defaultStats.total, icon: FileText, cls: 'text-blue-400' },
           { label: 'Filed', value: defaultStats.filed, icon: Clock, cls: 'text-amber-400' },
-          { label: 'Слушания', value: defaultStats.inHearing, icon: Gavel, cls: 'text-cyan-400' },
+          { label: 'Hearings', value: defaultStats.inHearing, icon: Gavel, cls: 'text-cyan-400' },
           { label: 'Verdict', value: defaultStats.verdictIssued, icon: CheckCircle, cls: 'text-emerald-400' },
-          { label: 'Закрыто', value: defaultStats.closed, icon: Scale, cls: 'text-zinc-400' },
+          { label: 'Closed', value: defaultStats.closed, icon: Scale, cls: 'text-zinc-400' },
         ].map((s) => (
           <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">
             <CardContent className="p-3 flex justify-between items-center">
@@ -71,14 +71,14 @@ export default function CourtsPage() {
 
       {/* Info */}
       <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-3 text-sm text-zinc-300">
-        ⚖️ Courtебные дела создаются через эскалацию disputeов or жалоб. Court рассматривает case, назначает заседания и выносит вердикт.
+        ⚖️ Court cases are created through escalation of disputes or complaints. The court reviews the case, schedules hearings, and renders a verdict.
       </div>
 
       {/* Tabs + case list */}
       <Tabs defaultValue="all" value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="bg-zinc-900 border border-zinc-800">
-          <TabsTrigger value="all">All дела</TabsTrigger>
-          <TabsTrigger value="active">Activые</TabsTrigger>
+          <TabsTrigger value="all">All Cases</TabsTrigger>
+          <TabsTrigger value="active">Active</TabsTrigger>
           <TabsTrigger value="closed">Completed</TabsTrigger>
         </TabsList>
 
@@ -90,8 +90,8 @@ export default function CourtsPage() {
           ) : filteredCases.length === 0 ? (
             <div className="text-center py-12 text-zinc-500 space-y-2">
               <Scale className="h-12 w-12 mx-auto opacity-30" />
-              <p>Courtебных дел нет</p>
-              <p className="text-xs">Cases are created through escalation disputeов or жалоб</p>
+              <p>No court cases</p>
+              <p className="text-xs">Cases are created through escalation of disputes or complaints</p>
             </div>
           ) : (
             filteredCases.map((c: CourtCase) => {

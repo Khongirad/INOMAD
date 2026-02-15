@@ -55,7 +55,7 @@ export default function MigrationServicePage() {
       <div>
         <h1 className="text-2xl font-bold">Migration Service</h1>
         <p className="text-muted-foreground mt-1">
-          Оформление паdisputeтов, governance applicationsми и verification documentов
+          Оформление passportов, governance applicationsми и verification documentов
         </p>
       </div>
 
@@ -69,18 +69,18 @@ export default function MigrationServicePage() {
       {/* Passport Types */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader><CardTitle>📘 Стандартный паdisputeт</CardTitle></CardHeader>
+          <CardHeader><CardTitle>📘 Standard passport</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
               For citizens. Valid 10 лет. Betweenpeopleные поездки во all страны-partnerы.
             </p>
             <Button className="w-full" onClick={() => router.push('/services/migration/apply?type=STANDARD')}>
-              + Bygive application
+              + Submit application
             </Button>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>🎖️ Diplomaатический паdisputeт</CardTitle></CardHeader>
+          <CardHeader><CardTitle>🎖️ Diplomatic passport</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
               For гос. служащих и diplomaатов. Особые привилегии и иммунитеты.
@@ -91,10 +91,10 @@ export default function MigrationServicePage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>🛂 Служебный паdisputeт</CardTitle></CardHeader>
+          <CardHeader><CardTitle>🛂 Official passport</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              For служащих в командировках за рубежом.
+              For служащих in командировках за рубежом.
             </p>
             <Button variant="outline" className="w-full" disabled>
               Required авторизация
@@ -122,7 +122,7 @@ export default function MigrationServicePage() {
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-3">You ещё не подавали заявлений</p>
               <Button variant="outline" onClick={() => router.push('/services/migration/apply')}>
-                + Bygive на паdisputeт
+                + Submit на passport
               </Button>
             </div>
           ) : (
@@ -142,11 +142,11 @@ export default function MigrationServicePage() {
       {/* Passport Lookup */}
       <Card>
         <CardHeader>
-          <CardTitle>Verification паdisputeта</CardTitle>
+          <CardTitle>Verification passportа</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Проверьте действительность паdisputeта (публичный поclaim)
+            Проверьте действительность passportа (публичный поclaim)
           </p>
           <div className="flex gap-3 mb-3">
             <Input

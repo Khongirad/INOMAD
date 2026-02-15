@@ -117,7 +117,7 @@ export default function TaxPage() {
             Ежегодное taxообложение
           </h2>
           <p className="text-zinc-400">
-            Republic 7% + Confederation 3% = итого 10% от incomeа за квесты
+            Republic 7% + Confederation 3% = итого 10% from incomeа за квесты
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -229,7 +229,7 @@ export default function TaxPage() {
                     <div className="flex gap-2">
                       {record.status === 'DRAFT' && (
                         <Button size="sm" variant="secondary" onClick={() => handleFile(record.id)}>
-                          <Send className="mr-1 h-3 w-3" /> Bygive декларацию
+                          <Send className="mr-1 h-3 w-3" /> Submit декларацию
                         </Button>
                       )}
                       {record.status === 'FILED' && (
@@ -303,7 +303,7 @@ export default function TaxPage() {
 
           <div className="p-3 rounded-lg bg-zinc-800/50 text-xs text-zinc-400">
             <AlertCircle className="h-3 w-3 inline mr-1" />
-            Systemа автоматически подсчитает income от всех квестов за указанный год
+            Systemа автоматически подсчитает income from всех квестоin за указанный год
             и рассчитает tax по ставке 10% (7% republic + 3% confederation).
           </div>
 

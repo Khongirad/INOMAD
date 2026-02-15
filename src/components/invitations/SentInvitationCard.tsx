@@ -29,7 +29,7 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
     className: 'bg-yellow-600 hover:bg-yellow-700',
   },
   ACCEPTED: {
-    label: 'Принято',
+    label: 'Accepted',
     variant: 'default',
     icon: <CheckCircle className="h-3 w-3" />,
     className: 'bg-green-600 hover:bg-green-700',
@@ -41,7 +41,7 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
     className: '',
   },
   CANCELLED: {
-    label: 'Отменено',
+    label: 'Cancelled',
     variant: 'secondary',
     icon: <XCircle className="h-3 w-3" />,
     className: '',
@@ -53,7 +53,7 @@ export function SentInvitationCard({ invitation, onCancel }: SentInvitationCardP
   const config = statusConfig[invitation.status] || statusConfig.PENDING;
 
   const handleCancel = async () => {
-    if (!confirm('Отменить invitation?')) return;
+    if (!confirm('Cancel Invitation?')) return;
     await onCancel(invitation.id);
   };
 
@@ -70,7 +70,7 @@ export function SentInvitationCard({ invitation, onCancel }: SentInvitationCardP
                 {invitation.invitedUserName || invitation.invitedUserId}
               </h4>
               <p className="text-sm text-muted-foreground">
-                в {invitation.organizationName}
+                in {invitation.organizationName}
               </p>
             </div>
           </div>
@@ -84,7 +84,7 @@ export function SentInvitationCard({ invitation, onCancel }: SentInvitationCardP
               <button
                 onClick={handleCancel}
                 className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 transition-colors"
-                title="Отменить invitation"
+                title="Cancel Invitation"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

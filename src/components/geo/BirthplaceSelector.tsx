@@ -18,18 +18,18 @@ import { RegionCard } from "./RegionCard";
 import { NationCard } from "./NationCard";
 import { ResidenceStatusCard } from "./ResidenceStatusCard";
 
-// Динамический импорт карты (for SSR)
+// Dynamic map import (for SSR)
 const GeoMap = dynamic(() => import("./GeoMap"), {
   ssr: false,
   loading: () => (
     <div className="h-[400px] bg-zinc-900/50 rounded-xl flex items-center justify-center">
-      <div className="text-zinc-500">Загрузка карты...</div>
+      <div className="text-zinc-500">Loading map...</div>
     </div>
   ),
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ТИПЫ
+// TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface BirthplaceSelectorProps {
@@ -50,7 +50,7 @@ export interface BirthplaceData {
 type Step = "Region" | "location" | "nation" | "status" | "complete";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// КОМПОНЕНТ
+// COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function BirthplaceSelector({
@@ -77,7 +77,7 @@ export function BirthplaceSelector({
   const [showRegionCard, setShowRegionCard] = useState(false);
   const [showNationCard, setShowNationCard] = useState(false);
 
-  // Filterация peopleов по поclaimу
+  // Filterация peopleоin по search
   const filteredNations = useMemo(() => {
     if (!nationSearch.trim()) return NATIONS;
     const search = nationSearch.toLowerCase();
@@ -89,13 +89,13 @@ export function BirthplaceSelector({
     );
   }, [nationSearch]);
 
-  // Определение статуса проживания
+  // Determine residence status
   const residenceStatus = useMemo(() => {
     if (!selectedNation || !selectedRegion) return null;
     return determineResidenceStatus(selectedNation.code, selectedRegion.id);
   }, [selectedNation, selectedRegion]);
 
-  // Обработчики
+  // Handlers
   const handleRegionClick = useCallback((region: DoctrinalRegion) => {
     setSelectedRegion(region);
     setShowRegionCard(true);
@@ -180,7 +180,7 @@ export function BirthplaceSelector({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header с прогрессом */}
+      {/* Header with progress */}
       <div className="glass-panel rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -189,17 +189,17 @@ export function BirthplaceSelector({
             </div>
             <h1 className="mt-2 text-2xl font-bold text-white">
               {step === "Region" &&
-                (lang === "ru" ? "Select region рождения" : "Select Birth Region")}
+                (lang === "ru" ? "Select region birth" : "Select Birth Region")}
               {step === "location" &&
                 (lang === "ru"
-                  ? "Укажите place of birth"
+                  ? "Specify place of birth"
                   : "Specify Birthplace")}
               {step === "nation" &&
                 (lang === "ru"
-                  ? "Укажите национальность"
+                  ? "Укажите nationality"
                   : "Specify Nationality")}
               {step === "status" &&
-                (lang === "ru" ? "Your статус" : "Your Status")}
+                (lang === "ru" ? "Your Status" : "Your Status")}
               {step === "complete" &&
                 (lang === "ru" ? "Done" : "Complete")}
             </h1>
@@ -308,10 +308,10 @@ export function BirthplaceSelector({
               </div>
               <div>
                 <div className="text-sm text-zinc-400">
-                  {lang === "ru" ? "Seat рождения" : "Birthplace"}
+                  {lang === "ru" ? "Seat birth" : "Birthplace"}
                 </div>
                 <div className="text-base font-medium text-white">
-                  {placeName || (lang === "ru" ? "Нажмите на карту" : "Click on map")}
+                  {placeName || (lang === "ru" ? "Click on the map" : "Click on map")}
                 </div>
               </div>
             </div>
@@ -320,7 +320,7 @@ export function BirthplaceSelector({
             <div>
               <label className="text-xs text-zinc-500 block mb-2">
                 {lang === "ru"
-                  ? "Или введите вручную (как в паdisputeте):"
+                  ? "Или введите вручную (как in passport):"
                   : "Or enter manually (as in passport):"}
               </label>
               <input
@@ -328,7 +328,7 @@ export function BirthplaceSelector({
                 onChange={(e) => setPlaceName(e.target.value)}
                 placeholder={
                   lang === "ru"
-                    ? "г. Иркутск, Иркутская oblast"
+                    ? "Irkutsk, Irkutsk Oblast"
                     : "Irkutsk, Irkutsk Oblast"
                 }
                 className="input-field"
@@ -364,7 +364,7 @@ export function BirthplaceSelector({
                 value={nationSearch}
                 onChange={(e) => setNationSearch(e.target.value)}
                 placeholder={
-                  lang === "ru" ? "Search peopleа..." : "Search nation..."
+                  lang === "ru" ? "Search nation..." : "Search nation..."
                 }
                 className="input-field pl-10"
               />
@@ -413,7 +413,7 @@ export function BirthplaceSelector({
           {filteredNations.length === 0 && (
             <div className="glass-panel rounded-xl p-8 text-center">
               <div className="text-zinc-500">
-                {lang === "ru" ? "People не найден" : "Nation not found"}
+                {lang === "ru" ? "Nation not found" : "Nation not found"}
               </div>
             </div>
           )}
@@ -434,7 +434,7 @@ export function BirthplaceSelector({
           <div className="glass-panel rounded-xl p-6 text-center border border-gold-border/20 bg-gradient-to-br from-gold-dim/10 to-transparent">
             <p className="text-lg text-zinc-200 italic leading-relaxed">
               {lang === "ru"
-                ? "«Ты loginишь в общее пространство, где each знает свой дом, уважает чужой, и развивается вместе с другими.»"
+                ? "«Ты loginишь in общее пространство, где each знает свой дом, уважает чужой, и развивается вместе с другими.»"
                 : '"You enter a shared space where everyone knows their home, respects others\', and grows together."'}
             </p>
           </div>
@@ -443,7 +443,7 @@ export function BirthplaceSelector({
             onClick={confirmStatus}
             className="w-full rounded-lg bg-gold-border py-4 text-base font-medium text-black hover:bg-gold-text transition shadow-[0_0_30px_-10px_var(--gold-glow)]"
           >
-            {lang === "ru" ? "Confirm и continue" : "Confirm and Continue"}
+            {lang === "ru" ? "Confirm and Continue" : "Confirm and Continue"}
           </button>
         </div>
       )}
@@ -468,7 +468,7 @@ export function BirthplaceSelector({
           </div>
           <h2 className="text-xl font-bold text-white">
             {lang === "ru"
-              ? "Географические data сохранены"
+              ? "Geographic data saved"
               : "Geographic Data Saved"}
           </h2>
           <div className="text-sm text-zinc-400 space-y-1">
@@ -479,7 +479,7 @@ export function BirthplaceSelector({
               </span>
             </div>
             <div>
-              {lang === "ru" ? "Seat рождения" : "Birthplace"}:{" "}
+              {lang === "ru" ? "Seat birth" : "Birthplace"}:{" "}
               <span className="text-zinc-200">{placeName}</span>
             </div>
             <div>

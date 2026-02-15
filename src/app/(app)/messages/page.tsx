@@ -93,7 +93,7 @@ export default function MessagesPage() {
         setMessages((prev) => [...prev, msg]);
         setNewMessage('');
       } else {
-        toast.error('Error отправки');
+        toast.error('Submission error');
       }
     } catch (e) {
       toast.error('Error сети');
@@ -275,7 +275,7 @@ export default function MessagesPage() {
               <h3 className="text-xl font-semibold text-white mb-2">Select чат</h3>
               <p className="text-zinc-400 max-w-sm">
                 Select существующий разговор or начните new.
-                Чаты работают for организаций, квестов, courtебных дел и прямых сообщений.
+                Чаты workают for организаций, квестов, courtбных дел и прямых сообщений.
               </p>
             </div>
           </div>

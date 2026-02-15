@@ -21,7 +21,7 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
       case 'CREATOR': return 'Создатель';
       case 'RECIPIENT': return 'Genderучатель';
       case 'WITNESS': return 'Witness';
-      case 'AUTHORITY': return 'Уgenderномоченное лицо';
+      case 'AUTHORITY': return 'Уin the floorоченное лицо';
       default: return role;
     }
   };
@@ -148,7 +148,7 @@ export default function SignatureRoadmap({ signers, currentUserId }: SignatureRo
       ) : (
         <div className="p-4 bg-zinc-800/50 border border-zinc-700 rounded-lg">
           <div className="text-sm text-zinc-400">
-            Ожидание подписей от других members...
+            Ожидание подписей from других members...
           </div>
         </div>
       )}

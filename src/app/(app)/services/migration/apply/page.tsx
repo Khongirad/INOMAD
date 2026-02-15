@@ -12,7 +12,7 @@ import { ArrowLeft, ArrowRight, Send, Info } from 'lucide-react';
 
 const steps = [
   'Личная information',
-  'Биографические data',
+  'Biographical Data',
   'Загрузка documentов',
   'Verification и confirmation',
 ];
@@ -48,14 +48,14 @@ export default function PassportApplicationPage() {
   const handleNext = async () => {
     if (activeStep === 0) {
       if (!formData.fullName || !formData.dateOfBirth || !formData.sex) {
-        setError('Byжалуйста, заgenderните all обязательные genderя');
+        setError('Please, fill in all обязательные genderя');
         return;
       }
     }
 
     if (activeStep === 1) {
       if (!formData.placeOfBirth) {
-        setError('Byжалуйста, заgenderните биографические data');
+        setError('Please, fill in biographical data');
         return;
       }
     }
@@ -65,9 +65,9 @@ export default function PassportApplicationPage() {
         setLoading(true);
         const application = await createPassportApplication(formData);
         setApplicationId(application.id);
-        toast.success('Draft applications создан');
+        toast.success('Draft application created');
       } catch (err: any) {
-        setError(err.message || 'Не удалось созgive application');
+        setError(err.message || 'Failed to create application');
         setLoading(false);
         return;
       } finally {
@@ -86,25 +86,25 @@ export default function PassportApplicationPage() {
 
   const handleSubmit = async () => {
     if (!applicationId) {
-      setError('Application не создано');
+      setError('Application not created');
       return;
     }
 
     try {
       setLoading(true);
       await submitPassportApplication(applicationId);
-      toast.success('Application successfully подано!');
+      toast.success('Application successfully submitted!');
       router.push(`/services/migration/applications/${applicationId}`);
     } catch (err: any) {
-      setError(err.message || 'Не удалось поgive application');
+      setError(err.message || 'Failed to submit application');
     } finally {
       setLoading(false);
     }
   };
 
   const passportLabel =
-    passportType === 'STANDARD' ? 'Стандартный' :
-    passportType === 'DIPLOMATIC' ? 'Diplomaатический' : 'Служебный';
+    passportType === 'STANDARD' ? 'Standard' :
+    passportType === 'DIPLOMATIC' ? 'Diplomatic' : 'Official';
 
   return (
     <div className="p-6 max-w-[900px] mx-auto space-y-6">
@@ -116,11 +116,11 @@ export default function PassportApplicationPage() {
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back к службе миграции
+          Back to Migration Service
         </Button>
-        <h1 className="text-3xl font-bold">Application на паdisputeт</h1>
+        <h1 className="text-3xl font-bold">Passport Application</h1>
         <p className="text-muted-foreground mt-1">
-          {passportLabel} паdisputeт — Заgenderните all stepи for подачи applications
+          {passportLabel} passport — Заgenderните all stepи to submit applications
         </p>
       </div>
 
@@ -182,11 +182,11 @@ export default function PassportApplicationPage() {
             {activeStep === steps.length - 1 ? (
               <Button onClick={handleSubmit} disabled={loading}>
                 <Send className="h-4 w-4 mr-2" />
-                {loading ? 'Отправка...' : 'Bygive application'}
+                {loading ? 'Submitting...' : 'Submit application'}
               </Button>
             ) : (
               <Button onClick={handleNext} disabled={loading}>
-                {loading ? 'Соstorage...' : 'Next'}
+                {loading ? 'Saving...' : 'Next'}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             )}
@@ -201,10 +201,10 @@ export default function PassportApplicationPage() {
           <div>
             <p className="text-sm font-semibold mb-1">Important Information</p>
             <p className="text-sm text-muted-foreground">
-              • Вся information должна быть точной и проверяемой<br />
-              • Необходимые documentы: Фото (паdisputeтного размера), Signature, Certificate о рождении<br />
-              • Срок обработки: 5–10 рабочих days<br />
-              • You genderучите notification по email при изменении статуса applications
+              • All information must be accurate and verifiable<br />
+              • Необходимые documentы: Фото (passportного размера), Signature, Certificate о рождении<br />
+              • Срок обworkки: 5–10 рабочих days<br />
+              • You will be notified by email when your application status changes
             </p>
           </div>
         </div>

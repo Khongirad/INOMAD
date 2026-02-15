@@ -112,7 +112,7 @@ export default function RegisterPage() {
           <div className="mb-8">
             <div className="text-8xl mb-6 animate-bounce">🏔️</div>
             <h1 className="text-4xl font-bold text-gold-primary mb-4">
-              Welcome в Khural!
+              Welcome in Khural!
             </h1>
             <h2 className="text-2xl text-amber-400/80 mb-6">
               Welcome to the Khural!
@@ -121,13 +121,13 @@ export default function RegisterPage() {
 
           <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-lg p-8 mb-8">
             <p className="text-lg text-zinc-300 mb-4">
-              ✅ You successfully registeredы
+              ✅ You successfully registered
             </p>
             <p className="text-lg text-zinc-300 mb-4">
-              ✅ You приняли Terms исgenderьзования
+              ✅ You accepted the Terms of Use
             </p>
             <p className="text-lg text-green-400 font-bold mb-6">
-              ✅ You приняли Конституцию и стали ПРАВОВЫМ СУБЪЕКТОМ
+              ✅ You accepted the Constitution and became a LEGAL ENTITY
             </p>
             <div className="text-sm text-zinc-500">
               You are now a legal subject with full rights and responsibilities
@@ -162,9 +162,9 @@ export default function RegisterPage() {
           </div>
           
           <h1 className="text-4xl font-bold text-gold-primary mb-2">
-            РЕГИСТРАЦИЯ / REGISTRATION
+            РЕGISТРАЦИЯ / REGISTRATION
           </h1>
-          <p className="text-zinc-400">Gates of Khural • Gates Khuralа</p>
+          <p className="text-zinc-400">Gates of Khural • Gates Khural</p>
         </div>
 
         {/* Progress */}
@@ -187,7 +187,7 @@ export default function RegisterPage() {
         {currentStep === STEPS.ACCOUNT && (
           <form onSubmit={handleAccountSubmit} className="max-w-md mx-auto space-y-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">
-              Step 1: Creation accountа
+              Step 1: Account Creation
             </h2>
 
             <div>
@@ -254,7 +254,7 @@ export default function RegisterPage() {
         {currentStep === STEPS.TOS && (
           <form onSubmit={handleTOSSubmit} className="space-y-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">
-              Step 2: Terms исgenderьзования
+              Step 2: Terms of Use
             </h2>
 
             <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 max-h-96 overflow-y-auto prose prose-invert prose-amber max-w-none">
@@ -268,7 +268,7 @@ export default function RegisterPage() {
                 onChange={(e) => setTosAccepted(e.target.checked)}
                 className="w-5 h-5"
               />
-              <span>Я принимаю Terms исgenderьзования / I accept the Terms of Service</span>
+              <span>Я accept Terms of Use / I accept the Terms of Service</span>
             </label>
 
             {error && (
@@ -299,15 +299,15 @@ export default function RegisterPage() {
         {currentStep === STEPS.CONSTITUTION && (
           <form onSubmit={handleConstitutionSubmit} className="space-y-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">
-              Step 3: Принятие Конституции
+              Step 3: Accepting the Constitution
             </h2>
 
             <div className="bg-amber-950/20 border-2 border-amber-600/50 rounded-lg p-6 mb-6">
               <p className="text-lg font-bold text-amber-400 mb-2">
-                ⚖️ IMPORTANT: Юридический статус
+                ⚖️ IMPORTANT: Legal Status
               </p>
               <p className="text-zinc-300">
-                Принимая Конституцию ИНОМАД ХУРАЛА, вы становитесь <span className="text-green-400 font-bold">rightвым субъектом</span> с genderными правами и обязанностями в нашей суверенной systemе.
+                By accepting the Constitution INOMAD KHURAL, вы становитесь <span className="text-green-400 font-bold">legal entity</span> с genderными rights и obligations in our sovereign systemе.
               </p>
             </div>
 
@@ -323,7 +323,7 @@ export default function RegisterPage() {
                 className="w-5 h-5 mt-1"
               />
               <span>
-                Я принимаю Конституцию ИНОМАД ХУРАЛА и становлюсь citizenом с правами и обязанностями rightвого субъекта<br/>
+                I accept the Constitution of INOMAD KHURAL and become a citizen with the rights and obligations of a legal entity<br/>
                 <span className="text-sm text-zinc-400">
                   I accept the INOMAD KHURAL Constitution and become a citizen with rights and responsibilities as a legal subject
                 </span>
@@ -350,7 +350,7 @@ export default function RegisterPage() {
                 disabled={loading}
                 className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
               >
-                {loading ? 'Processing...' : '✅ Accept и завершить / Accept & Complete'}
+                {loading ? 'Processing...' : '✅ Accept and Complete / Accept & Complete'}
               </button>
             </div>
           </form>

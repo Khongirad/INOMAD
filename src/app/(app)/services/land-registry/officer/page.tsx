@@ -14,19 +14,19 @@ export default function LandRegistryOfficerPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Панель officerа земельного registryа</h1>
+        <h1 className="text-3xl font-bold">Панель officer land registry</h1>
         <p className="text-muted-foreground mt-1">
-          Утверждение регистраций, governance transferами и ведение кадастровых записей
+          Approval of registrations, governance transfers и ведение cadastral records
         </p>
       </div>
 
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex gap-2">
         <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-semibold mb-1">Инструменты officerа земельного registryа</p>
+          <p className="text-sm font-semibold mb-1">Инструменты officer land registry</p>
           <p className="text-sm text-muted-foreground">
-            Рассмотрение и утверждение регистраций земельных участков, прав собственности, contractов аренды и передачи прав.
-            All транзакции записываются в блокчейн ALTAN for неизменяемости.
+            Review and approval registrations land plots, ownership rights, contracts аренды и transfers прав.
+            All transactions are recorded on the ALTAN blockchain for immutability.
           </p>
         </div>
       </div>
@@ -38,11 +38,11 @@ export default function LandRegistryOfficerPage() {
           <Card>
             <CardContent className="pt-6 space-y-3">
               <Map className="h-10 w-10 text-primary" />
-              <h3 className="text-lg font-semibold">Кадастровая map</h3>
+              <h3 className="text-lg font-semibold">Cadastral Map</h3>
               <p className="text-sm text-muted-foreground">
-                Просмотр всех registeredных земельных участков на интерактивной ГИС-карте
+                View all registered land plots on interactive GIS map
               </p>
-              <Button className="w-full">Открыть карту</Button>
+              <Button className="w-full">Open Map</Button>
             </CardContent>
           </Card>
 
@@ -51,7 +51,7 @@ export default function LandRegistryOfficerPage() {
               <Mountain className="h-10 w-10 text-green-500" />
               <h3 className="text-lg font-semibold">Pending участки</h3>
               <p className="text-sm text-muted-foreground">
-                Рассмотрение и утверждение заявок на регистрацию земельных участков
+                Review and approval заявок на регистрацию land plots
               </p>
               <Button variant="outline" className="w-full">Pending (0)</Button>
             </CardContent>
@@ -60,9 +60,9 @@ export default function LandRegistryOfficerPage() {
           <Card>
             <CardContent className="pt-6 space-y-3">
               <Home className="h-10 w-10 text-yellow-500" />
-              <h3 className="text-lg font-semibold">Pending права собственности</h3>
+              <h3 className="text-lg font-semibold">Pending property rights</h3>
               <p className="text-sm text-muted-foreground">
-                Утверждение регистраций собственности и verification citizensства
+                Approval of registrations собственности и citizenship verification
               </p>
               <Button variant="outline" className="w-full">Pending (0)</Button>
             </CardContent>
@@ -71,9 +71,9 @@ export default function LandRegistryOfficerPage() {
           <Card>
             <CardContent className="pt-6 space-y-3">
               <Gavel className="h-10 w-10 text-red-500" />
-              <h3 className="text-lg font-semibold">Pending передачи</h3>
+              <h3 className="text-lg font-semibold">Pending transfers</h3>
               <p className="text-sm text-muted-foreground">
-                Рассмотрение заявок на передачу прав и confirmation оплаты
+                Review of applications на передачу праin и payment confirmation
               </p>
               <Button variant="outline" className="w-full">Pending (0)</Button>
             </CardContent>
@@ -84,20 +84,20 @@ export default function LandRegistryOfficerPage() {
       {/* Tabs */}
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">All записи</TabsTrigger>
-          <TabsTrigger value="land">Landые участки</TabsTrigger>
-          <TabsTrigger value="ownership">Права собственности</TabsTrigger>
+          <TabsTrigger value="all">All Records</TabsTrigger>
+          <TabsTrigger value="land">Land Plots</TabsTrigger>
+          <TabsTrigger value="ownership">Property Rights</TabsTrigger>
           <TabsTrigger value="leases">Lease</TabsTrigger>
-          <TabsTrigger value="transfers">Передачи</TabsTrigger>
+          <TabsTrigger value="transfers">Transfers</TabsTrigger>
         </TabsList>
 
         <Card className="mt-4">
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">
-              Инструменты officerа земельного registryа скоро будут accessны...
+              Инструменты officer land registry скоро будут accessны...
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Genderная интеграция кадастровой карты, просмотрщик ГИС и рабочие processы утверждения будут добавлены в следующем обновлении.
+              Full cadastral map integration, GIS viewer, and approval workflows will be added in the next update.
             </p>
           </CardContent>
         </Card>

@@ -154,21 +154,21 @@ export function PendingVerificationCard({
           <DialogHeader>
             <DialogTitle>Decline верификацию</DialogTitle>
             <DialogDescription>
-              Укажите причину отклонения for {verification.institution}
+              Specify reason отклонения for {verification.institution}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
-            <Label>Причина отклонения</Label>
+            <Label>Rejection Reason</Label>
             <Input
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Укажите причину..."
+              placeholder="Specify reason..."
             />
           </div>
 
           <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300">
-            ⚠️ Это action нельзя отменить. Genderьзователь genderучит notification с причиной отклонения.
+            ⚠️ Это action нельзя cancel. Genderьзователь genderучит notification с причиной отклонения.
           </div>
 
           <DialogFooter>

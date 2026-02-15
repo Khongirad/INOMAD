@@ -57,7 +57,7 @@ export default function InvitationsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed');
-      toast.success('Invitation принято');
+      toast.success('Invitation accepted');
       fetchInvitations();
     } catch {
       toast.error('Error при принятии');
@@ -85,7 +85,7 @@ export default function InvitationsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed');
-      toast.success('Invitation отменено');
+      toast.success('Invitation cancelled');
       fetchInvitations();
     } catch {
       toast.error('Error при отмене');

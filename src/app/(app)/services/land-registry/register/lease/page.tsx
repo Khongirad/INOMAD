@@ -11,7 +11,7 @@ import { registerLease } from '@/lib/api/land-registry';
 import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Send, Key, Loader2, Info, AlertTriangle, CheckCircle } from 'lucide-react';
 
-const STEPS = ['Election objectа', 'Terms аренды', 'Финансовые terms', 'Verification и подача'];
+const STEPS = ['Object Selection', 'Lease Terms', 'Financial Terms', 'Verification and Submission'];
 
 export default function LeaseRegistrationPage() {
   const router = useRouter();
@@ -41,10 +41,10 @@ export default function LeaseRegistrationPage() {
         paymentDay: parseInt(paymentDay),
         deposit: deposit ? parseFloat(deposit) : undefined, terms, notes,
       } as any);
-      toast.success('Lease registeredа!');
+      toast.success('Lease registered!');
       router.push('/services/land-registry');
     } catch (err: any) {
-      toast.error(err.message || 'Error регистрации');
+      toast.error(err.message || 'Registration error');
     } finally {
       setSubmitting(false);
     }
@@ -60,7 +60,7 @@ export default function LeaseRegistrationPage() {
   const calcDuration = () => {
     if (!startDate || !endDate) return '';
     const m = Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24 * 30));
-    return `${m} мес. (${Math.floor(m / 12)} лет, ${m % 12} мес.)`;
+    return `${m} mo. (${Math.floor(m / 12)} years, ${m % 12} mo.)`;
   };
 
   return (
@@ -72,8 +72,8 @@ export default function LeaseRegistrationPage() {
         <div className="flex items-center gap-3">
           <Key className="h-10 w-10 text-yellow-500" />
           <div>
-            <h1 className="text-3xl font-bold">Registration contractа аренды</h1>
-            <p className="text-muted-foreground mt-1">Accessно всем — citizenм и иностранцам</p>
+            <h1 className="text-3xl font-bold">Lease Contract Registration</h1>
+            <p className="text-muted-foreground mt-1">Available to all — citizens and foreigners</p>
           </div>
         </div>
       </div>
@@ -81,8 +81,8 @@ export default function LeaseRegistrationPage() {
       <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex gap-2">
         <CheckCircle className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-semibold">Lease открыта for всех</p>
-          <p className="text-sm text-muted-foreground">В отличие от собственности (only citizensе), аренду может register любой.</p>
+          <p className="text-sm font-semibold">Lease is open to everyone</p>
+          <p className="text-sm text-muted-foreground">Unlike ownership (citizens only), anyone can register a lease.</p>
         </div>
       </div>
 
@@ -107,46 +107,46 @@ export default function LeaseRegistrationPage() {
         <CardContent className="pt-6 space-y-6">
           {activeStep === 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Election objectа</h3><hr />
+              <h3 className="text-lg font-semibold">Object Selection</h3><hr />
               <div className="space-y-2">
                 <Label>ID участка / cadastral number</Label>
-                <Input placeholder="Object аренды" value={landPlotId} onChange={(e) => setLandPlotId(e.target.value)} />
+                <Input placeholder="Lease object" value={landPlotId} onChange={(e) => setLandPlotId(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Lessor (собственник)</Label>
-                <Input placeholder="Name or ID собственника" value={lessorName} onChange={(e) => setLessorName(e.target.value)} />
-                <p className="text-xs text-muted-foreground">Лицо, сдающее object в аренду</p>
+                <Label>Lessor (owner)</Label>
+                <Input placeholder="Owner name or ID" value={lessorName} onChange={(e) => setLessorName(e.target.value)} />
+                <p className="text-xs text-muted-foreground">Person leasing the object</p>
               </div>
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex gap-2">
                 <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">Lessor должен будет подтвердить contract.</p>
+                <p className="text-sm text-muted-foreground">Lessor will need to confirm the contract.</p>
               </div>
             </div>
           )}
 
           {activeStep === 1 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Terms аренды</h3><hr />
+              <h3 className="text-lg font-semibold">Lease Terms</h3><hr />
               <div className="space-y-2">
-                <Label>Date начала</Label>
+                <Label>Start Date</Label>
                 <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Date окончания</Label>
+                <Label>End Date</Label>
                 <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                {calcDuration() && <p className="text-xs text-muted-foreground">Срок: {calcDuration()}</p>}
+                {calcDuration() && <p className="text-xs text-muted-foreground">Duration: {calcDuration()}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Terms contractа</Label>
-                <Textarea placeholder="Опишите terms аренды..." value={terms} onChange={(e) => setTerms(e.target.value)} rows={4} />
-                <p className="text-xs text-muted-foreground">Разрешённое исgenderьзование, обязанности по обслуживанию и т.д.</p>
+                <Label>Contract Terms</Label>
+                <Textarea placeholder="Describe lease terms..." value={terms} onChange={(e) => setTerms(e.target.value)} rows={4} />
+                <p className="text-xs text-muted-foreground">Permitted use, maintenance obligations, etc.</p>
               </div>
             </div>
           )}
 
           {activeStep === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Финансовые terms</h3><hr />
+              <h3 className="text-lg font-semibold">Financial Terms</h3><hr />
               <div className="space-y-2">
                 <Label>Monthly rent</Label>
                 <Input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)} />
@@ -160,11 +160,11 @@ export default function LeaseRegistrationPage() {
                 <Input type="number" min={1} max={31} value={paymentDay} onChange={(e) => setPaymentDay(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Залог (optional)</Label>
+                <Label>Deposit (optional)</Label>
                 <Input type="number" value={deposit} onChange={(e) => setDeposit(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Заметки</Label>
+                <Label>Notes</Label>
                 <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
               </div>
             </div>
@@ -172,7 +172,7 @@ export default function LeaseRegistrationPage() {
 
           {activeStep === 3 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Verification contractа аренды</h3><hr />
+              <h3 className="text-lg font-semibold">Lease Contract Verification</h3><hr />
               <div><p className="text-xs text-muted-foreground">Object</p><p className="font-semibold">{landPlotId}</p></div>
               <div><p className="text-xs text-muted-foreground">Lessor</p><p>{lessorName}</p></div>
               <div>
@@ -182,17 +182,17 @@ export default function LeaseRegistrationPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Finance</p>
-                <p className="font-semibold">{monthlyRent} {currency}/мес.</p>
+                <p className="font-semibold">{monthlyRent} {currency}/mo.</p>
                 <p className="text-sm">Payment Day: {paymentDay}</p>
-                {deposit && <p className="text-sm">Залог: {deposit} {currency}</p>}
+                {deposit && <p className="text-sm">Deposit: {deposit} {currency}</p>}
               </div>
               {terms && <div><p className="text-xs text-muted-foreground">Terms</p><p className="text-sm">{terms}</p></div>}
-              {notes && <div><p className="text-xs text-muted-foreground">Заметки</p><p className="text-sm">{notes}</p></div>}
+              {notes && <div><p className="text-xs text-muted-foreground">Notes</p><p className="text-sm">{notes}</p></div>}
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold">⚠️ Required confirmation арендодателя</p>
-                  <p className="text-sm text-muted-foreground">Contract будет отправлен собственнику на confirmation и записан в блокчейн ALTAN.</p>
+                  <p className="text-sm font-semibold">⚠️ Lessor confirmation required</p>
+                  <p className="text-sm text-muted-foreground">Contract will be sent to the owner for confirmation and recorded on the ALTAN blockchain.</p>
                 </div>
               </div>
             </div>
@@ -203,7 +203,7 @@ export default function LeaseRegistrationPage() {
             {activeStep === STEPS.length - 1 ? (
               <Button className="bg-yellow-600 hover:bg-yellow-700" onClick={handleSubmit} disabled={!canProceed() || submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                {submitting ? 'Registration...' : 'Bygive на утверждение'}
+                {submitting ? 'Registration...' : 'Submit for approval'}
               </Button>
             ) : (
               <Button onClick={handleNext} disabled={!canProceed()}>Next<ArrowRight className="h-4 w-4 ml-2" /></Button>

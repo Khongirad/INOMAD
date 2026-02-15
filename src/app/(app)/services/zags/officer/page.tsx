@@ -56,7 +56,7 @@ export default function ZAGSOfficerPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Панель сотрудника Civil Registry</h1>
-        <p className="text-muted-foreground mt-1">Рассмотрение и одобрение регистраций marriageа</p>
+        <p className="text-muted-foreground mt-1">Рассмотрение и одобрение registrations marriageа</p>
       </div>
 
       {error && (
@@ -126,22 +126,22 @@ export default function ZAGSOfficerPage() {
             </TabsList>
           </div>
           <CardContent className="pt-4">
-            <h3 className="text-lg font-semibold mb-3">Заявления на marriage</h3>
+            <h3 className="text-lg font-semibold mb-3">Applications на marriage</h3>
 
             {loading ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
               </div>
             ) : filteredMarriages.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">Заявления не найдены</div>
+              <div className="text-center py-8 text-muted-foreground">Applications не найдены</div>
             ) : (
               <div className="border border-border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-3 font-medium">Spouseи</th>
-                      <th className="text-left p-3 font-medium">Date marriageа</th>
-                      <th className="text-left p-3 font-medium">Type церемонии</th>
+                      <th className="text-left p-3 font-medium">Spouses</th>
+                      <th className="text-left p-3 font-medium">Marriage Date</th>
+                      <th className="text-left p-3 font-medium">Ceremony Type</th>
                       <th className="text-left p-3 font-medium">Status</th>
                       <th className="text-left p-3 font-medium">Certificate</th>
                       <th className="text-right p-3 font-medium">Actions</th>

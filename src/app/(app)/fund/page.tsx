@@ -289,7 +289,7 @@ export default function FundPage() {
             <div>
               <h4 className="font-semibold text-amber-200 mb-1">О Суверенном fundе</h4>
               <p className="text-sm text-amber-100/70">
-                Sovereign Fund инвестирует taxовые поступления и UBI-излишки в инфраструктуру,
+                Sovereign Fund инвестирует taxовые поступления и UBI-излишки in инфраструктуру,
                 технологии, education и resources. Dividends are distributed among citizenми.
               </p>
             </div>

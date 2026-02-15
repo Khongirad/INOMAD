@@ -24,7 +24,7 @@ export interface GeoCoordinates {
 }
 
 export interface BirthplaceGeo {
-  label: string; // текст как в паdisputeте
+  label: string; // текст как in passport
   regionId?: string; // id доктринального the region of
   subRegionId?: string; // id подthe region of (for Сибири)
   coordinates?: GeoCoordinates; // точные coordinates

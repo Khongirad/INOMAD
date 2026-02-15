@@ -66,7 +66,7 @@ export default function MyDocumentsPage() {
       ) : documents.length === 0 ? (
         <div className="text-center py-12 bg-zinc-800/50 rounded-lg">
           <FileText className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-          <p className="text-zinc-400">Documentов not yet</p>
+          <p className="text-zinc-400">Documentоin not yet</p>
         </div>
       ) : (
         <div className="space-y-3">

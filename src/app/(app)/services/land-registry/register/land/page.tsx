@@ -13,7 +13,7 @@ import { registerLandPlot } from '@/lib/api/land-registry';
 import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Send, Mountain, Loader2, Info, AlertTriangle } from 'lucide-react';
 
-const STEPS = ['Основная information', 'Расgenderожение и размер', 'Details собственности', 'Verification и подача'];
+const STEPS = ['Basic Information', 'Location and Size', 'Ownership Details', 'Verification and Submission'];
 const LAND_USE_TYPES = ['AGRICULTURAL', 'RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL', 'FOREST', 'RECREATIONAL', 'CONSERVATION', 'MIXED_USE'];
 
 export default function LandRegistrationPage() {
@@ -40,10 +40,10 @@ export default function LandRegistrationPage() {
     try {
       setSubmitting(true);
       await registerLandPlot({ cadastralNumber, address, region, landUseType, area: parseFloat(area), coordinates, boundaries } as any);
-      toast.success('Landый plot registered!');
+      toast.success('Land Plot registered!');
       router.push('/services/land-registry');
     } catch (err: any) {
-      toast.error(err.message || 'Error регистрации');
+      toast.error(err.message || 'Registration error');
     } finally {
       setSubmitting(false);
     }
@@ -64,7 +64,7 @@ export default function LandRegistrationPage() {
         </Button>
         <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-lg p-4">
           <p className="font-semibold">Required citizenship</p>
-          <p className="text-sm">Only citizensе Сибирской Конфедерации могут регистрировать земельные участки. Иностранцы могут оформить аренду.</p>
+          <p className="text-sm">Only citizens of the Siberian Confederation may register land plots. Foreigners may apply for a lease.</p>
         </div>
       </div>
     );
@@ -74,13 +74,13 @@ export default function LandRegistrationPage() {
     <div className="p-6 max-w-[900px] mx-auto space-y-6">
       <div>
         <Button variant="ghost" onClick={() => router.push('/services/land-registry')} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />Back к registryу
+          <ArrowLeft className="h-4 w-4 mr-2" />Back to Registry
         </Button>
         <div className="flex items-center gap-3">
           <Mountain className="h-10 w-10 text-green-500" />
           <div>
-            <h1 className="text-3xl font-bold">Registration земельного участка</h1>
-            <p className="text-muted-foreground mt-1">Зарегистрируйте new plot в кадастровом registryе</p>
+            <h1 className="text-3xl font-bold">Land Plot Registration</h1>
+            <p className="text-muted-foreground mt-1">Register a new plot in the cadastral registry</p>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ export default function LandRegistrationPage() {
         <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-semibold">Only for citizens</p>
-          <p className="text-sm text-muted-foreground">All регистрации записываются в блокчейн ALTAN.</p>
+          <p className="text-sm text-muted-foreground">All registrations are recorded on the ALTAN blockchain.</p>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ export default function LandRegistrationPage() {
         <CardContent className="pt-6 space-y-6">
           {activeStep === 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Основная information</h3><hr />
+              <h3 className="text-lg font-semibold">Basic Information</h3><hr />
               <div className="space-y-2">
                 <Label>Cadastral number</Label>
                 <Input placeholder="54:35:123456:78" value={cadastralNumber} onChange={(e) => setCadastralNumber(e.target.value)} />
@@ -125,10 +125,10 @@ export default function LandRegistrationPage() {
               </div>
               <div className="space-y-2">
                 <Label>Region</Label>
-                <Input placeholder="Иркутская обл., Buryatia..." value={region} onChange={(e) => setRegion(e.target.value)} />
+                <Input placeholder="Irkutsk Oblast, Buryatia..." value={region} onChange={(e) => setRegion(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Type ofgenderьзования земли</Label>
+                <Label>Land Use Type</Label>
                 <Select value={landUseType} onValueChange={setLandUseType}>
                   <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                   <SelectContent>{LAND_USE_TYPES.map((t) => <SelectItem key={t} value={t}>{t.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
@@ -139,9 +139,9 @@ export default function LandRegistrationPage() {
 
           {activeStep === 1 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Расgenderожение и размер</h3><hr />
+              <h3 className="text-lg font-semibold">Location and Size</h3><hr />
               <div className="space-y-2">
-                <Label>Area (га)</Label>
+                <Label>Area (ha)</Label>
                 <Input type="number" placeholder="2.5" value={area} onChange={(e) => setArea(e.target.value)} step="0.01" min="0" />
               </div>
               <div className="space-y-2">
@@ -149,25 +149,25 @@ export default function LandRegistrationPage() {
                 <Input placeholder="52.2897° N, 104.2806° E" value={coordinates} onChange={(e) => setCoordinates(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Description границ (optional)</Label>
-                <Textarea placeholder="Опишите borders..." value={boundaries} onChange={(e) => setBoundaries(e.target.value)} rows={4} />
+                <Label>Border Description (optional)</Label>
+                <Textarea placeholder="Describe borders..." value={boundaries} onChange={(e) => setBoundaries(e.target.value)} rows={4} />
               </div>
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex gap-2">
                 <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground"><strong>GIS coming soon:</strong> Интерактивная map for рисования границ будет accessна в следующем обновлении.</p>
+                <p className="text-sm text-muted-foreground"><strong>GIS coming soon:</strong> Interactive border drawing map will be available in the next update.</p>
               </div>
             </div>
           )}
 
           {activeStep === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Details собственности</h3><hr />
+              <h3 className="text-lg font-semibold">Ownership Details</h3><hr />
               <div className="space-y-2">
-                <Label>Type собственности</Label>
+                <Label>Ownership Type</Label>
                 <Select value={ownershipType} onValueChange={(v) => setOwnershipType(v as 'FULL' | 'PARTIAL')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="FULL">Genderная (100%)</SelectItem>
+                    <SelectItem value="FULL">Full (100%)</SelectItem>
                     <SelectItem value="PARTIAL">Proportional</SelectItem>
                   </SelectContent>
                 </Select>
@@ -175,37 +175,37 @@ export default function LandRegistrationPage() {
               <div className="space-y-2">
                 <Label>Share (%)</Label>
                 <Input type="number" value={ownershipShare} onChange={(e) => setOwnershipShare(e.target.value)} disabled={ownershipType === 'FULL'} />
-                <p className="text-xs text-muted-foreground">{ownershipType === 'FULL' ? 'Genderная = 100%' : 'Enter yourу долю'}</p>
+                <p className="text-xs text-muted-foreground">{ownershipType === 'FULL' ? 'Full = 100%' : 'Enter your share'}</p>
               </div>
               <div className="space-y-2">
-                <Label>I confirmщие documentы (optional)</Label>
-                <Textarea placeholder="Перечислите documentы..." value={documents} onChange={(e) => setDocuments(e.target.value)} rows={3} />
+                <Label>Supporting Documents (optional)</Label>
+                <Textarea placeholder="List documents..." value={documents} onChange={(e) => setDocuments(e.target.value)} rows={3} />
               </div>
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 flex gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-                <p className="text-sm"><strong>Примечание:</strong> Registration будет проверена кадастровым officerом.</p>
+                <p className="text-sm"><strong>Note:</strong> Registration will be verified by a cadastral officer.</p>
               </div>
             </div>
           )}
 
           {activeStep === 3 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Verification регистрации</h3><hr />
+              <h3 className="text-lg font-semibold">Registration Verification</h3><hr />
               <div><p className="text-xs text-muted-foreground">Cadastral number</p><p className="font-semibold">{cadastralNumber}</p></div>
               <div><p className="text-xs text-muted-foreground">Address / Region</p><p>{address}</p><p className="text-sm text-muted-foreground">{region}</p></div>
-              <div><p className="text-xs text-muted-foreground">Type ofgenderьзования</p><Badge>{landUseType.replace(/_/g, ' ')}</Badge></div>
-              <div><p className="text-xs text-muted-foreground">Area</p><p>{area} га</p><p className="text-sm text-muted-foreground">GPS: {coordinates}</p></div>
+              <div><p className="text-xs text-muted-foreground">Type of Use</p><Badge>{landUseType.replace(/_/g, ' ')}</Badge></div>
+              <div><p className="text-xs text-muted-foreground">Area</p><p>{area} ha</p><p className="text-sm text-muted-foreground">GPS: {coordinates}</p></div>
               {boundaries && <div><p className="text-xs text-muted-foreground">Borders</p><p className="text-sm">{boundaries}</p></div>}
-              <div><p className="text-xs text-muted-foreground">Ownership</p><p>{ownershipType === 'FULL' ? 'Genderная' : `Proportional (${ownershipShare}%)`}</p></div>
+              <div><p className="text-xs text-muted-foreground">Ownership</p><p>{ownershipType === 'FULL' ? 'Full' : `Proportional (${ownershipShare}%)`}</p></div>
               {documents && <div><p className="text-xs text-muted-foreground">Documentы</p><p className="text-sm">{documents}</p></div>}
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                <p className="text-sm font-semibold mb-1">Byдтверждение</p>
-                <p className="text-sm text-muted-foreground">Byдавая application, вы confirm что:</p>
+                <p className="text-sm font-semibold mb-1">Confirmation</p>
+                <p className="text-sm text-muted-foreground">By submitting this application, you confirm that:</p>
                 <ul className="text-sm text-muted-foreground list-disc ml-4 mt-1 space-y-1">
                   <li>All information is accurate and reliable</li>
-                  <li>You имеете законные права на этот plot</li>
-                  <li>Registration будет проверена кадастровым officerом</li>
-                  <li>Record будет внесена в блокчейн ALTAN</li>
+                  <li>You have legal rights to this plot</li>
+                  <li>Registration will be verified by a cadastral officer.</li>
+                  <li>The record will be added to the ALTAN blockchain</li>
                 </ul>
               </div>
             </div>

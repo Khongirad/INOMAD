@@ -18,7 +18,7 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 mapboxgl.accessToken = MAPBOX_TOKEN;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ТИПЫ
+// TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GeoMapProps {
@@ -110,7 +110,7 @@ function subRegionToGeoJSON(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// КОМПОНЕНТ
+// COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function GeoMap({
@@ -170,7 +170,7 @@ export function GeoMap({
     };
   }, [initialCenter.lat, initialCenter.lng, initialZoom, interactive]);
 
-  // Добавление слоёв regions
+  // Добавление слоёin regions
   useEffect(() => {
     if (!map.current || !mapLoaded || !showRegionLayers) return;
 
@@ -243,7 +243,7 @@ export function GeoMap({
       });
     }
 
-    // Обработчики событий for regions
+    // Handlers событий for regions
     mapInstance.on("mouseenter", "regions-fill", () => {
       mapInstance.getCanvas().style.cursor = "pointer";
     });
@@ -352,7 +352,7 @@ export function GeoMap({
     }
   }, [mapLoaded, showSubRegions, selectedSubRegionId, onSubRegionClick]);
 
-  // Режим выбора точки на карте
+  // Режим выбора тpoints на карте
   useEffect(() => {
     if (!map.current || !mapLoaded || selectionMode !== "point") return;
 
@@ -480,7 +480,7 @@ export function GeoMap({
       {/* Индикатор загрузки */}
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/80 rounded-xl">
-          <div className="text-zinc-400">Загрузка карты...</div>
+          <div className="text-zinc-400">Loading map...</div>
         </div>
       )}
     </div>

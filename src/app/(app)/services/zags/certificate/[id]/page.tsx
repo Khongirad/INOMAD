@@ -29,7 +29,7 @@ export default function MarriageCertificatePage() {
       }
       setMarriage(data);
     } catch (err: any) {
-      setError(err.message || 'Не удалось upload certificate');
+      setError(err.message || 'Failed to load certificate');
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export default function MarriageCertificatePage() {
   if (error || !marriage) {
     return (
       <div className="max-w-3xl mx-auto space-y-4">
-        <Button variant="ghost" onClick={() => router.push('/services/zags')}>← Back в Civil Registry</Button>
+        <Button variant="ghost" onClick={() => router.push('/services/zags')}>← Back to Civil Registry</Button>
         <div className="bg-destructive/10 text-destructive rounded-lg p-4">
           {error || 'Marriage не найден'}
         </div>
@@ -57,7 +57,7 @@ export default function MarriageCertificatePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       <Button variant="ghost" onClick={() => router.push('/services/zags')} className="no-print">
-        ← Back в Civil Registry
+        ← Back to Civil Registry
       </Button>
       <CertificateViewer marriage={marriage} type="MARRIAGE" />
     </div>

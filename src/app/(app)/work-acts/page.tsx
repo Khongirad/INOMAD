@@ -33,7 +33,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
   SUBMITTED: { label: 'On проверке', color: 'text-blue-400 bg-blue-500/10', icon: FileCheck },
   REVIEWED: { label: 'Проверен', color: 'text-purple-400 bg-purple-500/10', icon: CheckCircle2 },
   SIGNED_BY_CONTRACTOR: { label: 'Byдписан подрядчиком', color: 'text-amber-400 bg-amber-500/10', icon: PenTool },
-  SIGNED_BY_CLIENT: { label: 'Byдписан заказчиком', color: 'text-emerald-400 bg-emerald-500/10', icon: PenTool },
+  SIGNED_BY_CLIENT: { label: 'Byдписан clientом', color: 'text-emerald-400 bg-emerald-500/10', icon: PenTool },
   COMPLETED: { label: 'Выgenderнен', color: 'text-emerald-500 bg-emerald-500/10', icon: CheckCircle2 },
   DISPUTED: { label: 'Оdisputeен', color: 'text-red-500 bg-red-500/10', icon: AlertTriangle },
   CANCELLED: { label: 'Отменён', color: 'text-zinc-500 bg-zinc-500/10', icon: XCircle },
@@ -107,7 +107,7 @@ export default function WorkActsPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
             <FileCheck className="text-emerald-500 w-8 h-8" />
-            Acts comgenderненных работ
+            Acts comgenderненных work
           </h2>
           <p className="text-zinc-400 mt-1">
             Создавайте, подписывайте и отслеживайте акты. Оплата после подписания обеими partyми.
@@ -221,7 +221,7 @@ export default function WorkActsPage() {
             <CardContent className="p-8 text-center">
               <FileCheck className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
               <h3 className="text-white font-semibold mb-1">No актов</h3>
-              <p className="text-zinc-500 text-sm">Создайте первый акт выgenderненных работ</p>
+              <p className="text-zinc-500 text-sm">Создайте первый акт выgenderненных work</p>
             </CardContent>
           </Card>
         ) : (

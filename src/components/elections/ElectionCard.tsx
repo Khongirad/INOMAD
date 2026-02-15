@@ -72,8 +72,8 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
     switch (election.status) {
       case 'ACTIVE': return 'Voting';
       case 'COMPLETED': return 'Completed';
-      case 'UPCOMING': return 'Предстоящие';
-      case 'CANCELLED': return 'Отменено';
+      case 'UPCOMING': return 'Upcoming';
+      case 'CANCELLED': return 'Cancelled';
       default: return election.status;
     }
   };
@@ -125,12 +125,12 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
           </span>
           {election.termMonths && (
             <span className="px-2 py-0.5 rounded border border-white/10 text-zinc-400">
-              {election.termMonths} мес.
+              {election.termMonths} mo.
             </span>
           )}
           {election.isAnonymous && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded border border-blue-500/20 text-blue-400">
-              <Lock className="h-3 w-3" /> Тайное
+              <Lock className="h-3 w-3" /> Secret
             </span>
           )}
         </div>
@@ -159,7 +159,7 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
 
         {/* Candidates label */}
         <div className="text-sm font-semibold text-zinc-300">
-          Candidateы ({election.candidates.length})
+          Candidates ({election.candidates.length})
         </div>
 
         {/* Voting Mode */}
@@ -199,7 +199,7 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
           <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
             <p className="text-sm text-blue-400 flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              Тайное voting — results после завершения
+              Secret voting — results после завершения
             </p>
             <p className="text-xs text-zinc-500 mt-1">
               Candidates: {election.candidates.length}
@@ -245,9 +245,9 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
         {/* Stats footer */}
         <div className="pt-2 text-xs text-zinc-500 flex items-center gap-1">
           <TrendingUp className="h-3 w-3" />
-          Voteов: {totalVotes}
+          Votes: {totalVotes}
           {isCompleted && election.turnoutRate && (
-            <> · Явка: {election.turnoutRate.toFixed(1)}%</>
+            <> · Turnout: {election.turnoutRate.toFixed(1)}%</>
           )}
         </div>
 
@@ -259,14 +259,14 @@ export function ElectionCard({ election, onVote, hasVoted = false }: ElectionCar
             disabled={!selectedCandidate || voting}
           >
             <Vote className="mr-2 h-4 w-4" />
-            {voting ? 'Voting...' : 'Проvotesать'}
+            {voting ? 'Voting...' : 'Vote'}
           </Button>
         )}
 
         {/* Already voted */}
         {hasVoted && isActive && (
           <div className="w-full text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-500 text-sm font-medium flex items-center justify-center gap-2">
-            <CheckCircle2 className="h-4 w-4" /> You проvotesали
+            <CheckCircle2 className="h-4 w-4" /> You have voted
           </div>
         )}
       </CardContent>

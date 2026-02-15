@@ -132,7 +132,7 @@ export default function QuestDetailsPage() {
               }}
               className="text-sm text-zinc-400 hover:text-white transition"
             >
-              от <span className="text-purple-400">{quest.giver.username}</span>
+              from <span className="text-purple-400">{quest.giver.username}</span>
             </button>
             <span className="text-sm text-zinc-500">
               {new Date(quest.createdAt).toLocaleDateString('ru-RU')}

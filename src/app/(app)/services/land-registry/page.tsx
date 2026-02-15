@@ -59,8 +59,8 @@ export default function LandRegistryPage() {
         <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => router.push('/services/land-registry/map')}>
           <CardContent className="pt-6 text-center">
             <div className="text-4xl mb-2">🗺️</div>
-            <h3 className="font-semibold">Кадастровая map</h3>
-            <p className="text-xs text-muted-foreground mt-1">Интерактивная map</p>
+            <h3 className="font-semibold">Cadastral Map</h3>
+            <p className="text-xs text-muted-foreground mt-1">Interactive map</p>
           </CardContent>
         </Card>
         <Card
@@ -87,7 +87,7 @@ export default function LandRegistryPage() {
           <CardContent className="pt-6 text-center">
             <div className="text-4xl mb-2">📄</div>
             <h3 className="font-semibold">Оформить аренду</h3>
-            <p className="text-xs text-muted-foreground mt-1">Lease имущества</p>
+            <p className="text-xs text-muted-foreground mt-1">Lease properties</p>
           </CardContent>
         </Card>
       </div>
@@ -193,23 +193,23 @@ export default function LandRegistryPage() {
           <CardHeader><CardTitle>🏛️ Правила собственности</CardTitle></CardHeader>
           <CardContent>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Only citizensе могут владеть землёй</li>
-              <li>• Иностранцы могут only арендовать</li>
+              <li>• Only citizens могут владеть землёй</li>
+              <li>• Foreigners могут only арендовать</li>
               <li>• All совладельцы должны быть citizenми</li>
               <li>• Citizenship проверяется автоматически</li>
-              <li>• Witnessства на блокчейне</li>
+              <li>• Witnessства на blockchain</li>
             </ul>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>🔄 Передача собственности</CardTitle></CardHeader>
+          <CardHeader><CardTitle>🔄 Ownership Transfer</CardTitle></CardHeader>
           <CardContent>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Инициация передачи онлайн</li>
-              <li>• Byкупатель подтверждает оплату через блокчейн</li>
+              <li>• Инициация transfers онлайн</li>
+              <li>• Byкупатель подтверждает оплату через blockchain</li>
               <li>• Регистратор завершает передачу</li>
               <li>• New certificate выдаётся автоматически</li>
-              <li>• Genderная history транзакций</li>
+              <li>• Full history транзакций</li>
             </ul>
           </CardContent>
         </Card>

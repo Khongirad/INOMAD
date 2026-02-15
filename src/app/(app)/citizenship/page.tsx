@@ -249,7 +249,7 @@ export default function CitizenshipPage() {
             Admission citizens ({admissions.length})
           </TabsTrigger>
           <TabsTrigger value="history">
-            History права ({rightHistory.length})
+            History rights ({rightHistory.length})
           </TabsTrigger>
         </TabsList>
 
@@ -265,7 +265,7 @@ export default function CitizenshipPage() {
                   <div>
                     <h4 className="font-semibold text-amber-200 mb-1">Only for коренных</h4>
                     <p className="text-sm text-amber-100/70">
-                      Voting за приём новых citizens accessно only коренным (INDIGENOUS).
+                      Voting за приём new citizens accessно only коренным (INDIGENOUS).
                     </p>
                   </div>
                 </div>
@@ -363,7 +363,7 @@ export default function CitizenshipPage() {
               <CardContent className="p-8 text-center">
                 <ScrollText className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-1">No записей</h3>
-                <p className="text-zinc-400 text-sm">History передачи земельного права пуста</p>
+                <p className="text-zinc-400 text-sm">History transfers земельного rights пуста</p>
               </CardContent>
             </Card>
           ) : (
@@ -411,11 +411,11 @@ export default function CitizenshipPage() {
               <Flag className="h-4 w-4 text-gold-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-gold-primary mb-1">Принципы citizensства</h4>
+              <h4 className="font-semibold text-gold-primary mb-1">Принципы citizenship</h4>
               <p className="text-sm text-zinc-300">
                 Indigenous people — source власти на своей земле. Claimлючительное земельное right
-                передаётся по male линии. Khural формируется из держателей земельного права.
-                Приём новых citizens осуществляется votingм коренных.
+                передаётся по male линии. Khural формируется из держателей земельного rights.
+                Приём new citizens осуществляется votingм коренных.
               </p>
             </div>
           </div>
