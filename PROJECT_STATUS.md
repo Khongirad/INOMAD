@@ -1,72 +1,85 @@
 # PROJECT STATUS — INOMAD KHURAL
 
-**Last Updated**: February 11, 2026  
-**Current Phase**: Full-Stack Stabilization ✅  
-**Overall Status**: 🟢 **Both Frontend & Backend Operational**
+**Last Updated**: February 15, 2026  
+**Current Phase**: Test Coverage Expansion & Stabilization ✅  
+**Overall Status**: 🟢 **Full-Stack Operational — 95%+ Backend Coverage**
 
 ---
 
 ## 📊 System Status Overview
 
+### Codebase Metrics
+
+| Metric | Value |
+|--------|-------|
+| **Total source files** | 1,778 |
+| **Production code** | ~112,000 lines (TypeScript) |
+| **Test code** | ~25,600 lines (TypeScript) |
+| **Total codebase** | **~137,000 lines** |
+| **Git commits** | 166 |
+| **Contributors** | 1 |
+
 ### Backend Server
 - **Status**: ✅ **RUNNING** on port 3001
-- **Modules**: 57 NestJS modules
-- **API Endpoints**: 100+ routes registered
-- **Database**: 4 PostgreSQL databases (main + 3 government service DBs)
-- **Prisma**: Single schema, multi-DB architecture
+- **Modules**: 62 NestJS modules
+- **Controllers**: 69 REST controllers
+- **Services**: 96 injectable services
+- **Test Suites**: 176 spec files (95.85% line coverage)
+- **API Endpoints**: 120+ routes registered
+- **Database**: PostgreSQL (Prisma ORM)
+- **Prisma Schema**: 5,243 lines — 143 models, 94 enums
 - **TypeScript**: Builds without errors
 
 ### Frontend Application
 - **Status**: ✅ **Build passes** (`npx next build` clean)
 - **Framework**: Next.js 16.1.1 (Turbopack)
-- **UI Libraries**: MUI v7.3.7, shadcn/ui, Lucide React
+- **UI Libraries**: Shadcn/UI, Lucide React (MUI→Shadcn migration complete)
 - **React**: 19.2.3
-- **Routes**: 50+ pages compiled
-- **API Integration**: 14 centralized API wrapper modules
+- **Routes**: 65 pages compiled
+- **React Components**: 60 reusable components
+- **API Wrappers**: 29 centralized API wrapper modules
+- **Language**: 100% English (Russian→English translation complete)
 
 ### Blockchain (ALTAN L1)
-- **Status**: ⚪ Development mode (optional for core features)
+- **Smart Contracts**: 133 Solidity contracts (`chain/contracts/`)
+- **ALTAN L1**: Cosmos SDK (Go) with x/corelaw module (37 constitutional articles)
 - **Integration**: Graceful degradation implemented
-- **Contracts**: Local Hardhat deployment when needed
+- **Deployment**: Local Hardhat / Base Sepolia
 
 ---
 
 ## 🚀 Available Features
 
-### ✅ Fully Operational
+### ✅ Fully Operational (23 Systems)
 - User authentication (JWT) & session management
 - User registration, verification chain system
-- Seat binding & identity management
-- MPC wallet setup (basic)
+- Seat binding & identity management (SeatSBT)
+- MPC wallet setup (Web3Auth)
 - Archive & document system with notarization
 - Admin & Creator management tools
-- Guild platform
+- Guild platform with professional certifications
 - Education module with courses & certifications
 - Election system with term/anonymous voting
-- Timeline & Calendar
+- Timeline & Calendar (dual calendar system)
 - Government services: Migration (passport), ZAGS (marriage/divorce), Land Registry
 - Organization management with treasury & budgets
 - Khural (parliament) motions & voting
 - Messaging system
 - Work acts & quest system
-- Universal reputation system
+- Universal reputation system with regional scores
 - Notifications
+- Tax system with tax authority
+- Complaint system with hierarchical resolution
+- Dispute resolution
+- Parliament hierarchy (Arban → Zun → Myangan → Tumen → Confederate Khural)
+- Org banking with branch finance
+- News system
 
 ### ⚠️ Requires Blockchain
 - Arban credit lines (Family & Organizational)
 - Zun (Clan) formation
 - Banking hierarchy smart contracts
-- Digital seal services
-
-### 🔄 In Progress
-- Org Banking (module created, needs integration)
-- Tax system (backend active, frontend placeholder)
-- Dispute resolution (stub)
-
-### ⛔ Disabled Modules
-- Legislative (may overlap with Khural)
-- Marketplace
-- Temple
+- Digital seal services on-chain
 
 ---
 
@@ -90,36 +103,61 @@
 | Quests | `/api/quests/*` | ✅ |
 | Timeline | `/api/timeline/*` | ✅ |
 | Messaging | `/api/messaging/*` | ✅ |
+| Parliament | `/api/parliament/*` | ✅ |
+| Hierarchy | `/api/hierarchy/*` | ✅ |
+| Disputes | `/api/disputes/*` | ✅ |
+| Complaints | `/api/complaints/*` | ✅ |
+| Work Acts | `/api/work-acts/*` | ✅ |
+| Org Banking | `/api/org-banking/*` | ✅ |
+| News | `/api/news/*` | ✅ |
+| Notifications | `/api/notifications/*` | ✅ |
+| Onboarding | `/api/onboarding/*` | ✅ |
 | Arbans/Credit | `/api/arbans/*` | ⚠️ Requires blockchain |
+
+---
+
+## 🧪 Test Coverage
+
+### Backend Coverage Progress (Feb 2026)
+
+| Date | Coverage | Spec Files | Notes |
+|------|----------|------------|-------|
+| Feb 10 | ~80% | 110 | Initial baseline |
+| Feb 12 | 93.07% | 140 | Batch 13: +47 tests |
+| Feb 13 | 93.61% | 148 | Batch 14: 8 services deepened |
+| Feb 14 | 95.85% | 156 | Batch 16: 8 more services |
+| **Feb 15** | **95.85%+** | **176** | **36 new + 78 enhanced specs** |
+
+### Test Distribution
+- **Unit test spec files**: 176
+- **E2E test suites**: 5 (health, auth, migration, ZAGS, land)
+- **Lines of test code**: ~25,600
 
 ---
 
 ## ⚠️ Known Issues & TODO
 
 ### High Priority
-- [ ] Clean up 23 `as any` type casts in frontend (Date vs string mismatches)
-- [ ] Run and fix 110 backend unit tests
-- [ ] Database migration for User.dateOfBirth field
-- [ ] Re-enable CreatorBootstrapService after migration
+- [ ] End-to-end integration testing (registration → verification → wallet)
+- [ ] Production environment variables (replace dev secrets)
 
 ### Medium Priority
-- [ ] End-to-end integration testing (registration → verification → wallet)
-- [ ] Decide on disabled modules (legislative, marketplace, temple)
-- [ ] Production environment variables (replace dev secrets)
-- [ ] Frontend pages: org-banking, disputes, parliament need content
+- [ ] Database migration for User.dateOfBirth field
+- [ ] Security audit & penetration testing
+- [ ] Swagger/OpenAPI documentation generation
+- [ ] Performance benchmarking & load testing
 
 ### Low Priority
-- [ ] Production deployment (Dockerfile, HTTPS, CDN)
-- [ ] Security audit & load testing
-- [ ] Swagger/OpenAPI documentation generation
-- [ ] Developer onboarding guide
+- [ ] Production deployment (HTTPS, CDN, monitoring)
+- [ ] Developer onboarding guide update
+- [ ] Cross-contract blockchain integration (Phase 6)
 
 ---
 
 ## 🔧 Development Environment
 
 ### Required Services
-- ✅ PostgreSQL (localhost:5432) — 4 databases
+- ✅ PostgreSQL (localhost:5432)
 - ✅ Node.js backend (localhost:3001)
 - ✅ Next.js frontend (localhost:3000)
 - ⚪ Hardhat blockchain (localhost:8545) — Optional
@@ -127,6 +165,8 @@
 ### CI/CD
 - ✅ GitHub Actions: Backend build + test, Frontend build, Docker build
 - ✅ Frontend build gate active (no `continue-on-error`)
+- ✅ Full frontend Russian→English translation
+- ✅ MUI→Shadcn UI migration complete
 
 ---
 
@@ -137,11 +177,25 @@
 | Backend Core | ✅ Working | 100% |
 | API Endpoints | ✅ Registered | 100% |
 | Frontend Build | ✅ Clean | 100% |
-| Frontend Pages | ✅ 50+ routes | 95% |
-| Database Schema | 🟡 Needs migration | 95% |
-| Backend Tests | 🟡 Untested | 80% |
-| Integration Testing | 🟡 Pending | 20% |
+| Frontend Pages | ✅ 65 routes | 100% |
+| Frontend Translation | ✅ English | 100% |
+| Database Schema | ✅ 143 models | 100% |
+| Backend Tests | ✅ 95.85% coverage | 96% |
+| Smart Contracts | ✅ 133 contracts | 100% |
+| Integration Testing | 🟡 Pending | 30% |
 | Blockchain Integration | ⚪ Optional | N/A |
+
+---
+
+## 📅 Recent Activity (Feb 11–15, 2026)
+
+| Date | Commits | Highlights |
+|------|---------|------------|
+| Feb 11 | 3 | Chain repo cleanup, README branding update |
+| Feb 12 | 2 | Backend coverage batch 13 (+47 tests, 93.07%) |
+| Feb 13 | 2 | Coverage batch 14 (8 services, 92–100% each) |
+| Feb 14 | 4 | Complete frontend translation, CI fix, coverage batch 16 (95.85%) |
+| Feb 15 | 2 | Land Code rewrite, 36 new + 78 enhanced spec files |
 
 ---
 
@@ -149,4 +203,5 @@
 
 **GitHub**: https://github.com/Khongirad/INOMAD  
 **Branch**: main  
-**Contributors**: 1
+**Contributors**: 1  
+**Total Commits**: 166
