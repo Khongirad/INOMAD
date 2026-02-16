@@ -1,7 +1,9 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { OrganizationType, BranchType, MemberRole, RatingCategory } from '@prisma/client';
 
+@ApiTags('Organizations')
 @Controller('organizations')
 export class OrganizationController {
   constructor(private organizationService: OrganizationService) {}

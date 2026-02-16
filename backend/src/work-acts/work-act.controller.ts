@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -13,6 +14,7 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import { WorkActService } from './work-act.service';
 
+@ApiTags('WorkActs')
 @Controller('api/work-acts')
 @UseGuards(AuthGuard)
 export class WorkActController {

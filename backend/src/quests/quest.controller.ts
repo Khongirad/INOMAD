@@ -1,7 +1,9 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Body, Param, UseGuards, Req, Patch } from '@nestjs/common';
 import { QuestService } from './quest.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('Quests')
 @Controller('quests')
 @UseGuards(JwtAuthGuard)
 export class QuestController {

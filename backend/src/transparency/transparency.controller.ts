@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Query } from '@nestjs/common';
 import { ActivityLogService } from './activity-log.service';
 import { TransparencyService } from './transparency.service';
@@ -9,6 +10,7 @@ import { Public } from '../auth/decorators/public.decorator';
  * All endpoints accessible to any arban member
  */
 @Public()
+@ApiTags('Transparency')
 @Controller('transparency')
 export class TransparencyController {
   constructor(

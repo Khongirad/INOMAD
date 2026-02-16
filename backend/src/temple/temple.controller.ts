@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -15,6 +16,7 @@ import { RecordType } from '@prisma/client';
  * @class TempleController
  * @description REST API for Temple of Heaven cultural archive
  */
+@ApiTags('Temple')
 @Controller('temple')
 export class TempleController {
   private readonly logger = new Logger(TempleController.name);

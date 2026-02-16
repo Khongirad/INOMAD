@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -13,6 +14,7 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import { MessagingService } from './messaging.service';
 
+@ApiTags('Messaging')
 @Controller('api/messages')
 @UseGuards(AuthGuard)
 export class MessagingController {

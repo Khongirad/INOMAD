@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -17,6 +18,7 @@ import { CentralBankAuthGuard } from '../central-bank/central-bank-auth.guard';
  * 
  * Manages the initial ALTAN distribution from 2.1T emission
  */
+@ApiTags('Distribution')
 @Controller('distribution')
 export class DistributionController {
   constructor(private readonly distributionService: DistributionService) {}

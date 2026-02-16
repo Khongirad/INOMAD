@@ -1,8 +1,10 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { TimelineService } from './timeline.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { EventType, EventScope } from '@prisma/client';
 
+@ApiTags('Timeline')
 @Controller('timeline')
 @UseGuards(JwtAuthGuard)
 export class TimelineController {

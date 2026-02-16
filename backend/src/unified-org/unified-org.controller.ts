@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -27,6 +28,7 @@ import {
 } from './dto/unified-org.dto';
 import { OrganizationType, BranchType, RatingCategory } from '@prisma/client';
 
+@ApiTags('UnifiedOrg')
 @Controller('org')
 @UseGuards(AuthGuard)
 export class UnifiedOrgController {

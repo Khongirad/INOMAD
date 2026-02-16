@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -15,6 +16,7 @@ import { RegionalReputationService } from './regional-reputation.service';
 import { ReputationActionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
+@ApiTags('RegionalReputation')
 @Controller('regional-reputation')
 @UseGuards(AuthGuard)
 export class RegionalReputationController {

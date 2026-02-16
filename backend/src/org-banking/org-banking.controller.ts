@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -13,6 +14,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { OrgBankingService } from './org-banking.service';
 import { OrgBankTxStatus, OrgBankTxType } from '@prisma/client';
 
+@ApiTags('OrgBanking')
 @Controller('org-banking')
 @UseGuards(AuthGuard)
 export class OrgBankingController {

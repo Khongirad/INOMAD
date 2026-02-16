@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Param } from '@nestjs/common';
 import { CitizenDistributionService } from './citizen-distribution.service';
 
@@ -5,6 +6,7 @@ import { CitizenDistributionService } from './citizen-distribution.service';
  * Distribution Controller
  * API endpoints for citizen ALTAN distribution
  */
+@ApiTags('Identity')
 @Controller('distribution')
 export class DistributionController {
   constructor(private distributionService: CitizenDistributionService) {}

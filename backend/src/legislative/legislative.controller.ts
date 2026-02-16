@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -18,6 +19,7 @@ import { LegislativeService } from './legislative.service';
  * Routes are under /legislative/proposals (separate from /legislative/voting
  * which handles on-chain VotingCenter operations).
  */
+@ApiTags('Legislative')
 @Controller('legislative/proposals')
 @UseGuards(AuthGuard)
 export class LegislativeController {

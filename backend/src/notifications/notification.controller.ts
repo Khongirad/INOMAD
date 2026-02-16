@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -12,6 +13,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { NotificationService } from './notification.service';
 import { NotificationType } from '@prisma/client';
 
+@ApiTags('Notifications')
 @Controller('notifications')
 @UseGuards(AuthGuard)
 export class NotificationController {

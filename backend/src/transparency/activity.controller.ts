@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -10,6 +11,7 @@ import { TemplateService } from './template.service';
 import { PowerBranchType, HierarchyLevel } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
 
+@ApiTags('Transparency')
 @Controller('activities')
 export class ActivityController {
   constructor(

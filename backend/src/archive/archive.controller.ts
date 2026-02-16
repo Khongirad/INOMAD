@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -22,6 +23,7 @@ import { DocumentStage, DocumentStatus, SignerRole } from '@prisma/client';
  * 
  * API endpoints for State Archive & Document Constructor System
  */
+@ApiTags('Archive')
 @Controller('archive')
 export class ArchiveController {
   private readonly logger = new Logger(ArchiveController.name);
@@ -374,5 +376,32 @@ export class ArchiveController {
       body.archiveNumber,
       body.blockchainTx,
     );
+  }
+
+  /**
+   * Generate PDF-ready data for a document
+   */
+  @Get('documents/:id/pdf')
+  @UseGuards(JwtAuthGuard)
+  async generatePDF(@Param('id') id: string, @Request() req) {
+    return this.documentService.generatePDF(id, req.user.userId);
+  }
+
+  /**
+   * Register document hash on blockchain
+   */
+  @Post('documents/:id/register-hash')
+  @UseGuards(JwtAuthGuard)
+  async registerHash(@Param('id') id: string, @Request() req) {
+    return this.documentService.registerDocumentHash(id, req.user.userId);
+  }
+
+  /**
+   * Verify document hash integrity
+   */
+  @Get('documents/:id/verify-hash')
+  @UseGuards(JwtAuthGuard)
+  async verifyHash(@Param('id') id: string) {
+    return this.documentService.verifyDocumentHash(id);
   }
 }

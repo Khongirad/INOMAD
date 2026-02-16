@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Param } from '@nestjs/common';
 import { SovereignFundService } from './sovereign-fund.service';
 
@@ -5,6 +6,7 @@ import { SovereignFundService } from './sovereign-fund.service';
  * Sovereign Fund Controller
  * Public API endpoints for pension fund transparency
  */
+@ApiTags('Identity')
 @Controller('sovereign-fund')
 export class SovereignFundController {
   constructor(private fundService: SovereignFundService) {}

@@ -1,4 +1,5 @@
 import { Controller, Get, ForbiddenException } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { E2ETestService } from './e2e-test.service';
 import { BlockchainService } from './blockchain.service';
 import { Public } from '../auth/decorators/public.decorator';
@@ -9,6 +10,7 @@ import { Public } from '../auth/decorators/public.decorator';
  * ONLY available when NODE_ENV !== 'production'.
  */
 @Public()
+@ApiTags('E2E')
 @Controller('e2e')
 export class E2ETestController {
   constructor(

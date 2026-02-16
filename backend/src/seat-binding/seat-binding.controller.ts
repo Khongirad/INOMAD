@@ -1,9 +1,11 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Post, Get, Body, Param } from '@nestjs/common';
 import { SeatBindingService } from './seat-binding.service';
 import { BindSeatDto, SyncSeatsDto } from './dto/seat-binding.dto';
 import { AuthenticatedRequest } from '../auth/auth.middleware';
 import { Request } from '@nestjs/common';
 
+@ApiTags('SeatBinding')
 @Controller('seat-binding')
 export class SeatBindingController {
   constructor(private seatBindingService: SeatBindingService) {}

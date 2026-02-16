@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -13,6 +14,7 @@ import {
 import { CalendarService } from './calendar.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('Calendar')
 @Controller('calendar')
 @UseGuards(JwtAuthGuard)
 export class CalendarController {
@@ -104,5 +106,31 @@ export class CalendarController {
   @Delete('notes/:id')
   async deleteNote(@Param('id') id: string, @Request() req) {
     return this.calendarService.deleteNote(id, req.user.sub);
+  }
+
+  // ============== REMINDERS ==============
+
+  @Post('events/:id/reminder')
+  async setReminder(
+    @Param('id') id: string,
+    @Request() req,
+    @Body() body: { minutesBefore: number },
+  ) {
+    return this.calendarService.setReminder(id, req.user.sub, body.minutesBefore);
+  }
+
+  @Delete('events/:id/reminder')
+  async removeReminder(@Param('id') id: string, @Request() req) {
+    return this.calendarService.removeReminder(id, req.user.sub);
+  }
+
+  @Get('reminders')
+  async getReminders(@Request() req) {
+    return this.calendarService.getEventsWithReminders(req.user.sub);
+  }
+
+  @Get('reminders/due')
+  async getDueReminders() {
+    return this.calendarService.getDueReminders();
   }
 }

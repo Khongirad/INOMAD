@@ -1,7 +1,9 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { AuthenticatedRequest } from '../auth/auth.middleware';
 
+@ApiTags('Audit')
 @Controller('audit')
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}

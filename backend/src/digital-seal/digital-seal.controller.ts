@@ -1,6 +1,8 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Post, Get, Param, Body, Headers, HttpException, HttpStatus } from '@nestjs/common';
 import { DigitalSealService, CreateSealDto, ApproveSealDto } from './digital-seal.service';
 
+@ApiTags('DigitalSeal')
 @Controller('digital-seal')
 export class DigitalSealController {
   constructor(private readonly digitalSealService: DigitalSealService) {}

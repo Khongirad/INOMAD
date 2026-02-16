@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -23,6 +24,7 @@ import { BankTransferDto } from './dto/bank-transfer.dto';
  * - Auth JWT will be REJECTED here
  * - Only bank tickets (from POST /bank/auth/ticket) are accepted
  */
+@ApiTags('Bank')
 @Controller('bank/me')
 @UseGuards(BankAuthGuard)
 export class BankController {

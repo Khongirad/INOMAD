@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -16,6 +17,7 @@ import { ethers } from 'ethers';
  * @class VotingCenterController
  * @description REST API for Legislative Branch voting
  */
+@ApiTags('Legislative')
 @Controller('legislative/voting')
 export class VotingCenterController {
   private readonly logger = new Logger(VotingCenterController.name);

@@ -1,7 +1,9 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Post, Body, Get, UseGuards, Req, Param } from '@nestjs/common';
 import { CouncilService } from './council.service';
 import { AuthenticatedRequest } from '../auth/auth.middleware';
 
+@ApiTags('Guilds')
 @Controller('council')
 export class CouncilController {
   constructor(private readonly councilService: CouncilService) {}

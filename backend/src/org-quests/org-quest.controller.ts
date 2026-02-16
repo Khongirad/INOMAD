@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -12,6 +13,7 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import { OrgQuestService } from './org-quest.service';
 
+@ApiTags('OrgQuests')
 @Controller('org-quests')
 @UseGuards(AuthGuard)
 export class OrgQuestController {

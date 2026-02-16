@@ -1,9 +1,11 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { InvitationService } from './invitation.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { InvitationStatus } from '@prisma/client';
 
+@ApiTags('Invitations')
 @Controller('invitations')
 @UseGuards(JwtAuthGuard)
 export class InvitationController {

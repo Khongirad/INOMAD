@@ -6,6 +6,7 @@ import {
   Param,
   Body,
   Req,
+  Query,
 } from '@nestjs/common';
 import { ZagsServiceService } from './zags-service.service';
 
@@ -132,5 +133,85 @@ export class ZagsServiceController {
   @Get('officer/stats')
   async getOfficerStats() {
     return this.zagsService.getOfficerStats();
+  }
+
+  // ============ Death Registration ============
+
+  @Post('deaths')
+  async registerDeath(@Req() req: any, @Body() body: any) {
+    return this.zagsService.registerDeath(req.user.userId, body);
+  }
+
+  @Get('deaths/:id')
+  async getDeathRegistration(@Param('id') id: string) {
+    return this.zagsService.getDeathRegistration(id);
+  }
+
+  @Get('deaths/pending/all')
+  async getPendingDeaths() {
+    return this.zagsService.getPendingDeaths();
+  }
+
+  @Post('deaths/:id/approve')
+  async approveDeathRegistration(@Req() req: any, @Param('id') id: string) {
+    return this.zagsService.approveDeathRegistration(id, req.user.userId);
+  }
+
+  @Post('deaths/:id/reject')
+  async rejectDeathRegistration(
+    @Param('id') id: string,
+    @Body() body: { notes: string },
+  ) {
+    return this.zagsService.rejectDeathRegistration(id, body.notes);
+  }
+
+  @Get('death-certificates/:certNum')
+  async getDeathCertificate(@Param('certNum') certNum: string) {
+    return this.zagsService.getDeathCertificate(certNum);
+  }
+
+  // ============ Name Change ============
+
+  @Post('name-changes')
+  async applyNameChange(@Req() req: any, @Body() body: any) {
+    return this.zagsService.applyNameChange(req.user.userId, body);
+  }
+
+  @Get('name-changes/me')
+  async getMyNameChanges(@Req() req: any) {
+    return this.zagsService.getMyNameChanges(req.user.userId);
+  }
+
+  @Get('name-changes/pending/all')
+  async getPendingNameChanges() {
+    return this.zagsService.getPendingNameChanges();
+  }
+
+  @Post('name-changes/:id/approve')
+  async approveNameChange(@Req() req: any, @Param('id') id: string) {
+    return this.zagsService.approveNameChange(id, req.user.userId);
+  }
+
+  @Post('name-changes/:id/reject')
+  async rejectNameChange(
+    @Param('id') id: string,
+    @Body() body: { notes: string },
+  ) {
+    return this.zagsService.rejectNameChange(id, body.notes);
+  }
+
+  // ============ Public Registry Search ============
+
+  @Get('public/search')
+  async searchPublicRegistry(
+    @Query('name') name?: string,
+    @Query('certificateNumber') certificateNumber?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Query('type') type?: string,
+  ) {
+    return this.zagsService.searchPublicRegistry({
+      name, certificateNumber, dateFrom, dateTo, type: type as any,
+    });
   }
 }
