@@ -35,8 +35,11 @@ describe('ZagsServiceService', () => {
     count: jest.fn().mockResolvedValue(5),
   });
 
+  const mockAdultUser = { id: 'user-1', dateOfBirth: new Date('1990-01-01') };
+
   beforeEach(async () => {
     prisma = {
+      user: baseMock(mockAdultUser),
       marriage: baseMock(mockMarriage),
       marriageConsent: baseMock({ id: 'consent-1', userId: 'user-2', status: 'PENDING', marriage: mockMarriage }),
       zagsDivorce: baseMock(mockDivorce),
@@ -63,7 +66,8 @@ describe('ZagsServiceService', () => {
   // ── ELIGIBILITY ──
 
   describe('checkEligibility', () => {
-    it('should return eligible for single user', async () => {
+    it('should return eligible for single adult user', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockAdultUser);
       prisma.marriage.findFirst.mockResolvedValue(null);
       const result = await service.checkEligibility('user-3');
       expect(result.isEligible).toBe(true);
@@ -71,6 +75,7 @@ describe('ZagsServiceService', () => {
     });
 
     it('should return ineligible for married user', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockAdultUser);
       prisma.marriage.findFirst.mockResolvedValue(mockMarriage);
       prisma.zagsDivorce.findFirst.mockResolvedValue(null);
       const result = await service.checkEligibility('user-1');
@@ -80,17 +85,36 @@ describe('ZagsServiceService', () => {
     });
 
     it('should note pending divorce', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockAdultUser);
       prisma.marriage.findFirst.mockResolvedValue(mockMarriage);
       prisma.zagsDivorce.findFirst.mockResolvedValue(mockDivorce);
       const result = await service.checkEligibility('user-1');
       expect(result.reasons).toContain('Divorce proceedings in progress');
+    });
+
+    it('should return ineligible for underage user', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'minor', dateOfBirth: new Date('2015-01-01') });
+      prisma.marriage.findFirst.mockResolvedValue(null);
+      const result = await service.checkEligibility('minor');
+      expect(result.isEligible).toBe(false);
+      expect(result.reasons[0]).toContain('Must be at least 18');
+    });
+
+    it('should return ineligible if no date of birth on file', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'no-dob', dateOfBirth: null });
+      prisma.marriage.findFirst.mockResolvedValue(null);
+      const result = await service.checkEligibility('no-dob');
+      expect(result.isEligible).toBe(false);
+      expect(result.reasons).toContain('Date of birth not on file — update your profile first');
     });
   });
 
   // ── MARRIAGE APPLICATION ──
 
   describe('createMarriageApplication', () => {
-    it('should create a marriage application', async () => {
+    it('should create a marriage application when both eligible', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockAdultUser);
+      prisma.marriage.findFirst.mockResolvedValue(null); // both single
       prisma.marriage.create.mockResolvedValue({ ...mockMarriage, status: 'PENDING_CONSENT' });
       const result = await service.createMarriageApplication('user-1', {
         partnerId: 'user-2', spouse1FullName: 'Alice', spouse2FullName: 'Bob',
@@ -102,6 +126,8 @@ describe('ZagsServiceService', () => {
     });
 
     it('should accept all optional fields', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockAdultUser);
+      prisma.marriage.findFirst.mockResolvedValue(null);
       prisma.marriage.create.mockResolvedValue({ ...mockMarriage, status: 'PENDING_CONSENT' });
       const result = await service.createMarriageApplication('user-1', {
         partnerId: 'user-2', spouse1FullName: 'Alice', spouse2FullName: 'Bob',
@@ -110,6 +136,14 @@ describe('ZagsServiceService', () => {
         witness1Name: 'Charlie', witness2Name: 'Dave', propertyRegime: 'JOINT',
       });
       expect(result).toBeDefined();
+    });
+
+    it('should throw BadRequestException when marrying yourself', async () => {
+      await expect(service.createMarriageApplication('user-1', {
+        partnerId: 'user-1', spouse1FullName: 'A', spouse2FullName: 'A',
+        spouse1DateOfBirth: '1990-01-01', spouse2DateOfBirth: '1990-01-01',
+        marriageDate: '2024-06-15',
+      })).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -309,6 +343,7 @@ describe('ZagsServiceService', () => {
 
   describe('createCivilUnion', () => {
     it('should create a civil union when both eligible', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockAdultUser);
       prisma.marriage.findFirst.mockResolvedValue(null); // both eligible
       prisma.marriage.create.mockResolvedValue({ ...mockMarriage, status: 'PENDING_CONSENT' });
       const result = await service.createCivilUnion('user-3', {
@@ -319,6 +354,7 @@ describe('ZagsServiceService', () => {
       expect(result.status).toBe('PENDING_CONSENT');
     });
     it('should throw BadRequestException if initiator not eligible', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockAdultUser);
       prisma.marriage.findFirst.mockResolvedValue(mockMarriage); // married = ineligible
       prisma.zagsDivorce.findFirst.mockResolvedValue(null);
       await expect(service.createCivilUnion('user-1', {

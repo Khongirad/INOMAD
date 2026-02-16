@@ -19,6 +19,7 @@ export class AuthPasswordService {
     username: string;
     password: string;
     email?: string;
+    dateOfBirth?: string;
   }) {
     // Validate username
     if (!dto.username || dto.username.length < 3) {
@@ -71,6 +72,7 @@ export class AuthPasswordService {
         username: dto.username,
         passwordHash,
         email: dto.email,
+        dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
         role: 'CITIZEN',
         verificationStatus: 'DRAFT',
         walletStatus: 'LOCKED',

@@ -6,6 +6,7 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  IsISO8601,
 } from 'class-validator';
 
 export class RequestNonceDto {
@@ -53,6 +54,10 @@ export class RegisterDto {
   @IsEmail({}, { message: 'Invalid email format' })
   @IsOptional()
   email?: string;
+
+  @IsISO8601({}, { message: 'Date of birth must be in ISO 8601 format (YYYY-MM-DD)' })
+  @IsOptional()
+  dateOfBirth?: string;
 }
 
 export class LoginPasswordDto {

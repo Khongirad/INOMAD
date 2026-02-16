@@ -6,6 +6,12 @@ export class ZagsServiceService {
   constructor(private prisma: PrismaService) {}
 
   async checkEligibility(userId: string) {
+    // Check user profile for age
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, dateOfBirth: true },
+    });
+
     // Check if user has active marriage
     const activeMarriage = await this.prisma.marriage.findFirst({
       where: {
@@ -28,7 +34,6 @@ export class ZagsServiceService {
       : null;
 
     const currentStatus = activeMarriage ? 'MARRIED' : 'SINGLE';
-    const isEligible = !activeMarriage;
     const reasons: string[] = [];
 
     if (activeMarriage) {
@@ -38,6 +43,19 @@ export class ZagsServiceService {
       }
     }
 
+    // Age check — must be 18+
+    if (user?.dateOfBirth) {
+      const age = Math.floor(
+        (Date.now() - new Date(user.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000),
+      );
+      if (age < 18) {
+        reasons.push(`Must be at least 18 years old (current age: ${age})`);
+      }
+    } else {
+      reasons.push('Date of birth not on file — update your profile first');
+    }
+
+    const isEligible = reasons.length === 0;
     return { isEligible, currentStatus, reasons };
   }
 
@@ -57,6 +75,24 @@ export class ZagsServiceService {
     propertyRegime?: 'SEPARATE' | 'JOINT' | 'CUSTOM';
     propertyAgreement?: string;
   }) {
+    // Cannot marry yourself
+    if (userId === data.partnerId) {
+      throw new BadRequestException('Cannot marry yourself');
+    }
+
+    // Verify eligibility for both parties
+    const [elig1, elig2] = await Promise.all([
+      this.checkEligibility(userId),
+      this.checkEligibility(data.partnerId),
+    ]);
+
+    if (!elig1.isEligible) {
+      throw new BadRequestException(`Initiator not eligible: ${elig1.reasons.join(', ')}`);
+    }
+    if (!elig2.isEligible) {
+      throw new BadRequestException(`Partner not eligible: ${elig2.reasons.join(', ')}`);
+    }
+
     const ceremonyMap: Record<string, any> = {
       'Civil': 'CIVIL',
       'Religious': 'RELIGIOUS',
