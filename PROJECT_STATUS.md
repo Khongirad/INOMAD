@@ -1,7 +1,7 @@
 # PROJECT STATUS — INOMAD KHURAL
 
-**Last Updated**: February 15, 2026  
-**Current Phase**: Test Coverage Expansion & Stabilization ✅  
+**Last Updated**: February 16, 2026  
+**Current Phase**: Spec Compliance & API Documentation ✅  
 **Overall Status**: 🟢 **Full-Stack Operational — 95%+ Backend Coverage**
 
 ---
@@ -21,13 +21,14 @@
 
 ### Backend Server
 - **Status**: ✅ **RUNNING** on port 3001
-- **Modules**: 62 NestJS modules
-- **Controllers**: 69 REST controllers
-- **Services**: 96 injectable services
-- **Test Suites**: 176 spec files (95.85% line coverage)
-- **API Endpoints**: 120+ routes registered
+- **Modules**: 63 NestJS modules
+- **Controllers**: 70 REST controllers (100% Swagger-tagged)
+- **Services**: 98 injectable services
+- **Test Suites**: 176 spec files, 2989 tests (95.85% line coverage)
+- **API Endpoints**: 130+ routes registered
 - **Database**: PostgreSQL (Prisma ORM)
-- **Prisma Schema**: 5,243 lines — 143 models, 94 enums
+- **Prisma Schema**: 5,487 lines — 146 models, 96 enums
+- **Swagger/OpenAPI**: 70/70 controllers tagged
 - **TypeScript**: Builds without errors
 
 ### Frontend Application
@@ -50,18 +51,18 @@
 
 ## 🚀 Available Features
 
-### ✅ Fully Operational (23 Systems)
+### ✅ Fully Operational (26 Systems)
 - User authentication (JWT) & session management
 - User registration, verification chain system
 - Seat binding & identity management (SeatSBT)
 - MPC wallet setup (Web3Auth)
-- Archive & document system with notarization
+- Archive & document system with notarization + blockchain hashing
 - Admin & Creator management tools
 - Guild platform with professional certifications
 - Education module with courses & certifications
 - Election system with term/anonymous voting
-- Timeline & Calendar (dual calendar system)
-- Government services: Migration (passport), ZAGS (marriage/divorce), Land Registry
+- Timeline & Calendar (dual calendar system + reminders)
+- Government services: Migration (passport), ZAGS (marriage/divorce/death/name-change), Land Registry (with encumbrances)
 - Organization management with treasury & budgets
 - Khural (parliament) motions & voting
 - Messaging system
@@ -74,6 +75,9 @@
 - Parliament hierarchy (Arban → Zun → Myangan → Tumen → Confederate Khural)
 - Org banking with branch finance
 - News system
+- Census service (demographic aggregation)
+- Marketplace with escrow, shopping cart, full-text search, seller reputation
+- Professions system
 
 ### ⚠️ Requires Blockchain
 - Arban credit lines (Family & Organizational)
@@ -140,11 +144,12 @@
 ### High Priority
 - [ ] End-to-end integration testing (registration → verification → wallet)
 - [ ] Production environment variables (replace dev secrets)
+- [ ] Deploy VotingCenter contract (`chain/scripts/deploy-voting-center.js`)
 
 ### Medium Priority
-- [ ] Database migration for User.dateOfBirth field
+- [ ] Run Prisma migration for new models (EscrowTransaction, ShoppingCart, CartItem)
 - [ ] Security audit & penetration testing
-- [ ] Swagger/OpenAPI documentation generation
+- [x] ~~Swagger/OpenAPI documentation (70/70 controllers tagged)~~
 - [ ] Performance benchmarking & load testing
 
 ### Low Priority
@@ -196,7 +201,7 @@
 | Feb 13 | 2 | Coverage batch 14 (8 services, 92–100% each) |
 | Feb 14 | 4 | Complete frontend translation, CI fix, coverage batch 16 (95.85%) |
 | Feb 15 | 3 | Land Code rewrite, 36 new + 78 enhanced specs, governance corrections |
-| Feb 16 | 11 | Arban verification, Khural indigenous-only, citizen lifecycle E2E, **SECURITY: global AuthGuard + defaultSecret + duplicate guard**, Swagger (36 controllers), **ZAGS 18+ age validation + dateOfBirth registration** |
+| Feb 16 | 11+ | Arban verification, Khural indigenous-only, citizen lifecycle E2E, **SECURITY: global AuthGuard**, Swagger (70/70 controllers), **ZAGS 18+ age validation**, **Spec compliance: Escrow, Cart, Census, Archive hashing, Full-text search, Seller reputation**, VotingCenter deploy script |
 
 ---
 
