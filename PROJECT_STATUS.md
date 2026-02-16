@@ -16,7 +16,7 @@
 | **Production code** | ~112,000 lines (TypeScript) |
 | **Test code** | ~25,600 lines (TypeScript) |
 | **Total codebase** | **~137,000 lines** |
-| **Git commits** | 172 |
+| **Git commits** | 174 |
 | **Contributors** | 1 |
 
 ### Backend Server
@@ -196,7 +196,7 @@
 | Feb 13 | 2 | Coverage batch 14 (8 services, 92–100% each) |
 | Feb 14 | 4 | Complete frontend translation, CI fix, coverage batch 16 (95.85%) |
 | Feb 15 | 3 | Land Code rewrite, 36 new + 78 enhanced specs, governance corrections |
-| Feb 16 | 3 | Arban-level verification, Khural indigenous-only, citizen lifecycle E2E test (12 tests) |
+| Feb 16 | 5 | Arban verification, Khural indigenous-only, citizen lifecycle E2E (12 tests), **SECURITY: global AuthGuard (29 controllers protected)** |
 
 ---
 
@@ -205,4 +205,4 @@
 **GitHub**: https://github.com/Khongirad/INOMAD  
 **Branch**: main  
 **Contributors**: 1  
-**Total Commits**: 172
+**Total Commits**: 174
