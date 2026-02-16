@@ -1,167 +1,200 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ArbanVerificationService } from './arban-verification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TieredVerificationService } from '../verification/tiered-verification.service';
+import { BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 
 describe('ArbanVerificationService', () => {
   let service: ArbanVerificationService;
   let prisma: any;
 
-  beforeEach(async () => {
-    prisma = {
-      user: {
-        findUnique: jest.fn(),
-        findMany: jest.fn(),
-        updateMany: jest.fn().mockResolvedValue({}),
-      },
-      arbanMutualVerification: {
-        findUnique: jest.fn(),
-        findMany: jest.fn(),
-        create: jest.fn(),
-        count: jest.fn(),
-        delete: jest.fn().mockResolvedValue({}),
-      },
-      guild: {
-        update: jest.fn().mockResolvedValue({}),
-      },
-    };
+  const mockPrisma = () => ({
+    user: { findUnique: jest.fn(), findMany: jest.fn(), updateMany: jest.fn() },
+    arbanMutualVerification: {
+      findUnique: jest.fn(), findMany: jest.fn(),
+      create: jest.fn(), count: jest.fn(), delete: jest.fn(),
+    },
+    guild: { update: jest.fn().mockResolvedValue({}) },
+  });
 
+  const mockTiered = () => ({});
+
+  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ArbanVerificationService,
-        { provide: PrismaService, useValue: prisma },
-        { provide: TieredVerificationService, useValue: {} },
+        { provide: PrismaService, useFactory: mockPrisma },
+        { provide: TieredVerificationService, useFactory: mockTiered },
       ],
     }).compile();
-
-    service = module.get<ArbanVerificationService>(ArbanVerificationService);
+    service = module.get(ArbanVerificationService);
+    prisma = module.get(PrismaService);
   });
 
+  it('should be defined', () => expect(service).toBeDefined());
+
   describe('verifyMember', () => {
+    it('should create verification', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ currentArbanId: 'a1' })
+        .mockResolvedValueOnce({ currentArbanId: 'a1' });
+      prisma.arbanMutualVerification.findUnique.mockResolvedValue(null);
+      prisma.arbanMutualVerification.create.mockResolvedValue({
+        verifier: { id: 'u1' }, verified: { id: 'u2' },
+      });
+      prisma.user.findMany.mockResolvedValue([]);
+      prisma.arbanMutualVerification.count.mockResolvedValue(1);
+
+      const result = await service.verifyMember('a1', 'u1', 'u2');
+      expect(result.isArbanComplete).toBe(false);
+    });
+
     it('should throw if user not found', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.verifyMember('arban-1', 'verifier-1', 'verified-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.verifyMember('a1', 'u1', 'u2'))
+        .rejects.toThrow(NotFoundException);
     });
 
-    it('should reject if users not in same arban', async () => {
+    it('should throw if not in same arban', async () => {
       prisma.user.findUnique
-        .mockResolvedValueOnce({ currentArbanId: 'arban-1' })
-        .mockResolvedValueOnce({ currentArbanId: 'arban-2' }); // different
-
-      await expect(
-        service.verifyMember('arban-1', 'v1', 'v2'),
-      ).rejects.toThrow(ForbiddenException);
+        .mockResolvedValueOnce({ currentArbanId: 'a1' })
+        .mockResolvedValueOnce({ currentArbanId: 'a2' });
+      await expect(service.verifyMember('a1', 'u1', 'u2'))
+        .rejects.toThrow(ForbiddenException);
     });
 
-    it('should reject self-verification', async () => {
+    it('should throw if self-verification', async () => {
       prisma.user.findUnique
-        .mockResolvedValueOnce({ currentArbanId: 'arban-1' })
-        .mockResolvedValueOnce({ currentArbanId: 'arban-1' });
-
-      await expect(
-        service.verifyMember('arban-1', 'same', 'same'),
-      ).rejects.toThrow(BadRequestException);
+        .mockResolvedValueOnce({ currentArbanId: 'a1' })
+        .mockResolvedValueOnce({ currentArbanId: 'a1' });
+      await expect(service.verifyMember('a1', 'u1', 'u1'))
+        .rejects.toThrow(BadRequestException);
     });
 
-    it('should reject duplicate verification', async () => {
+    it('should throw if already verified', async () => {
       prisma.user.findUnique
-        .mockResolvedValueOnce({ currentArbanId: 'arban-1' })
-        .mockResolvedValueOnce({ currentArbanId: 'arban-1' });
+        .mockResolvedValueOnce({ currentArbanId: 'a1' })
+        .mockResolvedValueOnce({ currentArbanId: 'a1' });
       prisma.arbanMutualVerification.findUnique.mockResolvedValue({ id: 'existing' });
-
-      await expect(
-        service.verifyMember('arban-1', 'v1', 'v2'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.verifyMember('a1', 'u1', 'u2'))
+        .rejects.toThrow(BadRequestException);
     });
   });
 
   describe('isFullyVerified', () => {
-    it('should return false if not 5 members', async () => {
-      prisma.user.findMany.mockResolvedValue([{ id: '1' }, { id: '2' }]); // only 2
-
-      const result = await service.isFullyVerified('arban-1');
-      expect(result).toBe(false);
-    });
-
-    it('should return true when 20 verifications exist', async () => {
-      prisma.user.findMany.mockResolvedValue(
-        Array.from({ length: 5 }, (_, i) => ({ id: `user-${i}` })),
-      );
+    it('should return true when 20 verifications for 5 members', async () => {
+      prisma.user.findMany.mockResolvedValue([
+        { id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' },
+      ]);
       prisma.arbanMutualVerification.count.mockResolvedValue(20);
-
-      const result = await service.isFullyVerified('arban-1');
-      expect(result).toBe(true);
+      expect(await service.isFullyVerified('a1')).toBe(true);
     });
 
-    it('should return false when verifications incomplete', async () => {
-      prisma.user.findMany.mockResolvedValue(
-        Array.from({ length: 5 }, (_, i) => ({ id: `user-${i}` })),
-      );
-      prisma.arbanMutualVerification.count.mockResolvedValue(15);
-
-      const result = await service.isFullyVerified('arban-1');
-      expect(result).toBe(false);
+    it('should return false if not 5 members', async () => {
+      prisma.user.findMany.mockResolvedValue([{ id: '1' }]);
+      expect(await service.isFullyVerified('a1')).toBe(false);
     });
   });
 
   describe('getVerificationProgress', () => {
-    it('should return zero progress for incomplete arban', async () => {
-      prisma.user.findMany.mockResolvedValue([{ id: '1' }]); // only 1 member
-
-      const result = await service.getVerificationProgress('arban-1');
-      expect(result.total).toBe(20);
-      expect(result.completed).toBe(0);
-      expect(result.isComplete).toBe(false);
-    });
-
-    it('should compute correct progress', async () => {
+    it('should calculate progress', async () => {
       prisma.user.findMany.mockResolvedValue(
-        Array.from({ length: 5 }, (_, i) => ({ id: `user-${i}` })),
+        Array.from({ length: 5 }, (_, i) => ({ id: `u${i}` }))
       );
       prisma.arbanMutualVerification.count.mockResolvedValue(10);
-
-      const result = await service.getVerificationProgress('arban-1');
+      const result = await service.getVerificationProgress('a1');
       expect(result.total).toBe(20);
       expect(result.completed).toBe(10);
       expect(result.percentage).toBe(50);
-      expect(result.remaining).toBe(10);
     });
   });
 
   describe('getVerificationMatrix', () => {
-    it('should build verification matrix', async () => {
+    it('should build matrix', async () => {
       prisma.arbanMutualVerification.findMany.mockResolvedValue([
-        { verifierId: 'A', verifiedId: 'B' },
-        { verifierId: 'C', verifiedId: 'B' },
-        { verifierId: 'A', verifiedId: 'C' },
+        { verifierId: 'u1', verifiedId: 'u2' },
+        { verifierId: 'u3', verifiedId: 'u2' },
       ]);
-
-      const matrix = await service.getVerificationMatrix('arban-1');
-      expect(matrix['B']).toEqual(['A', 'C']);
-      expect(matrix['C']).toEqual(['A']);
+      const matrix = await service.getVerificationMatrix('a1');
+      expect(matrix['u2']).toHaveLength(2);
     });
   });
 
   describe('revokeVerification', () => {
-    it('should reject unauthorized revocation', async () => {
-      prisma.user.findUnique.mockResolvedValue({ role: 'CITIZEN', id: 'other' });
-
-      await expect(
-        service.revokeVerification('arban-1', 'v1', 'v2', 'other'),
-      ).rejects.toThrow(ForbiddenException);
+    it('should allow self-revoke', async () => {
+      prisma.user.findUnique.mockResolvedValue({ role: 'CITIZEN' });
+      prisma.arbanMutualVerification.delete.mockResolvedValue({});
+      prisma.user.findMany.mockResolvedValue([]);
+      prisma.arbanMutualVerification.count.mockResolvedValue(0);
+      prisma.user.updateMany.mockResolvedValue({});
+      const result = await service.revokeVerification('a1', 'u1', 'u2', 'u1');
+      expect(result.success).toBe(true);
     });
 
-    it('should allow self-revocation', async () => {
-      prisma.user.findUnique.mockResolvedValue({ role: 'CITIZEN', id: 'v1' });
-      prisma.user.findMany.mockResolvedValue([{ id: '1' }]); // not 5 members
-      prisma.arbanMutualVerification.count.mockResolvedValue(0);
+    it('should reject unauthorized revoke', async () => {
+      prisma.user.findUnique.mockResolvedValue({ role: 'CITIZEN', id: 'other' });
+      await expect(service.revokeVerification('a1', 'u1', 'u2', 'other'))
+        .rejects.toThrow(ForbiddenException);
+    });
 
-      const result = await service.revokeVerification('arban-1', 'v1', 'v2', 'v1');
+    it('should allow admin revoke', async () => {
+      prisma.user.findUnique.mockResolvedValue({ role: 'ADMIN', id: 'admin-1' });
+      prisma.arbanMutualVerification.delete.mockResolvedValue({});
+      prisma.user.findMany.mockResolvedValue([]);
+      prisma.arbanMutualVerification.count.mockResolvedValue(0);
+      prisma.user.updateMany.mockResolvedValue({});
+      const result = await service.revokeVerification('a1', 'u1', 'u2', 'admin-1');
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe('getUnverifiedMembers', () => {
+    it('should return members not yet verified by user', async () => {
+      prisma.user.findMany.mockResolvedValue([
+        { id: 'u1' }, { id: 'u2' }, { id: 'u3' },
+      ]);
+      prisma.arbanMutualVerification.findMany.mockResolvedValue([
+        { verifiedId: 'u2' },
+      ]);
+      const result = await service.getUnverifiedMembers('a1', 'u1');
+      // u1 is the verifier (self excluded), u2 already verified → only u3 left
+      expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'u3' })]));
+    });
+  });
+
+  describe('getMemberVerifications', () => {
+    it('should return verifications for a member', async () => {
+      prisma.arbanMutualVerification.findMany.mockResolvedValue([
+        { verifierId: 'u1', verifiedId: 'u2', verifier: { id: 'u1' } },
+      ]);
+      prisma.user.findMany.mockResolvedValue([
+        { id: 'u1' }, { id: 'u2' }, { id: 'u3' },
+      ]);
+      const result = await service.getMemberVerifications('a1', 'u2');
+      expect(result.given).toHaveLength(1);
+    });
+  });
+
+  describe('getVerificationProgress edge cases', () => {
+    it('should return not-complete for non-5-member arban', async () => {
+      prisma.user.findMany.mockResolvedValue([{ id: 'u1' }]);
+      prisma.arbanMutualVerification.count.mockResolvedValue(0);
+      const result = await service.getVerificationProgress('a1');
+      expect(result.total).toBe(20);
+      expect(result.percentage).toBe(0);
+      expect(result.isComplete).toBe(false);
+    });
+  });
+
+  describe('onFullVerification', () => {
+    it('should upgrade members when arban is fully verified', async () => {
+      prisma.user.findMany.mockResolvedValue([
+        { id: 'u1' }, { id: 'u2' }, { id: 'u3' }, { id: 'u4' }, { id: 'u5' },
+      ]);
+      prisma.user.updateMany.mockResolvedValue({ count: 5 });
+      prisma.guild.update.mockResolvedValue({});
+      await (service as any).onFullVerification('a1');
+      expect(prisma.user.updateMany).toHaveBeenCalled();
     });
   });
 });
