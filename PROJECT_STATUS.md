@@ -16,7 +16,7 @@
 | **Production code** | ~112,000 lines (TypeScript) |
 | **Test code** | ~25,600 lines (TypeScript) |
 | **Total codebase** | **~137,000 lines** |
-| **Git commits** | 166 |
+| **Git commits** | 168 |
 | **Contributors** | 1 |
 
 ### Backend Server
@@ -195,7 +195,7 @@
 | Feb 12 | 2 | Backend coverage batch 13 (+47 tests, 93.07%) |
 | Feb 13 | 2 | Coverage batch 14 (8 services, 92–100% each) |
 | Feb 14 | 4 | Complete frontend translation, CI fix, coverage batch 16 (95.85%) |
-| Feb 15 | 2 | Land Code rewrite, 36 new + 78 enhanced spec files |
+| Feb 15 | 3 | Land Code rewrite, 36 new + 78 enhanced specs, governance corrections (verification 3→1, emission tiers, 8 citizenship statuses) |
 
 ---
 
@@ -204,4 +204,4 @@
 **GitHub**: https://github.com/Khongirad/INOMAD  
 **Branch**: main  
 **Contributors**: 1  
-**Total Commits**: 166
+**Total Commits**: 168
