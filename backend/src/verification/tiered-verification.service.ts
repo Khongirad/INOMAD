@@ -21,7 +21,15 @@ export class TieredVerificationService {
   ) {}
 
   /**
-   * Get emission limit for a user based on verification level
+   * Get emission limit for a user based on verification level.
+   *
+   * Денежный поток:
+   *   Центральный Банк →(корр. счёт)→ Банк Сибири →(прямой перевод)→ счёт гражданина
+   *
+   * Уровни эмиссии:
+   *   UNVERIFIED  = 100 ALTAN    (начальный)
+   *   ARBAN       = 1,000 ALTAN  (создание Арбана)
+   *   ZUN+        = безлимит     (вся оставшаяся эмиссия гражданина)
    */
   getEmissionLimit(level: VerificationLevel, role?: UserRole): number {
     // Creator has unlimited emissions
@@ -31,11 +39,11 @@ export class TieredVerificationService {
 
     switch (level) {
       case VerificationLevel.UNVERIFIED:
-        return 100; // 100 ALTAN lifetime limit
+        return 100; // 100 ALTAN — initial allocation
       case VerificationLevel.ARBAN_VERIFIED:
-        return 1000; // 1,000 ALTAN shared per Arban (checked at Arban level)
+        return 1000; // 1,000 ALTAN — upon Arban creation
       case VerificationLevel.ZUN_VERIFIED:
-        return 10000; // 10,000 ALTAN
+        return Number.MAX_SAFE_INTEGER; // All remaining citizen emission
       case VerificationLevel.FULLY_VERIFIED:
         return Number.MAX_SAFE_INTEGER; // Unlimited
       default:
@@ -137,7 +145,8 @@ export class TieredVerificationService {
     }
 
     const isUnlimited = user.role === UserRole.CREATOR || 
-                         user.verificationLevel === VerificationLevel.FULLY_VERIFIED;
+                         user.verificationLevel === VerificationLevel.FULLY_VERIFIED ||
+                         user.verificationLevel === VerificationLevel.ZUN_VERIFIED;
     
     const limit = this.getEmissionLimit(user.verificationLevel, user.role);
     const used = user.totalEmitted;

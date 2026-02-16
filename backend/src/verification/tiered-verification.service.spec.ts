@@ -56,8 +56,8 @@ describe('TieredVerificationService', () => {
     it('returns 1000 for ARBAN_VERIFIED', () => {
       expect(service.getEmissionLimit('ARBAN_VERIFIED' as any)).toBe(1000);
     });
-    it('returns 10000 for ZUN_VERIFIED', () => {
-      expect(service.getEmissionLimit('ZUN_VERIFIED' as any)).toBe(10000);
+    it('returns MAX_SAFE_INTEGER for ZUN_VERIFIED (all remaining emission)', () => {
+      expect(service.getEmissionLimit('ZUN_VERIFIED' as any)).toBe(Number.MAX_SAFE_INTEGER);
     });
     it('returns MAX_SAFE_INTEGER for FULLY_VERIFIED', () => {
       expect(service.getEmissionLimit('FULLY_VERIFIED' as any)).toBe(Number.MAX_SAFE_INTEGER);
@@ -141,6 +141,14 @@ describe('TieredVerificationService', () => {
     it('returns unlimited for FULLY_VERIFIED', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'u1', verificationLevel: 'FULLY_VERIFIED', role: 'CITIZEN',
+        totalEmitted: new Decimal(0), currentArbanId: null,
+      });
+      const result = await service.getEmissionStatus('u1');
+      expect(result.isUnlimited).toBe(true);
+    });
+    it('returns unlimited for ZUN_VERIFIED', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'u1', verificationLevel: 'ZUN_VERIFIED', role: 'CITIZEN',
         totalEmitted: new Decimal(0), currentArbanId: null,
       });
       const result = await service.getEmissionStatus('u1');

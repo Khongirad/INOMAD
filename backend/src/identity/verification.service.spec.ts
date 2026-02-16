@@ -52,17 +52,18 @@ describe('VerificationService', () => {
 
   // ─── submitVerification ────────────────
   describe('submitVerification', () => {
-    it('should submit verification and return progress', async () => {
+    it('should submit verification and verify user (referral = 1)', async () => {
       prisma.user.findUnique.mockResolvedValue(mockVerifier);
       prisma.user.findFirst.mockResolvedValue(mockTarget);
       prisma.verification.create.mockResolvedValue({});
       prisma.verification.count.mockResolvedValue(1);
+      prisma.user.update.mockResolvedValue({});
       const result = await service.submitVerification('V-SEAT', 'u1');
       expect(result.count).toBe(1);
-      expect(result.verified).toBe(false);
+      expect(result.verified).toBe(true);
     });
 
-    it('should verify user at quorum (3)', async () => {
+    it('should also verify with multiple referrals', async () => {
       prisma.user.findUnique.mockResolvedValue(mockVerifier);
       prisma.user.findFirst.mockResolvedValue(mockTarget);
       prisma.verification.create.mockResolvedValue({});
@@ -131,7 +132,7 @@ describe('VerificationService', () => {
       prisma.verification.count.mockResolvedValue(2);
       const result = await service.getVerificationStatus('u1');
       expect(result!.progress).toBe(2);
-      expect(result!.required).toBe(3);
+      expect(result!.required).toBe(1);
     });
 
     it('should return null if user not found', async () => {

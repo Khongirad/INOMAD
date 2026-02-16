@@ -30,7 +30,8 @@ export class VerificationService {
   ) {}
 
   /**
-   * Standard Verification: Requires 3 verified locals.
+   * Referral Verification: Requires 1 verified citizen from the same Zuun.
+   * Реферальная программа — один верифицированный гражданин подтверждает нового.
    */
   async submitVerification(verifierSeatId: string, targetUserId: string) {
     const verifier = await this.prisma.user.findUnique({
@@ -81,12 +82,12 @@ export class VerificationService {
       }
     });
 
-    // Check for Quorum (3)
+    // Referral: 1 verification is sufficient
     const count = await this.prisma.verification.count({
       where: { targetUserId: target.id }
     });
 
-    if (count >= 3) {
+    if (count >= 1) {
       await this.prisma.user.update({
         where: { id: target.id },
         data: { 
@@ -105,7 +106,7 @@ export class VerificationService {
       }
     }
 
-    return { count, threshold: 3, verified: count >= 3 };
+    return { count, threshold: 1, verified: count >= 1 };
   }
 
   async superVerify(fondantSeatId: string, targetUserId: string, justification: string) {
@@ -210,7 +211,7 @@ export class VerificationService {
     return {
       ...user,
       progress: verificationsCount,
-      required: 3,
+      required: 1,
       canBeSuperVerified: !user.isSuperVerified,
       isFounderMandateHolder: this.FOUNDER_MANDATES.includes(user.seatId || '')
     };
