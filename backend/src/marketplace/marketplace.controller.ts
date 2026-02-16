@@ -316,4 +316,174 @@ export class MarketplaceController {
       data: results,
     };
   }
+
+  // ============== ESCROW ENDPOINTS ==============
+
+  /**
+   * Create escrow for a purchase
+   */
+  @Post('escrow')
+  async createEscrow(@Request() req, @Body() body: { purchaseId: string; sellerId: string; amount: string }) {
+    const escrow = await this.marketplaceService.createEscrow(
+      body.purchaseId,
+      req.user.userId,
+      body.sellerId,
+      body.amount,
+    );
+    return { success: true, data: escrow };
+  }
+
+  /**
+   * Fund an escrow (locks buyer's funds)
+   */
+  @Post('escrow/:id/fund')
+  async fundEscrow(
+    @Request() req,
+    @Param('id') escrowId: string,
+    @Body() body: { txHash?: string },
+  ) {
+    const escrow = await this.marketplaceService.fundEscrow(escrowId, req.user.userId, body.txHash);
+    return { success: true, data: escrow };
+  }
+
+  /**
+   * Release escrow funds to seller (buyer confirms)
+   */
+  @Post('escrow/:id/release')
+  async releaseEscrow(@Request() req, @Param('id') escrowId: string) {
+    const escrow = await this.marketplaceService.releaseEscrow(escrowId, req.user.userId);
+    return { success: true, data: escrow, message: 'Funds released to seller' };
+  }
+
+  /**
+   * Open a dispute on an escrow
+   */
+  @Post('escrow/:id/dispute')
+  async openDispute(
+    @Request() req,
+    @Param('id') escrowId: string,
+    @Body() body: { reason: string },
+  ) {
+    const escrow = await this.marketplaceService.openDispute(escrowId, req.user.userId, body.reason);
+    return { success: true, data: escrow };
+  }
+
+  /**
+   * Resolve a dispute (arbitrator)
+   */
+  @Post('escrow/:id/resolve')
+  async resolveDispute(
+    @Request() req,
+    @Param('id') escrowId: string,
+    @Body() body: { decision: 'RELEASE' | 'REFUND' },
+  ) {
+    const escrow = await this.marketplaceService.resolveDispute(escrowId, req.user.userId, body.decision);
+    return { success: true, data: escrow };
+  }
+
+  /**
+   * Get escrow details by ID
+   */
+  @Get('escrow/:id')
+  async getEscrow(@Param('id') escrowId: string) {
+    const escrow = await this.marketplaceService.getEscrow(escrowId);
+    return { success: true, data: escrow };
+  }
+
+  /**
+   * Get escrow by purchase ID
+   */
+  @Get('purchase/:id/escrow')
+  async getEscrowByPurchase(@Param('id') purchaseId: string) {
+    const escrow = await this.marketplaceService.getEscrowByPurchase(purchaseId);
+    return { success: true, data: escrow };
+  }
+
+  /**
+   * Get all disputed escrows (for arbitrators)
+   */
+  @Get('escrow/disputes')
+  async getDisputedEscrows() {
+    const disputes = await this.marketplaceService.getDisputedEscrows();
+    return { success: true, data: disputes };
+  }
+
+  // ============== SHOPPING CART ENDPOINTS ==============
+
+  /**
+   * Get shopping cart
+   */
+  @Get('cart')
+  async getCart(@Request() req) {
+    const cart = await this.marketplaceService.getOrCreateCart(req.user.userId);
+    return { success: true, data: cart };
+  }
+
+  /**
+   * Add item to cart
+   */
+  @Post('cart/add')
+  async addToCart(@Request() req, @Body() body: { listingId: string; quantity?: number }) {
+    const cart = await this.marketplaceService.addToCart(
+      req.user.userId,
+      body.listingId,
+      body.quantity || 1,
+    );
+    return { success: true, data: cart };
+  }
+
+  /**
+   * Remove item from cart
+   */
+  @Delete('cart/item/:listingId')
+  async removeFromCart(@Request() req, @Param('listingId') listingId: string) {
+    const cart = await this.marketplaceService.removeFromCart(req.user.userId, listingId);
+    return { success: true, data: cart };
+  }
+
+  /**
+   * Update cart item quantity
+   */
+  @Put('cart/item/:listingId')
+  async updateCartItem(
+    @Request() req,
+    @Param('listingId') listingId: string,
+    @Body() body: { quantity: number },
+  ) {
+    const cart = await this.marketplaceService.updateCartItemQuantity(
+      req.user.userId,
+      listingId,
+      body.quantity,
+    );
+    return { success: true, data: cart };
+  }
+
+  /**
+   * Clear cart
+   */
+  @Delete('cart')
+  async clearCart(@Request() req) {
+    const cart = await this.marketplaceService.clearCart(req.user.userId);
+    return { success: true, data: cart };
+  }
+
+  // ============== SEARCH & REPUTATION ==============
+
+  /**
+   * Full-text search (PostgreSQL ranked)
+   */
+  @Get('search/fulltext')
+  async fullTextSearch(@Query('q') query: string, @Query('limit') limit?: string) {
+    const results = await this.marketplaceService.fullTextSearch(query, limit ? parseInt(limit) : 20);
+    return { success: true, data: results };
+  }
+
+  /**
+   * Get seller reputation
+   */
+  @Get('seller/:id/reputation')
+  async getSellerReputation(@Param('id') sellerId: string) {
+    const reputation = await this.marketplaceService.getSellerReputation(sellerId);
+    return { success: true, data: reputation };
+  }
 }

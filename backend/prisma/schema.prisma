@@ -209,6 +209,9 @@ model User {
   marriagesAsSpouse2 Marriage[]        @relation("Spouse2Marriages")
   marriageConsents   MarriageConsent[] @relation("MarriageConsents")
   divorcesInitiated  ZagsDivorce[]     @relation("DivorceInitiator")
+  deathRegistrations DeathRegistration[] @relation("DeathRegistrations")
+  deathReports       DeathRegistration[] @relation("DeathReporter")
+  nameChanges        NameChange[]        @relation("NameChanges")
 
   // Land Registry
   landPlotsRegistered LandPlot[]        @relation("LandRegistrar")
@@ -216,6 +219,10 @@ model User {
   landLeases          LandLease[]       @relation("LandLessee")
   landSales           LandTransaction[] @relation("LandSeller")
   landPurchases       LandTransaction[] @relation("LandBuyer")
+  landEncumbrances    LandEncumbrance[] @relation("EncumbranceHolder")
+  escrowsAsBuyer      EscrowTransaction[] @relation("EscrowBuyer")
+  escrowsAsSeller     EscrowTransaction[] @relation("EscrowSeller")
+  shoppingCart        ShoppingCart?        @relation("UserCart")
 
   // Notifications
   notifications Notification[] @relation("UserNotifications")
@@ -2705,6 +2712,7 @@ model MarketplaceListing {
   updatedAt DateTime @updatedAt
 
   purchases MarketplacePurchase[]
+  cartItems CartItem[]
 
   @@index([sellerId])
   @@index([categoryId])
@@ -2737,6 +2745,7 @@ model MarketplacePurchase {
   completedAt DateTime?
 
   listing MarketplaceListing @relation(fields: [listingId], references: [id])
+  escrow  EscrowTransaction?
 
   @@index([listingId])
   @@index([buyerId])
@@ -2825,6 +2834,87 @@ enum MarketplacePurchaseStatus {
   CANCELLED
   DISPUTED
   REFUNDED
+}
+
+enum EscrowStatus {
+  CREATED
+  FUNDED
+  RELEASED
+  REFUNDED
+  DISPUTED
+  RESOLVED
+}
+
+model EscrowTransaction {
+  id String @id @default(uuid())
+
+  // Link to purchase
+  purchaseId String @unique
+  purchase   MarketplacePurchase @relation(fields: [purchaseId], references: [id])
+
+  // Parties
+  buyerId  String
+  buyer    User @relation("EscrowBuyer", fields: [buyerId], references: [id])
+  sellerId String
+  seller   User @relation("EscrowSeller", fields: [sellerId], references: [id])
+
+  // Amounts
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @default("ALTAN")
+
+  // Status
+  status EscrowStatus @default(CREATED)
+
+  // Blockchain
+  contractAddress String?  // Smart contract address (if deployed)
+  lockTxHash      String?  // Transaction hash for locking funds
+  releaseTxHash   String?  // Transaction hash for releasing funds
+
+  // Dispute
+  disputeReason String?
+  disputedAt    DateTime?
+  resolvedAt    DateTime?
+  resolvedBy    String?   // Reviewer/arbitrator
+
+  // Timestamps
+  fundedAt   DateTime?
+  releasedAt DateTime?
+  refundedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+}
+
+model ShoppingCart {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation("UserCart", fields: [userId], references: [id])
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id     String @id @default(uuid())
+  cartId String
+  cart   ShoppingCart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  listingId String
+  listing   MarketplaceListing @relation(fields: [listingId], references: [id])
+
+  quantity Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, listingId])
+  @@index([cartId])
+  @@index([listingId])
 }
 
 enum JobPostingStatus {
@@ -3729,7 +3819,108 @@ model ZagsDivorce {
   @@index([status])
 }
 
+// ============== DEATH REGISTRATION ==============
+
+enum DeathRegistrationStatus {
+  PENDING
+  REGISTERED
+  REJECTED
+}
+
+model DeathRegistration {
+  id                String   @id @default(uuid())
+  certificateNumber String   @unique @default(uuid())
+
+  deceasedId        String
+  deceased          User     @relation("DeathRegistrations", fields: [deceasedId], references: [id])
+  deceasedFullName  String
+  dateOfBirth       DateTime
+  dateOfDeath       DateTime
+  placeOfDeath      String
+  causeOfDeath      String
+
+  // Reporting
+  reportedById      String
+  reportedBy        User     @relation("DeathReporter", fields: [reportedById], references: [id])
+  reportedByName    String
+  relationship      String   // SPOUSE, CHILD, PARENT, SIBLING, DOCTOR, OTHER
+
+  // Medical
+  medicalCertificateNumber String?
+  doctorName               String?
+  hospitalName             String?
+
+  // Burial
+  burialLocation    String?
+  burialDate        DateTime?
+
+  // Status & registration
+  status            DeathRegistrationStatus @default(PENDING)
+  registeredById    String?
+  registeredAt      DateTime?
+  notes             String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([deceasedId])
+  @@index([reportedById])
+  @@index([status])
+}
+
+// ============== NAME CHANGE ==============
+
+enum NameChangeStatus {
+  PENDING
+  APPROVED
+  REGISTERED
+  REJECTED
+}
+
+model NameChange {
+  id                String   @id @default(uuid())
+  certificateNumber String   @unique @default(uuid())
+
+  userId            String
+  user              User     @relation("NameChanges", fields: [userId], references: [id])
+
+  previousName      String
+  newName           String
+  reason            String   // MARRIAGE, DIVORCE, PERSONAL, ADOPTION, OTHER
+
+  // Supporting documents
+  supportingDocumentIds String[]
+
+  // Status & registration
+  status            NameChangeStatus @default(PENDING)
+  approvedById      String?
+  approvedAt        DateTime?
+  effectiveDate     DateTime?
+  notes             String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
 // ============== LAND REGISTRY ==============
+
+enum EncumbranceType {
+  MORTGAGE
+  LIEN
+  EASEMENT
+  RESTRICTION
+  SOVEREIGN  // Only indigenous have right to create sovereign encumbrance
+}
+
+enum EncumbranceStatus {
+  ACTIVE
+  RELEASED
+  EXPIRED
+  FORECLOSED
+}
 
 enum LandType {
   AGRICULTURAL
@@ -3810,10 +4001,11 @@ model LandPlot {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  properties   LandProperty[]
-  ownerships   LandOwnership[]
-  leases       LandLease[]
-  transactions LandTransaction[] @relation("LandPlotTransactions")
+  properties    LandProperty[]
+  ownerships    LandOwnership[]
+  leases        LandLease[]
+  transactions  LandTransaction[] @relation("LandPlotTransactions")
+  encumbrances  LandEncumbrance[] @relation("PlotEncumbrances")
 
   @@index([region, district])
   @@index([landType])
@@ -3842,9 +4034,10 @@ model LandProperty {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ownerships   LandOwnership[]
-  leases       LandLease[]
-  transactions LandTransaction[] @relation("PropertyTransactions")
+  ownerships    LandOwnership[]
+  leases        LandLease[]
+  transactions  LandTransaction[] @relation("PropertyTransactions")
+  encumbrances  LandEncumbrance[] @relation("PropertyEncumbrances")
 
   @@index([landPlotId])
   @@index([propertyType])
@@ -3962,6 +4155,57 @@ model LandTransaction {
   @@index([landPlotId])
   @@index([propertyId])
   @@index([status])
+}
+
+// Encumbrance (mortgage, lien, easement) — tracks financial obligations on land
+model LandEncumbrance {
+  id String @id @default(uuid())
+
+  // Target: land plot and/or property
+  landPlotId String?
+  landPlot   LandPlot? @relation("PlotEncumbrances", fields: [landPlotId], references: [id])
+
+  propertyId String?
+  property   LandProperty? @relation("PropertyEncumbrances", fields: [propertyId], references: [id])
+
+  // Encumbrance details
+  type        EncumbranceType
+  status      EncumbranceStatus @default(ACTIVE)
+  description String
+
+  // Financial terms (for MORTGAGE/LIEN)
+  amount      Decimal?  @db.Decimal(18, 2)
+  currency    String    @default("ALTAN")
+  interestRate Float?    // annual percentage
+
+  // Holder (lender, institution, or indigenous sovereign)
+  holderId   String
+  holder     User   @relation("EncumbranceHolder", fields: [holderId], references: [id])
+  holderName String
+
+  // Indigenous sovereign rights:
+  // Only INDIGENOUS citizens can create SOVEREIGN type encumbrances
+  // which restrict alienation of ancestral land
+  isIndigenousSovereign Boolean @default(false)
+
+  // Dates
+  startDate DateTime
+  endDate   DateTime?
+  releasedAt DateTime?
+  releasedBy String?
+
+  // Documents
+  documentNumber String? @unique
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([landPlotId])
+  @@index([propertyId])
+  @@index([holderId])
+  @@index([status])
+  @@index([type])
 }
 
 // ==============================================================================

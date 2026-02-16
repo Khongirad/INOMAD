@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -30,6 +31,7 @@ import { JobPostingStatus } from '@prisma/client';
  * - DELETE /jobs/applications/:id - Withdraw application
  * - POST /jobs/:id/complete - Complete job
  */
+@ApiTags('Marketplace')
 @Controller('jobs')
 @UseGuards(JwtAuthGuard)
 export class JobMarketplaceController {
