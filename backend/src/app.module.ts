@@ -32,6 +32,7 @@ import { VerificationModule } from './verification/verification.module';
 import { TimelineModule } from './timeline/timeline.module';
 import { HistoryModule } from './history/history.module';
 import { CalendarModule } from './calendar/calendar.module';
+import { CensusModule } from './census/census.module';
 import { ReputationModule } from './reputation/reputation.module';
 // import { DocumentModule } from './documents/document.module'; // Disabled - replaced by State Archive
 import { QuestModule } from './quest/quest.module';
@@ -99,6 +100,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     TimelineModule,
     HistoryModule,
     CalendarModule,
+    CensusModule,
     ReputationModule,  // Reputation & Trust system
     // DocumentModule,    // Document management & signing - DISABLED (replaced by ArchiveModule)
     QuestModule,       // Quest/Task assignment system
