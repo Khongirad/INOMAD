@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import { Reflector } from '@nestjs/core';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 
 describe('JwtAuthGuard', () => {
@@ -15,6 +16,7 @@ describe('JwtAuthGuard', () => {
       providers: [
         JwtAuthGuard,
         { provide: JwtService, useValue: jwtService },
+        Reflector,
       ],
     }).compile();
     guard = module.get(JwtAuthGuard);
@@ -25,11 +27,13 @@ describe('JwtAuthGuard', () => {
     delete process.env.AUTH_JWT_SECRET;
   });
 
-  const createContext = (headers: any = {}): ExecutionContext =>
+  const createContext = (headers: any = {}, isPublic = false): ExecutionContext =>
     ({
       switchToHttp: () => ({
         getRequest: () => ({ headers, user: undefined }),
       }),
+      getHandler: () => (isPublic ? function PublicHandler() {} : function Handler() {}),
+      getClass: () => (isPublic ? class PublicClass {} : class NormalClass {}),
     } as any);
 
   it('should be defined', () => expect(guard).toBeDefined());

@@ -63,6 +63,8 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { NewsModule } from './news/news.module';
 import { CitizenshipModule } from './citizenship/citizenship.module';
 
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -136,6 +138,10 @@ import { CitizenshipModule } from './citizenship/citizenship.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })
