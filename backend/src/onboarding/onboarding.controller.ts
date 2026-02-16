@@ -1,6 +1,8 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Body, Req } from '@nestjs/common';
 import { OnboardingService } from './onboarding.service';
 
+@ApiTags('Gamification')
 @Controller('onboarding')
 export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}

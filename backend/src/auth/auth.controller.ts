@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -23,6 +24,7 @@ import {
 } from './dto/auth.dto';
 import { Request } from 'express';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(

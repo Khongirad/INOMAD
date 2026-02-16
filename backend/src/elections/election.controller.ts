@@ -1,9 +1,11 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ElectionService } from './election.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { CreateElectionDto, AddCandidateDto, CastVoteDto } from './dto/election.dto';
 
+@ApiTags('Elections')
 @Controller('elections')
 @UseGuards(JwtAuthGuard)
 export class ElectionController {

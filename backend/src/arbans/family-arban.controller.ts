@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -21,6 +22,7 @@ import {
   SetKhuralRepRequest,
 } from './types/arban.types';
 
+@ApiTags('Arbans')
 @Controller('arbans/family')
 @UseGuards(JwtAuthGuard)
 export class FamilyArbanController {

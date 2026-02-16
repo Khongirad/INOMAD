@@ -1,6 +1,8 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Post, Get, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
 import { AcademyOfSciencesService, SubmitPatentDto, ReviewPatentDto, RegisterDiscoveryDto, PeerReviewDto, RequestGrantDto, ApproveGrantDto } from './academy.service';
 
+@ApiTags('Education')
 @Controller('academy')
 export class AcademyController {
   constructor(private readonly academyService: AcademyOfSciencesService) {}

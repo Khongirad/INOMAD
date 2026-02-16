@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -21,6 +22,7 @@ import {
   UpdateProgressDto,
 } from './quest.dto';
 
+@ApiTags('Gamification')
 @Controller('quests')
 @UseGuards(AuthGuard)
 export class QuestController {

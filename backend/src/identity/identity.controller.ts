@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Post, Body, Get, Param, UseGuards, Request } from '@nestjs/common';
 import { RegistrationService } from './registration.service';
 import { VerificationService } from './verification.service';
@@ -12,6 +13,7 @@ import {
   RequestActivationDto,
 } from './dto/identity.dto';
 
+@ApiTags('Identity')
 @Controller('identity')
 export class IdentityController {
   constructor(

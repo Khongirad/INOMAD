@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -18,6 +19,7 @@ import { CentralBankGuard } from '../auth/guards/central-bank.guard';
 import { ethers } from 'ethers';
 import { BorrowRequest, RepayLoanRequest } from './types/arban.types';
 
+@ApiTags('Arbans')
 @Controller('arbans/credit')
 @UseGuards(JwtAuthGuard)
 export class CreditController {

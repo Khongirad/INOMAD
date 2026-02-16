@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { CreatorGuard } from '../auth/guards/creator.guard';
 
+@ApiTags('Admin')
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
 export class AdminController {

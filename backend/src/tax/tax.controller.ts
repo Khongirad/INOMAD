@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -11,6 +12,7 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import { TaxService } from './tax.service';
 
+@ApiTags('Tax')
 @Controller('tax')
 @UseGuards(AuthGuard)
 export class TaxController {

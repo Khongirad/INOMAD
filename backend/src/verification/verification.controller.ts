@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { 
   Controller, 
   Get, 
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { VerificationLevel } from '@prisma/client';
 
+@ApiTags('Verification')
 @Controller('verification')
 @UseGuards(JwtAuthGuard)
 export class VerificationController {

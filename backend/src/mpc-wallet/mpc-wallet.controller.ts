@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { 
   Controller, 
   Post, 
@@ -61,6 +62,7 @@ class ConfirmRecoveryDto {
 
 // ==================== CONTROLLER ====================
 
+@ApiTags('Wallet')
 @Controller('mpc-wallet')
 @UseGuards(JwtAuthGuard)
 export class MPCWalletController {

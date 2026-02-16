@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -18,6 +19,7 @@ import { BankNonceDto, BankTicketDto } from './dto/bank-ticket.dto';
  * FIREWALL: These endpoints do NOT accept or validate auth JWTs.
  * A separate wallet signature is required.
  */
+@ApiTags('Banking')
 @Controller('bank/auth')
 export class BankAuthController {
   constructor(private bankAuthService: BankAuthService) {}

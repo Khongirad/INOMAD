@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -31,6 +32,7 @@ import { MarketplaceListingType, MarketplaceListingStatus } from '@prisma/client
  * - POST /marketplace/purchase/:id/rate - Rate transaction
  * - GET /marketplace/stats - Get statistics
  */
+@ApiTags('Marketplace')
 @Controller('marketplace')
 @UseGuards(JwtAuthGuard)
 export class MarketplaceController {

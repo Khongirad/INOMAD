@@ -1,9 +1,11 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { KhuralService } from './khural.service';
 import { CreateKhuralGroupDto, ApplySeatDto, AssignSeatDto } from './dto/khural.dto';
 import { AuthenticatedRequest } from '../auth/auth.middleware';
 import { Request } from '@nestjs/common';
 
+@ApiTags('Khural')
 @Controller('khural')
 export class KhuralController {
   constructor(private khuralService: KhuralService) {}

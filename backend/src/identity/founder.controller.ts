@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { FounderService } from './founder.service';
 
@@ -5,6 +6,7 @@ import { FounderService } from './founder.service';
  * Founder Bootstrap Controller
  * Endpoints for founder super-verification and bootstrap status
  */
+@ApiTags('Identity')
 @Controller('founder')
 export class FounderController {
   constructor(private founderService: FounderService) {}

@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Post, Get, Put, Body, Param, UseGuards, HttpStatus, HttpException } from '@nestjs/common';
 import { BankHierarchyService } from './bank-hierarchy.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -13,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
  * - PUT /bank/hierarchy/performance/:employeeId - Update performance
  * - GET /bank/hierarchy/promotion/:employeeId - Check promotion eligibility
  */
+@ApiTags('Hierarchy')
 @Controller('bank/hierarchy')
 @UseGuards(JwtAuthGuard)
 export class BankHierarchyController {

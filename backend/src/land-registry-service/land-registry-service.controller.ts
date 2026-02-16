@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -9,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { LandRegistryServiceService } from './land-registry-service.service';
 
+@ApiTags('Land')
 @Controller('land-registry')
 export class LandRegistryServiceController {
   constructor(private readonly landService: LandRegistryServiceService) {}

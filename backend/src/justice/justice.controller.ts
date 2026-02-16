@@ -1,6 +1,8 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Post, Get, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
 import { CouncilOfJusticeService, NominateMemberDto, ApproveMemberDto, FileCaseDto, AssignCaseDto, RuleOnCaseDto, RegisterPrecedentDto } from './justice.service';
 
+@ApiTags('Justice')
 @Controller('justice')
 export class JusticeController {
   constructor(private readonly justiceService: CouncilOfJusticeService) {}

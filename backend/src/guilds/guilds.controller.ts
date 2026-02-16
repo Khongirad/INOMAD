@@ -1,9 +1,11 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { GuildsService } from './guilds.service';
 import { CreateGuildDto, JoinGuildDto } from './dto/guilds.dto';
 import { AuthenticatedRequest } from '../auth/auth.middleware';
 import { Request } from '@nestjs/common';
 
+@ApiTags('Organizations')
 @Controller('guilds')
 export class GuildsController {
   constructor(private guildsService: GuildsService) {}

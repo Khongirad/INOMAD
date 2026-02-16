@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -12,6 +13,7 @@ import {
 import { ParliamentService } from './parliament.service';
 import { AuthGuard } from '../auth/auth.guard';
 
+@ApiTags('Parliament')
 @Controller('parliament')
 @UseGuards(AuthGuard)
 export class ParliamentController {

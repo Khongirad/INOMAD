@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -24,6 +25,7 @@ import { EventIndexerService } from './event-indexer.service';
  * - POST /protection/alerts/:id/acknowledge - Acknowledge alert
  * - GET /protection/high-risk - High risk wallets
  */
+@ApiTags('Wallet')
 @Controller('protection')
 export class WalletProtectionController {
   constructor(

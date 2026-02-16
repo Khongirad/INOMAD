@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -11,6 +12,7 @@ import {
 import { ArbanVerificationService } from './arban-verification.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('Arbans')
 @Controller('arbans')
 @UseGuards(JwtAuthGuard)
 export class ArbanVerificationController {

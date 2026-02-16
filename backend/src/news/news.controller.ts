@@ -1,6 +1,8 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Post, Body, Param, Query, Req } from '@nestjs/common';
 import { NewsMediaService } from './news.service';
 
+@ApiTags('Organizations')
 @Controller('news')
 export class NewsController {
   constructor(private readonly newsService: NewsMediaService) {}

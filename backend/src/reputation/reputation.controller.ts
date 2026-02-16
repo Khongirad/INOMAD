@@ -1,7 +1,9 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ReputationService } from './reputation.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@ApiTags('Organizations')
 @Controller('reputation')
 @UseGuards(JwtAuthGuard)
 export class ReputationController {

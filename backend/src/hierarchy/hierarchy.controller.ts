@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -12,6 +13,7 @@ import {
 import { HierarchyService } from './hierarchy.service';
 import { AuthGuard } from '../auth/auth.guard';
 
+@ApiTags('Hierarchy')
 @Controller('hierarchy')
 @UseGuards(AuthGuard)
 export class HierarchyController {

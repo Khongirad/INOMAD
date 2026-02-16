@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -10,6 +11,7 @@ import {
 import { CitizenshipService } from './citizenship.service';
 import { AuthGuard } from '../auth/auth.guard';
 
+@ApiTags('Migration')
 @Controller('citizenship')
 @UseGuards(AuthGuard)
 export class CitizenshipController {

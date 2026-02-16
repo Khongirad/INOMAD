@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -23,6 +24,7 @@ import {
   CreateDepartmentRequest,
 } from './types/arban.types';
 
+@ApiTags('Arbans')
 @Controller('arbans/org')
 @UseGuards(JwtAuthGuard)
 export class OrganizationalArbanController {

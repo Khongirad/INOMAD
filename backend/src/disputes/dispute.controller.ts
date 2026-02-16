@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -13,6 +14,7 @@ import { DisputeService } from './dispute.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { DisputeSourceType, DisputeStatus } from '@prisma/client';
 
+@ApiTags('Justice')
 @Controller('disputes')
 @UseGuards(AuthGuard)
 export class DisputeController {

@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Post,
@@ -16,6 +17,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ethers } from 'ethers';
 import { FormZunRequest } from './types/arban.types';
 
+@ApiTags('Hierarchy')
 @Controller('arbans/zun')
 @UseGuards(JwtAuthGuard)
 export class ZunController {

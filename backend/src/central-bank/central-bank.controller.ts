@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -28,6 +29,7 @@ import { UpdatePolicyDto } from './dto/policy.dto';
  * Provides API endpoints for the Fourth Branch of Power.
  * Public stats available without auth. All operations require CB ticket.
  */
+@ApiTags('Banking')
 @Controller('cb')
 export class CentralBankController {
   constructor(

@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import {
   Controller,
   Get,
@@ -8,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ZagsServiceService } from './zags-service.service';
 
+@ApiTags('ZAGS')
 @Controller('zags')
 export class ZagsServiceController {
   constructor(private readonly zagsService: ZagsServiceService) {}
