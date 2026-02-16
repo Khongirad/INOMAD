@@ -1,9 +1,33 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
+/**
+ * LandRegistryService — Земельный Кодекс
+ *
+ * КЛЮЧЕВЫЕ ПРАВИЛА:
+ * 1. Вся земля принадлежит коренному народу и распределяется через Земельный Фонд.
+ * 2. Граждане (CITIZEN, INDIGENOUS) имеют право ВЛАДЕТЬ землёй.
+ * 3. Иностранцы (FOREIGNER) — только АРЕНДА через Земельный Фонд.
+ * 4. Земля может продаваться, покупаться и дариться ТОЛЬКО между гражданами
+ *    вне зависимости от пола и вероисповедания.
+ * 5. Некоренные граждане (CITIZEN) НЕ МОГУТ отчуждать, продавать или сдавать
+ *    землю иностранцам. Запрет на отделение/отчуждение.
+ * 6. Земельный Фонд обладает исключительным правом на аренду иностранцам.
+ * 7. Земельный Фонд подчиняется Хуралу.
+ * 8. Коренной статус передаётся по мужской линии (отец → сын).
+ */
 @Injectable()
 export class LandRegistryServiceService {
+  private readonly logger = new Logger(LandRegistryServiceService.name);
+
   constructor(private prisma: PrismaService) {}
+
+  // ===== Helpers =====
+
+  /** Check if user is a citizen (CITIZEN or INDIGENOUS) */
+  private isCitizen(citizenType: string): boolean {
+    return citizenType === 'CITIZEN' || citizenType === 'INDIGENOUS';
+  }
 
   // ===== Cadastral =====
 
@@ -100,9 +124,11 @@ export class LandRegistryServiceService {
   }
 
   /**
-   * Register ownership. 
-   * GOVERNANCE: Земля принадлежит коренному народу и остаётся в Земельном Фонде.
-   * Только строения (property) могут быть в частной собственности.
+   * Register ownership of land or property.
+   *
+   * ЗЕМЕЛЬНЫЙ КОДЕКС:
+   * - Граждане (CITIZEN, INDIGENOUS) могут владеть землёй и строениями.
+   * - Иностранцы (FOREIGNER) и жители (RESIDENT) НЕ МОГУТ владеть — только аренда.
    */
   async registerOwnership(userId: string, data: {
     landPlotId?: string;
@@ -111,24 +137,16 @@ export class LandRegistryServiceService {
     sharePercentage: number;
     coOwners?: string[];
   }) {
-    // GOVERNANCE: Land plots cannot be privately owned — they stay in the State Land Fund
-    if (data.landPlotId) {
-      throw new BadRequestException(
-        'Земля остаётся в Государственном Земельном Фонде и не может быть в частной собственности. ' +
-        'Используйте аренду (lease) для пользования земельным участком.',
-      );
-    }
-
-    // Verify citizen
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    // Only CITIZEN or INDIGENOUS can own property (buildings)
-    if ((user as any).citizenType === 'RESIDENT') {
-      throw new BadRequestException(
-        'Только граждане (CITIZEN или INDIGENOUS) могут владеть недвижимостью.',
+    const ct = (user as any).citizenType as string;
+
+    // GOVERNANCE: Only citizens can own land and property
+    if (!this.isCitizen(ct)) {
+      throw new ForbiddenException(
+        'Только граждане (CITIZEN или INDIGENOUS) могут владеть землёй и недвижимостью. ' +
+        'Иностранцы могут арендовать через Земельный Фонд.',
       );
     }
 
@@ -151,12 +169,22 @@ export class LandRegistryServiceService {
   async getMyLeases(userId: string) {
     return this.prisma.landLease.findMany({
       where: { lesseeId: userId, isActive: true },
-      include: { property: true },
+      include: { landPlot: true, property: true },
     });
   }
 
+  /**
+   * Register a lease on a land plot or property.
+   *
+   * ЗЕМЕЛЬНЫЙ КОДЕКС:
+   * - Только Земельный Фонд имеет право сдавать в аренду иностранцам.
+   * - Иностранцы (FOREIGNER) — единственные кто арендует (граждане владеют).
+   * - Арендная плата поступает в Земельный Фонд.
+   * - Аренда может быть на земельный участок (landPlotId) и/или строение (propertyId).
+   */
   async registerLease(data: {
-    propertyId: string;
+    landPlotId?: string;
+    propertyId?: string;
     lesseeId: string;
     lesseeName: string;
     lesseeNationality: string;
@@ -166,8 +194,29 @@ export class LandRegistryServiceService {
     monthlyRent: number;
     currency: string;
   }) {
+    if (!data.landPlotId && !data.propertyId) {
+      throw new BadRequestException('Необходимо указать landPlotId или propertyId для аренды.');
+    }
+
+    // Verify lessee is FOREIGNER
+    const lessee = await this.prisma.user.findUnique({ where: { id: data.lesseeId } });
+    if (!lessee) throw new NotFoundException('Lessee not found');
+
+    const ct = (lessee as any).citizenType as string;
+    if (this.isCitizen(ct)) {
+      throw new BadRequestException(
+        'Граждане (CITIZEN/INDIGENOUS) имеют право ВЛАДЕТЬ землёй, а не арендовать. ' +
+        'Используйте registerOwnership для оформления собственности.',
+      );
+    }
+
+    this.logger.log(
+      `Land Fund lease: plot=${data.landPlotId || 'N/A'}, property=${data.propertyId || 'N/A'}, lessee=${data.lesseeId} (${ct})`,
+    );
+
     return this.prisma.landLease.create({
       data: {
+        landPlotId: data.landPlotId,
         propertyId: data.propertyId,
         lesseeId: data.lesseeId,
         lesseeName: data.lesseeName,
@@ -178,7 +227,7 @@ export class LandRegistryServiceService {
         monthlyRent: data.monthlyRent,
         currency: data.currency || 'ALTAN',
       },
-      include: { property: true },
+      include: { landPlot: true, property: true },
     });
   }
 
@@ -195,6 +244,15 @@ export class LandRegistryServiceService {
     });
   }
 
+  /**
+   * Initiate a land/property transfer (sale, gift, inheritance).
+   *
+   * ЗЕМЕЛЬНЫЙ КОДЕКС:
+   * - Земля продаётся, покупается и дарится ТОЛЬКО МЕЖДУ ГРАЖДАНАМИ
+   *   вне зависимости от пола и вероисповедания.
+   * - Иностранцы НЕ МОГУТ покупать или продавать землю.
+   * - Некоренные граждане не могут продавать/отчуждать землю иностранцам.
+   */
   async initiateTransfer(userId: string, data: {
     landPlotId?: string;
     propertyId?: string;
@@ -202,9 +260,27 @@ export class LandRegistryServiceService {
     salePrice: number;
     currency: string;
   }) {
-    const seller = await this.prisma.user.findUnique({ where: { id: userId } });
-    const buyer = await this.prisma.user.findUnique({ where: { id: data.buyerId } });
+    const [seller, buyer] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: userId } }),
+      this.prisma.user.findUnique({ where: { id: data.buyerId } }),
+    ]);
     if (!seller || !buyer) throw new NotFoundException('User not found');
+
+    const sellerCt = (seller as any).citizenType as string;
+    const buyerCt = (buyer as any).citizenType as string;
+
+    // GOVERNANCE: Only citizens can participate in land transactions
+    if (!this.isCitizen(sellerCt)) {
+      throw new ForbiddenException(
+        'Только граждане могут продавать или дарить землю и недвижимость.',
+      );
+    }
+    if (!this.isCitizen(buyerCt)) {
+      throw new ForbiddenException(
+        'Земля и недвижимость могут передаваться только гражданам. ' +
+        'Иностранцы могут арендовать через Земельный Фонд.',
+      );
+    }
 
     return this.prisma.landTransaction.create({
       data: {
@@ -242,9 +318,11 @@ export class LandRegistryServiceService {
   }
 
   /**
-   * Complete transfer.
-   * GOVERNANCE: Земля не может меняться в собственности — только аренда.
-   * Только строения (property) могут передаваться.
+   * Complete transfer of land/property.
+   *
+   * ЗЕМЕЛЬНЫЙ КОДЕКС:
+   * - Земля и строения передаются ТОЛЬКО МЕЖДУ ГРАЖДАНАМИ.
+   * - Покупатель должен быть CITIZEN или INDIGENOUS.
    */
   async completeTransfer(transactionId: string, officerId: string, blockchainTxHash?: string) {
     const tx = await this.prisma.landTransaction.findUnique({
@@ -255,14 +333,33 @@ export class LandRegistryServiceService {
       throw new BadRequestException('Payment must be confirmed first');
     }
 
-    // GOVERNANCE: Land plots cannot be transferred — they stay in the State Land Fund
-    if (tx.landPlotId) {
-      throw new BadRequestException(
-        'Земельные участки остаются в Государственном Земельном Фонде и не могут быть переданы в собственность.',
+    // GOVERNANCE: Verify buyer is still a citizen at time of completion
+    const buyer = await this.prisma.user.findUnique({ where: { id: tx.buyerId } });
+    if (!buyer) throw new NotFoundException('Buyer not found');
+    const buyerCt = (buyer as any).citizenType as string;
+    if (!this.isCitizen(buyerCt)) {
+      throw new ForbiddenException(
+        'Покупатель должен быть гражданином для завершения сделки.',
       );
     }
 
-    // Only property (buildings) can be transferred
+    // Transfer ownership: deactivate seller's, create buyer's
+    if (tx.landPlotId) {
+      await this.prisma.landOwnership.updateMany({
+        where: { landPlotId: tx.landPlotId, ownerId: tx.sellerId, isActive: true },
+        data: { isActive: false },
+      });
+      await this.prisma.landOwnership.create({
+        data: {
+          landPlotId: tx.landPlotId,
+          ownerId: tx.buyerId,
+          ownershipType: 'FULL',
+          sharePercentage: 100,
+          isCitizenVerified: buyer.isVerified,
+        },
+      });
+    }
+
     if (tx.propertyId) {
       await this.prisma.landOwnership.updateMany({
         where: { propertyId: tx.propertyId, ownerId: tx.sellerId, isActive: true },
@@ -274,7 +371,7 @@ export class LandRegistryServiceService {
           ownerId: tx.buyerId,
           ownershipType: 'FULL',
           sharePercentage: 100,
-          isCitizenVerified: true,
+          isCitizenVerified: buyer.isVerified,
         },
       });
     }

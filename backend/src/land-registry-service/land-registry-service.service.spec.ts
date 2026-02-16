@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LandRegistryServiceService } from './land-registry-service.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 
 describe('LandRegistryServiceService', () => {
   let service: LandRegistryServiceService;
@@ -28,6 +28,8 @@ describe('LandRegistryServiceService', () => {
   });
 
   it('should be defined', () => expect(service).toBeDefined());
+
+  // ===== Cadastral =====
 
   describe('registerLandPlot', () => {
     it('should create plot with cadastral number', async () => {
@@ -71,13 +73,9 @@ describe('LandRegistryServiceService', () => {
     });
   });
 
-  describe('registerOwnership', () => {
-    it('should throw if landPlotId provided (governance)', async () => {
-      await expect(service.registerOwnership('u1', {
-        landPlotId: 'plot1', ownershipType: 'FULL', sharePercentage: 100,
-      })).rejects.toThrow(BadRequestException);
-    });
+  // ===== Ownership (Citizens own land; foreigners cannot) =====
 
+  describe('registerOwnership', () => {
     it('should throw if user not found', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
       await expect(service.registerOwnership('u1', {
@@ -85,34 +83,92 @@ describe('LandRegistryServiceService', () => {
       })).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw for RESIDENT citizen type', async () => {
+    it('should throw ForbiddenException for FOREIGNER', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'FOREIGNER', isVerified: true });
+      await expect(service.registerOwnership('u1', {
+        propertyId: 'p1', ownershipType: 'FULL', sharePercentage: 100,
+      })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException for RESIDENT', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'RESIDENT', isVerified: true });
       await expect(service.registerOwnership('u1', {
         propertyId: 'p1', ownershipType: 'FULL', sharePercentage: 100,
-      })).rejects.toThrow(BadRequestException);
+      })).rejects.toThrow(ForbiddenException);
     });
 
-    it('should register property ownership for citizen', async () => {
+    it('should register LAND ownership for CITIZEN', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'CITIZEN', isVerified: true });
       prisma.landOwnership.create.mockResolvedValue({ id: 'own1' });
       const result = await service.registerOwnership('u1', {
-        propertyId: 'p1', ownershipType: 'FULL', sharePercentage: 100,
+        landPlotId: 'plot1', ownershipType: 'FULL', sharePercentage: 100,
       });
       expect(result.id).toBe('own1');
     });
+
+    it('should register PROPERTY ownership for INDIGENOUS', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'INDIGENOUS', isVerified: true });
+      prisma.landOwnership.create.mockResolvedValue({ id: 'own2' });
+      const result = await service.registerOwnership('u1', {
+        propertyId: 'p1', ownershipType: 'FULL', sharePercentage: 100,
+      });
+      expect(result.id).toBe('own2');
+    });
   });
 
+  // ===== Leases (Foreigners lease through Land Fund) =====
+
   describe('registerLease', () => {
-    it('should create lease', async () => {
+    it('should throw if no landPlotId and no propertyId', async () => {
+      await expect(service.registerLease({
+        lesseeId: 'u1', lesseeName: 'User',
+        lesseeNationality: 'RU', leaseType: 'LONG_TERM',
+        startDate: '2024-01-01', endDate: '2025-01-01', monthlyRent: 1000, currency: 'ALTAN',
+      })).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw if lessee not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      await expect(service.registerLease({
+        landPlotId: 'plot1', lesseeId: 'u1', lesseeName: 'User',
+        lesseeNationality: 'US', leaseType: 'LONG_TERM',
+        startDate: '2024-01-01', endDate: '2025-01-01', monthlyRent: 1000, currency: 'ALTAN',
+      })).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if lessee is CITIZEN (citizens own, not lease)', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'CITIZEN' });
+      await expect(service.registerLease({
+        landPlotId: 'plot1', lesseeId: 'u1', lesseeName: 'Citizen',
+        lesseeNationality: 'SC', leaseType: 'LONG_TERM',
+        startDate: '2024-01-01', endDate: '2025-01-01', monthlyRent: 1000, currency: 'ALTAN',
+      })).rejects.toThrow(BadRequestException);
+    });
+
+    it('should create lease for FOREIGNER on land plot', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'FOREIGNER' });
       prisma.landLease.create.mockResolvedValue({ id: 'l1' });
       const result = await service.registerLease({
-        propertyId: 'p1', lesseeId: 'u1', lesseeName: 'User',
-        lesseeNationality: 'RU', leaseType: 'LONG_TERM',
+        landPlotId: 'plot1', lesseeId: 'u1', lesseeName: 'Foreigner',
+        lesseeNationality: 'US', leaseType: 'AGRICULTURAL_LEASE',
         startDate: '2024-01-01', endDate: '2025-01-01', monthlyRent: 1000, currency: 'ALTAN',
       });
       expect(result.id).toBe('l1');
     });
+
+    it('should create lease for RESIDENT on property', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'RESIDENT' });
+      prisma.landLease.create.mockResolvedValue({ id: 'l2' });
+      const result = await service.registerLease({
+        propertyId: 'p1', lesseeId: 'u1', lesseeName: 'Resident',
+        lesseeNationality: 'SC', leaseType: 'RESIDENTIAL_LEASE',
+        startDate: '2024-01-01', endDate: '2025-01-01', monthlyRent: 500, currency: 'ALTAN',
+      });
+      expect(result.id).toBe('l2');
+    });
   });
+
+  // ===== Transfers (citizen↔citizen only) =====
 
   describe('initiateTransfer', () => {
     it('should throw if seller or buyer not found', async () => {
@@ -122,17 +178,37 @@ describe('LandRegistryServiceService', () => {
       })).rejects.toThrow(NotFoundException);
     });
 
-    it('should create transaction', async () => {
+    it('should throw if seller is FOREIGNER', async () => {
       prisma.user.findUnique
-        .mockResolvedValueOnce({ id: 'u1', username: 'seller' })
-        .mockResolvedValueOnce({ id: 'u2', username: 'buyer' });
+        .mockResolvedValueOnce({ id: 'u1', username: 'seller', citizenType: 'FOREIGNER' })
+        .mockResolvedValueOnce({ id: 'u2', username: 'buyer', citizenType: 'CITIZEN' });
+      await expect(service.initiateTransfer('u1', {
+        buyerId: 'u2', salePrice: 50000, currency: 'ALTAN',
+      })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw if buyer is FOREIGNER', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ id: 'u1', username: 'seller', citizenType: 'CITIZEN' })
+        .mockResolvedValueOnce({ id: 'u2', username: 'buyer', citizenType: 'FOREIGNER' });
+      await expect(service.initiateTransfer('u1', {
+        buyerId: 'u2', salePrice: 50000, currency: 'ALTAN',
+      })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should create transaction between citizens', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ id: 'u1', username: 'seller', citizenType: 'CITIZEN' })
+        .mockResolvedValueOnce({ id: 'u2', username: 'buyer', citizenType: 'INDIGENOUS' });
       prisma.landTransaction.create.mockResolvedValue({ id: 'tx1', status: 'INITIATED' });
       const result = await service.initiateTransfer('u1', {
-        buyerId: 'u2', salePrice: 50000, currency: 'ALTAN',
+        landPlotId: 'plot1', buyerId: 'u2', salePrice: 50000, currency: 'ALTAN',
       });
       expect(result.status).toBe('INITIATED');
     });
   });
+
+  // ===== Payment =====
 
   describe('confirmPayment', () => {
     it('should throw if tx not found', async () => {
@@ -153,19 +229,49 @@ describe('LandRegistryServiceService', () => {
     });
   });
 
+  // ===== Complete Transfer (land now transferrable between citizens) =====
+
   describe('completeTransfer', () => {
-    it('should throw if landPlotId (governance)', async () => {
-      prisma.landTransaction.findUnique.mockResolvedValue({
-        status: 'PAYMENT_CONFIRMED', landPlotId: 'plot1',
-      });
+    it('should throw if tx not found', async () => {
+      prisma.landTransaction.findUnique.mockResolvedValue(null);
+      await expect(service.completeTransfer('bad', 'off1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if wrong status', async () => {
+      prisma.landTransaction.findUnique.mockResolvedValue({ status: 'INITIATED' });
       await expect(service.completeTransfer('tx1', 'off1')).rejects.toThrow(BadRequestException);
     });
 
-    it('should transfer property ownership', async () => {
+    it('should throw if buyer is not citizen', async () => {
+      prisma.landTransaction.findUnique.mockResolvedValue({
+        status: 'PAYMENT_CONFIRMED', landPlotId: 'plot1', buyerId: 'u2', sellerId: 'u1',
+      });
+      prisma.user.findUnique.mockResolvedValue({ id: 'u2', citizenType: 'FOREIGNER', isVerified: false });
+      await expect(service.completeTransfer('tx1', 'off1')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should transfer LAND ownership between citizens', async () => {
+      prisma.landTransaction.findUnique.mockResolvedValue({
+        status: 'PAYMENT_CONFIRMED', landPlotId: 'plot1', propertyId: null,
+        sellerId: 'u1', buyerId: 'u2',
+      });
+      prisma.user.findUnique.mockResolvedValue({ id: 'u2', citizenType: 'CITIZEN', isVerified: true });
+      prisma.landOwnership.updateMany.mockResolvedValue({});
+      prisma.landOwnership.create.mockResolvedValue({});
+      prisma.landTransaction.update.mockResolvedValue({ status: 'COMPLETED' });
+      const result = await service.completeTransfer('tx1', 'off1');
+      expect(result.status).toBe('COMPLETED');
+      expect(prisma.landOwnership.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ landPlotId: 'plot1' }) }),
+      );
+    });
+
+    it('should transfer PROPERTY ownership between citizens', async () => {
       prisma.landTransaction.findUnique.mockResolvedValue({
         status: 'PAYMENT_CONFIRMED', landPlotId: null, propertyId: 'p1',
         sellerId: 'u1', buyerId: 'u2',
       });
+      prisma.user.findUnique.mockResolvedValue({ id: 'u2', citizenType: 'INDIGENOUS', isVerified: true });
       prisma.landOwnership.updateMany.mockResolvedValue({});
       prisma.landOwnership.create.mockResolvedValue({});
       prisma.landTransaction.update.mockResolvedValue({ status: 'COMPLETED' });
@@ -173,6 +279,8 @@ describe('LandRegistryServiceService', () => {
       expect(result.status).toBe('COMPLETED');
     });
   });
+
+  // ===== Valuation =====
 
   describe('calculateValuation', () => {
     it('should calculate for land plot', async () => {
@@ -185,7 +293,21 @@ describe('LandRegistryServiceService', () => {
       prisma.landPlot.findUnique.mockResolvedValue(null);
       await expect(service.calculateValuation('bad')).rejects.toThrow(NotFoundException);
     });
+
+    it('should calculate for property', async () => {
+      prisma.landProperty.findUnique.mockResolvedValue({ buildingArea: 200 });
+      const result = await service.calculateValuation(undefined, 'p1');
+      expect(result.estimatedValue).toBe(50000); // 10000 base + 200*200
+    });
+
+    it('should return base when property not found', async () => {
+      prisma.landProperty.findUnique.mockResolvedValue(null);
+      const result = await service.calculateValuation(undefined, 'p1');
+      expect(result.estimatedValue).toBe(10000);
+    });
   });
+
+  // ===== Market =====
 
   describe('getMarketTrends', () => {
     it('should return region stats', async () => {
@@ -196,6 +318,8 @@ describe('LandRegistryServiceService', () => {
       expect(result.totalPlots).toBe(25);
     });
   });
+
+  // ===== Simple getters =====
 
   describe('getMyOwnerships', () => {
     it('should return user ownerships', async () => {
@@ -224,45 +348,6 @@ describe('LandRegistryServiceService', () => {
       prisma.landTransaction.findMany.mockResolvedValue([]);
       const result = await service.getTransactionHistory(undefined, 'p1');
       expect(result).toHaveLength(0);
-    });
-  });
-
-  describe('calculateValuation', () => {
-    it('should calculate for property', async () => {
-      prisma.landProperty.findUnique.mockResolvedValue({ area: 200 });
-      const result = await service.calculateValuation(undefined, 'p1');
-      expect(result.estimatedValue).toBeDefined();
-    });
-
-    it('should still return valuation when property not found (no additional building area)', async () => {
-      prisma.landProperty.findUnique.mockResolvedValue(null);
-      const result = await service.calculateValuation(undefined, 'p1');
-      expect(result.estimatedValue).toBe(10000); // base value only
-    });
-  });
-
-  describe('completeTransfer edge cases', () => {
-    it('should throw if transaction not found', async () => {
-      prisma.landTransaction.findUnique.mockResolvedValue(null);
-      await expect(service.completeTransfer('bad', 'off1')).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw if wrong status', async () => {
-      prisma.landTransaction.findUnique.mockResolvedValue({ status: 'INITIATED' });
-      await expect(service.completeTransfer('tx1', 'off1')).rejects.toThrow(BadRequestException);
-    });
-  });
-
-  describe('initiateTransfer edge cases', () => {
-    it('should throw for no landPlotId/propertyId when seller/buyer exist', async () => {
-      prisma.user.findUnique
-        .mockResolvedValueOnce({ id: 'u1', username: 'seller' })
-        .mockResolvedValueOnce({ id: 'u2', username: 'buyer' });
-      prisma.landTransaction.create.mockResolvedValue({ id: 'tx1', status: 'INITIATED' });
-      const result = await service.initiateTransfer('u1', {
-        propertyId: 'p1', buyerId: 'u2', salePrice: 50000, currency: 'ALTAN',
-      });
-      expect(result.status).toBe('INITIATED');
     });
   });
 });

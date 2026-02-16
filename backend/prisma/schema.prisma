@@ -1914,6 +1914,7 @@ enum CitizenType {
   RESIDENT   // Житель (зарегистрирован, ещё не принят гражданами)
   CITIZEN    // Полноценный гражданин (принят коренными, голосует, владеет имуществом)
   INDIGENOUS // Коренной сибиряк (обладает исключительным земельным правом)
+  FOREIGNER  // Иностранец (только аренда через Земельный Фонд)
 }
 
 enum WalletStatus {
@@ -3811,6 +3812,7 @@ model LandPlot {
 
   properties   LandProperty[]
   ownerships   LandOwnership[]
+  leases       LandLease[]
   transactions LandTransaction[] @relation("LandPlotTransactions")
 
   @@index([region, district])
@@ -3886,10 +3888,14 @@ model LandOwnership {
 model LandLease {
   id String @id @default(uuid())
 
-  propertyId String
-  property   LandProperty @relation(fields: [propertyId], references: [id])
+  // Target: land plot OR property (at least one required)
+  landPlotId String?
+  landPlot   LandPlot? @relation(fields: [landPlotId], references: [id])
 
-  // Lessee
+  propertyId String?
+  property   LandProperty? @relation(fields: [propertyId], references: [id])
+
+  // Lessee (must be FOREIGNER — citizens own, not lease)
   lesseeId          String
   lessee            User   @relation("LandLessee", fields: [lesseeId], references: [id])
   lesseeName        String
@@ -3908,6 +3914,7 @@ model LandLease {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([landPlotId])
   @@index([propertyId])
   @@index([lesseeId])
   @@index([isActive])
