@@ -256,4 +256,93 @@ export class CalendarService {
       },
     });
   }
+
+  // ============== REMINDERS ==============
+
+  /**
+   * Set a reminder on a calendar event.
+   * @param minutesBefore - minutes before event to trigger reminder (e.g., 15, 60, 1440 for 1 day)
+   */
+  async setReminder(eventId: string, userId: string, minutesBefore: number) {
+    const event = await this.prisma.calendarEvent.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.userId !== userId) throw new ForbiddenException('You can only set reminders on your own events');
+
+    return this.prisma.calendarEvent.update({
+      where: { id: eventId },
+      data: { reminderMinutes: minutesBefore },
+    });
+  }
+
+  /**
+   * Remove reminder from an event.
+   */
+  async removeReminder(eventId: string, userId: string) {
+    const event = await this.prisma.calendarEvent.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.userId !== userId) throw new ForbiddenException('You can only remove reminders from your own events');
+
+    return this.prisma.calendarEvent.update({
+      where: { id: eventId },
+      data: { reminderMinutes: null },
+    });
+  }
+
+  /**
+   * Get events with active reminders for a user.
+   * Returns events that have reminderMinutes set and are in the future.
+   */
+  async getEventsWithReminders(userId: string) {
+    return this.prisma.calendarEvent.findMany({
+      where: {
+        userId,
+        reminderMinutes: { not: null },
+        startDate: { gte: new Date() },
+      },
+      orderBy: { startDate: 'asc' },
+    });
+  }
+
+  /**
+   * Get due reminders — events whose reminder window has arrived.
+   * An event is "due" if:  (startDate - reminderMinutes) <= now < startDate
+   *
+   * This is designed to be called by a cron job or scheduler.
+   */
+  async getDueReminders() {
+    const now = new Date();
+
+    // Get all future events with reminders set
+    const events = await this.prisma.calendarEvent.findMany({
+      where: {
+        reminderMinutes: { not: null },
+        startDate: { gte: now },
+      },
+      include: {
+        user: { select: { id: true, username: true, email: true } },
+      },
+    });
+
+    // Filter to events whose reminder is due
+    const dueReminders = events.filter((event: any) => {
+      const reminderTime = new Date(event.startDate.getTime() - event.reminderMinutes * 60000);
+      return reminderTime <= now;
+    });
+
+    return dueReminders.map((event: any) => ({
+      eventId: event.id,
+      userId: event.userId,
+      user: event.user,
+      title: event.title,
+      startDate: event.startDate,
+      reminderMinutes: event.reminderMinutes,
+      reminderAt: new Date(event.startDate.getTime() - event.reminderMinutes * 60000),
+    }));
+  }
 }

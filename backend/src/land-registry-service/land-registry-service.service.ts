@@ -282,6 +282,16 @@ export class LandRegistryServiceService {
       );
     }
 
+    // GOVERNANCE: Check for active encumbrances that block transfer
+    const encCheck = await this.checkActiveEncumbrances(data.landPlotId, data.propertyId);
+    if (encCheck.blockingTransfer) {
+      const types = encCheck.blocking.map((e: any) => e.type).join(', ');
+      throw new ForbiddenException(
+        `Земля/имущество имеет активные обременения (${types}), блокирующие передачу. ` +
+        'Снимите обременения перед продажей.',
+      );
+    }
+
     return this.prisma.landTransaction.create({
       data: {
         type: 'SALE',
@@ -433,6 +443,144 @@ export class LandRegistryServiceService {
       averagePricePerSqm: 50, // placeholder
       trend: 'STABLE',
       lastUpdated: new Date(),
+    };
+  }
+
+  // ===== Encumbrances (mortgages, liens, easements) =====
+
+  /**
+   * Create an encumbrance on land or property.
+   *
+   * ЗЕМЕЛЬНЫЙ КОДЕКС:
+   * - SOVEREIGN encumbrances can only be created by INDIGENOUS citizens.
+   *   These restrict alienation of ancestral land.
+   * - MORTGAGE/LIEN/EASEMENT/RESTRICTION — any citizen can create.
+   */
+  async createEncumbrance(holderId: string, data: {
+    landPlotId?: string;
+    propertyId?: string;
+    type: string;
+    description: string;
+    amount?: number;
+    interestRate?: number;
+    holderName: string;
+    startDate: string;
+    endDate?: string;
+    notes?: string;
+  }) {
+    if (!data.landPlotId && !data.propertyId) {
+      throw new BadRequestException('Must specify landPlotId or propertyId');
+    }
+
+    const holder = await this.prisma.user.findUnique({ where: { id: holderId } });
+    if (!holder) throw new NotFoundException('User not found');
+
+    const ct = (holder as any).citizenType as string;
+
+    // GOVERNANCE: Only INDIGENOUS can create SOVEREIGN encumbrances
+    if (data.type === 'SOVEREIGN' && ct !== 'INDIGENOUS') {
+      throw new ForbiddenException(
+        'Только коренные граждане (INDIGENOUS) могут создавать суверенные обременения. ' +
+        'Это исключительное право, ограничивающее отчуждение земли.',
+      );
+    }
+
+    // Only citizens can create any encumbrance
+    if (!this.isCitizen(ct)) {
+      throw new ForbiddenException(
+        'Только граждане могут создавать обременения на землю.',
+      );
+    }
+
+    const docNumber = `ENC-${Date.now().toString(36).toUpperCase()}`;
+
+    return this.prisma.landEncumbrance.create({
+      data: {
+        landPlotId: data.landPlotId,
+        propertyId: data.propertyId,
+        type: data.type as any,
+        description: data.description,
+        amount: data.amount,
+        interestRate: data.interestRate,
+        holderId,
+        holderName: data.holderName,
+        isIndigenousSovereign: data.type === 'SOVEREIGN',
+        startDate: new Date(data.startDate),
+        endDate: data.endDate ? new Date(data.endDate) : null,
+        documentNumber: docNumber,
+        notes: data.notes,
+      },
+      include: { landPlot: true, property: true },
+    });
+  }
+
+  /**
+   * Get all encumbrances for a land plot and/or property.
+   */
+  async getEncumbrances(landPlotId?: string, propertyId?: string) {
+    const where: any = {};
+    if (landPlotId) where.landPlotId = landPlotId;
+    if (propertyId) where.propertyId = propertyId;
+
+    return this.prisma.landEncumbrance.findMany({
+      where,
+      include: { landPlot: true, property: true, holder: { select: { id: true, username: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Get encumbrance by ID.
+   */
+  async getEncumbranceById(id: string) {
+    const enc = await this.prisma.landEncumbrance.findUnique({
+      where: { id },
+      include: { landPlot: true, property: true, holder: { select: { id: true, username: true } } },
+    });
+    if (!enc) throw new NotFoundException('Encumbrance not found');
+    return enc;
+  }
+
+  /**
+   * Release an encumbrance (mark as RELEASED).
+   */
+  async releaseEncumbrance(id: string, releasedBy: string) {
+    const enc = await this.prisma.landEncumbrance.findUnique({ where: { id } });
+    if (!enc) throw new NotFoundException('Encumbrance not found');
+    if (enc.status !== 'ACTIVE') {
+      throw new BadRequestException('Only ACTIVE encumbrances can be released');
+    }
+
+    return this.prisma.landEncumbrance.update({
+      where: { id },
+      data: {
+        status: 'RELEASED',
+        releasedAt: new Date(),
+        releasedBy,
+      },
+    });
+  }
+
+  /**
+   * Check if a land plot or property has active encumbrances that block transfer.
+   * SOVEREIGN encumbrances always block transfer.
+   * MORTGAGE/LIEN block transfer unless released.
+   */
+  async checkActiveEncumbrances(landPlotId?: string, propertyId?: string) {
+    const where: any = { status: 'ACTIVE' };
+    if (landPlotId) where.landPlotId = landPlotId;
+    if (propertyId) where.propertyId = propertyId;
+
+    const encumbrances = await this.prisma.landEncumbrance.findMany({ where });
+    const blocking = encumbrances.filter(
+      (e: any) => e.type === 'SOVEREIGN' || e.type === 'MORTGAGE' || e.type === 'LIEN',
+    );
+
+    return {
+      hasActiveEncumbrances: encumbrances.length > 0,
+      blockingTransfer: blocking.length > 0,
+      encumbrances,
+      blocking,
     };
   }
 }

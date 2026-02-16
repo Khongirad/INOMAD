@@ -524,5 +524,300 @@ export class ZagsServiceService {
       recentMarriages,
     };
   }
+
+  // ============ DEATH REGISTRATION ============
+
+  /**
+   * Register a death. Reporter cannot be the deceased.
+   */
+  async registerDeath(reporterId: string, data: {
+    deceasedId: string;
+    deceasedFullName: string;
+    dateOfBirth: string;
+    dateOfDeath: string;
+    placeOfDeath: string;
+    causeOfDeath: string;
+    reportedByName: string;
+    relationship: string;
+    medicalCertificateNumber?: string;
+    doctorName?: string;
+    hospitalName?: string;
+    burialLocation?: string;
+    burialDate?: string;
+  }) {
+    if (reporterId === data.deceasedId) {
+      throw new BadRequestException('Cannot register your own death');
+    }
+
+    // Verify deceased user exists
+    const deceased = await this.prisma.user.findUnique({
+      where: { id: data.deceasedId },
+      select: { id: true },
+    });
+    if (!deceased) {
+      throw new NotFoundException('Deceased user not found');
+    }
+
+    return this.prisma.deathRegistration.create({
+      data: {
+        deceasedId: data.deceasedId,
+        deceasedFullName: data.deceasedFullName,
+        dateOfBirth: new Date(data.dateOfBirth),
+        dateOfDeath: new Date(data.dateOfDeath),
+        placeOfDeath: data.placeOfDeath,
+        causeOfDeath: data.causeOfDeath,
+        reportedById: reporterId,
+        reportedByName: data.reportedByName,
+        relationship: data.relationship,
+        medicalCertificateNumber: data.medicalCertificateNumber,
+        doctorName: data.doctorName,
+        hospitalName: data.hospitalName,
+        burialLocation: data.burialLocation,
+        burialDate: data.burialDate ? new Date(data.burialDate) : undefined,
+      },
+    });
+  }
+
+  /** Get a death registration by ID. */
+  async getDeathRegistration(id: string) {
+    const reg = await this.prisma.deathRegistration.findUnique({ where: { id } });
+    if (!reg) throw new NotFoundException('Death registration not found');
+    return reg;
+  }
+
+  /** Officer: get pending death registrations. */
+  async getPendingDeaths() {
+    return this.prisma.deathRegistration.findMany({
+      where: { status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Officer: approve and register a death, update deceased user status. */
+  async approveDeathRegistration(id: string, officerId: string) {
+    const reg = await this.prisma.deathRegistration.findUnique({ where: { id } });
+    if (!reg) throw new NotFoundException('Death registration not found');
+    if (reg.status !== 'PENDING') {
+      throw new BadRequestException(`Cannot approve registration with status ${reg.status}`);
+    }
+
+    // Update registration + mark user as DECEASED
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.deathRegistration.update({
+        where: { id },
+        data: {
+          status: 'REGISTERED',
+          registeredById: officerId,
+          registeredAt: new Date(),
+        },
+      }),
+      this.prisma.user.update({
+        where: { id: reg.deceasedId },
+        data: {
+          verificationStatus: 'DECEASED' as any,
+        },
+      }),
+    ]);
+
+    return updated;
+  }
+
+  /** Officer: reject a death registration. */
+  async rejectDeathRegistration(id: string, notes: string) {
+    const reg = await this.prisma.deathRegistration.findUnique({ where: { id } });
+    if (!reg) throw new NotFoundException('Death registration not found');
+    if (reg.status !== 'PENDING') {
+      throw new BadRequestException(`Cannot reject registration with status ${reg.status}`);
+    }
+
+    return this.prisma.deathRegistration.update({
+      where: { id },
+      data: { status: 'REJECTED', notes },
+    });
+  }
+
+  /** Get a death certificate by certificate number. */
+  async getDeathCertificate(certificateNumber: string) {
+    const reg = await this.prisma.deathRegistration.findUnique({
+      where: { certificateNumber },
+    });
+    if (!reg) throw new NotFoundException('Death certificate not found');
+    return reg;
+  }
+
+  // ============ NAME CHANGE ============
+
+  /** Apply for a legal name change. */
+  async applyNameChange(userId: string, data: {
+    previousName: string;
+    newName: string;
+    reason: string;
+    supportingDocumentIds?: string[];
+  }) {
+    if (data.previousName === data.newName) {
+      throw new BadRequestException('New name must differ from current name');
+    }
+
+    return this.prisma.nameChange.create({
+      data: {
+        userId,
+        previousName: data.previousName,
+        newName: data.newName,
+        reason: data.reason,
+        supportingDocumentIds: data.supportingDocumentIds ?? [],
+      },
+    });
+  }
+
+  /** Get user's own name change history. */
+  async getMyNameChanges(userId: string) {
+    return this.prisma.nameChange.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Officer: get pending name change applications. */
+  async getPendingNameChanges() {
+    return this.prisma.nameChange.findMany({
+      where: { status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Officer: approve a name change and update the user's display name. */
+  async approveNameChange(id: string, officerId: string) {
+    const nc = await this.prisma.nameChange.findUnique({ where: { id } });
+    if (!nc) throw new NotFoundException('Name change application not found');
+    if (nc.status !== 'PENDING') {
+      throw new BadRequestException(`Cannot approve application with status ${nc.status}`);
+    }
+
+    const now = new Date();
+
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.nameChange.update({
+        where: { id },
+        data: {
+          status: 'REGISTERED',
+          approvedById: officerId,
+          approvedAt: now,
+          effectiveDate: now,
+        },
+      }),
+      this.prisma.user.update({
+        where: { id: nc.userId },
+        data: { username: nc.newName },
+      }),
+    ]);
+
+    return updated;
+  }
+
+  /** Officer: reject a name change application. */
+  async rejectNameChange(id: string, notes: string) {
+    const nc = await this.prisma.nameChange.findUnique({ where: { id } });
+    if (!nc) throw new NotFoundException('Name change application not found');
+    if (nc.status !== 'PENDING') {
+      throw new BadRequestException(`Cannot reject application with status ${nc.status}`);
+    }
+
+    return this.prisma.nameChange.update({
+      where: { id },
+      data: { status: 'REJECTED', notes },
+    });
+  }
+
+  // ============ Public Registry Search ============
+
+  /**
+   * Search public registry for registered civil records.
+   * Returns only APPROVED/REGISTERED records for privacy.
+   */
+  async searchPublicRegistry(query: {
+    name?: string;
+    certificateNumber?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    type?: 'MARRIAGE' | 'DEATH' | 'NAME_CHANGE' | 'ALL';
+  }) {
+    const type = query.type || 'ALL';
+    const results: any = {};
+
+    const dateFilter: any = {};
+    if (query.dateFrom) dateFilter.gte = new Date(query.dateFrom);
+    if (query.dateTo) dateFilter.lte = new Date(query.dateTo);
+
+    if (type === 'ALL' || type === 'MARRIAGE') {
+      const marriageWhere: any = { status: 'REGISTERED' };
+      if (query.name) {
+        marriageWhere.OR = [
+          { spouse1FullName: { contains: query.name, mode: 'insensitive' } },
+          { spouse2FullName: { contains: query.name, mode: 'insensitive' } },
+        ];
+      }
+      if (query.certificateNumber) {
+        marriageWhere.certificateNumber = query.certificateNumber;
+      }
+      if (query.dateFrom || query.dateTo) {
+        marriageWhere.marriageDate = dateFilter;
+      }
+      results.marriages = await this.prisma.marriage.findMany({
+        where: marriageWhere,
+        select: {
+          id: true, certificateNumber: true, spouse1FullName: true, spouse2FullName: true,
+          marriageDate: true, ceremonyLocation: true, status: true,
+        },
+        take: 50,
+        orderBy: { marriageDate: 'desc' },
+      });
+    }
+
+    if (type === 'ALL' || type === 'DEATH') {
+      const deathWhere: any = { status: 'APPROVED' };
+      if (query.name) {
+        deathWhere.deceasedFullName = { contains: query.name, mode: 'insensitive' };
+      }
+      if (query.certificateNumber) {
+        deathWhere.certificateNumber = query.certificateNumber;
+      }
+      if (query.dateFrom || query.dateTo) {
+        deathWhere.dateOfDeath = dateFilter;
+      }
+      results.deaths = await this.prisma.deathRegistration.findMany({
+        where: deathWhere,
+        select: {
+          id: true, certificateNumber: true, deceasedFullName: true,
+          dateOfDeath: true, placeOfDeath: true, status: true,
+        },
+        take: 50,
+        orderBy: { dateOfDeath: 'desc' },
+      });
+    }
+
+    if (type === 'ALL' || type === 'NAME_CHANGE') {
+      const changeWhere: any = { status: 'APPROVED' };
+      if (query.name) {
+        changeWhere.OR = [
+          { previousName: { contains: query.name, mode: 'insensitive' } },
+          { newName: { contains: query.name, mode: 'insensitive' } },
+        ];
+      }
+      if (query.dateFrom || query.dateTo) {
+        changeWhere.createdAt = dateFilter;
+      }
+      results.nameChanges = await this.prisma.nameChange.findMany({
+        where: changeWhere,
+        select: {
+          id: true, previousName: true, newName: true,
+          reason: true, status: true, createdAt: true,
+        },
+        take: 50,
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    return results;
+  }
 }
 

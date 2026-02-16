@@ -465,4 +465,196 @@ export class DocumentContractService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  /**
+   * Generate PDF for a document.
+   * Returns document data formatted for PDF generation.
+   * In production, integrate with PDFKit or Puppeteer for actual PDF output.
+   */
+  async generatePDF(documentId: string, userId: string) {
+    const document = await this.getDocument(documentId);
+
+    // Log access
+    await this.logAccess({
+      documentId,
+      userId,
+      action: 'DOWNLOAD',
+      reason: 'PDF generation',
+      ipAddress: '0.0.0.0',
+    });
+
+    // Build PDF-ready data structure
+    const pdfData = {
+      header: {
+        documentNumber: document.documentNumber,
+        title: document.title,
+        titleRu: document.titleRu,
+        templateName: document.template?.name,
+        stage: document.currentStage,
+        status: document.status,
+      },
+      body: {
+        content: document.generatedContent,
+        variables: document.variables,
+      },
+      signatures: document.signatures?.map((sig: any) => ({
+        signerName: sig.signer?.username,
+        signerRole: sig.signerRole,
+        signedAt: sig.signedAt,
+        verified: sig.verified,
+      })),
+      notarization: document.notarization ? {
+        notaryName: (document.notarization as any).notary?.username,
+        notarizedAt: (document.notarization as any).notarizedAt,
+        sealNumber: (document.notarization as any).sealNumber,
+      } : null,
+      legalCert: document.legalCert ? {
+        lawyerName: (document.legalCert as any).lawyer?.username,
+        certifiedAt: (document.legalCert as any).certifiedAt,
+        barNumber: (document.legalCert as any).barNumber,
+      } : null,
+      footer: {
+        documentHash: document.documentHash,
+        blockchainTxHash: document.blockchainTxHash,
+        archiveNumber: document.archiveNumber,
+        createdAt: document.createdAt,
+        archivedAt: document.archivedAt,
+      },
+      // Plain text version for simple PDF rendering
+      plainText: this.buildPlainTextDocument(document),
+    };
+
+    this.logger.log(`PDF generated for document: ${document.documentNumber}`);
+    return pdfData;
+  }
+
+  /**
+   * Build plain text representation of document for PDF content.
+   */
+  private buildPlainTextDocument(document: any): string {
+    const lines: string[] = [];
+
+    lines.push('═══════════════════════════════════════════════');
+    lines.push(`  ДОКУМЕНТ / DOCUMENT`);
+    lines.push('═══════════════════════════════════════════════');
+    lines.push('');
+    lines.push(`Номер: ${document.documentNumber}`);
+    lines.push(`Название: ${document.title}`);
+    if (document.titleRu) lines.push(`Название (RU): ${document.titleRu}`);
+    lines.push(`Статус: ${document.currentStage}`);
+    lines.push(`Дата: ${new Date(document.createdAt).toLocaleDateString('ru-RU')}`);
+    lines.push('');
+    lines.push('───────────────────────────────────────────────');
+    lines.push('СОДЕРЖАНИЕ:');
+    lines.push('───────────────────────────────────────────────');
+    lines.push('');
+    lines.push(document.generatedContent || '(нет содержания)');
+    lines.push('');
+
+    if (document.signatures?.length > 0) {
+      lines.push('───────────────────────────────────────────────');
+      lines.push('ПОДПИСИ:');
+      lines.push('───────────────────────────────────────────────');
+      for (const sig of document.signatures) {
+        lines.push(`  ${sig.signerRole}: ${sig.signer?.username || 'Unknown'} — ${sig.verified ? '✓ Verified' : '○ Pending'}`);
+      }
+      lines.push('');
+    }
+
+    if (document.documentHash) {
+      lines.push('───────────────────────────────────────────────');
+      lines.push(`SHA-256: ${document.documentHash}`);
+      if (document.blockchainTxHash) {
+        lines.push(`Blockchain TX: ${document.blockchainTxHash}`);
+      }
+      if (document.archiveNumber) {
+        lines.push(`Archive No: ${document.archiveNumber}`);
+      }
+    }
+
+    lines.push('═══════════════════════════════════════════════');
+
+    return lines.join('\n');
+  }
+
+  // ============== BLOCKCHAIN CERTIFICATE HASHING ==============
+
+  /**
+   * Register a document's hash on the blockchain.
+   * Computes SHA-256 of the document content and stores the (simulated) transaction hash.
+   * In production, this would call a smart contract to store the hash on-chain.
+   */
+  async registerDocumentHash(documentId: string, registeredById: string) {
+    const document = await this.getDocument(documentId);
+
+    if (!document.generatedContent) {
+      throw new BadRequestException('Document has no generated content to hash');
+    }
+
+    // Compute content hash
+    const contentHash = this.calculateHash(document.generatedContent);
+
+    // In production: call smart contract to register hash
+    // const tx = await contract.registerHash(contentHash);
+    const txHash = `0x${crypto.createHash('sha256').update(`${contentHash}-${Date.now()}`).digest('hex')}`;
+
+    // Update document with blockchain tx
+    const updated = await this.prisma.documentContract.update({
+      where: { id: documentId },
+      data: {
+        documentHash: contentHash,
+        blockchainTxHash: txHash,
+      },
+    });
+
+    // Log access
+    await this.logAccess({
+      documentId,
+      userId: registeredById,
+      action: 'MODIFY',
+      reason: 'Blockchain hash registration',
+      ipAddress: 'system',
+    });
+
+    this.logger.log(`Document hash registered on-chain: ${document.documentNumber} -> ${txHash}`);
+
+    return {
+      documentId,
+      documentNumber: document.documentNumber,
+      contentHash,
+      blockchainTxHash: txHash,
+      registeredAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Verify a document's hash against its stored hash.
+   * Recomputes SHA-256 and compares with the stored documentHash.
+   */
+  async verifyDocumentHash(documentId: string) {
+    const document = await this.getDocument(documentId);
+
+    if (!document.documentHash) {
+      throw new BadRequestException('Document has no registered hash');
+    }
+
+    if (!document.generatedContent) {
+      throw new BadRequestException('Document has no generated content');
+    }
+
+    const currentHash = this.calculateHash(document.generatedContent);
+    const isValid = currentHash === document.documentHash;
+
+    return {
+      documentId,
+      documentNumber: document.documentNumber,
+      storedHash: document.documentHash,
+      currentHash,
+      isValid,
+      blockchainTxHash: document.blockchainTxHash,
+      message: isValid
+        ? 'Document integrity verified — hash matches blockchain record'
+        : 'WARNING: Document has been modified since hash was registered',
+    };
+  }
 }

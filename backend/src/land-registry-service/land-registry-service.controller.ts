@@ -109,4 +109,37 @@ export class LandRegistryServiceController {
   async getMarketTrends(@Param('region') region: string) {
     return this.landService.getMarketTrends(region);
   }
+
+  // ===== Encumbrances =====
+
+  @Post('encumbrances')
+  async createEncumbrance(@Req() req: any, @Body() body: any) {
+    return this.landService.createEncumbrance(req.user.userId, body);
+  }
+
+  @Get('encumbrances')
+  async getEncumbrances(
+    @Query('landPlotId') landPlotId?: string,
+    @Query('propertyId') propertyId?: string,
+  ) {
+    return this.landService.getEncumbrances(landPlotId, propertyId);
+  }
+
+  @Get('encumbrances/:id')
+  async getEncumbranceById(@Param('id') id: string) {
+    return this.landService.getEncumbranceById(id);
+  }
+
+  @Post('encumbrances/:id/release')
+  async releaseEncumbrance(@Req() req: any, @Param('id') id: string) {
+    return this.landService.releaseEncumbrance(id, req.user.userId);
+  }
+
+  @Get('encumbrances/check')
+  async checkEncumbrances(
+    @Query('landPlotId') landPlotId?: string,
+    @Query('propertyId') propertyId?: string,
+  ) {
+    return this.landService.checkActiveEncumbrances(landPlotId, propertyId);
+  }
 }

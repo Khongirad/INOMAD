@@ -13,6 +13,7 @@ describe('LandRegistryServiceService', () => {
     landLease: { findMany: jest.fn(), create: jest.fn() },
     landTransaction: { findMany: jest.fn(), create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), count: jest.fn() },
     landProperty: { findUnique: jest.fn() },
+    landEncumbrance: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     user: { findUnique: jest.fn() },
   });
 
@@ -200,11 +201,22 @@ describe('LandRegistryServiceService', () => {
       prisma.user.findUnique
         .mockResolvedValueOnce({ id: 'u1', username: 'seller', citizenType: 'CITIZEN' })
         .mockResolvedValueOnce({ id: 'u2', username: 'buyer', citizenType: 'INDIGENOUS' });
+      prisma.landEncumbrance.findMany.mockResolvedValue([]); // no blocking encumbrances
       prisma.landTransaction.create.mockResolvedValue({ id: 'tx1', status: 'INITIATED' });
       const result = await service.initiateTransfer('u1', {
         landPlotId: 'plot1', buyerId: 'u2', salePrice: 50000, currency: 'ALTAN',
       });
       expect(result.status).toBe('INITIATED');
+    });
+
+    it('should block transfer when active MORTGAGE encumbrance exists', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ id: 'u1', username: 'seller', citizenType: 'CITIZEN' })
+        .mockResolvedValueOnce({ id: 'u2', username: 'buyer', citizenType: 'CITIZEN' });
+      prisma.landEncumbrance.findMany.mockResolvedValue([{ type: 'MORTGAGE', status: 'ACTIVE' }]);
+      await expect(service.initiateTransfer('u1', {
+        landPlotId: 'plot1', buyerId: 'u2', salePrice: 50000, currency: 'ALTAN',
+      })).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -348,6 +360,117 @@ describe('LandRegistryServiceService', () => {
       prisma.landTransaction.findMany.mockResolvedValue([]);
       const result = await service.getTransactionHistory(undefined, 'p1');
       expect(result).toHaveLength(0);
+    });
+  });
+
+  // ===== Encumbrances =====
+
+  describe('createEncumbrance', () => {
+    it('should throw if no landPlotId/propertyId', async () => {
+      await expect(service.createEncumbrance('u1', {
+        type: 'MORTGAGE', description: 'test', holderName: 'Bank', startDate: '2024-01-01',
+      })).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw if holder not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      await expect(service.createEncumbrance('u1', {
+        landPlotId: 'p1', type: 'MORTGAGE', description: 'test', holderName: 'Bank', startDate: '2024-01-01',
+      })).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if non-INDIGENOUS tries SOVEREIGN', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'CITIZEN' });
+      await expect(service.createEncumbrance('u1', {
+        landPlotId: 'p1', type: 'SOVEREIGN', description: 'ancestral', holderName: 'Citizen', startDate: '2024-01-01',
+      })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw if FOREIGNER tries to create encumbrance', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'FOREIGNER' });
+      await expect(service.createEncumbrance('u1', {
+        landPlotId: 'p1', type: 'MORTGAGE', description: 'test', holderName: 'Bank', startDate: '2024-01-01',
+      })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should create MORTGAGE for CITIZEN', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'CITIZEN' });
+      prisma.landEncumbrance.create.mockResolvedValue({ id: 'enc1', type: 'MORTGAGE' });
+      const result = await service.createEncumbrance('u1', {
+        landPlotId: 'p1', type: 'MORTGAGE', description: 'home loan', holderName: 'Bank', startDate: '2024-01-01',
+      });
+      expect(result.type).toBe('MORTGAGE');
+    });
+
+    it('should create SOVEREIGN for INDIGENOUS', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', citizenType: 'INDIGENOUS' });
+      prisma.landEncumbrance.create.mockResolvedValue({ id: 'enc2', type: 'SOVEREIGN', isIndigenousSovereign: true });
+      const result = await service.createEncumbrance('u1', {
+        landPlotId: 'p1', type: 'SOVEREIGN', description: 'ancestral land restriction', holderName: 'Elder', startDate: '2024-01-01',
+      });
+      expect(result.type).toBe('SOVEREIGN');
+      expect(result.isIndigenousSovereign).toBe(true);
+    });
+  });
+
+  describe('getEncumbrances', () => {
+    it('should return encumbrances for a plot', async () => {
+      prisma.landEncumbrance.findMany.mockResolvedValue([{ id: 'enc1' }]);
+      const result = await service.getEncumbrances('plot1');
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('getEncumbranceById', () => {
+    it('should return encumbrance', async () => {
+      prisma.landEncumbrance.findUnique.mockResolvedValue({ id: 'enc1' });
+      const result = await service.getEncumbranceById('enc1');
+      expect(result.id).toBe('enc1');
+    });
+
+    it('should throw if not found', async () => {
+      prisma.landEncumbrance.findUnique.mockResolvedValue(null);
+      await expect(service.getEncumbranceById('bad')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('releaseEncumbrance', () => {
+    it('should throw if not found', async () => {
+      prisma.landEncumbrance.findUnique.mockResolvedValue(null);
+      await expect(service.releaseEncumbrance('bad', 'u1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if not ACTIVE', async () => {
+      prisma.landEncumbrance.findUnique.mockResolvedValue({ status: 'RELEASED' });
+      await expect(service.releaseEncumbrance('enc1', 'u1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should release ACTIVE encumbrance', async () => {
+      prisma.landEncumbrance.findUnique.mockResolvedValue({ id: 'enc1', status: 'ACTIVE' });
+      prisma.landEncumbrance.update.mockResolvedValue({ status: 'RELEASED' });
+      const result = await service.releaseEncumbrance('enc1', 'u1');
+      expect(result.status).toBe('RELEASED');
+    });
+  });
+
+  describe('checkActiveEncumbrances', () => {
+    it('should return no blocking when clear', async () => {
+      prisma.landEncumbrance.findMany.mockResolvedValue([]);
+      const result = await service.checkActiveEncumbrances('plot1');
+      expect(result.blockingTransfer).toBe(false);
+    });
+
+    it('should flag SOVEREIGN as blocking', async () => {
+      prisma.landEncumbrance.findMany.mockResolvedValue([{ type: 'SOVEREIGN' }]);
+      const result = await service.checkActiveEncumbrances('plot1');
+      expect(result.blockingTransfer).toBe(true);
+    });
+
+    it('should not block for EASEMENT alone', async () => {
+      prisma.landEncumbrance.findMany.mockResolvedValue([{ type: 'EASEMENT' }]);
+      const result = await service.checkActiveEncumbrances('plot1');
+      expect(result.blockingTransfer).toBe(false);
+      expect(result.hasActiveEncumbrances).toBe(true);
     });
   });
 });

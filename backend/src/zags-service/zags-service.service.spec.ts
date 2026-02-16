@@ -45,6 +45,8 @@ describe('ZagsServiceService', () => {
       zagsDivorce: baseMock(mockDivorce),
       orgBankAccount: baseMock({ id: 'acc-1', accountName: 'Family Account' }),
       weddingGift: baseMock({ id: 'gift-1', description: 'Silver set' }),
+      deathRegistration: baseMock({ id: 'death-1', deceasedId: 'user-2', reportedById: 'user-1', status: 'PENDING', certificateNumber: 'DEATH-CERT-001', deceasedFullName: 'Bob', dateOfBirth: new Date('1992-05-15'), dateOfDeath: new Date('2025-01-01'), placeOfDeath: 'Hospital', causeOfDeath: 'Natural', reportedByName: 'Alice', relationship: 'SPOUSE' }),
+      nameChange: baseMock({ id: 'nc-1', userId: 'user-1', previousName: 'Alice Smith', newName: 'Alice Johnson', reason: 'MARRIAGE', status: 'PENDING', supportingDocumentIds: [], certificateNumber: 'NC-CERT-001' }),
       $transaction: jest.fn((arg) => {
         if (typeof arg === 'function') return arg(prisma);
         return Promise.all(arg);
@@ -411,6 +413,158 @@ describe('ZagsServiceService', () => {
       expect(result.pendingMarriages).toBe(2);
       expect(result.totalDivorces).toBe(1);
       expect(result.activeMarriages).toBe(9);
+    });
+  });
+
+  // ── DEATH REGISTRATION ──
+
+  describe('registerDeath', () => {
+    it('should create a death registration', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-2' });
+      prisma.deathRegistration.create.mockResolvedValue({ id: 'death-new', status: 'PENDING' });
+      const result = await service.registerDeath('user-1', {
+        deceasedId: 'user-2',
+        deceasedFullName: 'Bob',
+        dateOfBirth: '1992-05-15',
+        dateOfDeath: '2025-01-01',
+        placeOfDeath: 'Hospital',
+        causeOfDeath: 'Natural',
+        reportedByName: 'Alice',
+        relationship: 'SPOUSE',
+      });
+      expect(result).toBeDefined();
+      expect(prisma.deathRegistration.create).toHaveBeenCalled();
+    });
+
+    it('should reject self-death registration', async () => {
+      await expect(service.registerDeath('user-1', {
+        deceasedId: 'user-1',
+        deceasedFullName: 'Alice',
+        dateOfBirth: '1990-01-01',
+        dateOfDeath: '2025-01-01',
+        placeOfDeath: 'Hospital',
+        causeOfDeath: 'Natural',
+        reportedByName: 'Alice',
+        relationship: 'SELF',
+      })).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject if deceased user not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      await expect(service.registerDeath('user-1', {
+        deceasedId: 'nonexistent',
+        deceasedFullName: 'Ghost',
+        dateOfBirth: '1990-01-01',
+        dateOfDeath: '2025-01-01',
+        placeOfDeath: 'Unknown',
+        causeOfDeath: 'Unknown',
+        reportedByName: 'Alice',
+        relationship: 'OTHER',
+      })).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getDeathRegistration', () => {
+    it('should return death registration by ID', async () => {
+      const result = await service.getDeathRegistration('death-1');
+      expect(result).toBeDefined();
+      expect(result.id).toBe('death-1');
+    });
+
+    it('should throw if not found', async () => {
+      prisma.deathRegistration.findUnique.mockResolvedValue(null);
+      await expect(service.getDeathRegistration('nonexistent')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('approveDeathRegistration', () => {
+    it('should approve and set status REGISTERED', async () => {
+      prisma.deathRegistration.findUnique.mockResolvedValue({ id: 'death-1', status: 'PENDING', deceasedId: 'user-2' });
+      prisma.deathRegistration.update.mockResolvedValue({ id: 'death-1', status: 'REGISTERED' });
+      prisma.user.update.mockResolvedValue({ id: 'user-2' });
+      const result = await service.approveDeathRegistration('death-1', 'officer-1');
+      expect(result).toBeDefined();
+    });
+
+    it('should reject if not PENDING', async () => {
+      prisma.deathRegistration.findUnique.mockResolvedValue({ id: 'death-1', status: 'REGISTERED' });
+      await expect(service.approveDeathRegistration('death-1', 'officer-1')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('rejectDeathRegistration', () => {
+    it('should reject and set notes', async () => {
+      prisma.deathRegistration.findUnique.mockResolvedValue({ id: 'death-1', status: 'PENDING' });
+      prisma.deathRegistration.update.mockResolvedValue({ id: 'death-1', status: 'REJECTED', notes: 'Insufficient evidence' });
+      const result = await service.rejectDeathRegistration('death-1', 'Insufficient evidence');
+      expect(result.status).toBe('REJECTED');
+    });
+  });
+
+  describe('getDeathCertificate', () => {
+    it('should return by certificate number', async () => {
+      prisma.deathRegistration.findUnique.mockResolvedValue({ certificateNumber: 'DEATH-CERT-001' });
+      const result = await service.getDeathCertificate('DEATH-CERT-001');
+      expect(result.certificateNumber).toBe('DEATH-CERT-001');
+    });
+
+    it('should throw if cert not found', async () => {
+      prisma.deathRegistration.findUnique.mockResolvedValue(null);
+      await expect(service.getDeathCertificate('FAKE')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ── NAME CHANGE ──
+
+  describe('applyNameChange', () => {
+    it('should create a name change application', async () => {
+      prisma.nameChange.create.mockResolvedValue({ id: 'nc-new', status: 'PENDING' });
+      const result = await service.applyNameChange('user-1', {
+        previousName: 'Alice Smith',
+        newName: 'Alice Johnson',
+        reason: 'MARRIAGE',
+      });
+      expect(result).toBeDefined();
+      expect(prisma.nameChange.create).toHaveBeenCalled();
+    });
+
+    it('should reject if same name', async () => {
+      await expect(service.applyNameChange('user-1', {
+        previousName: 'Alice',
+        newName: 'Alice',
+        reason: 'PERSONAL',
+      })).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getMyNameChanges', () => {
+    it('should return user name changes', async () => {
+      const result = await service.getMyNameChanges('user-1');
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe('approveNameChange', () => {
+    it('should approve and update username', async () => {
+      prisma.nameChange.findUnique.mockResolvedValue({ id: 'nc-1', status: 'PENDING', userId: 'user-1', newName: 'Alice Johnson' });
+      prisma.nameChange.update.mockResolvedValue({ id: 'nc-1', status: 'REGISTERED' });
+      prisma.user.update.mockResolvedValue({ id: 'user-1', username: 'Alice Johnson' });
+      const result = await service.approveNameChange('nc-1', 'officer-1');
+      expect(result).toBeDefined();
+    });
+
+    it('should reject if not PENDING', async () => {
+      prisma.nameChange.findUnique.mockResolvedValue({ id: 'nc-1', status: 'REGISTERED' });
+      await expect(service.approveNameChange('nc-1', 'officer-1')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('rejectNameChange', () => {
+    it('should reject with notes', async () => {
+      prisma.nameChange.findUnique.mockResolvedValue({ id: 'nc-1', status: 'PENDING' });
+      prisma.nameChange.update.mockResolvedValue({ id: 'nc-1', status: 'REJECTED', notes: 'Docs incomplete' });
+      const result = await service.rejectNameChange('nc-1', 'Docs incomplete');
+      expect(result.status).toBe('REJECTED');
     });
   });
 });
