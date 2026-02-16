@@ -24,7 +24,7 @@ export class MigrationServiceService {
   }) {
     return this.prisma.passportApplication.create({
       data: {
-        applicantId: userId,
+        applicant: { connect: { id: userId } },
         fullName: data.fullName,
         dateOfBirth: new Date(data.dateOfBirth),
         placeOfBirth: data.placeOfBirth,
