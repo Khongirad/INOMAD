@@ -30,8 +30,13 @@ export class VerificationService {
   ) {}
 
   /**
-   * Referral Verification: Requires 1 verified citizen from the same Zuun.
-   * Реферальная программа — один верифицированный гражданин подтверждает нового.
+   * Arban-Level Verification: Only members of an Arban can verify new users.
+   *
+   * Коллективная ответственность Арбана:
+   *   - Только члены Арбана верифицируют новых пользователей
+   *   - Арбан несёт ответственность за подлинность каждого верифицированного
+   *   - При обнаружении мошенничества/ботов → весь Арбан блокируется
+   *   - Все верифицированные этим Арбаном проходят проверку Миграционной Службой
    */
   async submitVerification(verifierSeatId: string, targetUserId: string) {
     const verifier = await this.prisma.user.findUnique({
@@ -53,7 +58,7 @@ export class VerificationService {
 
     if (!target) throw new BadRequestException('Target user not found.');
 
-    // Local Responsibility Check: Must belong to the same Zuun (100) or Myangan (1000)
+    // Arban Responsibility Check: Verifier must belong to the same Arban
     const verifierSeat = verifier.khuralSeats[0];
     const targetSeat = target.khuralSeats[0];
 
@@ -61,18 +66,15 @@ export class VerificationService {
         throw new BadRequestException('Territorial allocation missing for verifier or target.');
     }
 
-    const verifierArban = verifierSeat.group;
-    const targetArban = targetSeat.group;
-    
-    const verifierZuunId = verifierArban.parentGroupId;
-    const targetZuunId = targetArban.parentGroupId;
+    const verifierArbanId = verifierSeat.group.id;
+    const targetArbanId = targetSeat.group.id;
 
-    if (!verifierZuunId || !targetZuunId) {
+    if (!verifierArbanId || !targetArbanId) {
          throw new BadRequestException('Territorial hierarchy data incomplete.');
     }
 
-    if (verifierZuunId !== targetZuunId) {
-        throw new ForbiddenException('Indigenous Responsibility: You can only verify residents within your own local Zuun (100-family circle).');
+    if (verifierArbanId !== targetArbanId) {
+        throw new ForbiddenException('Arban Responsibility: You can only verify members within your own Arban. Your Arban bears collective responsibility for verified users.');
     }
 
     await this.prisma.verification.create({
