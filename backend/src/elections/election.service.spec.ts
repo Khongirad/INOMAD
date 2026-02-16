@@ -285,4 +285,91 @@ describe('ElectionService', () => {
       await expect(service.completeElection('bad', 'admin')).rejects.toThrow(NotFoundException);
     });
   });
+
+  // ─── additional coverage ────────────
+  describe('vote with PRIVATE org', () => {
+    it('should use shareholder weight for PRIVATE org', async () => {
+      const privateElection = {
+        ...mockElection,
+        organization: { id: 'org-1', ownershipType: 'PRIVATE' },
+      };
+      prisma.election.findUnique.mockResolvedValue(privateElection);
+      prisma.organizationMember.findFirst.mockResolvedValue({ userId: 'v1' });
+      prisma.user.findUnique.mockResolvedValue({ id: 'v1', citizenType: 'CITIZEN' });
+      prisma.electionCandidate.findFirst.mockResolvedValue(mockElection.candidates[0]);
+      prisma.orgShareholder.findUnique.mockResolvedValue({ voteWeight: 5 });
+      prisma.electionCandidate.update.mockResolvedValue({});
+      prisma.election.update.mockResolvedValue({});
+
+      await service.vote({ electionId: 'e1', voterId: 'v1', candidateId: 'c1' });
+      expect(prisma.electionCandidate.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { votes: { increment: 5 } },
+        }),
+      );
+    });
+
+    it('should throw if not shareholder in PRIVATE org', async () => {
+      const privateElection = {
+        ...mockElection,
+        organization: { id: 'org-1', ownershipType: 'PRIVATE' },
+      };
+      prisma.election.findUnique.mockResolvedValue(privateElection);
+      prisma.organizationMember.findFirst.mockResolvedValue({ userId: 'v1' });
+      prisma.user.findUnique.mockResolvedValue({ id: 'v1', citizenType: 'CITIZEN' });
+      prisma.electionCandidate.findFirst.mockResolvedValue(mockElection.candidates[0]);
+      prisma.orgShareholder.findUnique.mockResolvedValue(null);
+
+      await expect(service.vote({ electionId: 'e1', voterId: 'v1', candidateId: 'c1' }))
+        .rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('vote outside voting period', () => {
+    it('should throw if voting period has ended', async () => {
+      const expiredElection = {
+        ...mockElection,
+        startDate: new Date(Date.now() - 172800000),
+        endDate: new Date(Date.now() - 86400000),
+      };
+      prisma.election.findUnique.mockResolvedValue(expiredElection);
+      await expect(service.vote({ electionId: 'e1', voterId: 'v1', candidateId: 'c1' }))
+        .rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('vote candidate not found', () => {
+    it('should throw if candidate does not exist', async () => {
+      prisma.election.findUnique.mockResolvedValue(mockElection);
+      prisma.organizationMember.findFirst.mockResolvedValue({ userId: 'v1' });
+      prisma.user.findUnique.mockResolvedValue({ id: 'v1', citizenType: 'CITIZEN' });
+      prisma.electionCandidate.findFirst.mockResolvedValue(null);
+
+      await expect(service.vote({ electionId: 'e1', voterId: 'v1', candidateId: 'c99' }))
+        .rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('vote election not found', () => {
+    it('should throw NotFoundException', async () => {
+      prisma.election.findUnique.mockResolvedValue(null);
+      await expect(service.vote({ electionId: 'bad', voterId: 'v1', candidateId: 'c1' }))
+        .rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getElection not found', () => {
+    it('should return null for missing election', async () => {
+      prisma.election.findUnique.mockResolvedValue(null);
+      const result = await service.getElection('bad');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('addCandidate election not found', () => {
+    it('should throw NotFoundException', async () => {
+      prisma.election.findUnique.mockResolvedValue(null);
+      await expect(service.addCandidate('bad', 'c3')).rejects.toThrow(NotFoundException);
+    });
+  });
 });

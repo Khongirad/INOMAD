@@ -210,4 +210,41 @@ describe('DigitalSealService', () => {
         .rejects.toThrow('Caller is not a signer');
     });
   });
+
+  // ─── additional coverage tests ────────
+  describe('additional coverage', () => {
+    it('createSeal with DIGITAL_SEAL_BYTECODE set', async () => {
+      process.env.DIGITAL_SEAL_BYTECODE = '0xBYTECODE';
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ walletAddress: '0xAddr1' })
+        .mockResolvedValueOnce({ walletAddress: '0xAddr2' });
+      prisma.digitalSeal.create.mockResolvedValue(mockSeal);
+      blockchain.deployContract.mockResolvedValue({ getAddress: jest.fn().mockResolvedValue('0xNEW') });
+
+      const result = await service.createSeal({ signer1SeatId: 'seat-1', signer2SeatId: 'seat-2' });
+      expect(result.id).toBe('s1');
+      delete process.env.DIGITAL_SEAL_BYTECODE;
+    });
+
+    it('createSeal throws when both signers have no wallet', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce({ walletAddress: null })
+        .mockResolvedValueOnce({ walletAddress: null });
+      await expect(service.createSeal({ signer1SeatId: 'seat-1', signer2SeatId: 'seat-2' }))
+        .rejects.toThrow('One or both signers do not have wallet addresses');
+    });
+
+    it('revokeSeal as signer2', async () => {
+      prisma.digitalSeal.findUnique.mockResolvedValue({ ...mockSeal, signer2Approved: true });
+      prisma.digitalSeal.update.mockResolvedValue({ ...mockSeal, signer2Approved: false });
+      const result = await service.revokeSeal('s1', { seatId: 'seat-2', privateKey: '0xkey' });
+      expect(result.signer2Approved).toBe(false);
+    });
+
+    it('executeSeal throws for non-signer', async () => {
+      prisma.digitalSeal.findUnique.mockResolvedValue({ ...mockSeal, approvalCount: 2 });
+      await expect(service.executeSeal('s1', { seatId: 'other', privateKey: '0xkey' }))
+        .rejects.toThrow('Caller is not a signer');
+    });
+  });
 });

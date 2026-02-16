@@ -250,5 +250,80 @@ describe('AuthService', () => {
       await expect(service.verifySignature('0xValidAddress', '0xsig', 'test-nonce'))
         .rejects.toThrow(UnauthorizedException);
     });
+
+    it('should throw for signature mismatch (recovered != expected)', async () => {
+      const futureDate = new Date(Date.now() + 300000);
+      prisma.authNonce.findUnique.mockResolvedValue({
+        nonce: 'test-nonce', address: '0xexpectedaddress', consumed: false, expiresAt: futureDate,
+      });
+      const { ethers } = require('ethers');
+      ethers.verifyMessage.mockReturnValue('0xDifferentAddress');
+      await expect(service.verifySignature('0xExpectedAddress', '0xsig', 'test-nonce'))
+        .rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  // ─── SeatSBT verification enabled ─────
+  describe('verifySignature with seat verification', () => {
+    it('should throw if no SeatSBT found when verification enabled', async () => {
+      // Override configService to disable skip
+      const origGet = (service as any).configService.get;
+      (service as any).configService.get = jest.fn((key: string) => {
+        if (key === 'SKIP_SEAT_VERIFICATION') return 'false';
+        return origGet(key);
+      });
+
+      const futureDate = new Date(Date.now() + 300000);
+      prisma.authNonce.findUnique.mockResolvedValue({
+        nonce: 'test-nonce', address: '0xvalidaddress', consumed: false, expiresAt: futureDate,
+      });
+      prisma.authNonce.update.mockResolvedValue({});
+      const { ethers } = require('ethers');
+      ethers.verifyMessage.mockReturnValue('0xValidAddress');
+
+      // blockchainService.getSeatsOwnedBy returns empty
+      const bcService = (service as any).blockchainService;
+      bcService.getSeatsOwnedBy.mockResolvedValue([]);
+
+      await expect(service.verifySignature('0xValidAddress', '0xsig', 'test-nonce'))
+        .rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should succeed when SeatSBT found with verification enabled', async () => {
+      (service as any).configService.get = jest.fn((key: string) => {
+        if (key === 'SKIP_SEAT_VERIFICATION') return 'false';
+        if (key === 'AUTH_JWT_EXPIRY') return '15m';
+        if (key === 'AUTH_REFRESH_EXPIRY') return '24h';
+        return null;
+      });
+
+      const futureDate = new Date(Date.now() + 300000);
+      prisma.authNonce.findUnique.mockResolvedValue({
+        nonce: 'test-nonce', address: '0xvalidaddress', consumed: false, expiresAt: futureDate,
+      });
+      prisma.authNonce.update.mockResolvedValue({});
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'seat-1', walletAddress: '0xvalidaddress' });
+      prisma.authSession.create.mockResolvedValue({});
+      const { ethers } = require('ethers');
+      ethers.verifyMessage.mockReturnValue('0xValidAddress');
+      const bcService = (service as any).blockchainService;
+      bcService.getSeatsOwnedBy.mockResolvedValue(['seat-1']);
+
+      const result = await service.verifySignature('0xValidAddress', '0xsig', 'test-nonce');
+      expect(result.accessToken).toBe('jwt-token');
+    });
+  });
+
+  // ─── getMe without bankLink ───────────
+  describe('getMe without bankLink', () => {
+    it('should return hasBankLink false', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'u1', seatId: 'seat-1', walletAddress: '0x1', role: 'CITIZEN',
+        verificationStatus: 'VERIFIED', walletStatus: 'ACTIVE', bankLink: null,
+      });
+      const result = await service.getMe('u1');
+      expect(result.hasBankLink).toBe(false);
+      expect(result.bankCode).toBeNull();
+    });
   });
 });
