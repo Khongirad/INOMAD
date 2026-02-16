@@ -3,117 +3,137 @@ import { UBISchedulerService } from './ubi-scheduler.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BankRewardService } from '../bank/bank-reward.service';
 
-// Mock the @nestjs/schedule Cron decorator
-jest.mock('@nestjs/schedule', () => ({
-  Cron: () => () => {},
-  CronExpression: {},
-}));
-
-// Mock bank.utils
-jest.mock('../bank/bank.utils', () => ({
-  ECONOMIC_CONSTANTS: { UBI_WEEKLY_AMOUNT: 400 },
-  TRANSACTION_REASONS: { UBI_WEEKLY: 'Weekly UBI Distribution' },
-}));
-
 describe('UBISchedulerService', () => {
   let service: UBISchedulerService;
   let prisma: any;
   let bankReward: any;
 
+  const mockUser = { id: 'u1', seatId: 'SEAT-001', email: 'test@test.com' };
+  const mockPensionFund = { id: 'pf1', email: 'pension@system.khural' };
+
   beforeEach(async () => {
-    prisma = {
+    const mockPrisma = {
       user: {
-        findMany: jest.fn(),
-        findFirst: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([mockUser]),
+        findFirst: jest.fn().mockResolvedValue(mockPensionFund),
       },
       ubiPayment: {
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        upsert: jest.fn(),
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({ id: 'ubi1', status: 'PENDING' }),
+        update: jest.fn().mockResolvedValue({ id: 'ubi1', status: 'COMPLETED' }),
+        upsert: jest.fn().mockResolvedValue({ id: 'ubi1', status: 'FAILED' }),
       },
     };
-
-    bankReward = {
-      transferReward: jest.fn().mockResolvedValue({ transactionId: 'tx-1', status: 'COMPLETED' }),
+    const mockBankReward = {
+      transferReward: jest.fn().mockResolvedValue({ transactionId: 'tx1' }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UBISchedulerService,
-        { provide: PrismaService, useValue: prisma },
-        { provide: BankRewardService, useValue: bankReward },
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: BankRewardService, useValue: mockBankReward },
       ],
     }).compile();
+    service = module.get(UBISchedulerService);
+    prisma = module.get(PrismaService);
+    bankReward = module.get(BankRewardService);
+  });
 
-    service = module.get<UBISchedulerService>(UBISchedulerService);
+  it('should be defined', () => expect(service).toBeDefined());
+
+  describe('distributeWeeklyUBI', () => {
+    it('distributes to eligible users', async () => {
+      await service.distributeWeeklyUBI();
+      expect(bankReward.transferReward).toHaveBeenCalled();
+      expect(prisma.ubiPayment.create).toHaveBeenCalled();
+      expect(prisma.ubiPayment.update).toHaveBeenCalled();
+    });
+    it('skips already-paid users', async () => {
+      prisma.ubiPayment.findUnique.mockResolvedValue({ id: 'existing' });
+      await service.distributeWeeklyUBI();
+      expect(bankReward.transferReward).not.toHaveBeenCalled();
+    });
+    it('handles transfer failure', async () => {
+      bankReward.transferReward.mockRejectedValue(new Error('Transfer failed'));
+      await service.distributeWeeklyUBI();
+      expect(prisma.ubiPayment.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ status: 'FAILED' }),
+        }),
+      );
+    });
+    it('handles no eligible users', async () => {
+      prisma.user.findMany.mockResolvedValue([]);
+      await service.distributeWeeklyUBI();
+      expect(bankReward.transferReward).not.toHaveBeenCalled();
+    });
+    it('handles pension fund not found', async () => {
+      prisma.user.findFirst.mockResolvedValue(null);
+      // Should not throw (caught internally)
+      await service.distributeWeeklyUBI();
+    });
   });
 
   describe('manualDistribution', () => {
-    it('should throw when pension fund account missing', async () => {
-      prisma.user.findMany.mockResolvedValue([{ id: 'user-1', seatId: 'SEAT-1' }]);
-      prisma.user.findFirst.mockResolvedValue(null); // no pension fund
+    it('distributes with default dates', async () => {
+      const r = await service.manualDistribution();
+      expect(r.success).toBe(1);
+      expect(r.skipped).toBe(0);
+      expect(r.failed).toBe(0);
+    });
+    it('distributes with custom date', async () => {
+      const r = await service.manualDistribution(new Date('2026-01-06'));
+      expect(r.success).toBe(1);
+    });
+    it('skips already paid', async () => {
+      prisma.ubiPayment.findUnique.mockResolvedValue({ id: 'x' });
+      const r = await service.manualDistribution();
+      expect(r.skipped).toBe(1);
+      expect(r.success).toBe(0);
+    });
+    it('handles failure', async () => {
+      bankReward.transferReward.mockRejectedValue(new Error('fail'));
+      const r = await service.manualDistribution();
+      expect(r.failed).toBe(1);
+    });
+    it('throws when pension fund not found', async () => {
+      prisma.user.findFirst.mockResolvedValue(null);
+      await expect(service.manualDistribution()).rejects.toThrow('Pension Fund');
+    });
+  });
 
-      await expect(service.manualDistribution()).rejects.toThrow(
-        'Pension Fund system account not found',
+  describe('getLastWeekRange (private)', () => {
+    it('returns valid date range', () => {
+      const range = (service as any).getLastWeekRange();
+      expect(range.weekStart).toBeInstanceOf(Date);
+      expect(range.weekEnd).toBeInstanceOf(Date);
+      expect(range.weekEnd.getTime()).toBeGreaterThan(range.weekStart.getTime());
+    });
+  });
+
+  describe('getEligibleUsers (private)', () => {
+    it('queries verified users with bank links', async () => {
+      const users = await (service as any).getEligibleUsers();
+      expect(users).toHaveLength(1);
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            verificationStatus: 'VERIFIED',
+          }),
+        }),
       );
     });
+  });
 
-    it('should skip already-paid users (idempotency)', async () => {
-      prisma.user.findMany.mockResolvedValue([
-        { id: 'user-1', seatId: 'SEAT-1' },
-      ]);
-      prisma.user.findFirst.mockResolvedValue({ id: 'pension-fund' });
-      prisma.ubiPayment.findUnique.mockResolvedValue({ id: 'existing-payment' });
-
-      const result = await service.manualDistribution();
-
-      expect(result.skipped).toBe(1);
-      expect(result.success).toBe(0);
-      expect(bankReward.transferReward).not.toHaveBeenCalled();
+  describe('getPensionFundAccount (private)', () => {
+    it('returns pension fund account', async () => {
+      const pf = await (service as any).getPensionFundAccount();
+      expect(pf.id).toBe('pf1');
     });
-
-    it('should pay eligible users', async () => {
-      prisma.user.findMany.mockResolvedValue([
-        { id: 'user-1', seatId: 'SEAT-1' },
-        { id: 'user-2', seatId: 'SEAT-2' },
-      ]);
-      prisma.user.findFirst.mockResolvedValue({ id: 'pension-fund' });
-      prisma.ubiPayment.findUnique.mockResolvedValue(null);
-      prisma.ubiPayment.create.mockResolvedValue({ id: 'payment-1' });
-      prisma.ubiPayment.update.mockResolvedValue({});
-
-      const result = await service.manualDistribution();
-
-      expect(result.success).toBe(2);
-      expect(bankReward.transferReward).toHaveBeenCalledTimes(2);
-    });
-
-    it('should record failures', async () => {
-      prisma.user.findMany.mockResolvedValue([
-        { id: 'user-1', seatId: 'SEAT-1' },
-      ]);
-      prisma.user.findFirst.mockResolvedValue({ id: 'pension-fund' });
-      prisma.ubiPayment.findUnique.mockResolvedValue(null);
-      prisma.ubiPayment.create.mockResolvedValue({ id: 'payment-1' });
-      bankReward.transferReward.mockRejectedValue(new Error('Insufficient balance'));
-      prisma.ubiPayment.upsert.mockResolvedValue({});
-
-      const result = await service.manualDistribution();
-
-      expect(result.failed).toBe(1);
-      expect(prisma.ubiPayment.upsert).toHaveBeenCalled();
-    });
-
-    it('should use custom weekStartDate', async () => {
-      prisma.user.findMany.mockResolvedValue([]);
-      prisma.user.findFirst.mockResolvedValue({ id: 'pension-fund' });
-
-      const customDate = new Date('2026-01-06');
-      const result = await service.manualDistribution(customDate);
-
-      expect(result.success).toBe(0);
-      expect(result.skipped).toBe(0);
+    it('throws when not found', async () => {
+      prisma.user.findFirst.mockResolvedValue(null);
+      await expect((service as any).getPensionFundAccount()).rejects.toThrow('Pension Fund');
     });
   });
 });

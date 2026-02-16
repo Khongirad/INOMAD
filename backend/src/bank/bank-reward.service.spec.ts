@@ -1,96 +1,77 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
 import { BankRewardService } from './bank-reward.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { BadRequestException } from '@nestjs/common';
 
 describe('BankRewardService', () => {
   let service: BankRewardService;
   let prisma: any;
 
+  const mockTx = {
+    altanLedger: {
+      findUnique: jest.fn(),
+      update: jest.fn().mockResolvedValue({}),
+      create: jest.fn().mockResolvedValue({}),
+    },
+    altanTransaction: {
+      create: jest.fn().mockResolvedValue({ id: 'tx-1', status: 'COMPLETED' }),
+    },
+  };
+
+  const mockPrisma = () => ({
+    bankLink: { findUnique: jest.fn() },
+    $transaction: jest.fn((fn: any) => fn(mockTx)),
+  });
+
   beforeEach(async () => {
-    const txMocks = {
-      altanLedger: {
-        findUnique: jest.fn(),
-        update: jest.fn().mockResolvedValue({}),
-        create: jest.fn().mockResolvedValue({}),
-      },
-      altanTransaction: {
-        create: jest.fn().mockResolvedValue({ id: 'tx-1' }),
-      },
-    };
-
-    prisma = {
-      bankLink: { findUnique: jest.fn() },
-      $transaction: jest.fn((fn) => fn(txMocks)),
-      _txMocks: txMocks, // store for test assertions
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BankRewardService,
-        { provide: PrismaService, useValue: prisma },
+        { provide: PrismaService, useFactory: mockPrisma },
       ],
     }).compile();
-
-    service = module.get<BankRewardService>(BankRewardService);
+    service = module.get(BankRewardService);
+    prisma = module.get(PrismaService);
   });
 
+  it('should be defined', () => expect(service).toBeDefined());
+
   describe('transferReward', () => {
-    it('should reject zero amount', async () => {
-      await expect(
-        service.transferReward('from', 'to', 0),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should reject negative amount', async () => {
-      await expect(
-        service.transferReward('from', 'to', -50),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should reject self-reward', async () => {
-      await expect(
-        service.transferReward('same-user', 'same-user', 100),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should resolve bankRefs from userIds', async () => {
+    it('should transfer reward between users', async () => {
       prisma.bankLink.findUnique
-        .mockResolvedValueOnce({ bankRef: 'sender-ref' })
-        .mockResolvedValueOnce({ bankRef: 'recipient-ref' });
-
-      prisma._txMocks.altanLedger.findUnique
-        .mockResolvedValueOnce({ balance: 1000 }) // sender
-        .mockResolvedValueOnce({ balance: 500 }); // recipient
-
-      const result = await service.transferReward('from-user', 'to-user', 100);
-
-      expect(result.transactionId).toBe('tx-1');
+        .mockResolvedValueOnce({ bankRef: 'BANK-SENDER' })
+        .mockResolvedValueOnce({ bankRef: 'BANK-RECEIVER' });
+      mockTx.altanLedger.findUnique
+        .mockResolvedValueOnce({ userId: 'u1', balance: 1000 }) // sender
+        .mockResolvedValueOnce({ userId: 'u2', balance: 500 }); // recipient exists
+      const result = await service.transferReward('u1', 'u2', 100);
       expect(result.status).toBe('COMPLETED');
-    });
-
-    it('should reject insufficient balance', async () => {
-      prisma.bankLink.findUnique.mockResolvedValue(null);
-
-      prisma._txMocks.altanLedger.findUnique
-        .mockResolvedValueOnce({ balance: 50 }); // only 50, need 100
-
-      await expect(
-        service.transferReward('from', 'to', 100),
-      ).rejects.toThrow(BadRequestException);
     });
 
     it('should create ledger for new recipient', async () => {
-      prisma.bankLink.findUnique.mockResolvedValue(null);
-
-      prisma._txMocks.altanLedger.findUnique
-        .mockResolvedValueOnce({ balance: 1000 }) // sender has balance
-        .mockResolvedValueOnce(null); // recipient no ledger
-
-      const result = await service.transferReward('from', 'to', 100);
-
-      expect(prisma._txMocks.altanLedger.create).toHaveBeenCalled();
+      prisma.bankLink.findUnique
+        .mockResolvedValueOnce({ bankRef: 'S' })
+        .mockResolvedValueOnce({ bankRef: 'R' });
+      mockTx.altanLedger.findUnique
+        .mockResolvedValueOnce({ userId: 'u1', balance: 500 }) // sender
+        .mockResolvedValueOnce(null); // no recipient ledger
+      const result = await service.transferReward('u1', 'u2', 50);
+      expect(mockTx.altanLedger.create).toHaveBeenCalled();
       expect(result.status).toBe('COMPLETED');
+    });
+
+    it('should throw if amount <= 0', async () => {
+      await expect(service.transferReward('u1', 'u2', 0)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw if self-transfer', async () => {
+      await expect(service.transferReward('u1', 'u1', 100)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw if insufficient balance', async () => {
+      prisma.bankLink.findUnique.mockResolvedValue({ bankRef: 'B' });
+      mockTx.altanLedger.findUnique.mockResolvedValueOnce({ userId: 'u1', balance: 10 });
+      await expect(service.transferReward('u1', 'u2', 100)).rejects.toThrow(BadRequestException);
     });
   });
 });

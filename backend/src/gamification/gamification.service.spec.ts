@@ -291,4 +291,123 @@ describe('GamificationService', () => {
       expect(result.dailyStreak).toBe(1);
     });
   });
+
+  // ─── checkAchievements for CONTRACT_SIGNED ───
+  describe('checkAchievements for CONTRACT_SIGNED', () => {
+    it('should check contract achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.reputationProfile.findUnique.mockResolvedValue({ questsCompleted: 0, contractsSigned: 1 });
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await service.checkAchievements('user-1', 'CONTRACT_SIGNED');
+      expect(prisma.achievement.create).toHaveBeenCalled();
+    });
+  });
+
+  // ─── checkAchievements for TAX_PAID ──
+  describe('checkAchievements for TAX_PAID', () => {
+    it('should check tax achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.reputationProfile.findUnique.mockResolvedValue({ questsCompleted: 0, contractsSigned: 0 });
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await service.checkAchievements('user-1', 'TAX_PAID');
+      expect(prisma.achievement.create).toHaveBeenCalled();
+    });
+  });
+
+  // ─── checkAchievements for ORGANIZATION_JOINED ──
+  describe('checkAchievements for ORGANIZATION_JOINED', () => {
+    it('should check org join achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.reputationProfile.findUnique.mockResolvedValue({ questsCompleted: 0, contractsSigned: 0 });
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await service.checkAchievements('user-1', 'ORGANIZATION_JOINED');
+      expect(prisma.achievement.create).toHaveBeenCalled();
+    });
+  });
+
+  // ─── checkAchievements for ORGANIZATION_CREATED ─
+  describe('checkAchievements for ORGANIZATION_CREATED', () => {
+    it('should check org leader achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.reputationProfile.findUnique.mockResolvedValue({ questsCompleted: 0, contractsSigned: 0 });
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await service.checkAchievements('user-1', 'ORGANIZATION_CREATED');
+      expect(prisma.achievement.create).toHaveBeenCalled();
+    });
+  });
+
+  // ─── checkAchievements for MARRIAGE_REGISTERED ─
+  describe('checkAchievements for MARRIAGE_REGISTERED', () => {
+    it('should check marriage achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.reputationProfile.findUnique.mockResolvedValue({ questsCompleted: 0, contractsSigned: 0 });
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await service.checkAchievements('user-1', 'MARRIAGE_REGISTERED');
+      expect(prisma.achievement.create).toHaveBeenCalled();
+    });
+  });
+
+  // ─── checkAchievements for ARBAN_JOINED ─
+  describe('checkAchievements for ARBAN_JOINED', () => {
+    it('should check arban achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.reputationProfile.findUnique.mockResolvedValue({ questsCompleted: 0, contractsSigned: 0 });
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await service.checkAchievements('user-1', 'ARBAN_JOINED');
+      expect(prisma.achievement.create).toHaveBeenCalled();
+    });
+  });
+
+  // ─── checkAchievements for PROPOSAL_SUBMITTED ─
+  describe('checkAchievements for PROPOSAL_SUBMITTED', () => {
+    it('should check proposal achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.reputationProfile.findUnique.mockResolvedValue({ questsCompleted: 0, contractsSigned: 0 });
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await service.checkAchievements('user-1', 'PROPOSAL_SUBMITTED');
+      expect(prisma.achievement.create).toHaveBeenCalled();
+    });
+  });
+
+  // ─── checkStreakAchievements ──────────
+  describe('checkStreakAchievements (private)', () => {
+    it('should award 7-day streak achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await (service as any).checkStreakAchievements('user-1', 7);
+      expect(prisma.achievement.create).toHaveBeenCalled();
+    });
+    it('should award 30-day streak achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await (service as any).checkStreakAchievements('user-1', 30);
+      expect(prisma.achievement.create).toHaveBeenCalledTimes(2); // 7-day + 30-day
+    });
+    it('should award 100-day streak achievement', async () => {
+      prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
+      prisma.achievement.findUnique.mockResolvedValue(null);
+      prisma.achievement.create.mockResolvedValue({});
+      prisma.xPTransaction.create.mockResolvedValue({});
+      await (service as any).checkStreakAchievements('user-1', 100);
+      expect(prisma.achievement.create).toHaveBeenCalledTimes(3); // 7 + 30 + 100
+    });
+  });
 });

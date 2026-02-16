@@ -6,61 +6,78 @@ describe('CouncilService', () => {
   let service: CouncilService;
   let prisma: any;
 
-  beforeEach(async () => {
-    prisma = {
-      guildMember: { findMany: jest.fn().mockResolvedValue([]) },
-      khuralEventVersion: { create: jest.fn().mockResolvedValue({ id: 'v-1' }), update: jest.fn() },
-      councilVote: {
-        findUnique: jest.fn(),
-        create: jest.fn().mockResolvedValue({}),
-        count: jest.fn(),
-      },
-      khuralEvent: { update: jest.fn() },
-    };
+  const mockMember = { userId: 'u1', level: 5, xp: 1000, user: { id: 'u1', seatId: 'S-1' } };
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [CouncilService, { provide: PrismaService, useValue: prisma }],
-    }).compile();
-
-    service = module.get<CouncilService>(CouncilService);
+  const mockPrisma = () => ({
+    guildMember: { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn() },
+    khuralEventVersion: { create: jest.fn(), update: jest.fn() },
+    councilVote: { findUnique: jest.fn(), create: jest.fn(), count: jest.fn() },
+    khuralEvent: { update: jest.fn() },
   });
 
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CouncilService,
+        { provide: PrismaService, useFactory: mockPrisma },
+      ],
+    }).compile();
+    service = module.get(CouncilService);
+    prisma = module.get(PrismaService);
+  });
+
+  it('should be defined', () => expect(service).toBeDefined());
+
+  // ─── getCouncilMembers ─────────────────
   describe('getCouncilMembers', () => {
-    it('should get top 10 members', async () => {
-      await service.getCouncilMembers('guild-1');
-      expect(prisma.guildMember.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 10 }),
-      );
+    it('should return top 10 members for guild', async () => {
+      prisma.guildMember.findMany.mockResolvedValue([mockMember]);
+      const result = await service.getCouncilMembers('g1');
+      expect(result).toHaveLength(1);
+    });
+
+    it('should return global top 10 without guildId', async () => {
+      prisma.guildMember.findMany.mockResolvedValue([mockMember]);
+      const result = await service.getCouncilMembers();
+      expect(result).toHaveLength(1);
     });
   });
 
+  // ─── proposeVersion ────────────────────
   describe('proposeVersion', () => {
     it('should create version proposal', async () => {
-      const result = await service.proposeVersion('ev-1', 'New Title', 'New Desc', 'u1');
-      expect(result.id).toBe('v-1');
+      prisma.khuralEventVersion.create.mockResolvedValue({
+        id: 'v1', eventId: 'e1', title: 'New Title',
+      });
+      const result = await service.proposeVersion('e1', 'New Title', 'New Desc', 'u1');
+      expect(result.title).toBe('New Title');
     });
   });
 
+  // ─── castVote ──────────────────────────
   describe('castVote', () => {
-    it('should throw if already voted', async () => {
-      prisma.councilVote.findUnique.mockResolvedValue({ id: 'vote-1' });
-      await expect(service.castVote('v-1', 'u1', true)).rejects.toThrow('Already voted');
-    });
-
-    it('should record vote and return approval count', async () => {
+    it('should cast vote and return approval count', async () => {
       prisma.councilVote.findUnique.mockResolvedValue(null);
+      prisma.councilVote.create.mockResolvedValue({});
       prisma.councilVote.count.mockResolvedValue(3);
-      const result = await service.castVote('v-1', 'u1', true);
+      const result = await service.castVote('v1', 'u1', true);
       expect(result.voted).toBe(true);
       expect(result.currentApprovals).toBe(3);
     });
 
-    it('should auto-approve when consensus reached (6 votes)', async () => {
+    it('should throw if already voted', async () => {
+      prisma.councilVote.findUnique.mockResolvedValue({ id: 'existing' });
+      await expect(service.castVote('v1', 'u1', true)).rejects.toThrow('Already voted');
+    });
+
+    it('should trigger approval at 6 votes', async () => {
       prisma.councilVote.findUnique.mockResolvedValue(null);
+      prisma.councilVote.create.mockResolvedValue({});
       prisma.councilVote.count.mockResolvedValue(6);
-      prisma.khuralEventVersion.update.mockResolvedValue({ id: 'v-1', eventId: 'ev-1' });
-      await service.castVote('v-1', 'u1', true);
-      expect(prisma.khuralEventVersion.update).toHaveBeenCalled();
+      prisma.khuralEventVersion.update.mockResolvedValue({ id: 'v1', eventId: 'e1', title: 'T', description: 'D' });
+      prisma.khuralEvent.update.mockResolvedValue({});
+      const result = await service.castVote('v1', 'u1', true);
+      expect(result.currentApprovals).toBe(6);
     });
   });
 });

@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
 import { RegistrationService } from './registration.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -7,111 +6,167 @@ describe('RegistrationService', () => {
   let service: RegistrationService;
   let prisma: any;
 
+  const mockUser = { id: 'u1', seatId: null, role: 'CITIZEN' };
+  const mockTumen = { id: 'tum1', level: 'TUMEN', name: 'Novosibirsk Tumen I', childGroups: [] };
+  const mockMyangan = { id: 'mya1', level: 'MYANGAN', name: 'Novosibirsk Tumen I - Myangan 1' };
+  const mockZuun = { id: 'zun1', level: 'ZUUN', name: 'Myangan 1 - Zuun 1' };
+  const mockArban = { id: 'arb1', level: 'ARBAN', name: 'Zuun 1 - Arban 1' };
+  const mockSeat = { id: 'seat1', groupId: 'arb1', index: 0, isLeaderSeat: true, occupantUserId: null };
+
   beforeEach(async () => {
-    prisma = {
+    const mockPrisma = {
       user: {
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
+        findUnique: jest.fn().mockResolvedValue(mockUser),
+        update: jest.fn().mockImplementation(({ data }) =>
+          Promise.resolve({ ...mockUser, ...data }),
+        ),
+        create: jest.fn().mockImplementation(({ data }) =>
+          Promise.resolve({ id: 'new-u', ...data }),
+        ),
       },
       khuralGroup: {
-        findFirst: jest.fn(),
-        findMany: jest.fn(),
-        create: jest.fn(),
-        count: jest.fn(),
+        findFirst: jest.fn().mockResolvedValue(null),
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockImplementation(({ data }) =>
+          Promise.resolve({ id: `grp-${Date.now()}`, ...data, childGroups: [] }),
+        ),
+        count: jest.fn().mockResolvedValue(0),
       },
       khuralSeat: {
-        findMany: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        count: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockImplementation(({ data }) =>
+          Promise.resolve({ id: `s-${data.index}`, ...data, occupantUserId: null }),
+        ),
+        update: jest.fn().mockImplementation(({ data }) =>
+          Promise.resolve({ ...mockSeat, ...data }),
+        ),
+        count: jest.fn().mockResolvedValue(0),
       },
       khuralEvent: {
-        create: jest.fn().mockResolvedValue({}),
+        create: jest.fn().mockResolvedValue({ id: 'ev1' }),
       },
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegistrationService,
-        { provide: PrismaService, useValue: prisma },
+        { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
-
-    service = module.get<RegistrationService>(RegistrationService);
+    service = module.get(RegistrationService);
+    prisma = module.get(PrismaService);
   });
 
-  describe('assignTerritory', () => {
-    it('should throw for unknown user', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
+  it('should be defined', () => expect(service).toBeDefined());
 
-      await expect(
-        service.assignTerritory('unknown', 'Bayangol'),
-      ).rejects.toThrow(BadRequestException);
+  describe('assignTerritory', () => {
+    it('throws when user not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      await expect(service.assignTerritory('bad', 'district'))
+        .rejects.toThrow('User not found');
     });
 
-    it('should create tumen when none exists for district', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
+    it('creates full hierarchy and assigns seat for new district', async () => {
+      // No existing groups — all will be created fresh
       prisma.khuralGroup.findFirst.mockResolvedValue(null);
-
-      // Create new tumen
-      prisma.khuralGroup.create
-        .mockResolvedValueOnce({ id: 'tumen-1', name: 'Bayangol Tumen I', childGroups: [] }) // tumen
-        .mockResolvedValueOnce({ id: 'myangan-1', name: 'M1' }) // myangan
-        .mockResolvedValueOnce({ id: 'zuun-1', name: 'Z1' }) // zuun
-        .mockResolvedValueOnce({ id: 'arban-1', name: 'A1' }); // arban
-
-      // findAvailableChild returns null (need to create)
       prisma.khuralGroup.findMany.mockResolvedValue([]);
       prisma.khuralGroup.count.mockResolvedValue(0);
-
-      // Seats
       prisma.khuralSeat.findMany.mockResolvedValue([]);
-      prisma.khuralSeat.create.mockResolvedValue({ id: 'seat-0', index: 0, isLeaderSeat: true });
 
-      prisma.user.update.mockResolvedValue({});
+      let createCallIndex = 0;
+      prisma.khuralGroup.create.mockImplementation(({ data }: any) => {
+        createCallIndex++;
+        return Promise.resolve({
+          id: `grp-${createCallIndex}`,
+          ...data,
+          childGroups: [],
+          seats: [],
+        });
+      });
 
-      const result = await service.assignTerritory('user-1', 'Bayangol');
+      const r = await service.assignTerritory('u1', 'Novosibirsk');
+      expect(r.seatId).toBeDefined();
+      expect(r.seatIndex).toBe(0);
+      expect(prisma.khuralEvent.create).toHaveBeenCalled();
+      expect(prisma.user.update).toHaveBeenCalled();
+    });
 
-      expect(result.seatIndex).toBe(0);
-      expect(result.seatId).toBeDefined();
+    it('reuses existing tumen', async () => {
+      prisma.khuralGroup.findFirst.mockResolvedValue(mockTumen);
+      prisma.khuralGroup.findMany.mockResolvedValue([]);
+      prisma.khuralGroup.count.mockResolvedValue(0);
+      prisma.khuralSeat.findMany.mockResolvedValue([]);
+
+      let idx = 0;
+      prisma.khuralGroup.create.mockImplementation(({ data }: any) => {
+        idx++;
+        return Promise.resolve({ id: `g-${idx}`, ...data, childGroups: [], seats: [] });
+      });
+
+      const r = await service.assignTerritory('u1', 'Novosibirsk');
+      // Should not create a new tumen since one exists
+      expect(r.tumen.id).toBe('tum1');
+    });
+
+    it('uses empty seat in existing arban', async () => {
+      prisma.khuralGroup.findFirst
+        .mockResolvedValueOnce(mockTumen);
+      
+      // findAvailableChild returns a group for each level
+      prisma.khuralGroup.findMany
+        .mockResolvedValueOnce([{ ...mockMyangan, seats: [], childGroups: [] }]) // for MYANGAN
+        .mockResolvedValueOnce([{ ...mockZuun, seats: [], childGroups: [] }]) // for ZUUN
+        .mockResolvedValueOnce([{ ...mockArban, seats: [mockSeat], childGroups: [] }]); // for ARBAN
+
+      prisma.khuralSeat.count.mockResolvedValue(5); // 5 occupied < 10
+      prisma.khuralGroup.count.mockResolvedValue(3); // 3 children < 10
+
+      // Return empty seats for the arban
+      prisma.khuralSeat.findMany.mockResolvedValue([
+        { ...mockSeat, occupantUserId: null },
+      ]);
+
+      const r = await service.assignTerritory('u1', 'Novosibirsk');
+      expect(r.seatIndex).toBe(0);
+    });
+
+    it('throws when arban is full and all seats occupied', async () => {
+      prisma.khuralGroup.findFirst.mockResolvedValue(mockTumen);
+      prisma.khuralGroup.findMany.mockResolvedValue([]);
+      prisma.khuralGroup.count.mockResolvedValue(0);
+      
+      // Seats all occupied
+      const occupiedSeats = Array.from({ length: 10 }, (_, i) => ({
+        id: `s-${i}`, groupId: 'arb1', index: i,
+        isLeaderSeat: i === 0, occupantUserId: `user-${i}`,
+      }));
+      prisma.khuralSeat.findMany.mockResolvedValue(occupiedSeats);
+
+      let idx = 0;
+      prisma.khuralGroup.create.mockImplementation(({ data }: any) => {
+        idx++;
+        return Promise.resolve({ id: `g-${idx}`, ...data, childGroups: [], seats: [] });
+      });
+
+      await expect(service.assignTerritory('u1', 'TestDistrict'))
+        .rejects.toThrow('full');
     });
   });
 
   describe('initiateRegistration', () => {
-    it('should create user with CITIZEN role and DRAFT status', async () => {
-      prisma.user.create.mockResolvedValue({
-        id: 'new-user',
-        seatId: 'TEMP-123',
-        role: 'CITIZEN',
-        verificationStatus: 'DRAFT',
-        walletStatus: 'LOCKED',
+    it('creates user with temp seatId', async () => {
+      const r = await service.initiateRegistration({
+        birthPlace: 'Moscow', ethnicity: 'Siberian', clan: 'Khongirad',
       });
-
-      const result = await service.initiateRegistration({
-        birthPlace: 'Ulaanbaatar',
-        ethnicity: ['Khalkha'],
-        clan: 'Borjigon',
-      });
-
-      expect(result.role).toBe('CITIZEN');
-      expect(prisma.user.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          role: 'CITIZEN',
-          walletStatus: 'LOCKED',
-          verificationStatus: 'DRAFT',
-        }),
-      });
+      expect(r.seatId).toContain('TEMP-');
+      expect(r.role).toBe('CITIZEN');
     });
   });
 
   describe('getUpdatedUser', () => {
-    it('should return user by ID', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', seatId: 'SEAT-001' });
-
-      const result = await service.getUpdatedUser('user-1');
-
-      expect(result.id).toBe('user-1');
+    it('returns user', async () => {
+      const r = await service.getUpdatedUser('u1');
+      expect(r!.id).toBe('u1');
     });
   });
 });

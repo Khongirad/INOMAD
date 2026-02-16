@@ -1,98 +1,175 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
 import { CentralBankAuthService } from './central-bank-auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ethers } from 'ethers';
 
 describe('CentralBankAuthService', () => {
   let service: CentralBankAuthService;
+  let prisma: any;
+  let jwtService: any;
+
+  const mockOfficer = {
+    id: 'off1', walletAddress: '0xabc123', role: 'GOVERNOR', isActive: true,
+  };
 
   beforeEach(async () => {
-    const prisma = {
-      centralBankOfficer: { findUnique: jest.fn() },
+    const mockPrisma = {
+      centralBankOfficer: {
+        findUnique: jest.fn().mockResolvedValue(mockOfficer),
+      },
     };
-
-    const jwtService = {
+    const mockJwt = {
       sign: jest.fn().mockReturnValue('mock-cb-ticket'),
-      verify: jest.fn(),
     };
-
-    const configService = {
-      get: jest.fn((key: string) => {
-        const config: any = {
-          CB_JWT_SECRET: 'test-cb-secret',
-          BANK_JWT_SECRET: 'test-bank-secret',
-          AUTH_JWT_SECRET: 'test-auth-secret',
+    const mockConfig = {
+      get: jest.fn().mockImplementation((key: string) => {
+        const map: Record<string, string> = {
+          CB_JWT_SECRET: 'cb-test-secret',
+          BANK_JWT_SECRET: 'bank-test-secret',
+          AUTH_JWT_SECRET: 'auth-test-secret',
         };
-        return config[key];
+        return map[key];
       }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CentralBankAuthService,
-        { provide: PrismaService, useValue: prisma },
-        { provide: JwtService, useValue: jwtService },
-        { provide: ConfigService, useValue: configService },
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: JwtService, useValue: mockJwt },
+        { provide: ConfigService, useValue: mockConfig },
       ],
     }).compile();
-
-    service = module.get<CentralBankAuthService>(CentralBankAuthService);
+    service = module.get(CentralBankAuthService);
+    prisma = module.get(PrismaService);
+    jwtService = module.get(JwtService);
   });
+
+  it('should be defined', () => expect(service).toBeDefined());
 
   describe('generateNonce', () => {
-    it('should throw for empty address', async () => {
-      await expect(service.generateNonce('')).rejects.toThrow(UnauthorizedException);
+    it('generates nonce for valid address', async () => {
+      const addr = '0x1234567890abcdef1234567890abcdef12345678';
+      const r = await service.generateNonce(addr);
+      expect(r.nonce).toContain('CB:');
+      expect(r.message).toContain('Central Bank of Siberia:');
+      expect(r.expiresAt).toBeInstanceOf(Date);
     });
-
-    it('should throw for invalid address', async () => {
-      await expect(service.generateNonce('not-an-address')).rejects.toThrow(UnauthorizedException);
+    it('throws for invalid address', async () => {
+      await expect(service.generateNonce('not-an-address')).rejects.toThrow('Invalid wallet');
     });
-
-    it('should generate nonce for valid checksummed address', async () => {
-      // Use a valid EIP-55 checksummed Ethereum address
-      const result = await service.generateNonce('0x742d35Cc6634c0532925a3b844Bc9E7595F2bD10');
-      expect(result.nonce).toBeDefined();
-      expect(result.nonce.startsWith('CB:')).toBe(true);
-      expect(result.message).toContain('Central Bank of Siberia');
-      expect(result.expiresAt).toBeInstanceOf(Date);
-    });
-  });
-
-  describe('validateTicket', () => {
-    it('should throw for missing fields', () => {
-      expect(() => service.validateTicket({} as any)).toThrow(UnauthorizedException);
-    });
-
-    it('should throw for invalid role', () => {
-      expect(() => service.validateTicket({
-        officerId: 'o1', walletAddress: '0x123', role: 'INVALID' as any, jti: 'j1',
-      })).toThrow(UnauthorizedException);
-    });
-
-    it('should return valid payload for GOVERNOR', () => {
-      const payload = {
-        officerId: 'o1', walletAddress: '0x123', role: 'GOVERNOR' as const, jti: 'j1',
-      };
-      expect(service.validateTicket(payload)).toEqual(payload);
-    });
-
-    it('should return valid payload for BOARD_MEMBER', () => {
-      const payload = {
-        officerId: 'o1', walletAddress: '0x123', role: 'BOARD_MEMBER' as const, jti: 'j1',
-      };
-      expect(service.validateTicket(payload)).toEqual(payload);
+    it('throws for empty address', async () => {
+      await expect(service.generateNonce('')).rejects.toThrow('Invalid wallet');
     });
   });
 
   describe('issueTicket', () => {
-    it('should throw for invalid nonce format', async () => {
-      await expect(service.issueTicket('0x123', 'sig', 'bad-nonce')).rejects.toThrow(UnauthorizedException);
+    it('throws for invalid nonce format', async () => {
+      await expect(
+        service.issueTicket('0x123', 'sig', 'bad-nonce'),
+      ).rejects.toThrow('Invalid nonce format');
     });
+    it('throws for unknown nonce', async () => {
+      await expect(
+        service.issueTicket('0x123', 'sig', 'CB:unknown'),
+      ).rejects.toThrow('Nonce not found');
+    });
+    it('throws for already consumed nonce', async () => {
+      const addr = '0x1234567890abcdef1234567890abcdef12345678';
+      const { nonce } = await service.generateNonce(addr);
+      // Manually consume
+      (service as any).nonceStore.get(nonce).consumed = true;
+      await expect(
+        service.issueTicket(addr, 'sig', nonce),
+      ).rejects.toThrow('already consumed');
+    });
+    it('throws for expired nonce', async () => {
+      const addr = '0x1234567890abcdef1234567890abcdef12345678';
+      const { nonce } = await service.generateNonce(addr);
+      // Force expire
+      (service as any).nonceStore.get(nonce).expiresAt = new Date(0);
+      await expect(
+        service.issueTicket(addr, 'sig', nonce),
+      ).rejects.toThrow('expired');
+    });
+    it('throws for address mismatch', async () => {
+      const addr = '0x1234567890abcdef1234567890abcdef12345678';
+      const { nonce } = await service.generateNonce(addr);
+      await expect(
+        service.issueTicket('0xdifferent567890abcdef1234567890abcdef1234', 'sig', nonce),
+      ).rejects.toThrow('Address mismatch');
+    });
+    it('issues ticket with valid signature', async () => {
+      const wallet = ethers.Wallet.createRandom();
+      const addr = wallet.address;
+      const { nonce, message } = await service.generateNonce(addr);
+      const signature = await wallet.signMessage(message);
 
-    it('should throw for unknown nonce', async () => {
-      await expect(service.issueTicket('0x123', 'sig', 'CB:unknown-id')).rejects.toThrow(UnauthorizedException);
+      prisma.centralBankOfficer.findUnique.mockResolvedValue({
+        ...mockOfficer, walletAddress: addr.toLowerCase(),
+      });
+
+      const r = await service.issueTicket(addr, signature, nonce);
+      expect(r.cbTicket).toBe('mock-cb-ticket');
+      expect(r.expiresIn).toBe(900);
+      expect(jwtService.sign).toHaveBeenCalled();
+    });
+    it('throws when officer not found', async () => {
+      const wallet = ethers.Wallet.createRandom();
+      const addr = wallet.address;
+      const { nonce, message } = await service.generateNonce(addr);
+      const signature = await wallet.signMessage(message);
+
+      prisma.centralBankOfficer.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.issueTicket(addr, signature, nonce),
+      ).rejects.toThrow('not a registered');
+    });
+    it('throws when officer inactive', async () => {
+      const wallet = ethers.Wallet.createRandom();
+      const addr = wallet.address;
+      const { nonce, message } = await service.generateNonce(addr);
+      const signature = await wallet.signMessage(message);
+
+      prisma.centralBankOfficer.findUnique.mockResolvedValue({
+        ...mockOfficer, isActive: false,
+      });
+
+      await expect(
+        service.issueTicket(addr, signature, nonce),
+      ).rejects.toThrow('not a registered');
+    });
+  });
+
+  describe('validateTicket', () => {
+    it('validates valid ticket payload', () => {
+      const p = service.validateTicket({
+        officerId: 'off1', walletAddress: '0xabc',
+        role: 'GOVERNOR', jti: 'j1',
+      });
+      expect(p.role).toBe('GOVERNOR');
+    });
+    it('validates BOARD_MEMBER role', () => {
+      const p = service.validateTicket({
+        officerId: 'off1', walletAddress: '0xabc',
+        role: 'BOARD_MEMBER', jti: 'j2',
+      });
+      expect(p.role).toBe('BOARD_MEMBER');
+    });
+    it('throws for missing officerId', () => {
+      expect(() => service.validateTicket({
+        officerId: '', walletAddress: '0xabc',
+        role: 'GOVERNOR', jti: 'j1',
+      })).toThrow('Invalid CB ticket');
+    });
+    it('throws for invalid role', () => {
+      expect(() => service.validateTicket({
+        officerId: 'off1', walletAddress: '0xabc',
+        role: 'INVALID' as any, jti: 'j1',
+      })).toThrow('Invalid CB officer role');
     });
   });
 });

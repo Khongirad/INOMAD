@@ -1,217 +1,286 @@
+// Mock the typechain factory before imports
+const mockContractInstance = {
+  connect: jest.fn().mockReturnValue({
+    registerMarriage: jest.fn().mockResolvedValue({
+      wait: jest.fn().mockResolvedValue({
+        hash: '0xTX',
+        logs: [{ topics: [], data: '0x' }],
+      }),
+    }),
+    addChild: jest.fn().mockResolvedValue({ wait: jest.fn() }),
+    changeHeir: jest.fn().mockResolvedValue({ wait: jest.fn() }),
+    setKhuralRepresentative: jest.fn().mockResolvedValue({ wait: jest.fn() }),
+  }),
+  interface: {
+    parseLog: jest.fn().mockReturnValue({
+      name: 'MarriageRegistered',
+      args: { arbanId: BigInt(1) },
+    }),
+  },
+  getFamilyArban: jest.fn().mockResolvedValue([
+    'husband1', 'wife1', ['child1'], 'child1', BigInt(0), 'husband1', true,
+  ]),
+};
+
+jest.mock('../blockchain/abis/arbanCompletion.abi', () => ({ ArbanCompletion_ABI: [] }));
+jest.mock('../typechain-types/factories/ArbanCompletion__factory', () => ({
+  ArbanCompletion__factory: {
+    connect: jest.fn().mockReturnValue(mockContractInstance),
+  },
+}));
+jest.mock('ethers', () => {
+  const original = jest.requireActual('ethers');
+  return {
+    ...original,
+    ethers: {
+      ...original.ethers,
+      JsonRpcProvider: jest.fn().mockImplementation(() => ({})),
+    },
+  };
+});
+
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { FamilyArbanService } from './family-arban.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContractAddressesService } from '../blockchain/contract-addresses.service';
-
-// Mock the ArbanCompletion__factory
-jest.mock('../typechain-types/factories/ArbanCompletion__factory', () => ({
-  ArbanCompletion__factory: {
-    connect: jest.fn().mockReturnValue({
-      connect: jest.fn(),
-      interface: { parseLog: jest.fn() },
-      registerMarriage: jest.fn(),
-      addChild: jest.fn(),
-      changeHeir: jest.fn(),
-      setKhuralRepresentative: jest.fn(),
-      getFamilyArban: jest.fn(),
-    }),
-  },
-}));
+import { ConfigService } from '@nestjs/config';
 
 describe('FamilyArbanService', () => {
   let service: FamilyArbanService;
   let prisma: any;
 
+  const mockArban = {
+    arbanId: 1, husbandSeatId: 'husband1', wifeSeatId: 'wife1',
+    heirSeatId: 'child1', zunId: null, khuralRepSeatId: 'husband1',
+    khuralRepBirthYear: 1990, isActive: true, createdAt: new Date(),
+    children: [{ childSeatId: 'child1' }],
+  };
+
+  const mockSignerWallet = {} as any;
+
   beforeEach(async () => {
-    prisma = {
+    const mockPrisma = {
       familyArban: {
-        findFirst: jest.fn(),
-        findUnique: jest.fn(),
-        findMany: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        upsert: jest.fn(),
+        findFirst: jest.fn().mockResolvedValue(null),
+        findUnique: jest.fn().mockResolvedValue(mockArban),
+        findMany: jest.fn().mockResolvedValue([mockArban]),
+        create: jest.fn().mockResolvedValue(mockArban),
+        update: jest.fn().mockImplementation(({ data }) =>
+          Promise.resolve({ ...mockArban, ...data }),
+        ),
+        upsert: jest.fn().mockResolvedValue(mockArban),
       },
       familyArbanChild: {
-        findFirst: jest.fn(),
-        create: jest.fn(),
-        deleteMany: jest.fn(),
+        findFirst: jest.fn().mockResolvedValue({ childSeatId: 'child1' }),
+        create: jest.fn().mockResolvedValue({ childSeatId: 'child2' }),
+        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
+    };
+
+    const mockContractAddresses = {
+      getRpcUrl: jest.fn().mockReturnValue('http://localhost:8545'),
+      getGuildContracts: jest.fn().mockReturnValue({
+        arbanCompletion: '0xCONTRACT',
+      }),
+    };
+
+    const mockConfig = {
+      get: jest.fn().mockReturnValue('http://localhost:8545'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FamilyArbanService,
-        { provide: PrismaService, useValue: prisma },
-        {
-          provide: ContractAddressesService,
-          useValue: {
-            getRpcUrl: jest.fn().mockReturnValue('http://localhost:8545'),
-            getGuildContracts: jest.fn().mockReturnValue({
-              arbanCompletion: '0x' + '0'.repeat(40),
-            }),
-          },
-        },
-        {
-          provide: ConfigService,
-          useValue: { get: jest.fn().mockReturnValue('http://localhost:8545') },
-        },
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: ContractAddressesService, useValue: mockContractAddresses },
+        { provide: ConfigService, useValue: mockConfig },
       ],
     }).compile();
-
-    service = module.get<FamilyArbanService>(FamilyArbanService);
+    service = module.get(FamilyArbanService);
+    prisma = module.get(PrismaService);
   });
 
-  describe('registerMarriage', () => {
-    it('should reject if husband is already married', async () => {
-      prisma.familyArban.findFirst
-        .mockResolvedValueOnce({ arbanId: 'existing' }) // husband
-        .mockResolvedValueOnce(null); // wife
+  it('should be defined', () => expect(service).toBeDefined());
 
-      await expect(
-        service.registerMarriage(
-          { husbandSeatId: 'H1', wifeSeatId: 'W1' } as any,
-          {} as any,
-        ),
-      ).rejects.toThrow(BadRequestException);
+  describe('registerMarriage', () => {
+    it('registers marriage when both parties are single', async () => {
+      const r = await service.registerMarriage(
+        { husbandSeatId: 'h1', wifeSeatId: 'w1' },
+        mockSignerWallet,
+      );
+      expect(r.arbanId).toBe(1);
+      expect(r.txHash).toBe('0xTX');
+      expect(prisma.familyArban.create).toHaveBeenCalled();
     });
 
-    it('should reject if wife is already married', async () => {
-      prisma.familyArban.findFirst
-        .mockResolvedValueOnce(null) // husband
-        .mockResolvedValueOnce({ arbanId: 'existing' }); // wife
-
+    it('throws when husband already married', async () => {
+      prisma.familyArban.findFirst.mockResolvedValueOnce(mockArban);
       await expect(
         service.registerMarriage(
-          { husbandSeatId: 'H1', wifeSeatId: 'W1' } as any,
-          {} as any,
+          { husbandSeatId: 'husband1', wifeSeatId: 'w2' },
+          mockSignerWallet,
         ),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow('already married');
+    });
+
+    it('throws when wife already married', async () => {
+      prisma.familyArban.findFirst
+        .mockResolvedValueOnce(null) // husband check
+        .mockResolvedValueOnce(mockArban); // wife check
+      await expect(
+        service.registerMarriage(
+          { husbandSeatId: 'h2', wifeSeatId: 'wife1' },
+          mockSignerWallet,
+        ),
+      ).rejects.toThrow('already married');
     });
   });
 
   describe('addChild', () => {
-    it('should reject if arban not found', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.addChild({ arbanId: 'not-found', childSeatId: 'C1' } as any, {} as any),
-      ).rejects.toThrow(NotFoundException);
+    it('adds child to existing arban', async () => {
+      await service.addChild(
+        { arbanId: 1, childSeatId: 'child2' },
+        mockSignerWallet,
+      );
+      expect(prisma.familyArbanChild.create).toHaveBeenCalled();
+      expect(prisma.familyArban.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ heirSeatId: 'child2' }),
+        }),
+      );
     });
 
-    it('should reject if arban is inactive', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue({ arbanId: '1', isActive: false });
-
+    it('throws when arban not found', async () => {
+      prisma.familyArban.findUnique.mockResolvedValue(null);
       await expect(
-        service.addChild({ arbanId: '1', childSeatId: 'C1' } as any, {} as any),
-      ).rejects.toThrow(BadRequestException);
+        service.addChild({ arbanId: 999, childSeatId: 'c1' }, mockSignerWallet),
+      ).rejects.toThrow('not found');
+    });
+
+    it('throws when arban not active', async () => {
+      prisma.familyArban.findUnique.mockResolvedValue({ ...mockArban, isActive: false });
+      await expect(
+        service.addChild({ arbanId: 1, childSeatId: 'c1' }, mockSignerWallet),
+      ).rejects.toThrow('not active');
     });
   });
 
   describe('changeHeir', () => {
-    it('should reject if child not in arban', async () => {
-      prisma.familyArbanChild.findFirst.mockResolvedValue(null);
+    it('changes heir to another child', async () => {
+      await service.changeHeir(
+        { arbanId: 1, newHeirSeatId: 'child1' },
+        mockSignerWallet,
+      );
+      expect(prisma.familyArban.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ heirSeatId: 'child1' }),
+        }),
+      );
+    });
 
+    it('throws when child not found', async () => {
+      prisma.familyArbanChild.findFirst.mockResolvedValue(null);
       await expect(
-        service.changeHeir({ arbanId: '1', newHeirSeatId: 'C99' } as any, {} as any),
-      ).rejects.toThrow(BadRequestException);
+        service.changeHeir({ arbanId: 1, newHeirSeatId: 'stranger' }, mockSignerWallet),
+      ).rejects.toThrow('not a child');
     });
   });
 
   describe('setKhuralRepresentative', () => {
-    it('should reject representative over 60', async () => {
+    it('sets khural rep when valid spouse under 60', async () => {
+      await service.setKhuralRepresentative(
+        { arbanId: 1, repSeatId: 'husband1', birthYear: 1990 },
+        mockSignerWallet,
+      );
+      expect(prisma.familyArban.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ khuralRepSeatId: 'husband1' }),
+        }),
+      );
+    });
+
+    it('throws when rep is 60+', async () => {
       await expect(
         service.setKhuralRepresentative(
-          { arbanId: '1', repSeatId: 'H1', birthYear: 1950 } as any,
-          {} as any,
+          { arbanId: 1, repSeatId: 'husband1', birthYear: 1950 },
+          mockSignerWallet,
         ),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow('under 60');
     });
 
-    it('should reject rep who is not husband or wife', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue({
-        arbanId: '1',
-        husbandSeatId: 'H1',
-        wifeSeatId: 'W1',
-      });
-
+    it('throws when rep is not husband or wife', async () => {
       await expect(
         service.setKhuralRepresentative(
-          { arbanId: '1', repSeatId: 'C1', birthYear: 2000 } as any,
-          {} as any,
+          { arbanId: 1, repSeatId: 'stranger', birthYear: 1990 },
+          mockSignerWallet,
         ),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow('husband or wife');
     });
-  });
 
-  describe('getFamilyArban', () => {
-    it('should throw NotFoundException when arban missing', async () => {
+    it('throws when arban not found', async () => {
       prisma.familyArban.findUnique.mockResolvedValue(null);
-
-      await expect(service.getFamilyArban(999)).rejects.toThrow(NotFoundException);
-    });
-
-    it('should return mapped arban data', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue({
-        arbanId: '1',
-        husbandSeatId: 'H1',
-        wifeSeatId: 'W1',
-        children: [{ childSeatId: 'C1' }, { childSeatId: 'C2' }],
-        heirSeatId: 'C2',
-        zunId: null,
-        khuralRepSeatId: 'H1',
-        khuralRepBirthYear: 1990,
-        isActive: true,
-        createdAt: new Date(),
-      });
-
-      const result = await service.getFamilyArban(1);
-      expect(result.arbanId).toBe(1);
-      expect(result.childrenSeatIds).toEqual(['C1', 'C2']);
-    });
-  });
-
-  describe('getFamilyArbanBySeat', () => {
-    it('should return null if no arban found', async () => {
-      prisma.familyArban.findFirst.mockResolvedValue(null);
-
-      const result = await service.getFamilyArbanBySeat('UNKNOWN');
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('checkKhuralEligibility', () => {
-    it('should return false for missing arban', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue(null);
-
-      const result = await service.checkKhuralEligibility(999);
-      expect(result).toBe(false);
-    });
-
-    it('should return true for active arban', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue({ isActive: true });
-
-      const result = await service.checkKhuralEligibility(1);
-      expect(result).toBe(true);
+      await expect(
+        service.setKhuralRepresentative(
+          { arbanId: 999, repSeatId: 'h1', birthYear: 1990 },
+          mockSignerWallet,
+        ),
+      ).rejects.toThrow('not found');
     });
   });
 
   describe('getKhuralRepresentatives', () => {
-    it('should return mapped representatives', async () => {
-      prisma.familyArban.findMany.mockResolvedValue([
-        {
-          arbanId: '1',
-          khuralRepSeatId: 'H1',
-          khuralRepBirthYear: 1990,
-          createdAt: new Date(),
-        },
-      ]);
+    it('returns representatives with age calculated', async () => {
+      const r = await service.getKhuralRepresentatives();
+      expect(r.length).toBe(1);
+      expect(r[0].seatId).toBe('husband1');
+      expect(r[0].age).toBeGreaterThan(0);
+    });
+  });
 
-      const reps = await service.getKhuralRepresentatives();
-      expect(reps).toHaveLength(1);
-      expect(reps[0].seatId).toBe('H1');
+  describe('getFamilyArban', () => {
+    it('returns family arban by ID', async () => {
+      const r = await service.getFamilyArban(1);
+      expect(r.arbanId).toBe(1);
+      expect(r.childrenSeatIds).toEqual(['child1']);
+    });
+
+    it('throws when not found', async () => {
+      prisma.familyArban.findUnique.mockResolvedValue(null);
+      await expect(service.getFamilyArban(999)).rejects.toThrow('not found');
+    });
+  });
+
+  describe('getFamilyArbanBySeat', () => {
+    it('returns arban when found', async () => {
+      prisma.familyArban.findFirst.mockResolvedValue(mockArban);
+      const r = await service.getFamilyArbanBySeat('husband1');
+      expect(r!.husbandSeatId).toBe('husband1');
+    });
+
+    it('returns null when not found', async () => {
+      prisma.familyArban.findFirst.mockResolvedValue(null);
+      const r = await service.getFamilyArbanBySeat('stranger');
+      expect(r).toBeNull();
+    });
+  });
+
+  describe('checkKhuralEligibility', () => {
+    it('returns true for active arban', async () => {
+      expect(await service.checkKhuralEligibility(1)).toBe(true);
+    });
+
+    it('returns false when arban not found', async () => {
+      prisma.familyArban.findUnique.mockResolvedValue(null);
+      expect(await service.checkKhuralEligibility(999)).toBe(false);
+    });
+  });
+
+  describe('syncFromBlockchain', () => {
+    it('syncs arban from blockchain', async () => {
+      await service.syncFromBlockchain(1);
+      expect(prisma.familyArban.upsert).toHaveBeenCalled();
+      expect(prisma.familyArbanChild.deleteMany).toHaveBeenCalled();
+      expect(prisma.familyArbanChild.create).toHaveBeenCalled();
     });
   });
 });

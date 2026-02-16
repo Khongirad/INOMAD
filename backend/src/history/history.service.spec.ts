@@ -1,89 +1,152 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 describe('HistoryService', () => {
   let service: HistoryService;
   let prisma: any;
 
-  beforeEach(async () => {
-    prisma = {
-      historicalRecord: {
-        create: jest.fn().mockResolvedValue({ id: 'hr-1' }),
-        findMany: jest.fn().mockResolvedValue([]),
-        findUnique: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-      },
-      user: { findUnique: jest.fn() },
-    };
+  const mockRecord = {
+    id: 'rec-1', scope: 'NATIONAL', scopeId: 'nation-1',
+    title: 'Foundation', narrative: 'The beginning',
+    authorId: 'u1', isPublished: false,
+    author: { id: 'u1', username: 'alice', role: 'CITIZEN' },
+  };
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [HistoryService, { provide: PrismaService, useValue: prisma }],
-    }).compile();
-
-    service = module.get<HistoryService>(HistoryService);
+  const mockPrisma = () => ({
+    historicalRecord: {
+      create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(),
+      update: jest.fn(), delete: jest.fn(),
+    },
+    user: { findUnique: jest.fn() },
   });
 
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        HistoryService,
+        { provide: PrismaService, useFactory: mockPrisma },
+      ],
+    }).compile();
+    service = module.get(HistoryService);
+    prisma = module.get(PrismaService);
+  });
+
+  it('should be defined', () => expect(service).toBeDefined());
+
+  // ─── createRecord ──────────────────────
   describe('createRecord', () => {
-    it('should create unpublished record', async () => {
+    it('should create a historical record', async () => {
+      prisma.historicalRecord.create.mockResolvedValue(mockRecord);
       const result = await service.createRecord({
-        scope: 'NATION' as any, scopeId: 'n1', periodStart: new Date(),
-        title: 'Era 1', narrative: 'Story', authorId: 'u1', eventIds: [],
+        scope: 'NATIONAL' as any, scopeId: 'nation-1',
+        periodStart: new Date(), title: 'Foundation',
+        narrative: 'The beginning', authorId: 'u1', eventIds: [],
       });
-      expect(result.id).toBe('hr-1');
+      expect(result.title).toBe('Foundation');
     });
   });
 
+  // ─── getHistory ────────────────────────
   describe('getHistory', () => {
     it('should return published records for scope', async () => {
-      await service.getHistory('NATION' as any, 'n1');
-      expect(prisma.historicalRecord.findMany).toHaveBeenCalled();
+      prisma.historicalRecord.findMany.mockResolvedValue([mockRecord]);
+      const result = await service.getHistory('NATIONAL' as any, 'nation-1');
+      expect(result).toHaveLength(1);
     });
   });
 
+  // ─── getUserNarratives ─────────────────
+  describe('getUserNarratives', () => {
+    it('should return user narratives', async () => {
+      prisma.historicalRecord.findMany.mockResolvedValue([mockRecord]);
+      const result = await service.getUserNarratives('u1');
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  // ─── publishRecord ─────────────────────
   describe('publishRecord', () => {
-    it('should throw NotFoundException for unknown reviewer', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
-      await expect(service.publishRecord('hr-1', 'bad')).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw ForbiddenException for non-admin', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'u1', role: 'CITIZEN' });
-      await expect(service.publishRecord('hr-1', 'u1')).rejects.toThrow(ForbiddenException);
-    });
-
-    it('should publish record as admin', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'a1', role: 'ADMIN' });
-      prisma.historicalRecord.findUnique.mockResolvedValue({ id: 'hr-1' });
-      prisma.historicalRecord.update.mockResolvedValue({ id: 'hr-1', isPublished: true });
-      const result = await service.publishRecord('hr-1', 'a1');
+    it('should publish record by admin', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'admin', role: 'ADMIN' });
+      prisma.historicalRecord.findUnique.mockResolvedValue(mockRecord);
+      prisma.historicalRecord.update.mockResolvedValue({ ...mockRecord, isPublished: true });
+      const result = await service.publishRecord('rec-1', 'admin');
       expect(result.isPublished).toBe(true);
     });
-  });
 
-  describe('updateRecord', () => {
-    it('should throw ForbiddenException for non-author', async () => {
-      prisma.historicalRecord.findUnique.mockResolvedValue({ id: 'hr-1', authorId: 'u2', isPublished: false });
-      await expect(service.updateRecord('hr-1', 'u1', { title: 'X' })).rejects.toThrow(ForbiddenException);
+    it('should throw if reviewer not found', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      await expect(service.publishRecord('rec-1', 'bad')).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw ForbiddenException for published record', async () => {
-      prisma.historicalRecord.findUnique.mockResolvedValue({ id: 'hr-1', authorId: 'u1', isPublished: true });
-      await expect(service.updateRecord('hr-1', 'u1', { title: 'X' })).rejects.toThrow(ForbiddenException);
+    it('should throw if reviewer not admin', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'u2', role: 'CITIZEN' });
+      await expect(service.publishRecord('rec-1', 'u2')).rejects.toThrow(ForbiddenException);
     });
-  });
 
-  describe('deleteRecord', () => {
-    it('should throw NotFoundException for missing record', async () => {
+    it('should throw if record not found', async () => {
+      prisma.user.findUnique.mockResolvedValue({ id: 'admin', role: 'ADMIN' });
       prisma.historicalRecord.findUnique.mockResolvedValue(null);
-      await expect(service.deleteRecord('bad', 'u1')).rejects.toThrow(NotFoundException);
+      await expect(service.publishRecord('bad', 'admin')).rejects.toThrow(NotFoundException);
     });
   });
 
+  // ─── updateRecord ──────────────────────
+  describe('updateRecord', () => {
+    it('should update own unpublished record', async () => {
+      prisma.historicalRecord.findUnique.mockResolvedValue(mockRecord);
+      prisma.historicalRecord.update.mockResolvedValue({ ...mockRecord, title: 'Updated' });
+      const result = await service.updateRecord('rec-1', 'u1', { title: 'Updated' });
+      expect(result.title).toBe('Updated');
+    });
+
+    it('should throw if not author', async () => {
+      prisma.historicalRecord.findUnique.mockResolvedValue(mockRecord);
+      await expect(service.updateRecord('rec-1', 'u2', {})).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw if published', async () => {
+      prisma.historicalRecord.findUnique.mockResolvedValue({ ...mockRecord, isPublished: true, authorId: 'u1' });
+      await expect(service.updateRecord('rec-1', 'u1', {})).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  // ─── deleteRecord ──────────────────────
+  describe('deleteRecord', () => {
+    it('should delete own unpublished record', async () => {
+      prisma.historicalRecord.findUnique.mockResolvedValue(mockRecord);
+      prisma.user.findUnique.mockResolvedValue({ id: 'u1', role: 'CITIZEN' });
+      prisma.historicalRecord.delete.mockResolvedValue({});
+      const result = await service.deleteRecord('rec-1', 'u1');
+      expect(result.success).toBe(true);
+    });
+
+    it('should allow admin to delete any', async () => {
+      prisma.historicalRecord.findUnique.mockResolvedValue({ ...mockRecord, authorId: 'u2' });
+      prisma.user.findUnique.mockResolvedValue({ id: 'admin', role: 'ADMIN' });
+      prisma.historicalRecord.delete.mockResolvedValue({});
+      const result = await service.deleteRecord('rec-1', 'admin');
+      expect(result.success).toBe(true);
+    });
+
+    it('should throw if non-admin non-author', async () => {
+      prisma.historicalRecord.findUnique.mockResolvedValue({ ...mockRecord, isPublished: true });
+      prisma.user.findUnique.mockResolvedValue({ id: 'u2', role: 'CITIZEN' });
+      await expect(service.deleteRecord('rec-1', 'u2')).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  // ─── getRecord ─────────────────────────
   describe('getRecord', () => {
-    it('should throw NotFoundException for missing record', async () => {
+    it('should return record by id', async () => {
+      prisma.historicalRecord.findUnique.mockResolvedValue(mockRecord);
+      const result = await service.getRecord('rec-1');
+      expect(result.id).toBe('rec-1');
+    });
+
+    it('should throw NotFoundException', async () => {
       prisma.historicalRecord.findUnique.mockResolvedValue(null);
       await expect(service.getRecord('bad')).rejects.toThrow(NotFoundException);
     });

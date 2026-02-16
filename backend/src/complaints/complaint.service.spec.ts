@@ -242,4 +242,88 @@ describe('ComplaintService', () => {
         .rejects.toThrow(NotFoundException);
     });
   });
+
+  // ─── verifySource branches ────────────
+  describe('verifySource (private)', () => {
+    it('should verify QUEST source', async () => {
+      prisma.quest.findUnique.mockResolvedValue({ id: 'q1' });
+      await (service as any).verifySource('QUEST', 'q1');
+    });
+    it('should verify WORK_ACT source', async () => {
+      prisma.workAct.findUnique.mockResolvedValue({ id: 'wa1' });
+      await (service as any).verifySource('WORK_ACT', 'wa1');
+    });
+    it('should throw for missing QUEST source', async () => {
+      prisma.quest.findUnique.mockResolvedValue(null);
+      await expect((service as any).verifySource('QUEST', 'bad'))
+        .rejects.toThrow(BadRequestException);
+    });
+    it('should throw for missing WORK_ACT source', async () => {
+      prisma.workAct.findUnique.mockResolvedValue(null);
+      await expect((service as any).verifySource('WORK_ACT', 'bad'))
+        .rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ─── escalateToCourt ─────────────────
+  describe('escalateToCourt', () => {
+    it('should escalate directly to court', async () => {
+      prisma.complaint.findUnique.mockResolvedValue(mockComplaint);
+      prisma.escalationRecord.create.mockResolvedValue({});
+      prisma.complaint.update.mockResolvedValue({ ...mockComplaint, status: 'IN_COURT', currentLevel: 7 });
+      prisma.notification.create.mockResolvedValue({});
+      const result = await service.escalateToCourt('c1');
+      expect(result.status).toBe('IN_COURT');
+    });
+    it('should throw if already in court', async () => {
+      prisma.complaint.findUnique.mockResolvedValue({ ...mockComplaint, status: 'IN_COURT' });
+      await expect(service.escalateToCourt('c1')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ─── autoEscalateOverdue ─────────────
+  describe('autoEscalateOverdue with overdue items', () => {
+    it('should escalate overdue complaints', async () => {
+      prisma.complaint.findMany.mockResolvedValue([
+        { id: 'c1', currentLevel: 2, filerId: 'f1', title: 'T', levelEntityId: 'e1' },
+      ]);
+      prisma.escalationRecord.create.mockResolvedValue({});
+      prisma.complaint.update.mockResolvedValue({});
+      prisma.notification.create.mockResolvedValue({});
+      const result = await service.autoEscalateOverdue();
+      expect(result.escalated).toBe(1);
+      expect(result.total).toBe(1);
+    });
+    it('should file to court when escalating to level 7', async () => {
+      prisma.complaint.findMany.mockResolvedValue([
+        { id: 'c2', currentLevel: 6, filerId: 'f1', title: 'T', levelEntityId: 'e2' },
+      ]);
+      prisma.escalationRecord.create.mockResolvedValue({});
+      prisma.complaint.update.mockResolvedValue({});
+      prisma.notification.create.mockResolvedValue({});
+      const result = await service.autoEscalateOverdue();
+      expect(result.escalated).toBe(1);
+    });
+    it('should handle errors during escalation', async () => {
+      prisma.complaint.findMany.mockResolvedValue([
+        { id: 'c3', currentLevel: 2, filerId: 'f1', title: 'T', levelEntityId: 'e3' },
+      ]);
+      prisma.escalationRecord.create.mockRejectedValue(new Error('DB error'));
+      const result = await service.autoEscalateOverdue();
+      expect(result.escalated).toBe(0);
+      expect(result.total).toBe(1);
+    });
+  });
+
+  // ─── getComplaintBook with entityId ──
+  describe('getComplaintBook with entityId', () => {
+    it('should filter by entityId', async () => {
+      prisma.complaint.findMany.mockResolvedValue([mockComplaint]);
+      prisma.complaint.count.mockResolvedValue(1);
+      const result = await service.getComplaintBook(2, 'entity-1');
+      expect(result.level).toBe(2);
+      expect(result.total).toBe(1);
+    });
+  });
 });
+

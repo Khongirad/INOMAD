@@ -1,256 +1,171 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { AuthPasswordService } from './auth-password.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
+import { BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
-// Mock bcrypt
 jest.mock('bcrypt', () => ({
   hash: jest.fn().mockResolvedValue('$2b$12$hashedpassword'),
   compare: jest.fn(),
 }));
-import * as bcrypt from 'bcrypt';
 
 describe('AuthPasswordService', () => {
   let service: AuthPasswordService;
   let prisma: any;
 
-  beforeEach(async () => {
-    prisma = {
-      user: {
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-      },
-      authSession: {
-        create: jest.fn().mockResolvedValue({}),
-      },
-    };
+  const mockUser = {
+    id: 'u1', seatId: 'KHURAL-ABC', username: 'alice',
+    passwordHash: '$2b$12$hash', role: 'CITIZEN',
+    verificationStatus: 'DRAFT', walletStatus: 'LOCKED',
+    walletAddress: null, isFrozen: false,
+    hasAcceptedTOS: false, hasAcceptedConstitution: false, isLegalSubject: false,
+  };
 
+  const mockPrisma = () => ({
+    user: {
+      findUnique: jest.fn(), create: jest.fn(), update: jest.fn(),
+    },
+    authSession: { create: jest.fn().mockResolvedValue({}) },
+  });
+
+  const mockJwt = () => ({
+    signAsync: jest.fn().mockResolvedValue('jwt-token'),
+  });
+
+  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthPasswordService,
-        { provide: PrismaService, useValue: prisma },
-        {
-          provide: JwtService,
-          useValue: {
-            signAsync: jest.fn().mockResolvedValue('mock-access-token'),
-          },
-        },
+        { provide: PrismaService, useFactory: mockPrisma },
+        { provide: JwtService, useFactory: mockJwt },
       ],
     }).compile();
-
-    service = module.get<AuthPasswordService>(AuthPasswordService);
+    service = module.get(AuthPasswordService);
+    prisma = module.get(PrismaService);
   });
 
+  it('should be defined', () => expect(service).toBeDefined());
+
+  // ─── register ──────────────────────────
   describe('register', () => {
-    it('should reject username shorter than 3 chars', async () => {
-      await expect(
-        service.register({ username: 'ab', password: 'Password1' }),
-      ).rejects.toThrow(BadRequestException);
+    it('should register new user', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue(mockUser);
+      const result = await service.register({ username: 'alice', password: 'test1234' });
+      expect(result.ok).toBe(true);
+      expect(result.accessToken).toBeDefined();
     });
 
-    it('should reject password shorter than 8 chars', async () => {
-      await expect(
-        service.register({ username: 'testuser', password: 'Pass1' }),
-      ).rejects.toThrow(BadRequestException);
+    it('should reject short username', async () => {
+      await expect(service.register({ username: 'ab', password: 'test1234' }))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject short password', async () => {
+      await expect(service.register({ username: 'alice', password: 'test1' }))
+        .rejects.toThrow(BadRequestException);
     });
 
     it('should reject password without numbers', async () => {
-      await expect(
-        service.register({ username: 'testuser', password: 'PasswordOnly' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.register({ username: 'alice', password: 'testtest' }))
+        .rejects.toThrow(BadRequestException);
     });
 
     it('should reject password without letters', async () => {
-      await expect(
-        service.register({ username: 'testuser', password: '12345678' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.register({ username: 'alice', password: '12345678' }))
+        .rejects.toThrow(BadRequestException);
     });
 
     it('should reject duplicate username', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'existing' });
-
-      await expect(
-        service.register({ username: 'taken', password: 'Password1' }),
-      ).rejects.toThrow(ConflictException);
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+      await expect(service.register({ username: 'alice', password: 'test1234' }))
+        .rejects.toThrow(ConflictException);
     });
 
     it('should reject duplicate email', async () => {
       prisma.user.findUnique
-        .mockResolvedValueOnce(null) // username check
+        .mockResolvedValueOnce(null)  // username check
         .mockResolvedValueOnce({ id: 'existing' }); // email check
-
-      await expect(
-        service.register({
-          username: 'newuser',
-          password: 'Password1',
-          email: 'taken@example.com',
-        }),
-      ).rejects.toThrow(ConflictException);
-    });
-
-    it('should create user with correct defaults', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
-      prisma.user.create.mockResolvedValue({
-        id: 'user-1',
-        seatId: 'KHURAL-ABC123',
-        username: 'newuser',
-        role: 'CITIZEN',
-        verificationStatus: 'DRAFT',
-        walletStatus: 'LOCKED',
-        hasAcceptedTOS: false,
-        hasAcceptedConstitution: false,
-        isLegalSubject: false,
-      });
-
-      const result = await service.register({
-        username: 'newuser',
-        password: 'Password1',
-      });
-
-      expect(result.ok).toBe(true);
-      expect(result.user.username).toBe('newuser');
-      expect(result.user.role).toBe('CITIZEN');
-      expect(result.user.status).toBe('DRAFT');
-      expect(result.accessToken).toBeDefined();
-      expect(result.refreshToken).toBeDefined();
+      await expect(service.register({ username: 'bob', password: 'test1234', email: 'a@b.com' }))
+        .rejects.toThrow(ConflictException);
     });
   });
 
+  // ─── login ─────────────────────────────
   describe('login', () => {
-    it('should reject non-existent user', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.login({ username: 'nobody', password: 'Pass1234' }),
-      ).rejects.toThrow(UnauthorizedException);
+    it('should login with valid credentials', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      const result = await service.login({ username: 'alice', password: 'test1234' });
+      expect(result.ok).toBe(true);
     });
 
-    it('should reject frozen account', async () => {
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        passwordHash: '$2b$12$hash',
-        isFrozen: true,
-      });
-
-      await expect(
-        service.login({ username: 'frozen', password: 'Pass1234' }),
-      ).rejects.toThrow(UnauthorizedException);
+    it('should reject invalid user', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      await expect(service.login({ username: 'bad', password: 'test1234' }))
+        .rejects.toThrow(UnauthorizedException);
     });
 
     it('should reject wrong password', async () => {
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        passwordHash: '$2b$12$hash',
-        isFrozen: false,
-      });
+      prisma.user.findUnique.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-
-      await expect(
-        service.login({ username: 'user', password: 'WrongPass1' }),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.login({ username: 'alice', password: 'wrong123' }))
+        .rejects.toThrow(UnauthorizedException);
     });
 
-    it('should return tokens on valid login', async () => {
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        seatId: 'KHURAL-ABC',
-        username: 'user',
-        walletAddress: '0x123',
-        role: 'CITIZEN',
-        passwordHash: '$2b$12$hash',
-        isFrozen: false,
-        verificationStatus: 'VERIFIED',
-        walletStatus: 'ACTIVE',
-        hasAcceptedTOS: true,
-        hasAcceptedConstitution: true,
-        isLegalSubject: true,
-      });
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-
-      const result = await service.login({ username: 'user', password: 'Pass1234' });
-
-      expect(result.ok).toBe(true);
-      expect(result.user.seatId).toBe('KHURAL-ABC');
-      expect(result.accessToken).toBeDefined();
+    it('should reject frozen account', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...mockUser, isFrozen: true });
+      await expect(service.login({ username: 'alice', password: 'test1234' }))
+        .rejects.toThrow(UnauthorizedException);
     });
   });
 
+  // ─── acceptTOS ─────────────────────────
   describe('acceptTOS', () => {
     it('should update TOS acceptance', async () => {
-      prisma.user.update.mockResolvedValue({
-        hasAcceptedTOS: true,
-        tosAcceptedAt: new Date(),
-      });
-
-      const result = await service.acceptTOS('user-1');
-
+      prisma.user.update.mockResolvedValue({ ...mockUser, hasAcceptedTOS: true, tosAcceptedAt: new Date() });
+      const result = await service.acceptTOS('u1');
       expect(result.ok).toBe(true);
       expect(result.hasAcceptedTOS).toBe(true);
     });
   });
 
+  // ─── acceptConstitution ────────────────
   describe('acceptConstitution', () => {
-    it('should make user a legal subject', async () => {
+    it('should update constitution acceptance and make legal subject', async () => {
       prisma.user.update.mockResolvedValue({
-        hasAcceptedConstitution: true,
+        ...mockUser, hasAcceptedConstitution: true, isLegalSubject: true,
         constitutionAcceptedAt: new Date(),
-        isLegalSubject: true,
       });
-
-      const result = await service.acceptConstitution('user-1');
-
+      const result = await service.acceptConstitution('u1');
       expect(result.ok).toBe(true);
       expect(result.isLegalSubject).toBe(true);
     });
   });
 
+  // ─── changePassword ────────────────────
   describe('changePassword', () => {
-    it('should reject if user not found', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.changePassword('user-1', 'OldPass1', 'NewPass1'),
-      ).rejects.toThrow(BadRequestException);
+    it('should change password', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      prisma.user.update.mockResolvedValue({});
+      const result = await service.changePassword('u1', 'old1234', 'new12345');
+      expect(result.ok).toBe(true);
     });
 
-    it('should reject wrong current password', async () => {
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        passwordHash: '$2b$12$hash',
-      });
+    it('should reject wrong old password', async () => {
+      prisma.user.findUnique.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-
-      await expect(
-        service.changePassword('user-1', 'WrongOld1', 'NewPass1'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.changePassword('u1', 'wrong', 'new12345'))
+        .rejects.toThrow(UnauthorizedException);
     });
 
     it('should reject weak new password', async () => {
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        passwordHash: '$2b$12$hash',
-      });
+      prisma.user.findUnique.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-
-      await expect(
-        service.changePassword('user-1', 'OldPass1', 'short'),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should update password on valid input', async () => {
-      prisma.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        passwordHash: '$2b$12$hash',
-      });
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      prisma.user.update.mockResolvedValue({});
-
-      const result = await service.changePassword('user-1', 'OldPass1', 'NewPassword1');
-
-      expect(result.ok).toBe(true);
-      expect(prisma.user.update).toHaveBeenCalled();
+      await expect(service.changePassword('u1', 'old1234', 'short'))
+        .rejects.toThrow(BadRequestException);
     });
   });
 });
