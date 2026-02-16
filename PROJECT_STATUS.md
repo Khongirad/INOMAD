@@ -16,7 +16,7 @@
 | **Production code** | ~112,000 lines (TypeScript) |
 | **Test code** | ~25,600 lines (TypeScript) |
 | **Total codebase** | **~137,000 lines** |
-| **Git commits** | 170 |
+| **Git commits** | 172 |
 | **Contributors** | 1 |
 
 ### Backend Server
@@ -182,7 +182,7 @@
 | Database Schema | ✅ 143 models | 100% |
 | Backend Tests | ✅ 95.85% coverage | 96% |
 | Smart Contracts | ✅ 133 contracts | 100% |
-| Integration Testing | 🟡 Pending | 30% |
+| Integration Testing | 🟡 In Progress | 50% |
 | Blockchain Integration | ⚪ Optional | N/A |
 
 ---
@@ -196,7 +196,7 @@
 | Feb 13 | 2 | Coverage batch 14 (8 services, 92–100% each) |
 | Feb 14 | 4 | Complete frontend translation, CI fix, coverage batch 16 (95.85%) |
 | Feb 15 | 3 | Land Code rewrite, 36 new + 78 enhanced specs, governance corrections |
-| Feb 16 | 2 | Arban-level verification + collective responsibility, Khural indigenous-only, simplified naturalization path |
+| Feb 16 | 3 | Arban-level verification, Khural indigenous-only, citizen lifecycle E2E test (12 tests) |
 
 ---
 
@@ -205,4 +205,4 @@
 **GitHub**: https://github.com/Khongirad/INOMAD  
 **Branch**: main  
 **Contributors**: 1  
-**Total Commits**: 170
+**Total Commits**: 172
