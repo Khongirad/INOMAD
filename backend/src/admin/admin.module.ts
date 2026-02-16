@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AdminController, CreatorController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -11,9 +12,19 @@ import { AdminGuard } from '../auth/guards/admin.guard';
   imports: [
     PrismaModule,
     AuthModule, // Provides JwtAuthGuard
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'defaultSecret', // Consider using a config service for this
-      signOptions: { expiresIn: '60m' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('AUTH_JWT_SECRET');
+        if (!secret) {
+          throw new Error('AUTH_JWT_SECRET environment variable is required for AdminModule');
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '60m' },
+        };
+      },
     }),
   ],
   controllers: [AdminController, CreatorController],
@@ -21,3 +32,4 @@ import { AdminGuard } from '../auth/guards/admin.guard';
   exports: [AdminService],
 })
 export class AdminModule {}
+

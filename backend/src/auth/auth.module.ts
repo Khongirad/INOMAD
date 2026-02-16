@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -48,11 +47,6 @@ function parseExpiryToSeconds(expiry: string): number {
     AuthPasswordService,
     AuthGuard,
     JwtAuthGuard,
-    // Apply AuthGuard globally
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
   ],
   exports: [AuthService, AuthPasswordService, AuthGuard, JwtModule],
 })
