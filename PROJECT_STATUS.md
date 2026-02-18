@@ -142,12 +142,12 @@
 ## ⚠️ Known Issues & TODO
 
 ### High Priority
-- [ ] End-to-end integration testing (registration → verification → wallet)
+- [x] ~~End-to-end integration testing (registration → verification → wallet)~~
 - [ ] Production environment variables (replace dev secrets)
-- [ ] Deploy VotingCenter contract (`chain/scripts/deploy-voting-center.js`)
+- [x] ~~Deploy VotingCenter contract (`chain/scripts/deploy-voting-center.js`)~~
 
 ### Medium Priority
-- [ ] Run Prisma migration for new models (EscrowTransaction, ShoppingCart, CartItem)
+- [x] ~~Run Prisma migration for new models (EscrowTransaction, ShoppingCart, CartItem)~~
 - [ ] Security audit & penetration testing
 - [x] ~~Swagger/OpenAPI documentation (70/70 controllers tagged)~~
 - [ ] Performance benchmarking & load testing
