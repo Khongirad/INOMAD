@@ -226,8 +226,30 @@ export class AuthPasswordService {
   /**
    * Accept Constitution - User becomes legal subject
    * This is the key transformation moment!
+   *
+   * DETERMINISM: isLegalSubject is a one-way ratchet — once true, it cannot be
+   * set to false by this method. Only a judicial process (ForbiddenException) can
+   * strip legal status. This method is idempotent: calling it twice is safe.
    */
   async acceptConstitution(userId: string) {
+    // ── DETERMINISM GUARD: already accepted → idempotent return ───────────────
+    const existing = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { hasAcceptedConstitution: true, constitutionAcceptedAt: true, isLegalSubject: true },
+    });
+
+    if (existing?.hasAcceptedConstitution) {
+      // Already accepted — return stored values, do NOT overwrite timestamp
+      return {
+        ok: true,
+        hasAcceptedConstitution: true,
+        constitutionAcceptedAt: existing.constitutionAcceptedAt,
+        isLegalSubject: existing.isLegalSubject,
+        message: 'Already accepted — you are a legal subject of INOMAD KHURAL',
+      };
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -245,6 +267,7 @@ export class AuthPasswordService {
       message: 'You are now a legal subject of INOMAD KHURAL with full rights and responsibilities',
     };
   }
+
 
   /**
    * Change password
