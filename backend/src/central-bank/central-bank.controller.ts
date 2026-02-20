@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CentralBankService } from './central-bank.service';
 import { CentralBankAuthService } from './central-bank-auth.service';
 import { CBWorkflowService } from './cb-workflow.service';
+import { EmissionProposalService, CreateProposalDto } from './emission-proposal.service';
 import {
   CentralBankAuthGuard,
   CentralBankRoles,
@@ -28,6 +29,11 @@ import { UpdatePolicyDto } from './dto/policy.dto';
  *
  * Provides API endpoints for the Fourth Branch of Power.
  * Public stats available without auth. All operations require CB ticket.
+ *
+ * ⚠️  EMISSION GOVERNANCE:
+ *   /cb/emission/mint and /cb/emission/burn are DEPRECATED.
+ *   Use the multi-sig proposal workflow instead:
+ *   POST /cb/emission/propose → POST /cb/emission/:id/approve → POST /cb/emission/:id/execute
  */
 @ApiTags('Banking')
 @Controller('cb')
@@ -37,7 +43,9 @@ export class CentralBankController {
     private readonly cbService: CentralBankService,
     private readonly cbAuthService: CentralBankAuthService,
     private readonly workflowService: CBWorkflowService,
+    private readonly proposalService: EmissionProposalService,
   ) {}
+
 
   // ============================
   // PUBLIC (no auth)
@@ -99,6 +107,88 @@ export class CentralBankController {
     );
     return { ok: true, ...result };
   }
+
+  // ============================
+  // EMISSION GOVERNANCE (Multi-Sig Protocol)
+  // ============================
+
+  /**
+   * Governor creates an emission/burn proposal.
+   * Requires quorum of Board approvals + 24h timelock before execution.
+   * This is the ONLY valid way to create new ALTAN or destroy existing ALTAN.
+   */
+  @Post('emission/propose')
+  @UseGuards(CentralBankAuthGuard)
+  @CentralBankRoles('GOVERNOR')
+  async proposeEmission(
+    @Body() dto: CreateProposalDto,
+    @Req() req: CBAuthenticatedRequest,
+  ) {
+    return this.proposalService.createProposal(req.cbUser.officerId, dto);
+  }
+
+  /**
+   * Board member approves a proposal.
+   * Once quorumRequired approvals are reached, 24h timelock begins automatically.
+   */
+  @Post('emission/proposals/:id/approve')
+  @UseGuards(CentralBankAuthGuard)
+  @CentralBankRoles('GOVERNOR', 'BOARD_MEMBER')
+  async approveProposal(
+    @Param('id') id: string,
+    @Body() body: { note?: string },
+    @Req() req: CBAuthenticatedRequest,
+  ) {
+    return this.proposalService.approveProposal(req.cbUser.officerId, id, body.note);
+  }
+
+  /**
+   * Execute a proposal after quorum + timelock.
+   * Permissionless — anyone can trigger after the timelock expires.
+   * Records txHash on-chain.
+   */
+  @Post('emission/proposals/:id/execute')
+  @UseGuards(CentralBankAuthGuard)
+  @CentralBankRoles('GOVERNOR', 'BOARD_MEMBER')
+  async executeProposal(
+    @Param('id') id: string,
+    @Req() req: CBAuthenticatedRequest,
+  ) {
+    return this.proposalService.executeProposal(req.cbUser.officerId, id);
+  }
+
+  /**
+   * Governor rejects a proposal before execution.
+   */
+  @Post('emission/proposals/:id/reject')
+  @UseGuards(CentralBankAuthGuard)
+  @CentralBankRoles('GOVERNOR')
+  async rejectProposal(
+    @Param('id') id: string,
+    @Body() body: { reason: string },
+    @Req() req: CBAuthenticatedRequest,
+  ) {
+    return this.proposalService.rejectProposal(req.cbUser.officerId, id, body.reason);
+  }
+
+  /**
+   * Public governance journal — all emission proposals, status, votes, txHash.
+   * Every citizen can verify the money supply management is transparent.
+   */
+  @Get('emission/proposals')
+  async getProposals(@Query('status') status?: string) {
+    return this.proposalService.getProposals(status as any);
+  }
+
+  /**
+   * Get a single proposal by ID.
+   */
+  @Get('emission/proposals/:id')
+  async getProposal(@Param('id') id: string) {
+    return this.proposalService.getProposal(id);
+  }
+
+
 
   @Get('emission/history')
   @UseGuards(CentralBankAuthGuard)

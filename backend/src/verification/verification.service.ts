@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UserRole, EventType, EventScope } from '@prisma/client';
 import { TimelineService } from '../timeline/timeline.service';
 import { DistributionService } from '../distribution/distribution.service';
+import { OnChainVerificationService } from './on-chain-verification.service';
 
 @Injectable()
 export class VerificationService {
@@ -12,6 +13,7 @@ export class VerificationService {
     private prisma: PrismaService,
     private timelineService: TimelineService,
     private distributionService: DistributionService,
+    private onChainVerification: OnChainVerificationService,
   ) {}
 
   /**
@@ -270,6 +272,42 @@ export class VerificationService {
         timelineEventId: timelineEvent.id,
       },
     });
+
+    // ── ON-CHAIN: Mint SeatSBT ────────────────────────────────────────────────
+    // After DB verification is recorded, attempt to mint a Soul-Bound Token.
+    // This is non-fatal: if the citizen has no wallet yet, the SBT can be claimed
+    // later. The txHash is stored for permanent proof.
+    try {
+      const targetWithWallet = await this.prisma.user.findUnique({
+        where: { id: verifiedId },
+        select: { walletAddress: true, seatId: true },
+      });
+
+      if (targetWithWallet?.walletAddress && targetWithWallet?.seatId) {
+        const sbtResult = await this.onChainVerification.mintSeatForCitizen(
+          targetWithWallet.walletAddress,
+          targetWithWallet.seatId,
+        );
+
+        if (sbtResult) {
+          await this.prisma.userVerification.update({
+            where: { id: verification.id },
+            data: {
+              txHash: sbtResult.txHash,
+              blockNumber: sbtResult.blockNumber,
+              seatTokenId: sbtResult.tokenId,
+            },
+          });
+          this.logger.log(
+            `⛓️  SeatSBT minted for ${verifiedId}: tokenId=${sbtResult.tokenId}, txHash=${sbtResult.txHash}`,
+          );
+        }
+      }
+    } catch (err) {
+      // Non-fatal — verification is valid, SBT can be claimed later via wallet setup
+      this.logger.warn(`⚠️  SeatSBT mint skipped for ${verifiedId}: ${err?.message}`);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     // ── BIRTHRIGHT DISTRIBUTION ─────────────────────────────────────────────
     // Automatically distribute ALTAN to newly verified citizen.

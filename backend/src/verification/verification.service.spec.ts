@@ -3,6 +3,7 @@ import { VerificationService } from './verification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { DistributionService } from '../distribution/distribution.service';
+import { OnChainVerificationService } from './on-chain-verification.service';
 
 describe('VerificationService', () => {
   let service: VerificationService;
@@ -45,12 +46,20 @@ describe('VerificationService', () => {
       distributeByLevel: jest.fn().mockResolvedValue({ distributed: true, amount: 900 }),
     };
 
+    // Mock OnChainVerificationService — SeatSBT minting is non-fatal
+    const mockOnChain = {
+      mintSeatForCitizen: jest.fn().mockResolvedValue(null), // no wallet in tests
+      hasSeatSBT: jest.fn().mockResolvedValue(false),
+      revokeSeat: jest.fn().mockResolvedValue(null),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         VerificationService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: TimelineService, useValue: mockTimeline },
         { provide: DistributionService, useValue: mockDistribution },
+        { provide: OnChainVerificationService, useValue: mockOnChain },
       ],
     }).compile();
     service = module.get(VerificationService);

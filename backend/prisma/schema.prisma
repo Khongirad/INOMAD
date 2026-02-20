@@ -380,6 +380,74 @@ enum AccountRecoveryStatus {
   EXPIRED              // Token expired or request timed out
 }
 
+// ─── Emission Multi-Sig Models ────────────────────────────────────────────────
+
+enum EmissionProposalType {
+  MINT
+  BURN
+}
+
+enum EmissionProposalStatus {
+  PROPOSED                  // Created by Governor, awaiting Board approvals
+  APPROVED_PENDING_TIMELOCK // Quorum reached, 24h timelock running
+  EXECUTABLE                // Timelock expired, ready to execute
+  EXECUTED                  // On-chain tx confirmed, txHash recorded
+  REJECTED                  // Governor or Council rejected
+  EXPIRED                   // Proposal expired without reaching quorum
+}
+
+model EmissionProposal {
+  id               String                @id @default(uuid())
+  proposalType     EmissionProposalType
+  amount           Decimal               @db.Decimal(18, 6)
+  corrAccountId    String?
+  recipientAddress String?               // on-chain wallet address
+  reason           String
+  legalBasis       String?
+
+  // Multi-sig state
+  status           EmissionProposalStatus @default(PROPOSED)
+  proposedById     String                // User.id of CB Governor
+  approvals        EmissionApproval[]
+  approvalsCount   Int                   @default(0)
+  quorumRequired   Int                   @default(3)
+
+  // Timelock
+  quorumReachedAt  DateTime?
+  executableAfter  DateTime?             // quorumReachedAt + 24h
+
+  // On-chain result
+  txHash           String?               // blockchain tx hash after execution
+  blockNumber      BigInt?
+  executedAt       DateTime?
+  executedById     String?               // User.id who triggered execute
+
+  // Rejection
+  rejectedById     String?
+  rejectionReason  String?
+
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([status])
+  @@index([proposedById])
+  @@index([createdAt])
+}
+
+model EmissionApproval {
+  id           String           @id @default(uuid())
+  proposalId   String
+  approverId   String           // User.id of approving Board member
+  approverNote String?
+  approvedAt   DateTime         @default(now())
+
+  proposal     EmissionProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@unique([proposalId, approverId])  // One vote per member per proposal
+  @@index([proposalId])
+  @@index([approverId])
+}
+
 model BankLink {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
@@ -429,6 +497,11 @@ model UserVerification {
   // Link to timeline event
   timelineEventId String?        @unique
   timelineEvent   TimelineEvent? @relation(fields: [timelineEventId], references: [id])
+
+  // On-chain proof (SeatSBT mint)
+  txHash      String?  // blockchain transaction hash after on-chain verification
+  blockNumber BigInt?  // block number of the verification transaction
+  seatTokenId BigInt?  // SeatSBT tokenId minted for this citizen
 
   @@unique([verifiedUserId, verifierId])
   @@index([verifierId])

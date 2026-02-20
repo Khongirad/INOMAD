@@ -534,4 +534,131 @@ export class BlockchainService implements OnModuleInit {
       return BigInt(0);
     }
   }
+
+  // ─── Write Operations (require OPERATOR_PRIVATE_KEY) ──────────────────────
+
+  /**
+   * Mint a SeatSBT for a newly verified citizen.
+   * Called by OnChainVerificationService immediately after guarantor approval.
+   *
+   * @param walletAddress - Citizen's on-chain wallet (EOA or MPC)
+   * @param seatId        - Human-readable seat ID (e.g. "KHURAL-AB12CD34")
+   */
+  async mintSeatSBT(
+    walletAddress: string,
+    seatId: string,
+  ): Promise<{ txHash: string; tokenId: bigint; blockNumber: bigint }> {
+    const privateKey = this.configService.get<string>('OPERATOR_PRIVATE_KEY');
+    if (!privateKey) {
+      throw new Error('OPERATOR_PRIVATE_KEY not configured. Cannot mint SeatSBT on-chain.');
+    }
+
+    const addresses = this.contractAddresses.getIdentityContracts();
+    if (!addresses.seatSBT) {
+      throw new Error('SeatSBT contract address not configured');
+    }
+
+    const { SeatSBT_ABI: _ABI } = await import('./abis/seatSBT.abi');
+    const contract = this.getContractWithSigner(addresses.seatSBT, SeatSBT_ABI, privateKey);
+
+    const tx = await contract.mintSeat(walletAddress, seatId);
+    const receipt = await tx.wait();
+
+    // Parse SeatMinted event for tokenId
+    let tokenId = BigInt(0);
+    for (const log of receipt.logs ?? []) {
+      try {
+        const parsed = contract.interface.parseLog(log);
+        if (parsed?.name === 'SeatMinted') {
+          tokenId = parsed.args.tokenId;
+          break;
+        }
+      } catch { /* not this event */ }
+    }
+
+    return {
+      txHash: receipt.hash,
+      tokenId,
+      blockNumber: BigInt(receipt.blockNumber),
+    };
+  }
+
+  /**
+   * Revoke a SeatSBT (admin action — fraud, permanent ban).
+   */
+  async revokeSeatSBT(
+    tokenId: bigint,
+    reason: string,
+  ): Promise<{ txHash: string }> {
+    const privateKey = this.configService.get<string>('OPERATOR_PRIVATE_KEY');
+    if (!privateKey) throw new Error('OPERATOR_PRIVATE_KEY not configured');
+
+    const addresses = this.contractAddresses.getIdentityContracts();
+    const contract = this.getContractWithSigner(addresses.seatSBT, SeatSBT_ABI, privateKey);
+
+    const tx = await contract.revokeSeat(tokenId, reason);
+    const receipt = await tx.wait();
+    return { txHash: receipt.hash };
+  }
+
+  /**
+   * Check if a wallet address already holds a SeatSBT.
+   */
+  async hasSeatSBT(walletAddress: string): Promise<boolean> {
+    if (!this.isAvailable() || !this.seatSBTContract) return false;
+    try {
+      const balance = await this.seatSBTContract.balanceOf(walletAddress);
+      return Number(balance) > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Execute the actual emission/burn call on AltanCoreLedger.
+   * Only called from EmissionProposalService.executeProposal() after multi-sig quorum + timelock.
+   *
+   * In production the EmissionMultiSig contract handles this atomically on-chain.
+   * This backend method is the bridge for the operator to trigger execution.
+   *
+   * @param type             - 'MINT' or 'BURN'
+   * @param amount           - raw amount (in ALTAN units)
+   * @param recipientAddress - on-chain address (for MINT) or source (for BURN)
+   * @param corrAccountId    - Postgres corrAccount id (for internal DB update)
+   */
+  async executeEmissionProposal(
+    type: 'MINT' | 'BURN',
+    amount: number,
+    recipientAddress: string | null,
+    corrAccountId: string | null,
+  ): Promise<{ txHash: string; blockNumber: number }> {
+    const privateKey = this.configService.get<string>('OPERATOR_PRIVATE_KEY');
+    if (!privateKey) {
+      throw new Error('OPERATOR_PRIVATE_KEY not configured. Cannot execute emission on-chain.');
+    }
+
+    const bankingAddresses = this.contractAddresses.getBankingContracts();
+    const ledgerAddress = bankingAddresses.altanCoreLedger || bankingAddresses.altan;
+    if (!ledgerAddress) {
+      throw new Error('AltanCoreLedger contract address not configured');
+    }
+
+    const contract = this.getContractWithSigner(ledgerAddress, AltanCoreLedger_ABI, privateKey);
+
+    // Convert amount to 18-decimal wei equivalent
+    const amountWei = ethers.parseUnits(amount.toString(), 18);
+    const target = recipientAddress ?? ethers.ZeroAddress;
+
+    let tx: ethers.TransactionResponse;
+    if (type === 'MINT') {
+      tx = await contract.mint(target, amountWei);
+    } else {
+      tx = await contract.burn(target, amountWei);
+    }
+
+    const receipt = await tx.wait();
+    this.logger.log(`⛓️  ${type} ${amount} ALTAN executed on-chain: ${receipt.hash}`);
+
+    return { txHash: receipt.hash, blockNumber: receipt.blockNumber };
+  }
 }

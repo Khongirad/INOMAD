@@ -4,11 +4,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
 import { VerificationModule } from '../verification/verification.module';
 import { ArchiveModule } from '../archive/archive.module';
+import { BlockchainModule } from '../blockchain/blockchain.module';
 import { CentralBankController } from './central-bank.controller';
 import { CentralBankService } from './central-bank.service';
 import {  CentralBankAuthService } from './central-bank-auth.service';
 import { CentralBankAuthGuard } from './central-bank-auth.guard';
 import { CBWorkflowService } from './cb-workflow.service';
+import { EmissionProposalService } from './emission-proposal.service';
 
 /**
  * Central Bank Module — Fourth Branch of Power (Apex).
@@ -27,6 +29,7 @@ import { CBWorkflowService } from './cb-workflow.service';
   imports: [
     ConfigModule,
     PrismaModule,
+    BlockchainModule,  // For on-chain emission execution and SeatSBT operations
     VerificationModule, // For tiered verification emission limits
     ArchiveModule, // For formal CB documents (licenses, protocols, agreements)
     JwtModule.registerAsync({
@@ -44,7 +47,8 @@ import { CBWorkflowService } from './cb-workflow.service';
     CentralBankAuthService,
     CentralBankAuthGuard,
     CBWorkflowService,
+    EmissionProposalService,
   ],
-  exports: [CentralBankAuthService], // Export auth service for Distribution guards only
+  exports: [CentralBankAuthService, EmissionProposalService],
 })
 export class CentralBankModule {}
