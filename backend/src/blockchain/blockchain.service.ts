@@ -661,4 +661,24 @@ export class BlockchainService implements OnModuleInit {
 
     return { txHash: receipt.hash, blockNumber: receipt.blockNumber };
   }
+
+  // ── Block Queries ──────────────────────────────────────────────────────────
+
+  /**
+   * Get the hash of the latest block.
+   * Used for injecting blockchain entropy into deterministic SeatId generation:
+   *   seatId = sha256(username + timestamp + lastBlockHash.slice(8))
+   * This makes SeatIds unique across different server instances.
+   */
+  async getCurrentBlockHash(): Promise<string> {
+    if (!this.isEnabled || !this.provider) {
+      return '';
+    }
+    try {
+      const block = await this.provider.getBlock('latest');
+      return block?.hash ?? '';
+    } catch {
+      return '';
+    }
+  }
 }

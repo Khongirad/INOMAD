@@ -5,6 +5,7 @@ import { CentralBankService } from './central-bank.service';
 import { CentralBankAuthService } from './central-bank-auth.service';
 import { CBWorkflowService } from './cb-workflow.service';
 import { CentralBankAuthGuard } from './central-bank-auth.guard';
+import { EmissionProposalService } from './emission-proposal.service';
 
 describe('CentralBankController', () => {
   let controller: CentralBankController;
@@ -38,6 +39,14 @@ describe('CentralBankController', () => {
       openCorrespondentAccount: jest.fn().mockResolvedValue({ id: 'ca1' }),
       executeEmission: jest.fn().mockResolvedValue({ id: 'em1' }),
     };
+    const mockEmissionProposal = {
+      createProposal: jest.fn().mockResolvedValue({ id: 'ep1' }),
+      approveProposal: jest.fn().mockResolvedValue({ id: 'ep1' }),
+      executeProposal: jest.fn().mockResolvedValue({ id: 'ep1' }),
+      rejectProposal: jest.fn().mockResolvedValue({ id: 'ep1' }),
+      getProposals: jest.fn().mockResolvedValue([]),
+      getProposal: jest.fn().mockResolvedValue({ id: 'ep1' }),
+    };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CentralBankController],
       providers: [
@@ -45,6 +54,7 @@ describe('CentralBankController', () => {
         { provide: CentralBankService, useValue: mockCbService },
         { provide: CentralBankAuthService, useValue: mockAuthService },
         { provide: CBWorkflowService, useValue: mockWorkflow },
+        { provide: EmissionProposalService, useValue: mockEmissionProposal },
       ],
     }).overrideGuard(CentralBankAuthGuard).useValue({ canActivate: () => true }).compile();
     controller = module.get(CentralBankController);
@@ -66,7 +76,7 @@ describe('CentralBankController', () => {
   it('mint', async () => { const r = await controller.mint({ corrAccountId: 'ca1', amount: 100, reason: 'r', memo: 'm' } as any, req); expect(r.ok).toBe(true); });
   it('burn', async () => { const r = await controller.burn({ corrAccountId: 'ca1', amount: 50, reason: 'r' } as any, req); expect(r.ok).toBe(true); });
   it('getEmissionHistory', async () => { const r = await controller.getEmissionHistory('10', '0'); expect(r.ok).toBe(true); });
-  it('getEmissionHistory defaults', async () => { const r = await controller.getEmissionHistory(); expect(cbService.getEmissionHistory).toHaveBeenCalledWith(50, 0); });
+  it('getEmissionHistory defaults', async () => { await controller.getEmissionHistory(); expect(cbService.getEmissionHistory).toHaveBeenCalledWith(50, 0); });
   it('getSupply', async () => { const r = await controller.getSupply(); expect(r.ok).toBe(true); });
   it('getDailyEmission', async () => { const r = await controller.getDailyEmission(); expect(r.ok).toBe(true); });
 

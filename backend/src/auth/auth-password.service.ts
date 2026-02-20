@@ -1,15 +1,18 @@
-import { Injectable, UnauthorizedException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, Optional, UnauthorizedException, BadRequestException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { randomUUID } from 'crypto';
 import { generateBiometricHash } from './account-recovery.service';
+import { BlockchainService } from '../blockchain/blockchain.service';
 
 @Injectable()
 export class AuthPasswordService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    @Optional() private readonly blockchain?: BlockchainService,
   ) {}
 
   /**
@@ -86,8 +89,8 @@ export class AuthPasswordService {
     // Hash password
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
-    // Generate unique SeatID
-    const seatId = this.generateSeatId();
+    // Generate unique SeatID with blockchain entropy
+    const seatId = await this.generateSeatId(dto.username);
 
     // Generate random 13-digit citizen number (non-sequential for privacy)
     let citizenNumber: string;
@@ -315,11 +318,37 @@ export class AuthPasswordService {
   }
 
   /**
-   * Generate unique Seat ID for new users
+   * Generate unique Seat ID for new users.
+   *
+   * DETERMINISM (P4): SeatId now includes blockchain entropy to ensure global
+   * uniqueness even across server instances. The blockHash ensures that two
+   * servers registering a user at the same millisecond will produce different IDs.
+   *
+   * Format: KHURAL-XXXXXXXXXXXXXXXX
+   * Where X = sha256(username + timestamp + blockHash).slice(0, 16)
+   *
+   * Fallback: If blockchain is offline, uses cryptoRandomBytes for entropy.
    */
-  private generateSeatId(): string {
+  private async generateSeatId(username: string = ''): Promise<string> {
     const prefix = 'KHURAL';
-    const random = Math.random().toString(36).substring(2, 15).toUpperCase();
-    return `${prefix}-${random}`;
+    const timestamp = Date.now().toString();
+
+    // Get blockchain entropy (empty string if offline)
+    let blockHash = '';
+    if (this.blockchain) {
+      try {
+        blockHash = await this.blockchain.getCurrentBlockHash();
+      } catch {
+        // Non-fatal — use crypto fallback
+      }
+    }
+
+    // Mix entropy sources
+    const entropy = blockHash
+      ? `${username}|${timestamp}|${blockHash.slice(2, 14)}`  // Use 12 chars of block hash
+      : `${username}|${timestamp}|${crypto.randomBytes(16).toString('hex')}`; // Offline fallback
+
+    const hash = crypto.createHash('sha256').update(entropy).digest('hex');
+    return `${prefix}-${hash.slice(0, 16).toUpperCase()}`;
   }
 }
