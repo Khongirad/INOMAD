@@ -59,6 +59,30 @@ export class VerificationController {
     return this.verificationService.getVerifierStats(req.user.sub);
   }
 
+  /**
+   * POST /verification/request-by-seat
+   * New user sends guarantor's SeatID to request verification.
+   */
+  @Post('request-by-seat')
+  async requestVerificationBySeat(
+    @Request() req,
+    @Body() body: { guarantorSeatId: string },
+  ) {
+    return this.verificationService.requestVerificationBySeat(
+      req.user.sub,
+      body.guarantorSeatId,
+    );
+  }
+
+  /**
+   * GET /verification/my-guarantor
+   * Get who verified the current user.
+   */
+  @Get('my-guarantor')
+  async getMyGuarantor(@Request() req) {
+    return this.verificationService.getMyGuarantor(req.user.sub);
+  }
+
   @Post('revoke/:verificationId')
   @UseGuards(AdminGuard)
   async revokeVerification(

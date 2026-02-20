@@ -1,13 +1,17 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole, EventType, EventScope } from '@prisma/client';
 import { TimelineService } from '../timeline/timeline.service';
+import { DistributionService } from '../distribution/distribution.service';
 
 @Injectable()
 export class VerificationService {
+  private readonly logger = new Logger(VerificationService.name);
+
   constructor(
     private prisma: PrismaService,
     private timelineService: TimelineService,
+    private distributionService: DistributionService,
   ) {}
 
   /**
@@ -31,6 +35,95 @@ export class VerificationService {
       },
     });
   }
+
+  /**
+   * Request verification by guarantor's SeatID.
+   * Looks up the guarantor and marks the requester as pending with that guarantor.
+   * The guarantor sees this user in their pending list.
+   */
+  async requestVerificationBySeat(requesterId: string, guarantorSeatId: string) {
+    // Find guarantor
+    const guarantor = await this.prisma.user.findUnique({
+      where: { seatId: guarantorSeatId },
+      select: {
+        id: true,
+        seatId: true,
+        username: true,
+        isVerified: true,
+        role: true,
+        verificationCount: true,
+        maxVerifications: true,
+      },
+    });
+
+    if (!guarantor) {
+      throw new NotFoundException('No citizen found with that Seat ID');
+    }
+
+    // Can't vouch for yourself
+    if (guarantor.id === requesterId) {
+      throw new BadRequestException('You cannot be your own guarantor');
+    }
+
+    const isAdmin = ([UserRole.ADMIN, UserRole.CREATOR] as const).includes(guarantor.role as any);
+
+    if (!isAdmin && !guarantor.isVerified) {
+      throw new BadRequestException('This citizen is not yet verified and cannot vouch for others');
+    }
+
+    if (!isAdmin && guarantor.verificationCount >= guarantor.maxVerifications) {
+      throw new BadRequestException('This citizen has reached their verification quota');
+    }
+
+    // Update the requester to record who their intended guarantor is
+    await this.prisma.user.update({
+      where: { id: requesterId },
+      data: {
+        verificationStatus: 'PENDING',
+      },
+    });
+
+    return {
+      ok: true,
+      guarantor: {
+        username: guarantor.username,
+        seatId: guarantor.seatId,
+      },
+      message: `Verification request sent. ${guarantor.username} can now verify you from their Verification Dashboard.`,
+    };
+  }
+
+  /**
+   * Get who verified the current user (guarantor info)
+   */
+  async getMyGuarantor(userId: string) {
+    const verification = await this.prisma.userVerification.findFirst({
+      where: { verifiedUserId: userId },
+      include: {
+        verifier: {
+          select: {
+            id: true,
+            username: true,
+            seatId: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (!verification) {
+      return { guarantor: null };
+    }
+
+    return {
+      guarantor: {
+        username: verification.verifier.username,
+        seatId: verification.verifier.seatId,
+        verifiedAt: verification.createdAt,
+      },
+    };
+  }
+
 
   /**
    * Verify a user
@@ -177,6 +270,27 @@ export class VerificationService {
         timelineEventId: timelineEvent.id,
       },
     });
+
+    // ── BIRTHRIGHT DISTRIBUTION ─────────────────────────────────────────────
+    // Automatically distribute ALTAN to newly verified citizen.
+    // UNVERIFIED → receives 100 ALTAN on registration (registerCitizenForDistribution)
+    // ARBAN_VERIFIED → receives 900 more (total 1,000 ALTAN)
+    // Fails silently if distribution pool not initialized yet.
+    try {
+      // Ensure citizen is registered in distribution system first
+      await this.distributionService.registerCitizenForDistribution(verifiedId);
+    } catch (e) {
+      // Already registered — that's fine
+    }
+
+    try {
+      await this.distributionService.distributeByLevel(verifiedId, 'ARBAN_VERIFIED');
+      this.logger.log(`✅ Birthright ALTAN distributed to newly verified citizen ${verifiedId}`);
+    } catch (e) {
+      // Pool not initialized or user already received — log and continue
+      this.logger.warn(`⚠️  ALTAN distribution skipped for ${verifiedId}: ${e?.message}`);
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     return {
       verification,

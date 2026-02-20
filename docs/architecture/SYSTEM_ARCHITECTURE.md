@@ -1,23 +1,23 @@
-# INOMAD KHURAL - Архитектура системы
+# INOMAD KHURAL — System Architecture
 
-**Дата:** 2026-02-04  
-**Версия:** 2.0 (с Marketplace)
+**Date:** February 18, 2026  
+**Version:** 3.0 (verified from codebase)
 
 ---
 
-## 📐 Архитектурная диаграмма
+## 📐 Architecture Overview
 
 ```mermaid
 graph TB
     subgraph Client["🖥️ CLIENT LAYER"]
-        Web["Web Browser<br/>(Next.js 14)"]
-        Mobile["Mobile App<br/>(Future)"]
+        Web["Web Browser<br/>(Next.js 16.1.1 / Turbopack)"]
+        Mobile["Mobile App<br/>(Planned)"]
     end
 
-    subgraph Application["⚙️ APPLICATION LAYER"]
+    subgraph Application["⚙️ APPLICATION LAYER — 61 NestJS Modules"]
         subgraph Auth["🔐 Authentication & Identity"]
             MPC["Web3Auth<br/>MPC Wallet"]
-            JWT["JWT Auth"]
+            JWT["JWT Auth<br/>(Global AuthGuard)"]
             Registry["Citizen<br/>Registry"]
         end
 
@@ -28,20 +28,21 @@ graph TB
             Archive["State Archive"]
         end
 
-        subgraph Guild["⚔️ Guild Platform"]
+        subgraph Guild["⚔️ Guild & Governance"]
             Arban["Arban System"]
             Credit["Credit/Lending"]
             Seal["Digital Seal"]
             Edu["Education"]
             Election["Election"]
+            Parliament["Parliament &<br/>Hierarchy"]
         end
 
-        subgraph Market["🏪 Marketplace & Economy"]
-            Products["Product<br/>Listings"]
-            Orders["Order<br/>Management"]
-            Escrow["Escrow<br/>System"]
-            Reputation["Reputation<br/>System"]
-            Search["Search &<br/>Filters"]
+        subgraph Economy["🏦 Economy & Finance"]
+            Bank["Bank &<br/>Central Bank"]
+            Tax["Tax Authority"]
+            Distribution["UBI &<br/>Distribution"]
+            Marketplace["Marketplace"]
+            OrgBanking["Org Banking"]
         end
 
         subgraph Culture["🌙 Cultural Systems"]
@@ -49,59 +50,62 @@ graph TB
             Timeline["Timeline &<br/>History"]
             Temple["Temple of<br/>Heaven"]
         end
+
+        subgraph Systems["🔧 Systems"]
+            Messaging["Messaging"]
+            Complaints["Complaints &<br/>Disputes"]
+            WorkActs["Work Acts"]
+            Reputation["Reputation"]
+            News["News &<br/>Notifications"]
+        end
     end
 
     subgraph Service["🔧 SERVICE LAYER"]
-        API["NestJS REST API<br/>(67 services, 43 controllers)"]
+        API["NestJS REST API<br/>(97 services, 70 controllers)"]
         Blockchain["Blockchain Service<br/>Integration"]
         DocConstructor["Document<br/>Constructor"]
-        EscrowService["Escrow Smart<br/>Contracts"]
     end
 
     subgraph Data["💾 DATA LAYER"]
-        MainDB[("Main DB<br/>inomad_khural<br/>Users, Arbans,<br/>Bank, Wallet")]
-        MigrationDB[("Migration DB<br/>inomad_migration<br/>Passport data<br/>(encrypted)")]
-        ZAGSDB[("ZAGS DB<br/>inomad_zags<br/>Civil registry")]
-        LandDB[("Land Registry DB<br/>inomad_land_registry<br/>Property ownership")]
-        MarketDB[("Marketplace DB<br/>inomad_marketplace<br/>Products, Orders,<br/>Reviews")]
+        MainDB[("Unified PostgreSQL DB<br/>inomad_khural<br/>148 models, 98 enums<br/>5,487-line Prisma schema")]
     end
 
     subgraph Chain["⛓️ BLOCKCHAIN LAYER"]
-        Contracts["Smart Contracts:<br/>ArbanKhural.sol<br/>BankOfSiberia.sol<br/>DigitalSeal.sol<br/>Academy.sol<br/>MarketplaceEscrow.sol"]
+        Contracts["Smart Contracts:<br/>133 Solidity files (39,855 LOC)<br/>ArbanKhural · BankOfSiberia<br/>DigitalSeal · Academy<br/>MarketplaceEscrow · VotingCenter"]
+        L1["ALTAN L1 (Cosmos SDK)<br/>3,028 LOC Go<br/>x/corelaw (37 articles)"]
         Network["Base Sepolia<br/>Testnet"]
     end
 
     Web --> Auth
     Web --> Govt
     Web --> Guild
-    Web --> Market
+    Web --> Economy
     Web --> Culture
+    Web --> Systems
     Mobile --> Auth
-    Mobile --> Market
+    Mobile --> Economy
 
     Auth --> API
     Govt --> API
     Guild --> API
-    Market --> API
+    Economy --> API
     Culture --> API
+    Systems --> API
 
     API --> MainDB
-    API --> MigrationDB
-    API --> ZAGSDB
-    API --> LandDB
-    API --> MarketDB
     
-    Market --> EscrowService
-    EscrowService --> Contracts
+    Economy --> Blockchain
     Blockchain --> Contracts
     Contracts --> Network
+    Blockchain --> L1
 
     style Client fill:#e3f2fd
     style Auth fill:#bbdefb
     style Govt fill:#c8e6c9
     style Guild fill:#e1bee7
-    style Market fill:#b2ebf2
+    style Economy fill:#b2ebf2
     style Culture fill:#ffe0b2
+    style Systems fill:#fff3e0
     style Service fill:#f5f5f5
     style Data fill:#cfd8dc
     style Chain fill:#d7ccc8
@@ -109,21 +113,23 @@ graph TB
 
 ---
 
-## 🏗️ Детальное описание компонентов
+## 🏗️ Component Details
 
 ### 1. 🖥️ Client Layer
 
-**Web Browser (Next.js 14 App Router)**
-- Server-side rendering (SSR)
-- React Server Components
-- Material-UI компоненты
-- Responsive design
+**Web Browser (Next.js 16.1.1 App Router + Turbopack)**
+- ~8,500 lines of TypeScript/TSX
+- 65 routes (pages)
+- 60 reusable React components
+- 29 centralized API wrapper modules
+- Shadcn/UI + Lucide React icons
+- Tailwind CSS
 - PWA capabilities
+- 100% English (Russian→English translation complete)
 
-**Mobile App (Запланировано)**
-- React Native
+**Mobile App (Planned)**
+- React Native (future)
 - Native MPC wallet integration
-- Offline-first architecture
 
 ---
 
@@ -131,402 +137,295 @@ graph TB
 
 #### 🔐 Authentication & Identity
 
-**Web3Auth MPC Wallet**
-- Multi-Party Computation для распределенных ключей
-- Social recovery через guardians
-- Device-based encryption
-- Biometric support
-
-**JWT Auth**
-- Passport.js integration
-- Role-based access control (RBAC)
-- Token refresh mechanism
-- Session management
-
-**Citizen Registry**
-- Verification system (5-of-5 Arban matrix)
-- Identity documents storage
-- Super-verification workflow
-- Privacy-preserving checks
+| Module | Description |
+|--------|-------------|
+| `auth/` | JWT authentication, global AuthGuard, @Public() decorator, session management |
+| `identity/` | Citizen registry, KYC, verification chain (5-of-5 Arban matrix) |
+| `users/` | User CRUD, profile management |
+| `seat-binding/` | SeatSBT identity binding |
+| `mpc-wallet/` | Web3Auth MPC wallet, social recovery |
+| `wallet-protection/` | Wallet security, key share management |
+| `verification/` | Verification workflows, super-verification |
+| `citizenship/` | Citizenship status management |
+| `onboarding/` | Guided onboarding quest "Путь Гражданина" |
 
 ---
 
 #### 🏛️ Government Services
 
-**Migration Service (Паспорта)**
-- Биометрические данные
-- AES-256-GCM шифрование
-- Warrant system для правоохранительных органов
-- GDPR compliant audit logs
-- 14 API endpoints
-
-**ZAGS (Служба записи актов)**
-- Регистрация брака с двусторонним согласием
-- Divorce processing
-- Name changes
-- Digital signature support
-- Anti-bigamy checks
-- 11 API endpoints
-
-**Land Registry (Кадастровая служба)**
-- GPS coordinates и GeoJSON границы
-- Ownership (только граждане) vs Lease (иностранцы)
-- Property transfer workflow
-- Mortgage tracking
-- Automated valuation
-- 14 API endpoints
-
-**State Archive (Государственный архив)**
-- Document template system (5 готовых шаблонов)
-- Dynamic variable substitution
-- Electronic signature workflow
-- PDF generation
-- Blockchain certificate hashing
+| Module | Endpoints | Description |
+|--------|-----------|-------------|
+| `migration-service/` | 9 | Passport applications, document upload, AES-256-GCM encryption, warrants, GDPR audit logs |
+| `zags-service/` | 13 | Marriage registration with dual-consent, divorce, name changes, 18+ age validation, anti-bigamy |
+| `land-registry-service/` | 14 | GPS/GeoJSON parcels, ownership (citizens) / lease (foreigners), transfers, encumbrances |
+| `archive/` | — | Document templates, variable substitution, electronic signatures, blockchain certificate hashing |
 
 ---
 
-#### ⚔️ Guild Platform
+#### ⚔️ Guild & Governance
 
-**Arban System**
-- Two-type Arbans (родовой и территориальный)
-- 5x5 mutual verification matrix
-- Guild formation (10 Arbans)
-- Credit scoring based on Arban membership
-
-**Credit/Lending**
-- Arban-backed credit lines
-- Peer-to-peer lending
-- Collateral management
-- Automatic repayment
-
-**Digital Seal (2-of-2 Multisig)**
-- Khural Representative signature
-- Proposer signature
-- Smart contract enforcement
-- Transaction history
-
-**Education System**
-- Course catalog
-- Enrollment management
-- Progress tracking
-- Certificate issuance
-
-**Election System**
-- Khural Representative elections
-- Voting mechanism
-- Candidate management
-- Results tabulation
+| Module | Description |
+|--------|-------------|
+| `arbans/` | Two-type Arbans (family + organizational), 5x5 verification matrix |
+| `guilds/` | Professional guilds, skill certification |
+| `professions/` | Profession registry |
+| `khural/` | Parliamentary governance, motions, voting |
+| `legislative/` | Voting center, bills, law process |
+| `elections/` | On-chain voting, candidate management |
+| `parliament/` | Khural sessions (Tumen leaders) |
+| `hierarchy/` | Zun→Myangan→Tumen hierarchy |
+| `justice/` | Dispute resolution, arbitration |
+| `digital-seal/` | 2-of-2 multisig sealing |
 
 ---
 
-#### 🏪 Marketplace & Economy (🆕)
+#### 🏦 Economy & Finance
 
-**Product Listings**
-- Создание товаров/услуг продавцами
-- Категоризация (Товары, Услуги, Недвижимость, etc.)
-- Загрузка изображений
-- Цены в ALTAN
-- Inventory management
-
-**Order Management**
-- Shopping cart functionality
-- Checkout process
-- Order status tracking
-- Buyer/seller messaging
-- Order history
-
-**Escrow System**
-- Smart contract-based escrow
-- Funds locked until delivery confirmation
-- Dispute resolution mechanism
-- Automatic release on confirmation
-- Refund handling
-
-**Reputation System**
-- Seller ratings (1-5 stars)
-- Buyer feedback
-- Transaction-based reputation score
-- Verified purchase badges
-- Review moderation
-
-**Search & Filters**
-- Full-text search (PostgreSQL)
-- Category filtering
-- Price range
-- Location-based
-- Reputation sorting
-- Advanced filters
+| Module | Description |
+|--------|-------------|
+| `bank/` | Citizen & institutional banking |
+| `central-bank/` | ALTAN monetary policy, minting/burning |
+| `tax/` | Tax authority, calculations |
+| `distribution/` | UBI (400 ALTAN/week), sovereign fund, pension |
+| `marketplace/` | Products, orders, escrow, shopping cart, full-text search, seller reputation |
+| `org-banking/` | Organization finance, dual authorization, daily reports |
 
 ---
 
 #### 🌙 Cultural Systems
 
-**Dual Calendar System**
-- Григорианский календарь (стандартный)
-- Лунный календарь (монгольский)
-- 12 традиционных названий месяцев
-- 8 фаз луны с эмодзи
-- Tsagaan Sar (Лунный Новый Год) detection
-- Event scheduling для обоих календарей
-- Reminder system
+| Module | Description |
+|--------|-------------|
+| `calendar/` | Dual calendar (Gregorian + Lunar Mongolian), 12 traditional months, 8 moon phases, Tsagaan Sar detection |
+| `timeline/` | Personal timeline events, historical narrative editor |
+| `history/` | Historical records |
+| `temple/` | Temple of Heaven — rituals, cultural celebrations, sacred space booking |
+| `education/` | Course catalog, enrollment, progress, certificates |
+| `academy/` | Academy of Sciences |
 
-**Timeline & History**
-- Personal timeline events
-- Historical narrative editor
-- Markdown support
-- Event linking
-- Tag system
-- Privacy controls
+---
 
-**Temple of Heaven**
-- Ritual management
-- Cultural celebrations
-- Community events
-- Sacred space booking
+#### 🔧 System Modules
+
+| Module | Description |
+|--------|-------------|
+| `messaging/` | DM, group, org, case-thread messaging |
+| `complaints/` | Hierarchical complaint escalation |
+| `disputes/` | Pre-complaint negotiation (contracts/quests/work-acts) |
+| `work-acts/` | Universal work-act completion system |
+| `notifications/` | In-app notification system |
+| `news/` | News publishing system |
+| `reputation/` | Universal reputation & trust |
+| `regional-reputation/` | Territorial reputation per republic |
+| `quest/` | Quest/task assignment |
+| `quests/` | Quest board |
+| `org-quests/` | Organization task board |
+| `organizations/` | Organization management |
+| `unified-org/` | Unified organization system |
+| `invitations/` | Invitation system |
+| `gamification/` | Citizen XP, levels, achievements |
+| `census/` | Demographic aggregation |
+| `chancellery/` | Contract registry for lawyers/notaries |
+| `transparency/` | Public audit logs (GOST) |
+| `admin/` | Admin & creator management |
 
 ---
 
 ### 3. 🔧 Service Layer
 
 **NestJS REST API**
-- 39 модулей
-- 67 сервисов
-- 43 контроллера
-- 100+ API endpoints
-- OpenAPI documentation (Swagger)
+- 61 modules
+- 97 services
+- 70 controllers
+- 130+ API endpoints
+- OpenAPI/Swagger documentation (70/70 controllers tagged)
 - Request validation (class-validator)
 - Error handling middleware
-
-**Blockchain Service Integration**
-- Web3.js/Ethers.js для взаимодействия с контрактами
-- Transaction building и signing
-- Event listening
-- Gas estimation
-- Nonce management
-
-**Document Constructor**
-- Template rendering engine
-- Variable interpolation
-- Validation rules
-- PDF generation (Puppeteer/PDFKit)
-- Digital signature integration
-
-**Escrow Smart Contracts (🆕)**
-- Marketplace escrow implementation
-- Time-locked releases
-- Dispute arbitration
-- Multi-signature support
-- Event emissions для tracking
+- Global AuthGuard (`JwtAuthGuard` as APP_GUARD)
+- Rate limiting (ThrottlerGuard: 100 req/min)
 
 ---
 
 ### 4. 💾 Data Layer
 
-**Main Database (inomad_khural)**
-- Users (граждане, роли, статусы)
-- Arbans (членство, типы)
-- Bank (счета, транзакции)
-- Wallet (балансы, адреса)
-- Guild (10 Arbans)
-- MPCWallet (shares, recovery)
-- CalendarEvent, CalendarNote
-- Timeline, HistoricalRecord
-
-**Migration Database (inomad_migration)**
-- PassportApplication
-- Document (AES-256 encrypted)
-- AccessLog (GDPR audit trail)
-- Warrant (law enforcement access)
-
-**ZAGS Database (inomad_zags)**
-- Marriage (статус, дата)
-- MarriageConsent (цифровые подписи)
-- Divorce
-- NameChange
-- PublicRegistry (verification)
-
-**Land Registry Database (inomad_land_registry)**
-- LandPlot (GPS, GeoJSON)
-- Property
-- Ownership (только граждане)
-- Lease (для иностранцев)
-- Transaction (transfer history)
-- Encumbrance (mortgages, liens)
-
-**Marketplace Database (inomad_marketplace) 🆕**
-- Product (название, описание, цена, категория)
-- ProductImage
-- ProductCategory
-- Order (статус, total, buyer, seller)
-- OrderItem
-- EscrowTransaction (smart contract address, статус)
-- Review (rating, comment, verified purchase)
-- SellerReputation (aggregated scores)
-- SearchIndex (full-text search optimization)
-
-**Технологии:**
+**Unified PostgreSQL Database (`inomad_khural`)**
+- Single Prisma schema: 5,487 lines
+- 148 models
+- 98 enums
 - PostgreSQL 16
-- Prisma ORM
-- Миграции (automated + manual)
-- Изолированные БД для приватности
+- Prisma ORM with automated migrations
 - Connection pooling
+
+> **Note**: All data (users, government services, marketplace, etc.) is stored in a single unified database. The Prisma schema manages all 148 models within one database instance.
 
 ---
 
 ### 5. ⛓️ Blockchain Layer
 
 **Smart Contracts (Solidity 0.8.x)**
+- 133 contracts, 39,855 total lines
+- Framework: Hardhat
+- Network: Base Sepolia Testnet
 
-1. **ArbanKhural.sol**
-   - Arban membership management
-   - Voting mechanisms
-   - Guild formation
-   - Events для frontend
+| Contract Category | Key Contracts |
+|-------------------|--------------|
+| Governance | ArbanKhural.sol, Arban.sol, Zun.sol, ZunKhural.sol, Myangan.sol, Tumen.sol, TumenKhural.sol, ConfederativeKhural.sol |
+| Finance | Altan.sol, AltanCentralBank.sol, CitizenBank.sol, EscrowBank.sol, AltanSettlement.sol, SovereignWealthFund.sol, TaxAuthority.sol |
+| Legal | SupremeCourt.sol, CoreLaw.sol, JudicialReview.sol, NotaryHub.sol, ImmutableAxioms.sol, KhuralLawProcess.sol, DigitalSeal.sol |
+| Identity | CitizenRegistry.sol, SeatSBT.sol, SeatAccount.sol, CitizenVerification.sol, VotingCenter.sol |
+| Marketplace | RetailMarketplace.sol, ServiceMarketplace.sol, AuctionHouse.sol, CommodityExchange.sol, JobMarketplace.sol, AltanPaymentGateway.sol |
+| Infrastructure | DigitalProductPassport.sol, UnifiedChancellery.sol, StockExchange.sol, ForexExchange.sol |
 
-2. **BankOfSiberia.sol**
-   - ALTAN token (ERC-20)
-   - Minting/burning
-   - Central bank controls
-   - Initial distribution (1000 ALTAN)
-
-3. **DigitalSeal.sol**
-   - 2-of-2 multisig
-   - Khural Representative + Proposer
-   - Transaction proposals
-   - Execution controls
-
-4. **Academy.sol**
-   - Course NFTs
-   - Certificate issuance
-   - Achievement tracking
-   - Reputation integration
-
-5. **MarketplaceEscrow.sol** 🆕
-   - Escrow creation для orders
-   - Funds locking
-   - Delivery confirmation
-   - Dispute resolution
-   - Automatic refunds
-   - Fee collection (platform commission)
-
-**Network: Base Sepolia Testnet**
-- L2 Ethereum (low gas fees)
-- EVM compatible
-- Testnet for development
-- Mainnet migration готово
-
-**Планируемые контракты:**
-- PassportRegistry.sol (certificate verification)
-- MarriageRegistry.sol (public marriage records)
-- PropertyRegistry.sol (land NFTs)
+**ALTAN L1 (Cosmos SDK)**
+- 3,028 lines of Go code
+- `x/corelaw` module with 37 constitutional articles
+- Article 27: Network Fee — 0.03% → INOMAD INC
 
 ---
 
-## 🔄 Data Flow Examples
-
-### Пример 1: Покупка товара на Marketplace 🆕
-
-```
-1. Покупатель находит товар → GET /marketplace/products/:id
-2. Добавляет в корзину → POST /marketplace/cart/add
-3. Оформляет заказ → POST /marketplace/orders/create
-4. Backend создает EscrowTransaction → MarketplaceEscrow.sol.createEscrow()
-5. Покупатель переводит ALTAN в escrow → BankOfSiberia.sol.transfer()
-6. Продавец видит заказ → GET /marketplace/orders/seller
-7. Продавец отправляет товар → PUT /marketplace/orders/:id/ship
-8. Покупатель подтверждает получение → PUT /marketplace/orders/:id/confirm
-9. Smart contract освобождает средства → MarketplaceEscrow.sol.release()
-10. Покупатель оставляет отзыв → POST /marketplace/reviews/create
-11. Reputation обновляется → SellerReputation auto-recalculated
-```
-
-### Пример 2: Регистрация брака (ZAGS)
-
-```
-1. Заявитель создает заявку → POST /zags/marriage/apply
-2. Оба участника дают согласие → POST /zags/marriage/consent
-3. Офицер проверяет eligibility → EligibilityService.checkMarriageEligibility()
-4. Офицер регистрирует брак → POST /zags/marriage/register
-5. Сертификат генерируется → CertificateService.generateMarriageCertificate()
-6. Хеш записывается в blockchain → MarriageRegistry.sol (планируется)
-7. Публичная запись создается → PublicRegistry entry
-```
-
-### Пример 3: MPC Wallet Recovery
-
-```
-1. Пользователь теряет device → Wallet недоступен
-2. Инициирует recovery → POST /mpc-wallet/recovery/initiate
-3. Guardians получают уведомления → Email/Push notifications
-4. 3 из 5 guardians одобряют → POST /mpc-wallet/recovery/approve
-5. Новый device share генерируется → RecoveryService.regenerateShare()
-6. Пользователь восстанавливает доступ → Wallet unlocked
-```
-
----
-
-## 📊 Технические характеристики
+## 📊 Technical Specifications
 
 **Backend:**
 - Language: TypeScript
 - Framework: NestJS 10
 - ORM: Prisma 5
-- Auth: Passport + JWT
+- Auth: Global JwtAuthGuard + @Public() decorator
 - Validation: class-validator
-- API Documentation: Swagger/OpenAPI
+- API Documentation: Swagger/OpenAPI (70/70 controllers)
+- Rate Limiting: ThrottlerGuard (100 req/min)
 
 **Frontend:**
-- Framework: Next.js 14 (App Router)
-- UI Library: Material-UI v6
-- State Management: React Query + Zustand
+- Framework: Next.js 16.1.1 (App Router + Turbopack)
+- React: 19.2.3
+- UI Library: Shadcn/UI + Lucide React
+- Styling: Tailwind CSS
 - Forms: React Hook Form
 - Notifications: Sonner (toast)
-- Charts: Recharts
 
 **Blockchain:**
 - Solidity: 0.8.20+
 - Framework: Hardhat
-- Testing: Chai + Ethers
 - Network: Base Sepolia
 - Wallet: Web3Auth (MPC)
 
 **Database:**
-- PostgreSQL: 16
-- Миграции: Prisma Migrate
-- Backup: pg_dump automated
-- Scaling: Connection pooling
+- PostgreSQL 16
+- Prisma ORM (single unified schema)
+- Automated migrations
 
 **Infrastructure:**
-- CI/CD: GitHub Actions
-- Hosting: Vercel (frontend), Railway (backend)
-- Monitoring: Sentry
-- Analytics: PostHog
+- CI/CD: GitHub Actions (backend build+test, frontend build, Docker validation)
+- Docker: Multi-stage builds with docker-compose.yml
+- Security: Helmet, rate-limiting, global AuthGuard
 
 ---
 
-## 🚀 Roadmap
+## 🧪 Testing
 
-### Week 3 (Feb 10-14)
-- [ ] **Marketplace MVP** (backend models, API, UI)
-- [ ] MPC Wallet Setup Wizard
-- [ ] ERC-4337 Account Factory
-- [ ] Government Services UI (forms)
-
-### Week 4 (Feb 17-21)
-- [ ] **Marketplace Escrow Smart Contract** deployment
-- [ ] Product search optimization
-- [ ] Seller dashboard
-- [ ] E2E testing
-
-### Future
-- [ ] Mobile app (React Native)
-- [ ] AI-powered search recommendations
-- [ ] Cross-border payments
-- [ ] Decentralized storage (IPFS) для product images
-- [ ] DAO governance для platform decisions
+| Type | Count | Details |
+|------|-------|---------|
+| Unit test spec files | 176 | ~25,900 lines of test code |
+| E2E test suites | 7 | health, auth, migration, ZAGS, land, citizen-lifecycle, marketplace |
+| Backend coverage | **95.85%** | Line coverage (Jest) |
+| CI pipeline | ✅ | Unit tests only (E2E not in CI) |
 
 ---
 
-**Создано:** 2026-02-04 01:12 CST  
-**Автор:** INOMAD Development Team  
-**Версия:** 2.0 (с Marketplace)
+## 🔐 Security
+
+| Feature | Implementation |
+|---------|---------------|
+| Authentication | Global JwtAuthGuard as APP_GUARD |
+| Public endpoints | @Public() decorator (9 endpoints) |
+| Rate limiting | ThrottlerGuard: 100 req/min per IP |
+| HTTP headers | Helmet (XSS, HSTS, CSP) |
+| Passwords | bcrypt (12 rounds), min 8 chars |
+| JWT sessions | Database-backed with JTI tracking |
+
+---
+
+## 🔄 Data Flow Examples
+
+### Example 1: Marketplace Purchase
+
+```
+1. Buyer searches products        → GET /marketplace/products?search=...
+2. Adds to cart                  → POST /marketplace/cart/add
+3. Creates order                 → POST /marketplace/orders/create
+4. Backend creates EscrowTx      → EscrowTransaction record
+5. Buyer transfers ALTAN         → On-chain transfer to escrow
+6. Seller sees order             → GET /marketplace/orders/seller
+7. Seller ships                  → PUT /marketplace/orders/:id/ship
+8. Buyer confirms receipt        → PUT /marketplace/orders/:id/confirm
+9. Escrow releases funds         → Smart contract release
+10. Buyer leaves review          → POST /marketplace/reviews/create
+11. Seller reputation updated    → Auto-recalculated
+```
+
+### Example 2: Marriage Registration (ZAGS)
+
+```
+1. Applicant submits             → POST /zags/marriage/apply
+2. Both parties consent          → POST /zags/marriage/consent
+3. Officer checks eligibility    → EligibilityService (18+ age validation, anti-bigamy)
+4. Officer registers marriage    → POST /zags/marriage/register
+5. Certificate generated         → CertificateService
+6. Public registry updated       → PublicRegistry entry
+```
+
+### Example 3: Citizen Lifecycle
+
+```
+1. User registers                → POST /auth/register
+2. Verification chain            → 5 verifiers approve identity
+3. MPC wallet created            → Web3Auth key shares
+4. Seat binding                  → SeatSBT minted
+5. Arban membership              → Joins 10-member household
+6. Banking activated             → ALTAN wallet created
+7. UBI distribution              → Weekly 400 ALTAN payment
+```
+
+---
+
+## 📁 Repository Structure
+
+```
+inomad-client/  (Monorepo — ~132,000 lines)
+│
+├── src/                          # Next.js 16 frontend (65 pages, 60 components)
+│   ├── app/                      # App Router pages
+│   ├── components/               # React UI components (Shadcn/UI)
+│   └── lib/                      # API wrappers (29), hooks, utilities
+│
+├── backend/                      # NestJS 10 API server (61 modules)
+│   ├── src/                      # 70 controllers, 97 services
+│   │   ├── auth/                 # Authentication (JWT, global AuthGuard)
+│   │   ├── bank/                 # Citizen & institutional banking
+│   │   ├── central-bank/         # ALTAN monetary policy
+│   │   ├── marketplace/          # E-commerce with escrow
+│   │   ├── migration-service/    # Passport office (9 endpoints)
+│   │   ├── zags-service/         # Civil registry (13 endpoints)
+│   │   ├── land-registry-service/ # Cadastral system (14 endpoints)
+│   │   └── ... (54 more)         # All 61 modules
+│   ├── prisma/                   # Schema (5,487 lines, 148 models, 98 enums)
+│   └── test/                     # 7 E2E test suites + 176 unit spec files
+│
+├── chain/                        # Smart contracts
+│   └── contracts/                # 133 Solidity contracts (39,855 LOC)
+│
+├── packages/
+│   └── blockchain-l1/            # ALTAN L1 (Cosmos SDK, 3,028 LOC Go)
+│       └── x/corelaw/            # Constitutional law module (37 articles)
+│
+├── shared/types/                 # Shared TypeScript types (5 files)
+├── docs/                         # Documentation
+├── .github/workflows/ci.yml     # CI/CD pipeline
+├── docker-compose.yml            # Full stack deployment
+└── Dockerfile                    # Production builds
+```
+
+---
+
+**Created:** February 4, 2026  
+**Last Updated:** February 18, 2026  
+**Version:** 3.0 (verified from codebase audit)

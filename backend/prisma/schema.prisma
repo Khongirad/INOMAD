@@ -8,8 +8,9 @@ datasource db {
 }
 
 model User {
-  id     String @id @default(uuid())
-  seatId String @unique
+  id            String  @id @default(uuid())
+  seatId        String  @unique
+  citizenNumber String? @unique // Sequential citizen ID: "0000000000001", "0000000000002", etc.
 
   // Authentication (Gates of Khural)
   username     String? @unique
@@ -30,6 +31,7 @@ model User {
   ethnicity          String[]
   clan               String?
   gender             String?   // MALE / FEMALE — required for exclusive right inheritance
+  language           String?   // Preferred/native language (Buryad, Mongolian, Russian, English, etc.)
 
   // === GOVERNANCE: Коренной народ — источник власти ===
   citizenType              CitizenType @default(RESIDENT)

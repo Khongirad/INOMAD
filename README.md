@@ -5,12 +5,12 @@
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 [![Stage](https://img.shields.io/badge/stage-post--MVP-green)]()
 [![L1](https://img.shields.io/badge/ALTAN%20L1-Cosmos%20SDK-blue)]()
-[![Backend](https://img.shields.io/badge/backend-62%20NestJS%20modules-blueviolet)]()
+[![Backend](https://img.shields.io/badge/backend-61%20NestJS%20modules-blueviolet)]()
 [![Frontend](https://img.shields.io/badge/frontend-Next.js%2016%20+%20Shadcn%20UI-orange)]()
 [![Contracts](https://img.shields.io/badge/contracts-133%20Solidity-yellow)]()
 [![Tests](https://img.shields.io/badge/tests-176%20suites%20·%2095.85%25%20coverage-brightgreen)]()
 
-> **Latest Update (Feb 15, 2026):** 95.85% backend test coverage (176 spec files) · 133 smart contracts · Complete Russian→English frontend translation · MUI→Shadcn UI migration · Land Code rewrite · 143 DB models · 62 NestJS modules · 65 frontend pages · Full blockchain architecture · 3 Government Services · Docker + CI/CD
+> **Latest Update (Feb 18, 2026):** 95.85% backend test coverage (176 spec files) · 133 smart contracts (39,855 LOC) · Complete Russian→English frontend translation · MUI→Shadcn UI migration · 148 DB models · 61 NestJS modules · 65 frontend pages · Full blockchain architecture · 3 Government Services · Docker + CI/CD
 
 ---
 
@@ -26,19 +26,20 @@ Built for the **Siberian Confederation**, a sovereign digital state with constit
 
 | Metric | Value | Location |
 |--------|-------|----------|
-| **Production code** | ~112,000 lines (TypeScript) | `backend/src/` + `src/` |
-| **Test code** | ~25,600 lines (TypeScript) | `*.spec.ts` |
-| **Smart contracts** | 133 Solidity contracts | `chain/contracts/` |
-| **ALTAN L1 blockchain** | 2,971 lines (Go/Cosmos SDK) | `packages/blockchain-l1/` |
+| **Backend production code** | ~48,900 lines (TypeScript) | `backend/src/` |
+| **Frontend production code** | ~8,500 lines (TypeScript/TSX) | `src/` |
+| **Test code** | ~25,900 lines (TypeScript) | `*.spec.ts` |
+| **Smart contracts** | 133 Solidity contracts, 39,855 LOC | `chain/contracts/` |
+| **ALTAN L1 blockchain** | 3,028 lines (Go/Cosmos SDK) | `packages/blockchain-l1/` |
 | **x/corelaw module** | 448 lines (constitutional law) | `packages/blockchain-l1/x/corelaw/` |
-| **Prisma schema** | 5,243 lines (143 models, 94 enums) | `backend/prisma/schema.prisma` |
-| **Backend modules** | 62 NestJS modules | `backend/src/*/` |
-| **Services** | 96 injectable services | `*.service.ts` |
-| **Controllers** | 69 REST controllers | `*.controller.ts` |
-| **Test suites** | 176 unit + 5 E2E = 181 total | `*.spec.ts` + `test/*.e2e-spec.ts` |
+| **Prisma schema** | 5,487 lines (148 models, 98 enums) | `backend/prisma/schema.prisma` |
+| **Backend modules** | 61 NestJS modules | `backend/src/*/` |
+| **Services** | 97 injectable services | `*.service.ts` |
+| **Controllers** | 70 REST controllers | `*.controller.ts` |
+| **Test suites** | 176 unit + 7 E2E = 183 total | `*.spec.ts` + `test/*.e2e-spec.ts` |
 | **Test coverage** | **95.85%** backend line coverage | Jest |
 | **Frontend pages** | 65 routes | `src/app/` |
-| **Total codebase** | **~137,000 lines** of source code | — |
+| **Total codebase** | **~132,000 lines** of source code | — |
 
 ---
 
@@ -47,10 +48,10 @@ Built for the **Siberian Confederation**, a sovereign digital state with constit
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        FE["Next.js 16 Frontend<br/>38,265 LOC · React · Shadcn UI · Tailwind CSS · PWA"]
+        FE["Next.js 16 Frontend<br/>~8,500 LOC · React · Shadcn UI · Tailwind CSS · PWA"]
     end
 
-    subgraph "Application Layer — 62 NestJS Modules"
+    subgraph "Application Layer — 61 NestJS Modules"
         subgraph "🔐 Auth & Identity"
             AUTH["auth/ · identity/ · users/<br/>JWT · MPC Wallet · KYC · Seat Binding"]
         end
@@ -72,11 +73,11 @@ graph TB
     end
 
     subgraph "Data Layer"
-        DB["PostgreSQL · Prisma ORM<br/>5,243-line schema · 143 models · 94 enums"]
+        DB["PostgreSQL · Prisma ORM<br/>5,487-line schema · 148 models · 98 enums"]
     end
 
     subgraph "Blockchain Layer"
-        L1["ALTAN L1 · Cosmos SDK<br/>2,971 LOC Go · x/corelaw (37 articles)"]
+        L1["ALTAN L1 · Cosmos SDK<br/>3,028 LOC Go · x/corelaw (37 articles)"]
         SC["133 Solidity Smart Contracts<br/>39,855 LOC · Foundry · Base Sepolia"]
     end
 
@@ -113,7 +114,7 @@ graph TB
 
 ---
 
-## 📊 Platform Status — February 15, 2026
+## 📊 Platform Status — February 18, 2026
 
 ### Core Systems — ✅ Operational
 
@@ -175,7 +176,7 @@ graph LR
 |-----------|--------|---------|
 | 🐳 Docker | ✅ | Multi-stage builds, `docker-compose.yml` (PostgreSQL + Backend + Frontend) |
 | 🔄 CI/CD | ✅ | GitHub Actions: lint → build → test → Docker validation |
-| 🧪 Tests | ✅ | 176 unit test suites + 5 E2E suites · **95.85% coverage** |
+| 🧪 Tests | ✅ | 176 unit test suites + 7 E2E suites · **95.85% coverage** |
 | 🔒 Security | ✅ | Helmet, rate-limiting (100 req/min), global AuthGuard, `@Public()` decorator |
 | 📱 PWA | ✅ | Manifest, service worker, offline-first caching |
 | 📦 Shared Types | ✅ | `shared/types/` — auth, migration, ZAGS, land registry |
@@ -225,8 +226,8 @@ inomad-client/  (Monorepo — ~137,000 lines)
 │   ├── components/               # React UI components
 │   └── lib/                      # API wrappers, hooks, utilities
 │
-├── backend/                      # NestJS 10 API server (62 modules)
-│   ├── src/                      # 69 controllers, 96 services
+├── backend/                      # NestJS 10 API server (61 modules)
+│   ├── src/                      # 70 controllers, 97 services
 │   │   ├── auth/                 # Authentication (JWT, guards, MPC)
 │   │   ├── bank/                 # Citizen & institutional banking
 │   │   ├── central-bank/         # ALTAN monetary policy
@@ -252,8 +253,8 @@ inomad-client/  (Monorepo — ~137,000 lines)
 │   │   ├── work-acts/            # Universal work system
 │   │   ├── messaging/            # Platform messaging
 │   │   └── ... (20 more)         # Education, calendar, temple, etc.
-│   ├── prisma/                   # Schema (5,243 lines, 143 models, 94 enums)
-│   └── test/                     # E2E tests (5 suites) + 176 unit spec files
+│   ├── prisma/                   # Schema (5,487 lines, 148 models, 98 enums)
+│   └── test/                     # E2E tests (7 suites) + 176 unit spec files
 │
 ├── chain/                        # Smart contracts (Foundry)
 │   ├── contracts/                # 133 Solidity contracts (39,855 LOC)
@@ -312,7 +313,7 @@ docker-compose up -d             # PostgreSQL + Backend + Frontend
 # Backend unit tests (176 spec files, 95.85% coverage)
 cd backend && npm run test
 
-# Backend E2E tests (5 suites)
+# Backend E2E tests (7 suites)
 cd backend && npm run test:e2e
 
 # Smart contract tests
@@ -352,7 +353,7 @@ cd packages/blockchain-l1 && go test ./x/corelaw/...
 3. **Article 27 Revenue Model** — 0.03% network fee → INOMAD INC
 4. **133 Smart Contracts** — Full sovereign governance on-chain
 5. **Arban Governance System** — 10-member household democratic model
-6. **62-Module Platform** — Sovereign digital nation infrastructure
+6. **61-Module Platform** — Sovereign digital nation infrastructure
 
 ### Legal Documentation
 See [PROOF_OF_AUTHORSHIP.md](docs/blockchain/PROOF_OF_AUTHORSHIP.md) for:

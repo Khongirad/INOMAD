@@ -1,7 +1,7 @@
 # PROJECT STATUS — INOMAD KHURAL
 
-**Last Updated**: February 16, 2026  
-**Current Phase**: Spec Compliance & API Documentation ✅  
+**Last Updated**: February 18, 2026  
+**Current Phase**: Documentation Audit & Accuracy ✅  
 **Overall Status**: 🟢 **Full-Stack Operational — 95%+ Backend Coverage**
 
 ---
@@ -12,22 +12,25 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total source files** | 1,778 |
-| **Production code** | ~112,000 lines (TypeScript) |
-| **Test code** | ~25,600 lines (TypeScript) |
-| **Total codebase** | **~137,000 lines** |
-| **Git commits** | 180 |
+| **Backend production code** | ~48,900 lines (TypeScript) |
+| **Frontend production code** | ~8,500 lines (TypeScript/TSX) |
+| **Test code** | ~25,900 lines (TypeScript) |
+| **Prisma schema** | 5,487 lines |
+| **Smart contracts** | 39,855 lines (Solidity) |
+| **ALTAN L1 blockchain** | 3,028 lines (Go) |
+| **Total codebase** | **~132,000 lines** |
+| **Git commits** | 192 |
 | **Contributors** | 1 |
 
 ### Backend Server
 - **Status**: ✅ **RUNNING** on port 3001
-- **Modules**: 63 NestJS modules
+- **Modules**: 61 NestJS modules
 - **Controllers**: 70 REST controllers (100% Swagger-tagged)
-- **Services**: 98 injectable services
+- **Services**: 97 injectable services
 - **Test Suites**: 176 spec files, 2989 tests (95.85% line coverage)
 - **API Endpoints**: 130+ routes registered
 - **Database**: PostgreSQL (Prisma ORM)
-- **Prisma Schema**: 5,487 lines — 146 models, 96 enums
+- **Prisma Schema**: 5,487 lines — 148 models, 98 enums
 - **Swagger/OpenAPI**: 70/70 controllers tagged
 - **TypeScript**: Builds without errors
 
@@ -42,8 +45,8 @@
 - **Language**: 100% English (Russian→English translation complete)
 
 ### Blockchain (ALTAN L1)
-- **Smart Contracts**: 133 Solidity contracts (`chain/contracts/`)
-- **ALTAN L1**: Cosmos SDK (Go) with x/corelaw module (37 constitutional articles)
+- **Smart Contracts**: 133 Solidity contracts, 39,855 LOC (`chain/contracts/`)
+- **ALTAN L1**: Cosmos SDK (Go), 3,028 LOC with x/corelaw module (37 constitutional articles)
 - **Integration**: Graceful degradation implemented
 - **Deployment**: Local Hardhat / Base Sepolia
 
@@ -134,8 +137,8 @@
 
 ### Test Distribution
 - **Unit test spec files**: 176
-- **E2E test suites**: 5 (health, auth, migration, ZAGS, land)
-- **Lines of test code**: ~25,600
+- **E2E test suites**: 7 (health, auth, migration, ZAGS, land, citizen-lifecycle, marketplace)
+- **Lines of test code**: ~25,900
 
 ---
 
@@ -184,7 +187,7 @@
 | Frontend Build | ✅ Clean | 100% |
 | Frontend Pages | ✅ 65 routes | 100% |
 | Frontend Translation | ✅ English | 100% |
-| Database Schema | ✅ 143 models | 100% |
+| Database Schema | ✅ 148 models, 98 enums | 100% |
 | Backend Tests | ✅ 95.85% coverage | 96% |
 | Smart Contracts | ✅ 133 contracts | 100% |
 | Integration Testing | 🟡 In Progress | 50% |
@@ -192,7 +195,7 @@
 
 ---
 
-## 📅 Recent Activity (Feb 11–16, 2026)
+## 📅 Recent Activity (Feb 11–18, 2026)
 
 | Date | Commits | Highlights |
 |------|---------|------------|
@@ -202,6 +205,7 @@
 | Feb 14 | 4 | Complete frontend translation, CI fix, coverage batch 16 (95.85%) |
 | Feb 15 | 3 | Land Code rewrite, 36 new + 78 enhanced specs, governance corrections |
 | Feb 16 | 11+ | Arban verification, Khural indigenous-only, citizen lifecycle E2E, **SECURITY: global AuthGuard**, Swagger (70/70 controllers), **ZAGS 18+ age validation**, **Spec compliance: Escrow, Cart, Census, Archive hashing, Full-text search, Seller reputation**, VotingCenter deploy script |
+| Feb 18 | — | **Full project audit**: all docs updated to verified metrics, SYSTEM_ARCHITECTURE.md rewritten |
 
 ---
 
@@ -210,4 +214,4 @@
 **GitHub**: https://github.com/Khongirad/INOMAD  
 **Branch**: main  
 **Contributors**: 1  
-**Total Commits**: 180
+**Total Commits**: 192

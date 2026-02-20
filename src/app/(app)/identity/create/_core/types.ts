@@ -10,6 +10,7 @@ export type MacroRegion =
   | "siberia"
   | "caucasus"
   | "volga"
+  | "ural"
   | "north"
   | "kaliningrad"
   | "crimea_special"

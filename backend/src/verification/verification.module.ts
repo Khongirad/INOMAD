@@ -7,16 +7,19 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { TimelineModule } from '../timeline/timeline.module';
 import { DistributionModule } from '../distribution/distribution.module';
+import { DistributionService } from '../distribution/distribution.service';
+import { BlockchainModule } from '../blockchain/blockchain.module';
 
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
     TimelineModule,
-    forwardRef(() => DistributionModule), // Avoid circular dependency
+    BlockchainModule,                      // needed by DistributionService
+    forwardRef(() => DistributionModule),  // Avoid circular dependency
   ],
   controllers: [VerificationController],
-  providers: [VerificationService, CreatorBootstrapService, TieredVerificationService],
+  providers: [VerificationService, CreatorBootstrapService, TieredVerificationService, DistributionService],
   exports: [VerificationService, CreatorBootstrapService, TieredVerificationService],
 })
 export class VerificationModule {}

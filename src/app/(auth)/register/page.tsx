@@ -71,6 +71,11 @@ export default function RegistrationPage() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [pinError, setPinError] = useState<string | null>(null);
 
+  // Credentials — collected during ceremony for standalone use
+  // (If user came via /gates/register, these may be empty; tokens already stored)
+  const [ceremonyUsername, setCeremonyUsername] = useState('');
+  const [ceremonyPassword, setCeremonyPassword] = useState('');
+
   // Identity state (connected to reducer/storage)
   const [draft, dispatch] = useReducer(identityReducer, undefined, createEmptyDraft);
   const hydrated = useRef(false);
@@ -122,9 +127,24 @@ export default function RegistrationPage() {
 
   const handleNationSelect = useCallback((nation: Nation) => {
     setSelectedNation(nation);
-    const status = selectedRegion
-      ? determineResidenceStatus(nation.code, selectedRegion.id)
-      : undefined;
+
+    // The nation's home region always determines the responsibility zone.
+    // E.g. a Buryad-Mongol born in Moscow → responsibility zone = Siberia.
+    const nationHomeRegionId = nation.regions[0];
+    const nationHomeRegion = DOCTRINAL_REGIONS.find(r => r.id === nationHomeRegionId);
+
+    // Switch the selected region to the nation's homeland.
+    if (nationHomeRegion) {
+      setSelectedRegion(nationHomeRegion);
+    }
+
+    // Residence status: compare the birthplace zone (current selectedRegion)
+    // vs the nation's home zone. Same zone = 'home', different = 'resident'.
+    const birthplaceRegionId = selectedRegion?.id;
+    const status = nationHomeRegionId && birthplaceRegionId
+      ? (birthplaceRegionId === nationHomeRegionId ? "home" : "resident")
+      : "home";
+
     dispatch({
       type: "SET_NATIONALITY",
       value: {
@@ -138,7 +158,7 @@ export default function RegistrationPage() {
   }, [selectedRegion]);
 
   const residenceStatus = selectedNation && selectedRegion
-    ? determineResidenceStatus(selectedNation.code, selectedRegion.id)
+    ? (selectedNation.regions.includes(selectedRegion.id) ? "home" : "resident")
     : null;
 
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
@@ -147,10 +167,8 @@ export default function RegistrationPage() {
   const handleFinish = async () => {
     setLoading(true);
     try {
-      // Step 5 will handle the actual wallet creation with visual feedback
-      // Move to step 5 (Creating Sovereign) to show progress
       if (currentStep === 4) {
-        // Validate PIN one more time
+        // Validate PIN
         if (walletPin.length !== 6) {
           setPinError('PIN must be 6 digits');
           setLoading(false);
@@ -161,37 +179,60 @@ export default function RegistrationPage() {
           setLoading(false);
           return;
         }
-        
-        // Progress to creation step
+
+        // Progress to creation step animation
         setCurrentStep(5);
-        
-        // TEMPORARY: Skip actual wallet creation during registration
-        // Will create wallet after authentication on dashboard
-        // Wallet creation is deferred to post-authentication (on the dashboard)
-        // This avoids requiring a backend session during registration
-        // await createWallet(walletPin, 'SOCIAL');
-        
-        // Save draft with wallet PIN for later use
-        // Store PIN temporarily in localStorage for wallet creation after auth
+
+        // If not yet authenticated, register the account now
+        const { AuthSession } = await import('@/lib/auth/session');
+        if (!AuthSession.isAuthenticated()) {
+          // Get credentials — from ceremony fields or fallback localStorage
+          const username = ceremonyUsername || (typeof window !== 'undefined' ? localStorage.getItem('pending_username') || '' : '');
+          const password = ceremonyPassword || (typeof window !== 'undefined' ? localStorage.getItem('pending_password') || '' : '');
+
+          if (!username || !password) {
+            // No credentials — redirect to gates/register
+            setCurrentStep(4);
+            setPinError('Please register your account first at /gates/register');
+            setLoading(false);
+            return;
+          }
+
+          const { register } = await import('@/lib/api/identity');
+          await register({
+            username,
+            password,
+            birthPlace: draft.basic.placeOfBirth
+              ? { city: draft.basic.placeOfBirth.label }
+              : undefined,
+            ethnicity: draft.nationality?.code ? [draft.nationality.code] : undefined,
+            nationality: selectedNation?.name,
+          });
+
+          // Clean up pending credentials
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('pending_username');
+            localStorage.removeItem('pending_password');
+          }
+        }
+
+        // Store wallet PIN for later wallet creation
         if (typeof window !== 'undefined') {
           localStorage.setItem('pending_wallet_pin', walletPin);
         }
         saveDraft({...draft});
-        
-        // Small delay to show completion animation
+
+        // Short delay for animation
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Move to final initiation step
         setCurrentStep(6);
+
       } else if (currentStep === 6) {
-        // Final completion - redirect to wallet setup
-        // User must create wallet before accessing dashboard
-        router.push("/wallet");
+        // Final — redirect to dashboard
+        router.push('/dashboard');
       }
     } catch (error) {
-      console.error("Registration failed", error);
+      console.error('Registration failed', error);
       setPinError(error instanceof Error ? error.message : 'Registration failed');
-      // Return to wallet setup step on error
       setCurrentStep(4);
     } finally {
       setLoading(false);
@@ -274,7 +315,7 @@ export default function RegistrationPage() {
               </div>
 
               {/* List-Based Selection UI */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[400px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px]">
                   {/* Column 1: Responsibility Zones (Macro Regions) */}
                   <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
                       <div className="p-3 border-b border-zinc-800 bg-zinc-900 font-medium text-xs text-zinc-400 uppercase tracking-wider">
@@ -295,23 +336,83 @@ export default function RegistrationPage() {
                                   )}
                               >
                                   <span>{region.name}</span>
-                                  {region.id === 'siberia' && <span className="text-[10px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">CORE</span>}
-                                  {region.id === 'caucasus' && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">INDIGENOUS</span>}
                               </button>
                           ))}
                       </div>
                   </div>
 
-                  {/* Column 2: Sub-Regions (Republics/Oblasts) */}
+                  {/* Column 2: Indigenous Peoples (Siberia) / Sub-Regions (Others) */}
                   <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
                       <div className="p-3 border-b border-zinc-800 bg-zinc-900 font-medium text-xs text-zinc-400 uppercase tracking-wider">
-                          Region / Republic
+                          {selectedRegion?.id === 'siberia' ? 'Indigenous Peoples' : 'Region / Republic'}
                       </div>
                       <div className="overflow-y-auto flex-1 p-2 space-y-1">
                           {!selectedRegion ? (
                               <div className="h-full flex items-center justify-center text-zinc-600 text-sm p-4 text-center">
                                   Select a Zone on the left
                               </div>
+                          ) : selectedRegion.id === 'siberia' ? (
+                              <>
+                                  {/* Indigenous peoples list for Siberia */}
+                                  {NATIONS.filter(n => n.regions.includes('siberia') && n.isIndigenous).map(nation => (
+                                      <button
+                                          key={nation.code}
+                                          onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleNationSelect(nation);
+                                              dispatch({ type: "SET_BIRTHPLACE_LABEL", value: `${nation.name} — Siberia` });
+                                          }}
+                                          className={cn(
+                                              "w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex flex-col gap-0.5 border",
+                                              selectedNation?.code === nation.code
+                                                  ? "bg-gold-primary/10 text-gold-primary border-gold-primary/20"
+                                                  : "text-zinc-300 hover:bg-zinc-800 hover:text-white border-transparent hover:border-zinc-700"
+                                          )}
+                                      >
+                                          <div className="flex items-center gap-2">
+                                              <span className="font-medium">{nation.name}</span>
+                                              {nation.nativeName && nation.nativeName !== nation.name && (
+                                                  <span className="text-[10px] text-zinc-500">({nation.nativeName})</span>
+                                              )}
+                                          </div>
+                                          {nation.population && (
+                                              <span className="text-[10px] text-zinc-500">{nation.population}</span>
+                                          )}
+                                      </button>
+                                  ))}
+
+                                  {/* Divider */}
+                                  <div className="border-t border-zinc-700 my-2" />
+
+                                  {/* Non-indigenous option */}
+                                  <button
+                                      onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedNation(null);
+                                          dispatch({ type: "SET_BIRTHPLACE_LABEL", value: "Siberia (non-indigenous)" });
+                                          dispatch({
+                                              type: "SET_NATIONALITY",
+                                              value: {
+                                                  code: "non_indigenous",
+                                                  label: "Non-indigenous citizen",
+                                                  isIndigenous: false,
+                                                  residenceStatus: "resident",
+                                              },
+                                          });
+                                      }}
+                                      className={cn(
+                                          "w-full text-left px-3 py-3 rounded-lg text-sm transition-all border",
+                                          draft.nationality?.code === "non_indigenous"
+                                              ? "bg-zinc-700/30 text-zinc-200 border-zinc-600"
+                                              : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border-transparent hover:border-zinc-700"
+                                      )}
+                                  >
+                                      <div className="font-medium">Non-indigenous citizen</div>
+                                      <div className="text-[10px] text-zinc-500 mt-0.5">
+                                          Born in Siberia but not an indigenous people. No exclusive land rights.
+                                      </div>
+                                  </button>
+                              </>
                           ) : (
                               <>
                                   {selectedRegion.subRegions ? (
@@ -335,6 +436,36 @@ export default function RegistrationPage() {
                                           <span className="text-gold-primary">{selectedRegion.name}</span> selected.
                                       </div>
                                   )}
+
+                                  {/* Divider + Non-indigenous option for all zones */}
+                                  <div className="border-t border-zinc-700 my-2" />
+                                  <button
+                                      onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedNation(null);
+                                          dispatch({ type: "SET_BIRTHPLACE_LABEL", value: `${selectedRegion.name} (non-indigenous)` });
+                                          dispatch({
+                                              type: "SET_NATIONALITY",
+                                              value: {
+                                                  code: "non_indigenous",
+                                                  label: "Non-indigenous citizen",
+                                                  isIndigenous: false,
+                                                  residenceStatus: "resident",
+                                              },
+                                          });
+                                      }}
+                                      className={cn(
+                                          "w-full text-left px-3 py-3 rounded-lg text-sm transition-all border",
+                                          draft.nationality?.code === "non_indigenous"
+                                              ? "bg-zinc-700/30 text-zinc-200 border-zinc-600"
+                                              : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border-transparent hover:border-zinc-700"
+                                      )}
+                                  >
+                                      <div className="font-medium">Non-indigenous citizen</div>
+                                      <div className="text-[10px] text-zinc-500 mt-0.5">
+                                          Born in {selectedRegion.name} but not an indigenous people. No exclusive land rights.
+                                      </div>
+                                  </button>
                               </>
                           )}
                       </div>
@@ -468,25 +599,95 @@ export default function RegistrationPage() {
 
               <div className="space-y-4">
                 <Label>Select Primary Nation</Label>
-                <div className="grid grid-cols-2 gap-3 max-h-[250px] overflow-y-auto pr-1">
-                  {NATIONS.filter(n => n.isIndigenous).map(nation => (
-                    <button
-                      key={nation.code}
-                      onClick={() => handleNationSelect(nation)}
-                      className={cn(
-                        "p-3 rounded-xl border-2 text-left transition-all duration-300",
-                        selectedNation?.code === nation.code
-                          ? "border-gold-primary bg-gold-primary/10 text-gold-primary shadow-inner"
-                          : "border-zinc-800 bg-zinc-950/30 text-zinc-500 hover:border-zinc-700"
+
+                {selectedRegion && (() => {
+                  const zoneNations = NATIONS.filter(n => n.isIndigenous && n.regions.includes(selectedRegion.id));
+                  const otherNations = NATIONS.filter(n => n.isIndigenous && !n.regions.includes(selectedRegion.id));
+
+                  return (
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                      {/* Zone-specific nations */}
+                      {zoneNations.length > 0 && (
+                        <>
+                          <div className="text-[10px] text-gold-secondary uppercase tracking-widest px-1">
+                            Peoples of {selectedRegion.name}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {zoneNations.map(nation => (
+                              <button
+                                key={nation.code}
+                                onClick={() => handleNationSelect(nation)}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-left transition-all duration-300",
+                                  selectedNation?.code === nation.code
+                                    ? "border-gold-primary bg-gold-primary/10 text-gold-primary shadow-inner"
+                                    : "border-zinc-700 bg-zinc-900/50 text-zinc-300 hover:border-zinc-600"
+                                )}
+                              >
+                                <span className="text-sm font-medium">{nation.name}</span>
+                                {nation.nativeName && nation.nativeName !== nation.name && (
+                                  <span className="block text-xs text-zinc-500 mt-0.5">{nation.nativeName}</span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </>
                       )}
-                    >
-                      <span className="text-sm font-medium">{nation.name}</span>
-                      {nation.nativeName && nation.nativeName !== nation.name && (
-                        <span className="block text-xs text-zinc-600 mt-0.5">{nation.nativeName}</span>
+
+                      {/* Other peoples */}
+                      {otherNations.length > 0 && (
+                        <>
+                          <div className="border-t border-zinc-800 pt-2">
+                            <div className="text-[10px] text-zinc-600 uppercase tracking-widest px-1 mb-2">
+                              Other Peoples
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {otherNations.map(nation => (
+                                <button
+                                  key={nation.code}
+                                  onClick={() => handleNationSelect(nation)}
+                                  className={cn(
+                                    "p-3 rounded-xl border-2 text-left transition-all duration-300",
+                                    selectedNation?.code === nation.code
+                                      ? "border-gold-primary bg-gold-primary/10 text-gold-primary shadow-inner"
+                                      : "border-zinc-800 bg-zinc-950/30 text-zinc-500 hover:border-zinc-700"
+                                  )}
+                                >
+                                  <span className="text-sm font-medium">{nation.name}</span>
+                                  {nation.nativeName && nation.nativeName !== nation.name && (
+                                    <span className="block text-xs text-zinc-600 mt-0.5">{nation.nativeName}</span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </>
                       )}
-                    </button>
-                  ))}
-                </div>
+                    </div>
+                  );
+                })()}
+
+                {!selectedRegion && (
+                  <div className="grid grid-cols-2 gap-3 max-h-[250px] overflow-y-auto pr-1">
+                    {NATIONS.filter(n => n.isIndigenous).map(nation => (
+                      <button
+                        key={nation.code}
+                        onClick={() => handleNationSelect(nation)}
+                        className={cn(
+                          "p-3 rounded-xl border-2 text-left transition-all duration-300",
+                          selectedNation?.code === nation.code
+                            ? "border-gold-primary bg-gold-primary/10 text-gold-primary shadow-inner"
+                            : "border-zinc-800 bg-zinc-950/30 text-zinc-500 hover:border-zinc-700"
+                        )}
+                      >
+                        <span className="text-sm font-medium">{nation.name}</span>
+                        {nation.nativeName && nation.nativeName !== nation.name && (
+                          <span className="block text-xs text-zinc-600 mt-0.5">{nation.nativeName}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Selected nation detail */}
@@ -495,14 +696,21 @@ export default function RegistrationPage() {
               )}
 
               {/* Residence status */}
-              {residenceStatus && selectedRegion && selectedNation && (
-                <ResidenceStatusCard
-                  status={residenceStatus}
-                  regionName={selectedRegion.name}
-                  nationName={selectedNation.name}
-                  lang="en"
-                />
-              )}
+              {residenceStatus && selectedRegion && selectedNation && (() => {
+                // Derive the correct region name from the nation's home region (regions[0]),
+                // not from the zone currently selected in the left column.
+                const nationHomeRegionId = selectedNation.regions[0];
+                const nationHomeRegion = DOCTRINAL_REGIONS.find(r => r.id === nationHomeRegionId);
+                const displayRegionName = nationHomeRegion?.name ?? selectedRegion.name;
+                return (
+                  <ResidenceStatusCard
+                    status={residenceStatus}
+                    regionName={displayRegionName}
+                    nationName={selectedNation.name}
+                    lang="en"
+                  />
+                );
+              })()}
             </div>
           )}
 
@@ -558,6 +766,37 @@ export default function RegistrationPage() {
                   <p>• Encrypted on your device</p>
                 </div>
               </div>
+
+              {/* Account Credentials (shown only if not already authenticated) */}
+              {typeof window !== 'undefined' && !localStorage.getItem('inomad_access_token') && (
+                <div className="space-y-3 p-5 bg-zinc-900/60 border border-zinc-700 rounded-xl">
+                  <div className="text-xs text-zinc-400 uppercase tracking-wider font-mono mb-1">Account Credentials</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-zinc-400 text-xs">Username</Label>
+                      <Input
+                        placeholder="your_username"
+                        value={ceremonyUsername}
+                        onChange={(e) => setCeremonyUsername(e.target.value)}
+                        className="bg-zinc-950 border-zinc-700 text-sm"
+                        autoComplete="username"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-zinc-400 text-xs">Password</Label>
+                      <Input
+                        type="password"
+                        placeholder="min. 8 characters"
+                        value={ceremonyPassword}
+                        onChange={(e) => setCeremonyPassword(e.target.value)}
+                        className="bg-zinc-950 border-zinc-700 text-sm"
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-zinc-600">These credentials will be used to secure your Khural account.</p>
+                </div>
+              )}
 
               {/* PIN Setup */}
               <div className="space-y-4">

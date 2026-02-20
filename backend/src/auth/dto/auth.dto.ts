@@ -7,6 +7,8 @@ import {
   MaxLength,
   Matches,
   IsISO8601,
+  IsArray,
+  IsObject,
 } from 'class-validator';
 
 export class RequestNonceDto {
@@ -58,6 +60,28 @@ export class RegisterDto {
   @IsISO8601({}, { message: 'Date of birth must be in ISO 8601 format (YYYY-MM-DD)' })
   @IsOptional()
   dateOfBirth?: string;
+
+  // Census / demographic fields (optional — collected during registration or later via profile update)
+  @IsString()
+  @IsOptional()
+  gender?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  ethnicity?: string[];
+
+  @IsObject()
+  @IsOptional()
+  birthPlace?: Record<string, any>;
+
+  @IsString()
+  @IsOptional()
+  clan?: string;
+
+  @IsString()
+  @IsOptional()
+  nationality?: string;
 }
 
 export class LoginPasswordDto {

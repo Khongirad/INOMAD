@@ -1,24 +1,22 @@
 import { PrismaClient } from '@prisma/client';
-import * as crypto from 'crypto';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 /**
  * Creator Account Seed Script
- * 
- * Creates the supreme Creator account with full administrative privileges.
- * Run this script ONCE to initialize the Creator account.
- * 
+ *
+ * Creates the supreme Creator account — Citizen #0000000000001.
+ * Bair Ivanov (Баир Иванов), born 1991, Kizhinga, Republic of Buryatia.
+ * Clan: Khongirad. First verifier and root of the trust chain.
+ *
  * Usage:
  *   npx ts-node prisma/seed-creator.ts
  */
 
 async function main() {
-  console.log('🌟 Creating Creator Account...\n');
+  console.log('🌟 Creating Creator — First Citizen of INOMAD KHURAL...\n');
 
-  // Generate a random seatId for Creator
-  const creatorSeatId = `CREATOR-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
-  
   // Check if Creator already exists
   const existingCreator = await prisma.user.findFirst({
     where: { role: 'CREATOR' },
@@ -27,53 +25,81 @@ async function main() {
   if (existingCreator) {
     console.log('⚠️  Creator account already exists!');
     console.log(`SeatID: ${existingCreator.seatId}`);
-    console.log('\nIf you want to reset the Creator account, please delete it manually first.');
+    console.log(`Citizen #: ${existingCreator.citizenNumber}`);
+    console.log(`Username: ${existingCreator.username}`);
+    console.log('\nTo reset, delete the Creator account manually first.');
     return;
   }
 
-  // Create Creator account
+  // Hash default password (should be changed on first login)
+  const passwordHash = await bcrypt.hash('Khural2026!', 12);
+
+  // Create Creator account — Citizen #0000000000001
   const creator = await prisma.user.create({
     data: {
-      seatId: creatorSeatId,
+      seatId: 'SEAT-00001',
+      citizenNumber: '0000000000001',
+      username: 'khongirad',
+      passwordHash,
       role: 'CREATOR',
+
+      // Legal status — Creator is automatically a legal subject
+      hasAcceptedTOS: true,
+      tosAcceptedAt: new Date(),
+      hasAcceptedConstitution: true,
+      constitutionAcceptedAt: new Date(),
+      isLegalSubject: true,
+
+      // Verification — Creator is the root of the trust chain
       verificationStatus: 'VERIFIED',
+      isVerified: true,
+      verifiedAt: new Date(),
       isSuperVerified: true,
+
+      // Profile — Bair Ivanov
+      dateOfBirth: new Date('1991-01-01'),
+      gender: 'MALE',
+      nationality: 'Buryad-Mongol',
+      ethnicity: ['Buryad-Mongol'],
+      clan: 'Khongirad',
+      language: 'Buryad',
+      birthPlace: {
+        country: 'USSR',
+        district: 'Kizhinginsky District, Republic of Buryatia',
+        city: 'Kizhinga',
+      },
+
+      // System
       walletStatus: 'UNLOCKED',
       isFrozen: false,
-      ethnicity: ['CREATOR'],
-      clan: 'KHURAL_ADMIN',
-      birthPlace: {
-        region: 'SYSTEM',
-        city: 'ALTAN',
-      },
-      currentAddress: {
-        region: 'SYSTEM',
-        city: 'ALTAN',
-      },
+
+      // Citizen type
+      citizenType: 'INDIGENOUS',
+      verificationCount: 0,
+      maxVerifications: 999, // Creator has unlimited verifications
     },
   });
 
-  console.log('✅ Creator Account Created Successfully!\n');
-  console.log('═══════════════════════════════════════');
-  console.log('CREATOR CREDENTIALS:');
-  console.log('═══════════════════════════════════════');
-  console.log(`SeatID: ${creator.seatId}`);
-  console.log(`User ID: ${creator.id}`);
-  console.log(`Role: ${creator.role}`);
-  console.log(`Status: ${creator.verificationStatus}`);
-  console.log('═══════════════════════════════════════\n');
+  console.log('✅ Creator Account — Citizen #1 Created!\n');
+  console.log('═══════════════════════════════════════════════');
+  console.log('   FIRST CITIZEN OF INOMAD KHURAL');
+  console.log('═══════════════════════════════════════════════');
+  console.log(`   Citizen Number : ${creator.citizenNumber}`);
+  console.log(`   SeatID         : ${creator.seatId}`);
+  console.log(`   Username       : ${creator.username}`);
+  console.log(`   User ID        : ${creator.id}`);
+  console.log(`   Role           : ${creator.role}`);
+  console.log(`   Clan           : Khongirad`);
+  console.log(`   Birthplace     : Kizhinga, Republic of Buryatia, USSR`);
+  console.log('═══════════════════════════════════════════════\n');
 
-  console.log('📝 IMPORTANT NOTES:');
-  console.log('1. Save the SeatID - you\'ll need it to login');
-  console.log('2. You must create an MPC wallet for this account');
-  console.log('3. The Creator account cannot be frozen or deleted');
-  console.log('4. You can create up to 9 ADMIN accounts\n');
+  console.log('🔐 Default password: Khural2026!');
+  console.log('   ⚠️  Change this immediately after first login!\n');
 
-  console.log('🔐 Next Steps:');
-  console.log('1. Navigate to /wallet to create Creator MPC wallet');
-  console.log('2. Login with the SeatID above');
-  console.log('3. Access /creator/admins to manage admin accounts');
-  console.log('4. Access /admin to verify users\n');
+  console.log('📝 The Creator is:');
+  console.log('   • The root of the verification chain');
+  console.log('   • The first verifier (поручитель) for all initial citizens');
+  console.log('   • Supreme administrator with unlimited verification quota');
 }
 
 main()

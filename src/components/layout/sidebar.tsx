@@ -43,7 +43,8 @@ const NAV_ITEMS = [
   {
     category: "Legislative (Khural)",
     items: [
-      { name: "State Map", href: "/khural", icon: Building2 },
+      { name: "State Structure", href: "/state", icon: Building2 },
+      { name: "State Map", href: "/khural", icon: Globe },
       { name: "Hierarchy", href: "/hierarchy", icon: TreePine },
       { name: "Parliament", href: "/parliament", icon: Vote },
       { name: "Territory", href: "/territory", icon: Globe },

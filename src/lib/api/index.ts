@@ -26,3 +26,4 @@ export * from './khural';
 export * from './chancellery';
 export * from './justice';
 export * from './hierarchy';
+export * from './onboarding';

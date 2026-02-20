@@ -5,9 +5,17 @@ import { AuthSession } from '../auth/session';
 export interface RegisterDto {
   username: string;
   password: string;
-  familyName: string;
+  familyName?: string;
+  email?: string;
   clanName?: string;
   personalDetails?: any;
+  // Census / demographic fields
+  gender?: string;
+  dateOfBirth?: string;
+  ethnicity?: string[];
+  birthPlace?: { city?: string; district?: string; country?: string };
+  clan?: string;
+  nationality?: string;
 }
 
 export interface LoginDto {
@@ -66,6 +74,13 @@ export async function login(data: LoginDto): Promise<AuthResponse> {
   }
   
   return response;
+}
+
+/**
+ * Accept Terms of Service
+ */
+export async function acceptTOS(): Promise<{ ok: boolean; hasAcceptedTOS?: boolean }> {
+  return api.post('/auth/accept-tos', {});
 }
 
 /**

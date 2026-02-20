@@ -20,6 +20,11 @@ export class AuthPasswordService {
     password: string;
     email?: string;
     dateOfBirth?: string;
+    gender?: string;
+    ethnicity?: string[];
+    birthPlace?: Record<string, any>;
+    clan?: string;
+    nationality?: string;
   }) {
     // Validate username
     if (!dto.username || dto.username.length < 3) {
@@ -65,18 +70,37 @@ export class AuthPasswordService {
     // Generate unique SeatID
     const seatId = this.generateSeatId();
 
+    // Generate random 13-digit citizen number (non-sequential for privacy)
+    let citizenNumber: string;
+    let isUnique = false;
+    while (!isUnique) {
+      // Random number between 2 and 9999999999999 (Creator has #1)
+      const num = Math.floor(Math.random() * 9999999999998) + 2;
+      citizenNumber = String(num).padStart(13, '0');
+      const existing = await this.prisma.user.findUnique({
+        where: { citizenNumber },
+        select: { id: true },
+      });
+      if (!existing) isUnique = true;
+    }
+
     // Create user
     const user = await this.prisma.user.create({
       data: {
         seatId,
+        citizenNumber,
         username: dto.username,
         passwordHash,
         email: dto.email,
         dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+        gender: dto.gender,
+        birthPlace: dto.birthPlace,
+        clan: dto.clan,
+        nationality: dto.nationality,
         role: 'CITIZEN',
         verificationStatus: 'DRAFT',
         walletStatus: 'LOCKED',
-        ethnicity: [],
+        ethnicity: dto.ethnicity || [],
         hasAcceptedTOS: false,
         hasAcceptedConstitution: false,
         isLegalSubject: false,
@@ -91,6 +115,7 @@ export class AuthPasswordService {
       user: {
         userId: user.id,
         seatId: user.seatId,
+        citizenNumber: user.citizenNumber,
         username: user.username,
         role: user.role,
         status: user.verificationStatus,
@@ -140,6 +165,7 @@ export class AuthPasswordService {
       user: {
         userId: user.id,
         seatId: user.seatId,
+        citizenNumber: user.citizenNumber,
         username: user.username,
         address: user.walletAddress,
         role: user.role,

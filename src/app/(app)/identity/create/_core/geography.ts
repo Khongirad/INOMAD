@@ -53,7 +53,7 @@ export interface SubRegion {
 
 export interface DoctrinalRegion {
   id: string;
-  code: MacroRegion | "moscow" | "spb" | "golden_ring";
+  code: MacroRegion | "moscow" | "spb" | "golden_ring" | "ural";
   name: string;
   nameRu: string;
   status: TerritoryStatus;
@@ -82,9 +82,9 @@ export interface Nation {
   isIndigenous: boolean;
   population?: string; // примерная численность
   history: string;
-  historyRu: string;
+  historyRu?: string;
   culture: string;
-  cultureRu: string;
+  cultureRu?: string;
   traditions?: string[];
   traditionsRu?: string[];
 }
@@ -117,26 +117,40 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
     coordinates: { lat: 60.0, lng: 100.0 },
     bounds: { north: 77.0, south: 50.0, east: 170.0, west: 60.0 },
     indigenousPeoples: [
-      "bur",
-      "tuv",
-      "alt",
-      "khk",
-      "sah",
-      "nen",
-      "kha",
-      "man",
-      "eve",
-      "chu",
-      "sel",
-      "niv",
-      "ude",
-      "nan",
-      "ore",
-      "ulc",
-      "ket",
-      "dol",
-      "ngan",
-      "eny",
+      "bur",  // Buryad-Mongol
+      "tuv",  // Tuvans
+      "alt",  // Altaians
+      "khk",  // Khakas
+      "sah",  // Sakha (Yakuts)
+      "eve",  // Evenks
+      "evn",  // Evens
+      "nen",  // Nenets
+      "kha",  // Khanty
+      "man",  // Mansi
+      "chu",  // Chukchi
+      "sel",  // Selkups
+      "niv",  // Nivkhs
+      "ude",  // Udege
+      "nan",  // Nanai
+      "ore",  // Orochi
+      "ulc",  // Ulchi
+      "ket",  // Kets
+      "dol",  // Dolgans
+      "ngan", // Nganasans
+      "eny",  // Enets
+      "soy",  // Soyots
+      "tof",  // Tofalars
+      "ain",  // Ainu
+      "yuk",  // Yukagirs
+      "kor",  // Koryaks
+      "ite",  // Itelmen
+      "aly",  // Alyutors
+      "tel",  // Teleuts
+      "shors", // Shors
+      "cum",  // Kumandins
+      "tub",  // Tubalars
+      "chulym", // Chulyms
+      "neg",  // Negidals
     ],
     languages: [
       "Russian",
@@ -149,17 +163,33 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
       "Nenets",
       "Khanty",
       "Mansi",
+      "Chukchi",
+      "Even",
+      "Soyot",
+      "Tofalar",
+      "Selkup",
+      "Ket",
+      "Nivkh",
+      "Nanai",
+      "Ulchi",
+      "Udege",
+      "Oroch",
+      "Dolgan",
+      "Yukagir",
+      "Koryak",
+      "Itelmen",
+      "Ainu",
     ],
     subRegions: [
       {
         id: "buryad_mongolia",
-        name: "Buryad-Mongolian Zone",
-        nameRu: "Буряад-Монгольская зона",
+        name: "Buryad-Mongol",
+        nameRu: "Буряад-Монгол",
         capital: "Irkutsk",
         capitalRu: "Иркутск",
-        coordinates: { lat: 52.3, lng: 104.3 },
-        bounds: { north: 58.0, south: 50.0, east: 120.0, west: 98.0 },
-        indigenousPeoples: ["bur", "eve"],
+        coordinates: { lat: 55.0, lng: 110.0 },
+        bounds: { north: 65.0, south: 43.0, east: 180.0, west: 88.0 },
+        indigenousPeoples: ["bur", "eve", "niv", "kor", "ude", "nan", "ore", "soy", "tof", "ain", "neg", "ulc"],
         seaGates: [
           {
             id: "vladivostok",
@@ -167,55 +197,21 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
             nameRu: "Владивосток",
             type: "pacific",
             coordinates: { lat: 43.12, lng: 131.87 },
-            description: "Pacific gateway — port access for Buryad-Mongolia",
+            description: "Pacific gateway — port access for Buryad-Mongol",
+          },
+          {
+            id: "pacific_ne",
+            name: "Pacific Gateway (Sakhalin)",
+            nameRu: "Тихоокеанские ворота (Сахалин)",
+            type: "pacific",
+            coordinates: { lat: 47.0, lng: 143.0 },
+            description: "Pacific access via Sakhalin and Magadan",
           },
         ],
         description:
-          "Central Siberian heartland with Buryat cultural dominance. Historical connection to Mongolian world.",
+          "Central and Eastern Siberian heartland. Includes Baikal region, Krasnoyarsk, Magadan, Sakhalin. Buryat cultural dominance with historical connection to the Mongolian world.",
         descriptionRu:
-          "Центральносибирский хартленд с бурятским культурным доминированием. Историческая связь с монгольским миром.",
-      },
-      {
-        id: "altai",
-        name: "Altai Region",
-        nameRu: "Altai Region",
-        capital: "Novosibirsk",
-        capitalRu: "Новосибирск",
-        coordinates: { lat: 52.0, lng: 85.0 },
-        bounds: { north: 55.0, south: 49.0, east: 92.0, west: 78.0 },
-        indigenousPeoples: ["alt", "kaz"],
-        description:
-          "Mountain crossroads of Siberia. Meeting point of Turkic and Mongolic peoples.",
-        descriptionRu:
-          "Mountain crossroads of Siberia. Meeting point of Turkic and Mongolic peoples.",
-      },
-      {
-        id: "tyva",
-        name: "Tyva",
-        nameRu: "Tuva",
-        capital: "Kyzyl",
-        capitalRu: "Кызыл",
-        coordinates: { lat: 51.7, lng: 94.4 },
-        bounds: { north: 53.8, south: 49.7, east: 99.0, west: 89.0 },
-        indigenousPeoples: ["tuv"],
-        description:
-          "Independent Tuvan nation. Center of Siberia, home of throat singing. Buddhist and shamanist traditions.",
-        descriptionRu:
-          "Самостоятельная тувинская нация. Центр Сибири, родина горлового пения. Буддийские и шаманские традиции.",
-      },
-      {
-        id: "khakassia",
-        name: "Khakassia",
-        nameRu: "Хакасия",
-        capital: "Abakan",
-        capitalRu: "Абакан",
-        coordinates: { lat: 53.7, lng: 91.4 },
-        bounds: { north: 55.5, south: 51.5, east: 95.0, west: 87.5 },
-        indigenousPeoples: ["khk"],
-        description:
-          "Ancient Turkic land with unique Khakas culture. Rich archaeological heritage.",
-        descriptionRu:
-          "Древняя тюркская земля с уникальной хакасской культурой. Богатое археологическое насле��ие.",
+          "Центрально- и восточносибирский хартленд. Включает Прибайкалье, Красноярск, Магадан, Сахалин. Бурятское культурное доминирование с исторической связью с монгольским миром.",
       },
       {
         id: "sakha",
@@ -223,9 +219,9 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
         nameRu: "Саха (Якутия)",
         capital: "Yakutsk",
         capitalRu: "Якутск",
-        coordinates: { lat: 62.0, lng: 129.7 },
-        bounds: { north: 77.0, south: 55.0, east: 163.0, west: 105.0 },
-        indigenousPeoples: ["sah", "eve", "evn", "yuk", "dol", "chu"],
+        coordinates: { lat: 64.0, lng: 143.0 },
+        bounds: { north: 77.0, south: 55.0, east: 180.0, west: 105.0 },
+        indigenousPeoples: ["sah", "eve", "evn", "yuk", "dol", "chu", "kor", "ite", "aly", "ngan"],
         seaGates: [
           {
             id: "arctic_sakha",
@@ -234,37 +230,63 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
             type: "arctic",
             coordinates: { lat: 72.0, lng: 130.0 },
             description:
-              "Arctic maritime gateway — Sakha access to Northern Sea Route",
+              "Arctic maritime gateway — Northern Sea Route access",
           },
-        ],
-        description:
-          "Largest republic by territory. Permafrost realm. Sakha (Yakut) people with distinct Turkic-Siberian culture.",
-        descriptionRu:
-          "Крупнейшая republic по территории. Царство вечной мерзлоты. Народ саха (якуты) с уникальной тюркско-сибирской культурой.",
-      },
-      {
-        id: "northeast_ocean",
-        name: "Northeast Oceanic Region",
-        nameRu: "Северо-Восточный океанический Region",
-        capital: "Magadan",
-        capitalRu: "Магадан",
-        coordinates: { lat: 59.6, lng: 150.8 },
-        bounds: { north: 70.0, south: 43.0, east: 180.0, west: 140.0 },
-        indigenousPeoples: ["chu", "eve", "kor", "ite", "niv", "aly"],
-        seaGates: [
           {
-            id: "pacific_ne",
-            name: "Pacific Gateway",
-            nameRu: "Тихоокеанские ворота",
+            id: "pacific_kamchatka",
+            name: "Kamchatka Pacific Gateway",
+            nameRu: "Камчатские Тихоокеанские ворота",
             type: "pacific",
             coordinates: { lat: 53.0, lng: 158.0 },
-            description: "Pacific access point for Kamchatka and Chukotka",
+            description: "Pacific access via Kamchatka peninsula",
           },
         ],
         description:
-          "Magadan, Sakhalin, Chukotka, Kamchatka. Maritime peoples. Gateway to Pacific.",
+          "Largest territory. All northern lands: Yakutia, Kamchatka, Chukotka. Permafrost realm. Sakha (Yakut) people with distinct Turkic-Siberian culture.",
         descriptionRu:
-          "Магадан, Сахалин, Чукотка, Камчатка. Морские народы. Ворота в Тихий океан.",
+          "Крупнейшая территория. Все северные земли: Якутия, Камчатка, Чукотка. Царство вечной мерзлоты. Народ саха с уникальной тюркско-сибирской культурой.",
+      },
+      {
+        id: "altai",
+        name: "Altai Republic",
+        nameRu: "Республика Алтай",
+        capital: "Gorno-Altaysk",
+        capitalRu: "Горно-Алтайск",
+        coordinates: { lat: 52.0, lng: 85.0 },
+        bounds: { north: 56.0, south: 49.0, east: 92.0, west: 75.0 },
+        indigenousPeoples: ["alt", "kaz", "tel", "tub", "cum"],
+        description:
+          "Altai Republic with Altai Krai, Novosibirsk Oblast. Mountain crossroads of Turkic and Mongolic peoples. Sacred origin land.",
+        descriptionRu:
+          "Республика Алтай с Алтайским краем и Новосибирской областью. Горный перекрёсток тюркских и монгольских народов. Священная земля истоков.",
+      },
+      {
+        id: "tyva",
+        name: "Tyva Republic",
+        nameRu: "Республика Тыва",
+        capital: "Kyzyl",
+        capitalRu: "Кызыл",
+        coordinates: { lat: 51.7, lng: 94.4 },
+        bounds: { north: 55.5, south: 49.7, east: 99.0, west: 85.0 },
+        indigenousPeoples: ["tuv", "soy"],
+        description:
+          "Tyva Republic with Kemerovo Oblast. Center of Asia, home of throat singing. Buddhist and shamanist traditions.",
+        descriptionRu:
+          "Республика Тыва с Кемеровской областью. Центр Азии, родина горлового пения. Буддийские и шаманские традиции.",
+      },
+      {
+        id: "khakassia",
+        name: "Khakassia Republic",
+        nameRu: "Республика Хакасия",
+        capital: "Abakan",
+        capitalRu: "Абакан",
+        coordinates: { lat: 54.0, lng: 90.0 },
+        bounds: { north: 60.0, south: 51.5, east: 95.0, west: 68.0 },
+        indigenousPeoples: ["khk", "man", "kha", "nen"],
+        description:
+          "Khakassia Republic with Omsk, Tomsk, Tyumen oblasts. Ancient Turkic land with rich archaeological heritage.",
+        descriptionRu:
+          "Республика Хакасия с Омской, Томской, Тюменской областями. Древняя тюркская земля с богатым археологическим наследием.",
       },
     ],
     description:
@@ -400,7 +422,7 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
   {
     id: "central_heartland",
     code: "golden_ring",
-    name: "Central Heartland",
+    name: "Republic of Russia",
     nameRu: "Центральные Земли",
     status: "state",
     color: "#ca8a04", // золотой
@@ -489,7 +511,7 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
   {
     id: "north",
     code: "north",
-    name: "The North",
+    name: "North-West Land",
     nameRu: "Северные Земли",
     status: "indigenous",
     color: "#0891b2", // циан
@@ -608,75 +630,39 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
   {
     id: "volga",
     code: "volga",
-    name: "Volga Region",
+    name: "South West Land",
     nameRu: "Поволжье",
     status: "indigenous",
     color: "#16a34a", // зелёный
     opacity: 0.2,
     coordinates: { lat: 55.0, lng: 49.0 },
     bounds: { north: 60.0, south: 48.0, east: 60.0, west: 40.0 },
-    indigenousPeoples: ["tat", "bash", "chu", "mrd", "mar", "udm"],
-    languages: ["Russian", "Tatar", "Bashkir"],
+    indigenousPeoples: ["chu", "mrd", "mar"],
+    languages: ["Russian", "Chuvash", "Mari", "Mordvin"],
     subRegions: [
-        {
-            id: "tatarstan",
-            name: "Republic of Tatarstan",
-            nameRu: "Republic of Tatarstan",
-            capital: "Kazan",
-            capitalRu: "Казань",
-            coordinates: { lat: 55.79, lng: 49.1 },
-            bounds: { north: 56.7, south: 53.9, east: 54.3, west: 47.2 },
-            indigenousPeoples: ["tat"],
-            description: "Heart of the Volga.",
-            descriptionRu: "Heart of the Volga."
-        },
-        {
-            id: "bashkortostan",
-            name: "Republic of Bashkortostan",
-            nameRu: "Republic of Bashkortostan",
-            capital: "Ufa",
-            capitalRu: "Уфа",
-            coordinates: { lat: 54.73, lng: 55.95 },
-            bounds: { north: 56.5, south: 51.5, east: 60.0, west: 53.0 },
-            indigenousPeoples: ["bash"],
-            description: "Southern Urals.",
-            descriptionRu: "Southern Urals."
-        },
         {
             id: "chuvashia",
             name: "Chuvash Republic",
-            nameRu: "Chuvash Republic",
+            nameRu: "Чувашская Республика",
             capital: "Cheboksary",
             capitalRu: "Чебоксары",
             coordinates: { lat: 56.1, lng: 47.2 },
             bounds: { north: 56.2, south: 54.9, east: 48.2, west: 46.0 },
             indigenousPeoples: ["chu"],
             description: "Land of Hundred Embroideries.",
-            descriptionRu: "Land of Hundred Embroideries."
+            descriptionRu: "Земля ста вышивок."
         },
-         {
+        {
             id: "mari_el",
             name: "Mari El Republic",
-            nameRu: "Mari El Republic",
+            nameRu: "Республика Марий Эл",
             capital: "Yoshkar-Ola",
             capitalRu: "Йошкар-Ола",
             coordinates: { lat: 56.63, lng: 47.88 },
             bounds: { north: 57.3, south: 55.8, east: 50.2, west: 45.6 },
             indigenousPeoples: ["mar"],
             description: "Last Pagans of Europe.",
-            descriptionRu: "Last Pagans of Europe."
-        },
-        {
-            id: "udmurtia",
-            name: "Udmurt Republic",
-            nameRu: "Udmurt Republic",
-            capital: "Izhevsk",
-            capitalRu: "Ижевск",
-            coordinates: { lat: 56.8, lng: 53.2 },
-            bounds: { north: 58.6, south: 55.9, east: 54.5, west: 51.1 },
-            indigenousPeoples: ["udm"],
-            description: "Spring land.",
-            descriptionRu: "Spring land."
+            descriptionRu: "Последние язычники Европы."
         },
         {
             id: "mordovia",
@@ -704,6 +690,131 @@ export const DOCTRINAL_REGIONS: DoctrinalRegion[] = [
     responsibilityPrincipleRu:
       "The peoples of the Volga maintain the great river.",
   },
+
+  // УРАЛ
+  {
+    id: "ural",
+    code: "ural",
+    name: "Ural",
+    nameRu: "Урал",
+    status: "indigenous",
+    color: "#f59e0b", // amber
+    opacity: 0.25,
+    coordinates: { lat: 55.5, lng: 57.0 },
+    bounds: { north: 62.0, south: 50.0, east: 65.0, west: 49.0 },
+    indigenousPeoples: ["tat", "bash", "udm", "kom"],
+    languages: ["Russian", "Tatar", "Bashkir", "Udmurt"],
+    subRegions: [
+        {
+            id: "tatarstan",
+            name: "Republic of Tatarstan",
+            nameRu: "Республика Татарстан",
+            capital: "Kazan",
+            capitalRu: "Казань",
+            coordinates: { lat: 55.79, lng: 49.1 },
+            bounds: { north: 56.7, south: 53.9, east: 54.3, west: 47.2 },
+            indigenousPeoples: ["tat"],
+            description: "Heart of the Volga-Ural region. Largest Turkic republic.",
+            descriptionRu: "Сердце Волго-Уральского региона. Крупнейшая тюркская республика."
+        },
+        {
+            id: "bashkortostan",
+            name: "Republic of Bashkortostan",
+            nameRu: "Республика Башкортостан",
+            capital: "Ufa",
+            capitalRu: "Уфа",
+            coordinates: { lat: 54.73, lng: 55.95 },
+            bounds: { north: 56.5, south: 51.5, east: 60.0, west: 53.0 },
+            indigenousPeoples: ["bash"],
+            description: "Southern Urals. Bashkir homeland between Volga and Siberia.",
+            descriptionRu: "Южный Урал. Башкирская родина между Волгой и Сибирью."
+        },
+        {
+            id: "udmurtia",
+            name: "Udmurt Republic",
+            nameRu: "Удмуртская Республика",
+            capital: "Izhevsk",
+            capitalRu: "Ижевск",
+            coordinates: { lat: 56.8, lng: 53.2 },
+            bounds: { north: 58.6, south: 55.9, east: 54.5, west: 51.1 },
+            indigenousPeoples: ["udm"],
+            description: "Udmurt homeland. Finno-Ugric people of the Ural.",
+            descriptionRu: "Родина удмуртов. Финно-угорский народ Урала."
+        },
+        {
+            id: "perm",
+            name: "Perm Krai",
+            nameRu: "Пермский край",
+            capital: "Perm",
+            capitalRu: "Пермь",
+            coordinates: { lat: 58.0, lng: 56.3 },
+            bounds: { north: 61.7, south: 56.0, east: 59.5, west: 53.0 },
+            indigenousPeoples: ["kom"],
+            description: "Gateway between Europe and Asia. Komi-Permyak homeland.",
+            descriptionRu: "Врата между Европой и Азией. Родина коми-пермяков."
+        },
+        {
+            id: "sverdlovsk",
+            name: "Sverdlovsk Oblast",
+            nameRu: "Свердловская область",
+            capital: "Yekaterinburg",
+            capitalRu: "Екатеринбург",
+            coordinates: { lat: 56.8, lng: 60.6 },
+            bounds: { north: 61.9, south: 56.0, east: 66.2, west: 57.2 },
+            indigenousPeoples: [],
+            description: "Industrial heart of the Urals. Capital of the Ural Federal District.",
+            descriptionRu: "Индустриальное сердце Урала. Столица Уральского федерального округа."
+        },
+        {
+            id: "chelyabinsk",
+            name: "Chelyabinsk Oblast",
+            nameRu: "Челябинская область",
+            capital: "Chelyabinsk",
+            capitalRu: "Челябинск",
+            coordinates: { lat: 55.2, lng: 61.4 },
+            bounds: { north: 56.4, south: 52.0, east: 62.0, west: 57.5 },
+            indigenousPeoples: ["bash"],
+            description: "Southern Ural mountains. Industrial and mining center.",
+            descriptionRu: "Южный Урал. Промышленный и горнодобывающий центр."
+        },
+        {
+            id: "orenburg",
+            name: "Orenburg Oblast",
+            nameRu: "Оренбургская область",
+            capital: "Orenburg",
+            capitalRu: "Оренбург",
+            coordinates: { lat: 51.8, lng: 55.1 },
+            bounds: { north: 54.4, south: 50.5, east: 62.0, west: 50.7 },
+            indigenousPeoples: ["tat", "bash"],
+            description: "Border with Kazakhstan. Eurasian steppe frontier.",
+            descriptionRu: "Граница с Казахстаном. Евразийский степной рубеж."
+        },
+        {
+            id: "kurgan",
+            name: "Kurgan Oblast",
+            nameRu: "Курганская область",
+            capital: "Kurgan",
+            capitalRu: "Курган",
+            coordinates: { lat: 55.5, lng: 65.3 },
+            bounds: { north: 56.9, south: 54.2, east: 68.5, west: 63.0 },
+            indigenousPeoples: [],
+            description: "Trans-Ural steppe. Border with Kazakhstan and Siberia.",
+            descriptionRu: "Зауральская степь. Граница с Казахстаном и Сибирью."
+        },
+    ],
+    description:
+      "Ural mountain corridor between Europe and Asia. Homeland of Tatars, Bashkirs, Udmurts. Borders Siberia, Republic of Russia, South West Land, North Caucasus, North-West Land, and Kazakhstan.",
+    descriptionRu:
+      "Уральский горный коридор между Европой и Азией. Родина татар, башкир, удмуртов. Граничит с Сибирью, Республикой Россия, Поволжьем, Северным Кавказом, Северо-Западом и Казахстаном.",
+    culturalNotes:
+      "The Ural is a meeting point of Slavic, Turkic, and Finno-Ugric civilizations. Industrial heartland forged by centuries of metallurgy and mining.",
+    culturalNotesRu:
+      "Урал — точка встречи славянской, тюркской и финно-угорской цивилизаций. Индустриальное сердце, выкованное веками металлургии и горного дела.",
+    responsibilityPrinciple:
+      "The peoples of the Ural guard the spine of the continent and bridge East and West.",
+    responsibilityPrincipleRu:
+      "Народы Урала хранят хребет континента и соединяют Восток и Запад.",
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -718,7 +829,7 @@ export const NATIONS: Nation[] = [
     nameRu: "Буряад-Монгол",
     nativeName: "Буряад-Монгол",
     languages: ["Buryat", "Russian"],
-    regions: ["siberia", "buryad_mongolia"],
+    regions: ["siberia"],
     isIndigenous: true,
     population: "~500,000",
     history:
@@ -746,7 +857,7 @@ export const NATIONS: Nation[] = [
     nameRu: "Тувинцы",
     nativeName: "Tuvalars",
     languages: ["Tuvan", "Russian"],
-    regions: ["siberia", "tyva"],
+    regions: ["siberia"],
     isIndigenous: true,
     population: "~280,000",
     history:
@@ -766,7 +877,7 @@ export const NATIONS: Nation[] = [
     nameRu: "Саха (якуты)",
     nativeName: "Саха",
     languages: ["Yakut (Sakha)", "Russian"],
-    regions: ["siberia", "sakha"],
+    regions: ["siberia"],
     isIndigenous: true,
     population: "~500,000",
     history:
@@ -786,7 +897,7 @@ export const NATIONS: Nation[] = [
     nameRu: "Алтайцы",
     nativeName: "Алтай-кижи",
     languages: ["Altai", "Russian"],
-    regions: ["siberia", "altai"],
+    regions: ["siberia"],
     isIndigenous: true,
     population: "~80,000",
     history:
@@ -806,7 +917,7 @@ export const NATIONS: Nation[] = [
     nameRu: "Хакасы",
     nativeName: "Тадарлар",
     languages: ["Khakas", "Russian"],
-    regions: ["siberia", "khakassia"],
+    regions: ["siberia"],
     isIndigenous: true,
     population: "~75,000",
     history:
@@ -826,7 +937,7 @@ export const NATIONS: Nation[] = [
     nameRu: "Эвенки",
     nativeName: "Эвэнкил",
     languages: ["Evenki", "Russian"],
-    regions: ["siberia", "sakha", "buryad_mongolia"],
+    regions: ["siberia"],
     isIndigenous: true,
     population: "~40,000",
     history:
@@ -854,7 +965,7 @@ export const NATIONS: Nation[] = [
     nameRu: "Ненцы",
     nativeName: "Ненэй ненэць",
     languages: ["Nenets", "Russian"],
-    regions: ["siberia", "north"],
+    regions: ["siberia"],
     isIndigenous: true,
     population: "~45,000",
     history:
@@ -866,7 +977,322 @@ export const NATIONS: Nation[] = [
     cultureRu:
       "Кочевое оленеводство по тундре. Живут в чумах (конических палатках). Сильные анимистические традиции. Маршруты миграции охватывают сотни километров.",
     traditions: ["Reindeer herder festivals", "Seasonal migrations"],
-    traditionsRu: ["Holidayи оленеводов", "Сезонные миграции"],
+    traditionsRu: ["Праздники оленеводов", "Сезонные миграции"],
+  },
+  {
+    code: "evn",
+    name: "Evens",
+    nameRu: "Эвены",
+    nativeName: "Эвэн",
+    languages: ["Even", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~22,000",
+    history:
+      "The Evens are a Tungusic people related to the Evenks, inhabiting the mountainous regions of northeastern Siberia from Kamchatka to the Lena river.",
+    culture:
+      "Reindeer herding, fishing, and sea mammal hunting. Distinctive embroidered clothing and oral epic traditions.",
+    traditions: ["Evinek (reindeer festival)", "Bear cult ceremonies"],
+  },
+  {
+    code: "chu",
+    name: "Chukchi",
+    nameRu: "Чукчи",
+    nativeName: "Луораветлан",
+    languages: ["Chukchi", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~16,000",
+    history:
+      "The Chukchi are a Paleosiberian people of the Chukchi Peninsula. Divided into maritime (sea mammal hunters) and reindeer Chukchi. Never fully conquered by the Russian Empire.",
+    culture:
+      "Maritime and reindeer herding cultures. Famous for walrus ivory carving, fur clothing, and yarangas (portable dome-shaped tents).",
+    traditions: ["Whale festival", "Reindeer sacrifice ceremonies", "Walrus ivory carving"],
+  },
+  {
+    code: "soy",
+    name: "Soyots",
+    nameRu: "Сойоты",
+    nativeName: "Сойод",
+    languages: ["Soyot", "Buryat", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~4,000",
+    history:
+      "The Soyots are a Turkic-speaking people of the Eastern Sayan mountains in Buryatia. Historically yak herders and reindeer breeders. One of the smallest indigenous groups of Siberia.",
+    culture:
+      "Yak and reindeer herding in high mountains. Shamanist traditions with Buddhist influences. Close cultural ties to Tuvans and Buryats.",
+    traditions: ["Mountain worship ceremonies", "Yak herding festivals"],
+  },
+  {
+    code: "tof",
+    name: "Tofalars",
+    nameRu: "Тофалары",
+    nativeName: "Тофа",
+    languages: ["Tofalar", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~800",
+    history:
+      "The Tofalars are one of the smallest indigenous peoples of Russia, living in the Eastern Sayan mountains of Irkutsk Oblast. Turkic-speaking reindeer herders.",
+    culture:
+      "Nomadic reindeer herding in taiga mountains. Rich shamanist traditions. Endangered language and culture actively being preserved.",
+    traditions: ["Reindeer herding rituals", "Shaman ceremonies"],
+  },
+  {
+    code: "ain",
+    name: "Ainu",
+    nameRu: "Айны",
+    nativeName: "Аイну",
+    languages: ["Ainu", "Russian", "Japanese"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~100 (Russia)",
+    history:
+      "The Ainu are the indigenous people of Sakhalin, the Kuril Islands, and Hokkaido. A unique ethnic group with no clear linguistic relatives. Historically fishers and hunter-gatherers.",
+    culture:
+      "Rich bear cult traditions (Iyomante). Distinctive facial tattoos (for women). Elaborate textile patterns. Oral epic tradition (yukar).",
+    traditions: ["Iyomante (bear ritual)", "Marimo festival", "Yukar epic storytelling"],
+  },
+  {
+    code: "ore",
+    name: "Orochi",
+    nameRu: "Орочи",
+    nativeName: "Орочисэл",
+    languages: ["Oroch", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~600",
+    history:
+      "The Orochi are a Tungusic people of the Khabarovsk region. Traditional fishers and hunters of the Amur river basin and Sea of Japan coast.",
+    culture:
+      "Fishing and hunting culture. Birch bark crafts. Shamanist traditions. Close cultural ties to Nanai and Udege peoples.",
+    traditions: ["Bear festival", "First fish ceremonies"],
+  },
+  {
+    code: "yuk",
+    name: "Yukagirs",
+    nameRu: "Юкагиры",
+    nativeName: "Одул",
+    languages: ["Yukaghir", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~1,600",
+    history:
+      "The Yukagirs are one of the most ancient peoples of northeastern Siberia. Once widespread, now one of the smallest indigenous groups. Paleosiberian language isolate.",
+    culture:
+      "Hunting and reindeer herding. Ancient pictographic writing system on birch bark. Rich mythology and oral traditions.",
+    traditions: ["Shahadzibe (gathering festival)", "Ancient pictographic writing"],
+  },
+  {
+    code: "dol",
+    name: "Dolgans",
+    nameRu: "Долганы",
+    nativeName: "Долган",
+    languages: ["Dolgan", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~8,000",
+    history:
+      "The Dolgans are a Turkic people of the Taimyr Peninsula, the northernmost Turkic group in the world. Formed from mixing of Evenks, Yakuts, and Nganasans.",
+    culture:
+      "Nomadic reindeer herding in Arctic tundra. Mobile heated sledges (balok). Blend of Evenk and Yakut cultural elements.",
+    traditions: ["Reindeer herder festivals", "Taimyr seasonal ceremonies"],
+  },
+  {
+    code: "ngan",
+    name: "Nganasans",
+    nameRu: "Нганасаны",
+    nativeName: "Ня",
+    languages: ["Nganasan", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~900",
+    history:
+      "The Nganasans are the northernmost indigenous people of Eurasia, living on the Taimyr Peninsula. Samoyedic people who preserved the most archaic shamanist traditions in Siberia.",
+    culture:
+      "Wild reindeer hunting. Preserved ancient shamanist traditions. Distinctive clothing decorated with metal ornaments. One of the last peoples to be contacted.",
+    traditions: ["Clean Tent ceremony (Madyaŋ)", "Wild reindeer hunting rituals"],
+  },
+  {
+    code: "sel",
+    name: "Selkups",
+    nameRu: "Селькупы",
+    nativeName: "Сёльӄуп",
+    languages: ["Selkup", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~4,000",
+    history:
+      "The Selkups are a Samoyedic people of the Ob river region in western Siberia. Historically fishers and hunters of the taiga and forest-tundra.",
+    culture:
+      "Fishing and hunting culture. Bear cult traditions. Birch bark crafts. One of the southern Samoyedic peoples.",
+    traditions: ["Bear feast", "Seasonal fishing ceremonies"],
+  },
+  {
+    code: "niv",
+    name: "Nivkhs",
+    nameRu: "Нивхи",
+    nativeName: "Нивхгу",
+    languages: ["Nivkh", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~4,500",
+    history:
+      "The Nivkhs are a Paleosiberian people of Sakhalin Island and the lower Amur river. Language isolate with no known relatives.",
+    culture:
+      "Maritime and river fishing culture. Bear festival traditions. Elaborate dog sled culture. Distinctive wood and bone carving.",
+    traditions: ["Bear festival (Chkhyf-Lerknd)", "Dog sled racing"],
+  },
+  {
+    code: "ude",
+    name: "Udege",
+    nameRu: "Удэгейцы",
+    nativeName: "Удээ",
+    languages: ["Udege", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~1,500",
+    history:
+      "The Udege are a Tungusic people of the Primorsky and Khabarovsk regions. Traditional hunters of the Ussuri taiga. Inspiration for Dersu Uzala.",
+    culture:
+      "Tiger reverence traditions. Skilled hunters and trackers of the Ussuri taiga. Birch bark canoes and shelters. Shamanist beliefs.",
+    traditions: ["Tiger worship ceremonies", "First hunt rituals"],
+  },
+  {
+    code: "nan",
+    name: "Nanai",
+    nameRu: "Нанайцы",
+    nativeName: "Нанай",
+    languages: ["Nanai", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~12,000",
+    history:
+      "The Nanai are a Tungusic people of the Amur river basin. Known as 'Fish-Skin Tatars' by early explorers for their clothing made of fish skin.",
+    culture:
+      "Renowned for fish-skin clothing and crafts. Skilled Amur river fishers. Rich shamanist traditions with elaborate costumes and drums.",
+    traditions: ["Fish-skin craft festivals", "Shaman ceremonies", "Bear festival"],
+  },
+  {
+    code: "ulc",
+    name: "Ulchi",
+    nameRu: "Ульчи",
+    nativeName: "Нани",
+    languages: ["Ulch", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~2,700",
+    history:
+      "The Ulchi are a Tungusic people of the lower Amur river. Closely related to Nanai. Traditional fishers and hunters.",
+    culture:
+      "Amur river fishing culture. Bear cult traditions. Distinctive appliqué art on birch bark and fish skin.",
+    traditions: ["Bear festival", "Fishing ceremonies"],
+  },
+  {
+    code: "ket",
+    name: "Kets",
+    nameRu: "Кеты",
+    nativeName: "Кет",
+    languages: ["Ket", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~1,200",
+    history:
+      "The Kets are the last surviving speakers of a Yeniseian language, possibly related to Na-Dene languages of North America. Live along the Yenisei river.",
+    culture:
+      "Yenisei river culture. Unique language possibly linking Siberia and North America. Fishing and hunting. Shamanist traditions.",
+    traditions: ["Shaman ceremonies", "Yenisei fishing rituals"],
+  },
+  {
+    code: "kor",
+    name: "Koryaks",
+    nameRu: "Коряки",
+    nativeName: "Нымылан",
+    languages: ["Koryak", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~8,000",
+    history:
+      "The Koryaks are a Chukotko-Kamchatkan people of northern Kamchatka. Divided into coastal (Nymylan) and reindeer (Chav'chuven) groups.",
+    culture:
+      "Maritime seal hunting and reindeer herding. Elaborate fur clothing. Rich mythology and storytelling traditions.",
+    traditions: ["Hololo (autumn thanksgiving)", "Whale festival"],
+  },
+  {
+    code: "ite",
+    name: "Itelmen",
+    nameRu: "Ительмены",
+    nativeName: "Итенмэн",
+    languages: ["Itelmen", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~3,000",
+    history:
+      "The Itelmen are the aboriginal people of southern Kamchatka. One of the oldest populations of the peninsula, predating Koryak and Russian settlement.",
+    culture:
+      "Salmon fishing culture. Famous Alxalalalay harvest festival. Distinctive underground dwellings and hot spring bathing traditions.",
+    traditions: ["Alxalalalay (harvest festival)", "Salmon ceremonies"],
+  },
+  {
+    code: "tel",
+    name: "Teleuts",
+    nameRu: "Телеуты",
+    nativeName: "Телеут",
+    languages: ["Teleut", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~2,600",
+    history:
+      "The Teleuts are a Turkic people of the Kemerovo region and Altai. Descendants of the medieval Teleut khanate.",
+    culture:
+      "Horse-riding nomadic traditions. Shamanism and ancestor worship. Distinctive traditional clothing.",
+    traditions: ["Jylgayak (Spring celebration)", "Ancestor worship rituals"],
+  },
+  {
+    code: "shors",
+    name: "Shors",
+    nameRu: "Шорцы",
+    nativeName: "Шор",
+    languages: ["Shor", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~13,000",
+    history:
+      "The Shors are a Turkic people of the Kemerovo region. Famous as master blacksmiths — their name comes from 'shor' (related to ironworking).",
+    culture:
+      "Ancient metallurgy and blacksmithing traditions. Mountain taiga hunters. Throat singing (kai). Rich epic poetry.",
+    traditions: ["Olvala (Spring renewal)", "Blacksmithing ceremonies"],
+  },
+  {
+    code: "cum",
+    name: "Kumandins",
+    nameRu: "Кумандинцы",
+    nativeName: "Куманды",
+    languages: ["Kumandin", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~3,000",
+    history:
+      "The Kumandins are a Turkic people of the northern Altai region. One of the smaller indigenous groups of the Altai mountains.",
+    culture:
+      "Hunting and gathering. Birch bark crafts. Shamanist traditions. Close cultural ties to other Altai Turkic peoples.",
+    traditions: ["Kocho-Kan (ritual drama)", "Seasonal celebrations"],
+  },
+  {
+    code: "neg",
+    name: "Negidals",
+    nameRu: "Негидальцы",
+    nativeName: "Элькан бэйэнин",
+    languages: ["Negidal", "Russian"],
+    regions: ["siberia"],
+    isIndigenous: true,
+    population: "~500",
+    history:
+      "The Negidals are a Tungusic people of the Amur river tributaries in Khabarovsk. One of the smallest indigenous groups. Language critically endangered.",
+    culture:
+      "River fishing and hunting. Birch bark crafts. Shamanist healing traditions. Close cultural ties to Evenks and Nanai.",
+    traditions: ["Fishing ceremonies", "Shaman healing rituals"],
   },
 
   // КАВКАЗСКИЕ НАРОДЫ
