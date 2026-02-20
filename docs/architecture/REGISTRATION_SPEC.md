@@ -320,3 +320,137 @@ POST /verification/verify/:userId   ← guarantor action
 | **Currency Exchange** (`/exchange`) | Buy/sell ALTAN with external currencies |
 | **Arban Credit Line** | Arban-based micro-credit in ALTAN |
 | **UBI Scheduler** | Weekly 400 ALTAN distribution to active verified citizens |
+
+---
+
+## Account Recovery System
+
+> Version 1.0 — Implemented 2026-02-20
+
+The INOMAD KHURAL system has **no password reset by email**. Recovery is rooted in the same chain of trust as the rest of the system — through people, identity documents, and official organs of the state.
+
+### Philosophical Principle
+
+A person's digital shell is their legal subject in the system. Recovering access = re-proving that you are the same legal person. This is exactly analogous to recovering a government ID: you prove who you are through witnesses, documents, or official institutions.
+
+### Recovery Paths
+
+#### Path A — Guarantor Confirmation
+
+The citizen who originally vouched for you verifies your identity again.
+
+```
+POST /auth/recovery/via-guarantor
+  body: { claimedUsername, claimedFullName, claimedBirthDate, guarantorSeatId }
+  → Server validates: user exists, fullName/DOB match
+  → Creates AccountRecoveryRequest (status: AWAITING_GUARANTOR)
+  → Guarantor sees notification in their Dashboard
+
+POST /auth/recovery/:id/guarantor-confirm   (guarantor must be logged in)
+  → Guarantor confirms: "да, это тот самый человек"
+  → Recovery token issued (valid 1 hour)
+  → Requester uses token at POST /auth/recovery/reset-password
+```
+
+**Weight**: Full trust. The guarantor bears personal responsibility.
+
+#### Path 2.1 — Secret Question
+
+A pre-set secret question from profile creation.
+
+```
+Setup (during profile creation or any time after):
+  POST /auth/set-secret-question
+    body: { question, answer }
+    → Answer stored as bcrypt hash
+
+Recovery:
+  POST /auth/recovery/via-secret-question
+    body: { claimedUsername, claimedFullName, claimedBirthDate, secretAnswer }
+    → Server validates fullName+DOB, then bcrypt.compare(answer)
+    → If correct: recovery token issued immediately
+```
+
+**Weight**: Medium trust. Answer is known only to the person.
+
+#### Path 2.2 — Official Organs
+
+Migration Service or Council verifies the citizen's identity using state records.
+
+```
+POST /auth/recovery/via-official
+  body: { claimedUsername, claimedFullName, claimedBirthDate,
+          claimedPassportNumber, officialServiceType: "MIGRATION_SERVICE" | "COUNCIL" }
+  → Creates AccountRecoveryRequest (status: AWAITING_OFFICIAL)
+
+POST /auth/recovery/:id/official-approve   (admin/officer account)
+  body: { approved: true, note: "Verified in person at office" }
+  → Recovery token issued if approved
+```
+
+**Weight**: Highest institutional trust. Requires real-world identity verification.
+
+### One-Time Recovery Token
+
+All 3 paths produce a **one-time recovery token** (UUID):
+- Valid for **1 hour** from issue
+- Single-use: marked `recoveryTokenUsed: true` after consumption
+- On use: password updated, **all existing sessions revoked**
+
+### Anti-Duplicate Account Protection
+
+One person = one legal shell. Multiple layers:
+
+| Layer | Mechanism | When checked |
+|-------|-----------|-------------|
+| Username | `@unique` in DB | On every register |
+| Email | `@unique` in DB | On register (if email given) |
+| Passport Number | `@unique` in DB | On profile/passport submission |
+| Biometric Hash | `SHA-256(fullName+DOB+city)` `@unique` | When all 3 fields provided at register |
+
+**Biometric Hash formula:**
+```
+biometricIdentityHash = SHA-256(
+  normalize(fullName).toLowerCase() + "|" +
+  dateOfBirth.toISOString().split("T")[0] + "|" +
+  birthCity.toLowerCase().trim()
+)
+```
+
+This hash cannot be reversed — it's stored as a 64-char hex string and protects privacy while preventing duplicate identities.
+
+### Database Model: AccountRecoveryRequest
+
+```prisma
+model AccountRecoveryRequest {
+  id               String   @id @default(uuid())
+  claimedUsername  String
+  claimedFullName  String
+  claimedBirthDate DateTime
+  recoveryMethod   AccountRecoveryMethod
+  status           AccountRecoveryStatus @default(PENDING)
+  recoveryToken    String?  @unique
+  recoveryTokenUsed Boolean @default(false)
+  recoveryTokenExpires DateTime?
+  // ... path-specific fields
+}
+
+enum AccountRecoveryMethod { GUARANTOR, SECRET_QUESTION, OFFICIAL_ORGANS }
+enum AccountRecoveryStatus { PENDING, AWAITING_GUARANTOR, AWAITING_OFFICIAL,
+                             APPROVED, REJECTED, COMPLETED, EXPIRED }
+```
+
+### Frontend Pages
+
+| Route | Purpose |
+|-------|---------|
+| `/recovery` | Multi-step recovery start (username → identity → choose path) |
+| `/recovery/reset?token=...` | Enter new password using recovery token |
+
+### Security Properties
+
+- **No username enumeration**: All validation errors return the same generic message
+- **bcrypt for answers**: Secret answers stored as bcrypt hashes, never in plaintext
+- **Session revocation**: All active sessions invalidated after password reset
+- **Token expiry**: 1-hour window, single-use enforcement at DB level
+

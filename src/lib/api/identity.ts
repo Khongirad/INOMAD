@@ -103,3 +103,92 @@ export async function getMyProfile(): Promise<AuthResponse['user']> {
 export function logout(): void {
   localStorage.removeItem('token');
 }
+
+// ─── Account Recovery API ────────────────────────────────────────────────────
+
+export interface RecoveryGuarantorDto {
+  claimedUsername: string;
+  claimedFullName: string;
+  claimedBirthDate: string;     // YYYY-MM-DD
+  claimedBirthCity?: string;
+  guarantorSeatId: string;
+  claimedPassportNumber?: string;
+}
+
+export interface RecoverySecretQuestionDto {
+  claimedUsername: string;
+  claimedFullName: string;
+  claimedBirthDate: string;
+  secretAnswer: string;
+}
+
+export interface RecoveryOfficialDto {
+  claimedUsername: string;
+  claimedFullName: string;
+  claimedBirthDate: string;
+  claimedBirthCity?: string;
+  claimedPassportNumber: string;
+  claimedPassportSeries?: string;
+  claimedPassportIssuedBy?: string;
+  officialServiceType: 'MIGRATION_SERVICE' | 'COUNCIL';
+}
+
+export interface RecoveryRequestResult {
+  ok: boolean;
+  requestId?: string;
+  recoveryToken?: string;
+  expiresAt?: string;
+  message?: string;
+}
+
+/**
+ * Get list of pre-defined secret questions
+ */
+export async function getSecretQuestions(): Promise<string[]> {
+  const res = await api.get<{ ok: boolean; questions: string[] }>('/auth/recovery/questions');
+  return res.questions;
+}
+
+/**
+ * Set secret question for Path 2.1 recovery (call after profile creation)
+ */
+export async function setSecretQuestion(question: string, answer: string): Promise<{ ok: boolean }> {
+  return api.post('/auth/set-secret-question', { question, answer });
+}
+
+/**
+ * Request account recovery via guarantor (Path A)
+ */
+export async function requestRecoveryViaGuarantor(dto: RecoveryGuarantorDto): Promise<RecoveryRequestResult> {
+  return api.post('/auth/recovery/via-guarantor', dto);
+}
+
+/**
+ * Request account recovery via secret question (Path 2.1)
+ * Returns a recovery token immediately if the answer is correct.
+ */
+export async function requestRecoveryViaSecretQuestion(dto: RecoverySecretQuestionDto): Promise<RecoveryRequestResult> {
+  return api.post('/auth/recovery/via-secret-question', dto);
+}
+
+/**
+ * Request account recovery via official organ (Path 2.2)
+ */
+export async function requestRecoveryViaOfficial(dto: RecoveryOfficialDto): Promise<RecoveryRequestResult> {
+  return api.post('/auth/recovery/via-official', dto);
+}
+
+/**
+ * Reset password using a one-time recovery token
+ */
+export async function resetPasswordViaToken(recoveryToken: string, newPassword: string): Promise<{ ok: boolean }> {
+  return api.post('/auth/recovery/reset-password', { recoveryToken, newPassword });
+}
+
+/**
+ * Guarantor confirms a recovery request (requires logged-in guarantor)
+ */
+export async function confirmAsGuarantor(requestId: string): Promise<{ ok: boolean; message: string }> {
+  return api.post(`/auth/recovery/${requestId}/guarantor-confirm`, {});
+}
+

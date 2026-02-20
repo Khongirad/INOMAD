@@ -90,7 +90,30 @@ describe('AuthPasswordService', () => {
       await expect(service.register({ username: 'bob', password: 'test1234', email: 'a@b.com' }))
         .rejects.toThrow(ConflictException);
     });
+
+    it('should reject duplicate biometric identity (same fullName+DOB+city)', async () => {
+      prisma.user.findUnique
+        .mockResolvedValueOnce(null)                  // username check: ok
+        .mockResolvedValueOnce({ id: 'u-other' });    // biometricHash check: conflict
+      await expect(
+        service.register({
+          username: 'newuser', password: 'test1234',
+          fullName: 'Alice Smith', dateOfBirth: '1990-05-15', birthCity: 'Ulan-Ude',
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should not run biometric check if fullName/dateOfBirth/birthCity are missing', async () => {
+      prisma.user.findUnique.mockResolvedValueOnce(null); // username check only
+      prisma.user.create.mockResolvedValue(mockUser);
+      const result = await service.register({ username: 'newuser', password: 'test1234' });
+      // Should succeed without biometric check
+      expect(result.ok).toBe(true);
+      // findUnique called only twice: username + citizen number uniqueness check
+      expect(prisma.user.findUnique).not.toHaveBeenCalledTimes(3);
+    });
   });
+
 
   // ─── login ─────────────────────────────
   describe('login', () => {
