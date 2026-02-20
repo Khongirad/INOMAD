@@ -62,6 +62,17 @@ model User {
   passportNumber     String?   @unique // Links to Migration Service passport applications
   passportIssueDate  DateTime? // Passport validity tracking
   passportExpiryDate DateTime? // Passport expiry for renewals
+  passportSeries     String?   // Passport series (e.g. "АА", "AB")
+  passportIssuedBy   String?   // Issuing authority name
+
+  // Legal Name (for recovery & anti-duplicate)
+  fullName              String?  // Full legal name "Баир Иванов" — from passport
+  biometricIdentityHash String?  @unique // SHA-256(normalize(fullName)+DOB+birthCity) — one per person
+  fullNameLocked        Boolean  @default(false) // Once set via passport, cannot self-change
+
+  // Account Recovery — Secret Question (Path 2.1)
+  secretQuestion   String? // Predefined question selected by user
+  secretAnswerHash String? // bcrypt hash of the answer
 
   // Verification Chain
   isVerified            Boolean            @default(false)
@@ -295,6 +306,78 @@ model AuthSession {
 
   @@index([userId])
   @@index([jti])
+}
+
+// ========================================
+// ACCOUNT RECOVERY SYSTEM
+// ========================================
+
+/// Recovery request — one of 3 paths to regain access
+model AccountRecoveryRequest {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Identity claim — must match existing User record
+  claimedUsername  String    // The username they lost access to
+  claimedFullName  String    // Full legal name (must match User.fullName)
+  claimedBirthDate DateTime  // Date of birth (must match User.dateOfBirth)
+  claimedBirthCity String?   // City of birth (used for biometric match)
+
+  // Passport data (optional but strengthens claim)
+  claimedPassportNumber  String?
+  claimedPassportSeries  String?
+  claimedPassportIssuedBy String?
+
+  // Recovery path chosen
+  recoveryMethod   AccountRecoveryMethod
+
+  // --- Path 2.1: Secret Question ---
+  secretAnswer     String?   @db.Text // Plaintext on submission, compared then cleared
+
+  // --- Path A: Guarantor ---
+  guarantorSeatId        String?
+  guarantorConfirmed     Boolean   @default(false)
+  guarantorConfirmedAt   DateTime?
+  guarantorConfirmedById String?   // guarantor's userId
+
+  // --- Path 2.2: Official Organs ---
+  officialServiceType  String?   // "MIGRATION_SERVICE" | "COUNCIL"
+  officialReferenceId  String?   // External case/reference number
+  officialApprovedAt   DateTime?
+  officialApprovedById String?   // Admin userId who processed
+
+  // Status
+  status     AccountRecoveryStatus @default(PENDING)
+  resolvedAt DateTime?
+  resolvedNote String?      @db.Text
+
+  // One-time recovery token (issued on approval)
+  recoveryToken     String?  @unique
+  recoveryTokenAt   DateTime? // When token was issued
+  recoveryTokenUsed Boolean  @default(false)
+  recoveryTokenExpires DateTime? // 1 hour from issue
+
+  @@index([claimedUsername])
+  @@index([status])
+  @@index([recoveryMethod])
+  @@index([guarantorSeatId])
+}
+
+enum AccountRecoveryMethod {
+  GUARANTOR        // Path A — original guarantor confirms identity
+  SECRET_QUESTION  // Path 2.1 — answer a pre-set secret question
+  OFFICIAL_ORGANS  // Path 2.2 — Migration Service or Council verifies
+}
+
+enum AccountRecoveryStatus {
+  PENDING              // Submitted, not yet processed
+  AWAITING_GUARANTOR   // Notification sent to guarantor, waiting
+  AWAITING_OFFICIAL    // Sent to official organ, pending review
+  APPROVED             // Recovery approved, recovery token issued
+  REJECTED             // Request denied
+  COMPLETED            // Password successfully reset
+  EXPIRED              // Token expired or request timed out
 }
 
 model BankLink {

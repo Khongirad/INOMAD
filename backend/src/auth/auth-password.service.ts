@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
+import { generateBiometricHash } from './account-recovery.service';
 
 @Injectable()
 export class AuthPasswordService {
@@ -25,6 +26,8 @@ export class AuthPasswordService {
     birthPlace?: Record<string, any>;
     clan?: string;
     nationality?: string;
+    fullName?: string;       // Legal name for anti-duplicate check
+    birthCity?: string;     // City of birth for biometric hash
   }) {
     // Validate username
     if (!dto.username || dto.username.length < 3) {
@@ -61,6 +64,22 @@ export class AuthPasswordService {
 
       if (existingEmail) {
         throw new ConflictException('Email already registered');
+      }
+    }
+
+    // Anti-duplicate biometric check: if fullName + dateOfBirth + birthCity are all provided,
+    // compute a privacy-safe hash and verify no other account matches this identity
+    let biometricIdentityHash: string | undefined;
+    if (dto.fullName && dto.dateOfBirth && dto.birthCity) {
+      biometricIdentityHash = generateBiometricHash(dto.fullName, dto.dateOfBirth, dto.birthCity);
+      const existingBiometric = await this.prisma.user.findUnique({
+        where: { biometricIdentityHash },
+        select: { id: true },
+      });
+      if (existingBiometric) {
+        throw new ConflictException(
+          'An account with this identity already exists. One person may only hold one legal digital shell.',
+        );
       }
     }
 

@@ -162,7 +162,7 @@ export default function GatesOfKhuralPage() {
           </button>
 
           {/* Register Link */}
-          <div className="text-center pt-4">
+          <div className="text-center pt-4 space-y-3">
             <p className="text-zinc-500 text-sm mb-2">
               New to the Khural?
             </p>
@@ -173,6 +173,15 @@ export default function GatesOfKhuralPage() {
             >
               Create Your Seat
             </button>
+            <div>
+              <button
+                type="button"
+                onClick={() => router.push('/recovery')}
+                className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
+              >
+                🔑 Forgot access? Recover your account
+              </button>
+            </div>
           </div>
         </form>
 

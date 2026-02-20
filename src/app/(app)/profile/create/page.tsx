@@ -83,12 +83,15 @@ export default function CreateProfilePage() {
   const primaryEthnicity = ethnicity[0] || '';
   const availableClans = CLANS[primaryEthnicity] || [];
 
+  // Account recovery (secret question)
+  const [secretQuestion, setSecretQuestion] = useState('');
+  const [secretAnswer, setSecretAnswer] = useState('');
+
   const toggleEthnicity = (eth: string) => {
     setEthnicity((prev) =>
       prev.includes(eth) ? prev.filter((e) => e !== eth) : [...prev, eth],
     );
   };
-
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,6 +113,21 @@ export default function CreateProfilePage() {
         nationality: ethnicity[0],
         language: language || undefined,
       });
+
+      // Optionally set secret question (silently, non-blocking)
+      if (secretQuestion && secretAnswer.trim().length >= 3) {
+        try {
+          await api.post('/auth/set-secret-question', {
+            question: secretQuestion,
+            answer: secretAnswer,
+          });
+          toast.success('🔐 Secret question saved for account recovery!');
+        } catch {
+          // Don't block profile completion on this
+          console.warn('Failed to save secret question');
+        }
+      }
+
       toast.success('✅ Digital identity created successfully!');
       router.push('/dashboard');
     } catch (err: any) {
@@ -119,6 +137,7 @@ export default function CreateProfilePage() {
       setLoading(false);
     }
   };
+
 
   const inputClass = 'w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg focus:border-amber-500 focus:outline-none transition-colors text-white';
   const selectClass = `${inputClass} appearance-none cursor-pointer`;
@@ -284,6 +303,51 @@ export default function CreateProfilePage() {
                 Your preferred language for official communications and documents
               </p>
             </div>
+          </section>
+
+          {/* ── Section 5: Security Question ── */}
+          <section className="bg-zinc-900/50 border border-amber-900/20 rounded-xl p-6 space-y-4">
+            <h3 className={sectionTitle}>
+              🔐 Account Recovery (Recommended)
+            </h3>
+            <p className="text-sm text-zinc-400">
+              Set a secret question now to recover your account without a guarantor. This is your backup key.
+            </p>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Security Question</label>
+              <select
+                value={secretQuestion}
+                onChange={(e) => setSecretQuestion(e.target.value)}
+                className={selectClass}
+              >
+                <option value="">-- Skip (not recommended) --</option>
+                <option>What is your mother&apos;s maiden name?</option>
+                <option>What was the name of your first school?</option>
+                <option>What was the name of your childhood pet?</option>
+                <option>What city were you born in?</option>
+                <option>What is the name of the street you grew up on?</option>
+                <option>What was the model of your first car?</option>
+                <option>What is your paternal grandmother&apos;s first name?</option>
+                <option>What was the name of your closest childhood friend?</option>
+              </select>
+            </div>
+
+            {secretQuestion && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Your Answer</label>
+                <input
+                  type="password"
+                  value={secretAnswer}
+                  onChange={(e) => setSecretAnswer(e.target.value)}
+                  placeholder="Answer (stored encrypted, not shown again)"
+                  className="w-full px-4 py-2.5 bg-black/40 border border-zinc-700 rounded-lg focus:border-amber-500 focus:outline-none text-white text-sm transition-colors"
+                />
+                <p className="text-xs text-zinc-500 mt-1">
+                  Write it down. You cannot view this answer again later.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* ── Error & Submit ── */}

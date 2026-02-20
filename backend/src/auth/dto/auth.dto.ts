@@ -105,3 +105,114 @@ export class ChangePasswordDto {
   @MaxLength(128, { message: 'New password must be at most 128 characters' })
   newPassword: string;
 }
+
+// ─── Recovery DTOs ────────────────────────────────────────────────────────────
+
+export class SetSecretQuestionDto {
+  @IsString()
+  @IsNotEmpty()
+  question: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(3, { message: 'Answer must be at least 3 characters' })
+  answer: string;
+}
+
+export class RecoveryViaGuarantorDto {
+  @IsString()
+  @IsNotEmpty()
+  claimedUsername: string;
+
+  @IsString()
+  @IsNotEmpty()
+  claimedFullName: string;
+
+  @IsISO8601({}, { message: 'Birth date must be in YYYY-MM-DD format' })
+  claimedBirthDate: string;
+
+  @IsString()
+  @IsOptional()
+  claimedBirthCity?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  guarantorSeatId: string;
+
+  @IsString()
+  @IsOptional()
+  claimedPassportNumber?: string;
+}
+
+export class RecoveryViaSecretQuestionDto {
+  @IsString()
+  @IsNotEmpty()
+  claimedUsername: string;
+
+  @IsString()
+  @IsNotEmpty()
+  claimedFullName: string;
+
+  @IsISO8601({}, { message: 'Birth date must be in YYYY-MM-DD format' })
+  claimedBirthDate: string;
+
+  @IsString()
+  @IsNotEmpty()
+  secretAnswer: string;
+}
+
+export class RecoveryViaOfficialDto {
+  @IsString()
+  @IsNotEmpty()
+  claimedUsername: string;
+
+  @IsString()
+  @IsNotEmpty()
+  claimedFullName: string;
+
+  @IsISO8601({}, { message: 'Birth date must be in YYYY-MM-DD format' })
+  claimedBirthDate: string;
+
+  @IsString()
+  @IsOptional()
+  claimedBirthCity?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  claimedPassportNumber: string;
+
+  @IsString()
+  @IsOptional()
+  claimedPassportSeries?: string;
+
+  @IsString()
+  @IsOptional()
+  claimedPassportIssuedBy?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  officialServiceType: 'MIGRATION_SERVICE' | 'COUNCIL';
+}
+
+export class ResetPasswordViaTokenDto {
+  @IsString()
+  @IsNotEmpty()
+  recoveryToken: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  @MaxLength(128, { message: 'Password must be at most 128 characters' })
+  newPassword: string;
+}
+
+export class OfficialApproveDto {
+  @IsString()
+  @IsNotEmpty()
+  approved: boolean;
+
+  @IsString()
+  @IsOptional()
+  note?: string;
+}
+

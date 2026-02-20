@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthPasswordService } from './auth-password.service';
+import { AccountRecoveryService } from './account-recovery.service';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -46,9 +47,10 @@ function parseExpiryToSeconds(expiry: string): number {
   providers: [
     AuthService,
     AuthPasswordService,
+    AccountRecoveryService,
     AuthGuard,
     JwtAuthGuard,
   ],
-  exports: [AuthService, AuthPasswordService, AuthGuard, JwtModule],
+  exports: [AuthService, AuthPasswordService, AccountRecoveryService, AuthGuard, JwtModule],
 })
 export class AuthModule {}
