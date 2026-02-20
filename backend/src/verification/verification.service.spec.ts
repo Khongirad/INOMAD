@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { VerificationService } from './verification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimelineService } from '../timeline/timeline.service';
+import { DistributionService } from '../distribution/distribution.service';
 
 describe('VerificationService', () => {
   let service: VerificationService;
@@ -38,18 +39,25 @@ describe('VerificationService', () => {
     const mockTimeline = {
       createEvent: jest.fn().mockResolvedValue({ id: 'te1' }),
     };
+    // Mock DistributionService — birthright distribution added to verifyUser()
+    const mockDistribution = {
+      registerCitizenForDistribution: jest.fn().mockResolvedValue({}),
+      distributeByLevel: jest.fn().mockResolvedValue({ distributed: true, amount: 900 }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         VerificationService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: TimelineService, useValue: mockTimeline },
+        { provide: DistributionService, useValue: mockDistribution },
       ],
     }).compile();
     service = module.get(VerificationService);
     prisma = module.get(PrismaService);
     timeline = module.get(TimelineService);
   });
+
 
   it('should be defined', () => expect(service).toBeDefined());
 
