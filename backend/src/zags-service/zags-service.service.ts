@@ -6,10 +6,10 @@ export class ZagsServiceService {
   constructor(private prisma: PrismaService) {}
 
   async checkEligibility(userId: string) {
-    // Check user profile for age
+    // Check user profile for age and legal status
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, dateOfBirth: true },
+      select: { id: true, dateOfBirth: true, isVerified: true, isLegalSubject: true },
     });
 
     // Check if user has active marriage
@@ -35,6 +35,18 @@ export class ZagsServiceService {
 
     const currentStatus = activeMarriage ? 'MARRIED' : 'SINGLE';
     const reasons: string[] = [];
+
+    // ── LEGAL STATUS CHECKS (Four Branches Integration) ──────────────────────
+    // EXECUTIVE SERVICE: Must be a legal subject (accepted Constitution)
+    if (!user?.isLegalSubject) {
+      reasons.push('Must accept the Constitution and become a legal subject first');
+    }
+
+    // EXECUTIVE SERVICE: Must be verified by a guarantor
+    if (!user?.isVerified) {
+      reasons.push('Must be verified by a guarantor citizen before accessing ZAGS services');
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     if (activeMarriage) {
       reasons.push('Already married');
