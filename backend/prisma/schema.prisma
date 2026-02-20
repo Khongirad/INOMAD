@@ -271,6 +271,12 @@ model User {
   // Tax Records (annual filings)
   taxRecords             TaxRecord[]         @relation("UserTaxRecords")
 
+  // Creator Mode — temporary government management
+  creatorProvisionalRoles CreatorProvisionalRole[] @relation("CreatorProvisionalRoles")
+
+  // Public Square — народные дебаты
+  publicSquarePosts      PublicSquarePost[]   @relation("PublicSquarePosts")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -278,6 +284,7 @@ model User {
   @@index([hasExclusiveLandRight])
   @@index([fatherId])
 }
+
 
 model AuthNonce {
   id        String   @id @default(uuid())
@@ -2196,6 +2203,10 @@ enum OrgArbanType {
   GUILD
   SCIENTIFIC_COUNCIL
   EKHE_KHURAL
+  // Security forces — constitutional chain of command:
+  MILITARY        // Army / Navy / Air Force → reports to KHURAL (народ) only
+  POLICE          // Police / Special Services → reports to PRESIDENT (Executive)
+  INTELLIGENCE    // Special Services → reports to PRESIDENT (Executive)
 }
 
 enum PowerBranchType {
@@ -5677,3 +5688,124 @@ model CitizenshipAdmissionVote {
   @@unique([admissionId, voterId])
   @@index([admissionId])
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// CREATOR MODE — Временное управление ветвями власти
+// ═══════════════════════════════════════════════════════════════════
+
+/// Tracks which government roles the Creator temporarily holds.
+/// Every action taken while in a provisional role is logged in CreatorAuditLog.
+/// When a citizen is appointed, the Creator formally vacates via transferAct.
+model CreatorProvisionalRole {
+  id              String          @id @default(uuid())
+  creatorId       String
+  creator         User            @relation("CreatorProvisionalRoles", fields: [creatorId], references: [id])
+
+  branch          PowerBranchType // Which branch of government
+  roleName        String          // e.g. "PRESIDENT", "SPEAKER", "CHIEF_JUSTICE", "CB_CHAIR"
+  roleDisplayName String?         // Human name set by Creator, e.g. "Министр иностранных дел"
+  orgId           String?         // Specific org being managed (null = entire branch)
+
+  status          ProvisionalStatus @default(ACTIVE)
+  startedAt       DateTime          @default(now())
+  endedAt         DateTime?
+
+  // Transfer of Power ceremony
+  transferredToId String?          // userId of the appointed citizen
+  transferAct     String?          // sha256 hash of signed Transfer Act (Digital Seal)
+  transferNote    String?          // Public statement from Creator on vacating
+
+  auditLogs       CreatorAuditLog[]
+
+  @@index([creatorId, status])
+  @@index([branch, status])
+}
+
+/// Every action the Creator takes while in a provisional role.
+/// These records are IMMUTABLE — never deleted.
+model CreatorAuditLog {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+
+  provisionalRoleId String
+  provisionalRole   CreatorProvisionalRole @relation(fields: [provisionalRoleId], references: [id])
+
+  action        String   // e.g. "APPROVED_MARRIAGE", "SIGNED_LAW", "OPENED_BANK"
+  targetId      String?  // id of the resource acted upon
+  targetType    String?  // "Marriage", "LegislativeProposal", etc.
+  metadata      Json?    // any extra context
+
+  @@index([provisionalRoleId])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ПУБЛИЧНАЯ ПЛОЩАДЬ — Народные дебаты на каждом уровне иерархии
+// ═══════════════════════════════════════════════════════════════════
+
+/// A debate/petition/proposal in the Public Square at one hierarchy level.
+model PublicSquarePost {
+  id          String          @id @default(uuid())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  authorId    String
+  author      User            @relation("PublicSquarePosts", fields: [authorId], references: [id])
+
+  level       HierarchyLevel  // LEVEL_10=Arban | LEVEL_100=Zun | LEVEL_1000=Myangan | LEVEL_10000=Tumen | REPUBLIC | CONFEDERATION
+  scopeId     String          // id of the specific Arban/Zun/etc.
+  scopeName   String          // denormalized for display
+
+  title       String
+  content     String          @db.Text
+  postType    SquarePostType  // DEBATE | PETITION | PROPOSAL | ANNOUNCEMENT
+
+  status      SquareStatus    @default(OPEN)
+  supportCount Int            @default(0)
+  requiredSupport Int         @default(0) // threshold to escalate
+
+  escalatedTo String?         // id of the parent-level post if escalated
+  escalatedAt DateTime?
+
+  khuralProposalId String?    // if turned into a legislative proposal
+
+  votes       PublicSquareVote[]
+
+  @@index([level, scopeId, status])
+  @@index([authorId])
+}
+
+model PublicSquareVote {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  postId    String
+  post      PublicSquarePost @relation(fields: [postId], references: [id])
+  voterId   String
+  support   Boolean  // true = support, false = oppose
+
+  @@unique([postId, voterId])
+}
+
+enum ProvisionalStatus {
+  ACTIVE       // Creator currently holds this role
+  TRANSFERRED  // Power formally handed to a citizen (Transfer Act signed)
+  DISSOLVED    // Role was abolished
+}
+
+// HierarchyLevel enum already defined at line 3715 — using that one
+
+enum SquarePostType {
+  DEBATE       // Open discussion
+  PETITION     // Requires signatures to escalate
+  PROPOSAL     // Ready-to-submit legislative proposal
+  ANNOUNCEMENT // Read-only from authorities
+}
+
+enum SquareStatus {
+  OPEN        // Accepting votes/comments
+  VOTING      // Formal vote in progress
+  ESCALATED   // Moved to higher level
+  LEGISLATIVE // Submitted to Khural
+  CLOSED      // No longer active
+}
+

@@ -49,6 +49,7 @@ import { TransparencyModule } from './transparency/transparency.module';
 // Note: LegislativeModule, TaxModule, MarketplaceModule imported above
 import { AdminModule } from './admin/admin.module';
 import { UnifiedOrgModule } from './unified-org/unified-org.module';
+import { CreatorModeModule } from './creator-mode/creator-mode.module';
 import { NotificationModule } from './notifications/notification.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { ComplaintModule } from './complaints/complaint.module';
@@ -121,6 +122,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     MarketplaceModule,
     AdminModule,  // Admin and Creator management
     UnifiedOrgModule,  // Unified Organization Management System
+    CreatorModeModule, // Creator provisional governance + Transfer of Power
     NotificationModule, // In-app Notification System
     MessagingModule,    // Universal Messaging (DM, Group, Org, Case threads)
     ComplaintModule,    // Universal Complaint/Grievance System (hierarchical escalation)
