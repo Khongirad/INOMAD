@@ -35,7 +35,8 @@ describe('ZagsServiceService', () => {
     count: jest.fn().mockResolvedValue(5),
   });
 
-  const mockAdultUser = { id: 'user-1', dateOfBirth: new Date('1990-01-01') };
+  // Verified adult citizen — passes all ZAGS eligibility guards
+  const mockAdultUser = { id: 'user-1', dateOfBirth: new Date('1990-01-01'), isVerified: true, isLegalSubject: true };
 
   beforeEach(async () => {
     prisma = {
@@ -95,15 +96,16 @@ describe('ZagsServiceService', () => {
     });
 
     it('should return ineligible for underage user', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'minor', dateOfBirth: new Date('2015-01-01') });
+      // Minor with no verification — both legal + age reasons will appear
+      prisma.user.findUnique.mockResolvedValue({ id: 'minor', dateOfBirth: new Date('2015-01-01'), isVerified: false, isLegalSubject: false });
       prisma.marriage.findFirst.mockResolvedValue(null);
       const result = await service.checkEligibility('minor');
       expect(result.isEligible).toBe(false);
-      expect(result.reasons[0]).toContain('Must be at least 18');
+      expect(result.reasons.some(r => r.includes('Must be at least 18'))).toBe(true);
     });
 
     it('should return ineligible if no date of birth on file', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'no-dob', dateOfBirth: null });
+      prisma.user.findUnique.mockResolvedValue({ id: 'no-dob', dateOfBirth: null, isVerified: true, isLegalSubject: true });
       prisma.marriage.findFirst.mockResolvedValue(null);
       const result = await service.checkEligibility('no-dob');
       expect(result.isEligible).toBe(false);
