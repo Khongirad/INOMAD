@@ -503,6 +503,14 @@ model UserVerification {
   blockNumber BigInt?  // block number of the verification transaction
   seatTokenId BigInt?  // SeatSBT tokenId minted for this citizen
 
+  // ── VERIFICATION CHAIN INTEGRITY (cascade revocation) ──────────────────────
+  // isActive=false means the verifier's own chain was broken after this verification.
+  // This does NOT delete the verification (history is preserved), but flags it as
+  // needing re-verification. "You can verify your ancestors' records but cannot rewrite them."
+  isActive         Boolean   @default(true)
+  suspendedAt      DateTime?
+  suspendedReason  String?   // "Verifier chain broken: verifierId was revoked"
+
   @@unique([verifiedUserId, verifierId])
   @@index([verifierId])
   @@index([verifiedUserId])
@@ -3537,6 +3545,14 @@ model Election {
   totalVotes  Int      @default(0)
   turnoutRate Decimal? // Percentage
 
+  // ── CRYPTOGRAPHIC RESULT CERTIFICATION ("The vote was counted correctly") ──
+  // resultHash is computed atomically when the winner is declared.
+  // Any post-hoc change to winnerId, winnerVotes or totalVotes breaks this hash.
+  // sha256(electionId + winnerId + winnerVotes + totalVotes + turnoutRate + certifiedAt.toISO())
+  resultHash   String?   // Certificate of election result integrity
+  certifiedAt  DateTime? // When result was certified (== completedAt)
+  certTxHash   String?   // Optional on-chain anchor (published to StateAnchor contract)
+
   @@index([organizationId])
   @@index([status])
   @@index([startDate])
@@ -5437,6 +5453,12 @@ model LegislativeProposal {
   signedBy     User?    @relation("ProposalSigner", fields: [signedById], references: [id])
   documentId   String?  // Link to DocumentContract in Archive
 
+  // ── CRYPTOGRAPHIC CONTENT LOCK ("History cannot be rewritten") ──
+  // contentHash is computed at signLaw() and NEVER changes after that.
+  // If fullText or title is modified after signing → hash mismatch detected automatically.
+  contentHash      String?   // sha256(title + "\n" + fullText) — locked on signing
+  contentLockedAt  DateTime? // When the hash was locked (== signedAt)
+
   // Blockchain (optional — links to on-chain VotingCenter proposal)
   blockchainProposalId Int?
   blockchainTxHash     String?
@@ -5451,6 +5473,11 @@ model LegislativeProposal {
 }
 
 /// ProposalVote — individual vote on a legislative proposal.
+/// 
+/// DETERMINISM: Each vote is cryptographically unique.
+/// nullifier = sha256(seatId | proposalId | "vote") — proves voter voted WITHOUT revealing their choice.
+/// commitmentHash = sha256(seatId | proposalId | vote | timestamp) — immutable proof of the vote itself.
+/// If the same voter votes again → nullifier collision → BadRequestException.
 model ProposalVote {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
@@ -5464,8 +5491,15 @@ model ProposalVote {
   vote    String  // FOR, AGAINST, ABSTAIN
   comment String?
 
+  // ── CRYPTOGRAPHIC INTEGRITY (History cannot be rewritten) ──
+  // nullifier: sha256(seatId + proposalId) — unique proof a citizen voted, cannot vote twice
+  nullifier      String  @unique  // Collision = attempted double-vote
+  // commitmentHash: sha256(seatId + proposalId + vote + createdAt.toISO()) — immutable vote record
+  commitmentHash String           // Tamper detection — if vote changes, hash breaks
+
   @@unique([proposalId, voterId])
   @@index([proposalId])
+  @@index([nullifier])
 }
 
 /// ProposalDebate — debate entry (speech) on a legislative proposal. Supports threads.

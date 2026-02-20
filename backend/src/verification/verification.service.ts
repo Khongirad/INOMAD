@@ -466,14 +466,37 @@ export class VerificationService {
       throw new NotFoundException('Verification not found');
     }
 
-    // Delete verification
-    await this.prisma.userVerification.delete({
-      where: { id: verificationId },
-    });
+    // ── APPEND-ONLY: Soft revoke (NEVER delete — history is immutable) ─────────
+    // The verification record is preserved as historical fact.
+    // isActive=false marks it as broken without erasing evidence.
+    // \"You can know what happened in the past, but you cannot erase it.\"
+    const suspendedReason = `Revoked by admin ${revokedBy}: ${reason}`;
 
-    // Update verified user status
+    await this.prisma.userVerification.update({
+      where: { id: verificationId },
+      data: {
+        isActive: false,
+        suspendedAt: new Date(),
+        suspendedReason,
+      },
+    });
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // ── CASCADE: Suspend all downstream verifications ─────────────────────────
+    // If verifier A loses validity, all verifications A granted are suspended too.
+    // Citizens can re-verify through another chain. Their history is preserved.
+    const cascadeCount = await this.cascadeRevokeDownstream(
+      verification.verifierId,
+      `Chain broken: ${suspendedReason}`,
+    );
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // Update verified user status (check if they have another active verification)
     const stillVerified = await this.prisma.userVerification.findFirst({
-      where: { verifiedUserId: verification.verifiedUserId },
+      where: {
+        verifiedUserId: verification.verifiedUserId,
+        isActive: true,
+      },
     });
 
     if (!stillVerified) {
@@ -489,16 +512,12 @@ export class VerificationService {
     // Decrement verifier count
     await this.prisma.user.update({
       where: { id: verification.verifierId },
-      data: {
-        verificationCount: {
-          decrement: 1,
-        },
-      },
+      data: { verificationCount: { decrement: 1 } },
     });
 
-    // Log in audit
+    // Audit log (permanent record)
     await this.prisma.auditLog.create({
-       data: {
+      data: {
         userId: revokedBy,
         action: 'VERIFICATION_REVOKED',
         resourceType: 'UserVerification',
@@ -507,10 +526,86 @@ export class VerificationService {
           reason,
           verifiedUserId: verification.verifiedUserId,
           verifierId: verification.verifierId,
+          cascadeCount, // how many downstream verifications were also suspended
         },
       },
     });
 
-    return { success: true };
+    this.logger.log(
+      `⛓️  Verification ${verificationId} soft-revoked. Cascade suspended ${cascadeCount} downstream verifications.`,
+    );
+
+    return { success: true, cascadeCount };
+  }
+
+  /**
+   * VERIFICATION CHAIN CASCADE
+   *
+   * When verifier X is revoked, all verifications X gave are also suspended.
+   * This is recursive — if B was verified by A, and A is revoked, B's verifications
+   * are also suspended. Each hop is one level of cascade.
+   *
+   * This does NOT delete records. History is preserved.
+   * Citizens can gain a new verification from an independent chain.
+   */
+  private async cascadeRevokeDownstream(
+    revokerId: string,
+    reason: string,
+    depth = 0,
+  ): Promise<number> {
+    if (depth > 10) {
+      // Safety limit — prevent infinite recursion in pathological chains
+      this.logger.warn('Cascade revocation depth limit reached');
+      return 0;
+    }
+
+    // Find all active verifications given by this verifier
+    const downstreamVerifications = await this.prisma.userVerification.findMany({
+      where: {
+        verifierId: revokerId,
+        isActive: true,
+      },
+      select: { id: true, verifiedUserId: true },
+    });
+
+    if (downstreamVerifications.length === 0) return 0;
+
+    const now = new Date();
+    let count = downstreamVerifications.length;
+
+    // Suspend all downstream verifications
+    await this.prisma.userVerification.updateMany({
+      where: {
+        verifierId: revokerId,
+        isActive: true,
+      },
+      data: {
+        isActive: false,
+        suspendedAt: now,
+        suspendedReason: reason,
+      },
+    });
+
+    // For each downstream citizen, check if they have another valid path
+    for (const dv of downstreamVerifications) {
+      const hasOtherChain = await this.prisma.userVerification.findFirst({
+        where: {
+          verifiedUserId: dv.verifiedUserId,
+          isActive: true,
+        },
+      });
+
+      if (!hasOtherChain) {
+        await this.prisma.user.update({
+          where: { id: dv.verifiedUserId },
+          data: { isVerified: false, verifiedAt: null },
+        });
+        // Recurse: cascade their downstream too
+        count += await this.cascadeRevokeDownstream(dv.verifiedUserId, reason, depth + 1);
+      }
+    }
+
+    return count;
   }
 }
+

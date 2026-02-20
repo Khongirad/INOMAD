@@ -1,6 +1,24 @@
 import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ElectionStatus, Election } from '@prisma/client';
+
+/**
+ * Result hash: sha256(electionId + winnerId + winnerVotes + totalVotes + certifiedAt)
+ * Computed ATOMICALLY when the winner is declared.
+ * If winnerId or counts change afterward → hash mismatch on next verification.
+ * "The ancestor's vote cannot be changed retroactively."
+ */
+function computeResultHash(
+  electionId: string,
+  winnerId: string,
+  winnerVotes: number,
+  totalVotes: number,
+  certifiedAt: Date,
+): string {
+  const data = `${electionId}|${winnerId}|${winnerVotes}|${totalVotes}|${certifiedAt.toISOString()}`;
+  return crypto.createHash('sha256').update(data).digest('hex');
+}
 
 interface CreateElectionDto {
   organizationId: string;
@@ -256,48 +274,44 @@ export class ElectionService {
   }
 
   /**
-   * Complete election (declare winner)
+   * Complete election (declare winner).
+   *
+   * DETERMINISM: resultHash is computed atomically with the winner declaration.
+   * Anyone can recompute the hash from the public data and verify independently.
    */
   async completeElection(electionId: string, adminId: string): Promise<Election> {
     const election = await this.prisma.election.findUnique({
       where: { id: electionId },
       include: {
-        candidates: {
-          orderBy: {
-            votes: 'desc',
-          },
-        },
+        candidates: { orderBy: { votes: 'desc' } },
         organization: true,
       },
     });
 
-    if (!election) {
-      throw new NotFoundException('Election not found');
-    }
+    if (!election) throw new NotFoundException('Election not found');
+    if (election.status === 'COMPLETED') throw new BadRequestException('Election already completed');
 
-    if (election.status === 'COMPLETED') {
-      throw new BadRequestException('Election already completed');
-    }
-
-    // Find winner (most votes)
     const winner = election.candidates[0];
+    if (!winner) throw new BadRequestException('No candidates in election');
 
-    if (!winner) {
-      throw new BadRequestException('No candidates in election');
-    }
-
-    // Calculate turnout
     const totalMembers = await this.prisma.organizationMember.count({
-      where: {
-        organizationId: election.organizationId,
-      },
+      where: { organizationId: election.organizationId },
     });
-
-    const turnoutRate = totalMembers > 0 
-      ? (election.totalVotes / totalMembers) * 100 
+    const turnoutRate = totalMembers > 0
+      ? (election.totalVotes / totalMembers) * 100
       : 0;
 
-    // Update election
+    // ── Compute result certification hash ────────────────────────────────
+    const certifiedAt = new Date();
+    const resultHash = computeResultHash(
+      electionId,
+      winner.candidateId,
+      winner.votes,
+      election.totalVotes,
+      certifiedAt,
+    );
+    // ───────────────────────────────────────────────────────────────
+
     const completedElection = await this.prisma.election.update({
       where: { id: electionId },
       data: {
@@ -305,50 +319,37 @@ export class ElectionService {
         winnerId: winner.candidateId,
         winnerVotes: winner.votes,
         turnoutRate,
+        resultHash,      // ← LOCKED FOREVER at this moment
+        certifiedAt,
       },
       include: {
         winner: true,
         organization: true,
-        candidates: {
-          include: {
-            candidate: true,
-          },
-        },
+        candidates: { include: { candidate: true } },
       },
     });
 
     // Update organization leader
     await this.prisma.organization.update({
       where: { id: election.organizationId },
-      data: {
-        leaderId: winner.candidateId,
-      },
+      data: { leaderId: winner.candidateId },
     });
 
-    // Update membership roles
-    // Remove LEADER role from old leader
+    // Transfer leadership roles
     await this.prisma.organizationMember.updateMany({
-      where: {
-        organizationId: election.organizationId,
-        role: 'LEADER',
-      },
-      data: {
-        role: 'MEMBER',
-      },
+      where: { organizationId: election.organizationId, role: 'LEADER' },
+      data: { role: 'MEMBER' },
     });
-
-    // Assign LEADER role to winner
     await this.prisma.organizationMember.updateMany({
-      where: {
-        organizationId: election.organizationId,
-        userId: winner.candidateId,
-      },
-      data: {
-        role: 'LEADER',
-      },
+      where: { organizationId: election.organizationId, userId: winner.candidateId },
+      data: { role: 'LEADER' },
     });
 
-    return completedElection;
+    return {
+      ...completedElection,
+      resultHash,
+      certifiedAt,
+    } as any;
   }
 
   /**
@@ -376,49 +377,62 @@ export class ElectionService {
   }
 
   /**
-   * Get election details
+   * Get election details. Includes integrity verification of resultHash.
+   *
+   * TAMPER DETECTION: For completed elections, recomputes resultHash from
+   * current DB values. If someone changed winnerId or vote counts after
+   * certification → the mismatch is returned in integrity.error.
    */
   async getElection(electionId: string) {
     const election = await this.prisma.election.findUnique({
       where: { id: electionId },
       include: {
         organization: true,
-        winner: {
-          select: {
-            id: true,
-            username: true,
-            
-          },
-        },
+        winner: { select: { id: true, username: true } },
         candidates: {
-          include: {
-            candidate: {
-              select: {
-                id: true,
-                username: true,
-                
-              },
-            },
-          },
-          orderBy: {
-            votes: 'desc',
-          },
+          include: { candidate: { select: { id: true, username: true } } },
+          orderBy: { votes: 'desc' },
         },
       },
     });
 
-    // If anonymous + still active, hide individual vote counts
-    if (election?.isAnonymous && election.status === 'ACTIVE') {
+    if (!election) throw new NotFoundException('Election not found');
+
+    // ── Integrity verification ──────────────────────────────────────────
+    let integrityOk = true;
+    let integrityError: string | null = null;
+
+    if (election.status === 'COMPLETED' && election.resultHash && election.certifiedAt) {
+      const expected = computeResultHash(
+        election.id,
+        election.winnerId!,
+        election.winnerVotes!,
+        election.totalVotes,
+        election.certifiedAt,
+      );
+      if (expected !== election.resultHash) {
+        integrityOk = false;
+        integrityError =
+          '⚠️ INTEGRITY VIOLATION: Election result was modified after certification. ' +
+          `Expected: ${election.resultHash.slice(0, 12)}... Got: ${expected.slice(0, 12)}...`;
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // During anonymous+active election: hide individual vote counts
+    const result = {
+      ...election,
+      integrity: { ok: integrityOk, resultHash: election.resultHash, certifiedAt: election.certifiedAt, error: integrityError },
+    };
+
+    if (election.isAnonymous && election.status === 'ACTIVE') {
       return {
-        ...election,
-        candidates: election.candidates.map((c) => ({
-          ...c,
-          votes: undefined, // Hide until election completes
-        })),
+        ...result,
+        candidates: election.candidates.map((c) => ({ ...c, votes: undefined })),
       };
     }
 
-    return election;
+    return result;
   }
 
   /**

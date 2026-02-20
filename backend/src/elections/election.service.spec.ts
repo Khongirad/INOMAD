@@ -180,10 +180,12 @@ describe('ElectionService', () => {
 
   // ─── getElection ──────────────────────
   describe('getElection', () => {
-    it('should return election details', async () => {
+    it('should return election details with integrity info', async () => {
       prisma.election.findUnique.mockResolvedValue(mockElection);
       const result = await service.getElection('e1');
       expect(result!.id).toBe('e1');
+      expect(result.integrity).toBeDefined();
+      expect(result.integrity.ok).toBe(true); // No hash yet (not completed)
     });
 
     it('should hide votes for anonymous active election', async () => {
@@ -359,10 +361,9 @@ describe('ElectionService', () => {
   });
 
   describe('getElection not found', () => {
-    it('should return null for missing election', async () => {
+    it('should throw NotFoundException for missing election', async () => {
       prisma.election.findUnique.mockResolvedValue(null);
-      const result = await service.getElection('bad');
-      expect(result).toBeNull();
+      await expect(service.getElection('bad')).rejects.toThrow(NotFoundException);
     });
   });
 

@@ -30,8 +30,10 @@ describe('VerificationService', () => {
         }),
         findUnique: jest.fn().mockResolvedValue(null),
         findFirst: jest.fn().mockResolvedValue(null),
+        findMany: jest.fn().mockResolvedValue([]),     // cascade revocation
         delete: jest.fn().mockResolvedValue({}),
         update: jest.fn().mockResolvedValue({}),
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }), // cascade batch suspend
       },
       auditLog: {
         create: jest.fn().mockResolvedValue({}),
@@ -176,14 +178,23 @@ describe('VerificationService', () => {
   });
 
   describe('revokeVerification', () => {
-    it('revokes as admin', async () => {
+    it('revokes as admin (soft revoke — history preserved)', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'admin1', role: 'ADMIN' });
       prisma.userVerification.findUnique.mockResolvedValue({
         id: 'v1', verifiedUserId: 'u1', verifierId: 'admin1',
       });
+      // Soft revoke uses update() + cascade uses findMany + updateMany
+      prisma.userVerification.update.mockResolvedValue({});
+      prisma.userVerification.findMany.mockResolvedValue([]); // No downstream
+      prisma.userVerification.findFirst.mockResolvedValue({ id: 'other-v' }); // Still has active verification
+      prisma.user.update.mockResolvedValue({});
+      prisma.auditLog.create.mockResolvedValue({});
       const r = await service.revokeVerification('v1', 'admin1', 'fraud');
       expect(r.success).toBe(true);
-      expect(prisma.userVerification.delete).toHaveBeenCalled();
+      expect(r.cascadeCount).toBeDefined(); // New: cascade count returned
+      // IMPORTANT: Should NOT call delete() — history is immutable
+      expect(prisma.userVerification.delete).not.toHaveBeenCalled();
+      expect(prisma.userVerification.update).toHaveBeenCalled();
     });
     it('throws when not admin', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', role: 'CITIZEN' });
@@ -195,6 +206,7 @@ describe('VerificationService', () => {
       await expect(service.revokeVerification('bad', 'admin1', 'test')).rejects.toThrow('not found');
     });
   });
+
 
   // ─── verifyUser edge cases ─────────────
   describe('verifyUser edge cases', () => {
