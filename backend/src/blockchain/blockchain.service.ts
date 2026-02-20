@@ -666,9 +666,7 @@ export class BlockchainService implements OnModuleInit {
 
   /**
    * Get the hash of the latest block.
-   * Used for injecting blockchain entropy into deterministic SeatId generation:
-   *   seatId = sha256(username + timestamp + lastBlockHash.slice(8))
-   * This makes SeatIds unique across different server instances.
+   * Used for injecting blockchain entropy into deterministic SeatId generation.
    */
   async getCurrentBlockHash(): Promise<string> {
     if (!this.isEnabled || !this.provider) {
@@ -680,5 +678,44 @@ export class BlockchainService implements OnModuleInit {
     } catch {
       return '';
     }
+  }
+
+  // ── StateAnchor ────────────────────────────────────────────────────────────
+
+  /**
+   * Publish a Merkle root to StateAnchor.sol.
+   * Called by StateAnchorService weekly to create on-chain state commitments.
+   *
+   * @param contractAddress  StateAnchor.sol deployed address
+   * @param merkleRoot       0x-prefixed 32-byte Merkle root
+   * @param anchorType       Enum value matching StateAnchor.AnchorType
+   * @param description      Human-readable label for this anchor
+   * @returns Transaction hash
+   */
+  async callStateAnchor(
+    contractAddress: string,
+    merkleRoot: string,
+    anchorType: number,
+    description: string,
+  ): Promise<string> {
+    const privateKey = this.configService.get<string>('OPERATOR_PRIVATE_KEY');
+    if (!privateKey) {
+      throw new Error('OPERATOR_PRIVATE_KEY not configured — cannot anchor state');
+    }
+
+    // Minimal ABI for StateAnchor.addAnchor
+    const STATE_ANCHOR_ABI = [
+      'function addAnchor(bytes32 merkleRoot, uint8 anchorType, string calldata description) external returns (uint256 anchorId)',
+    ];
+
+    const contract = this.getContractWithSigner(contractAddress, STATE_ANCHOR_ABI, privateKey);
+
+    // Convert 0x hex string to bytes32
+    const rootBytes32 = ethers.zeroPadValue(merkleRoot, 32);
+
+    const tx = await contract.addAnchor(rootBytes32, anchorType, description);
+    const receipt = await tx.wait();
+    this.logger.log(`⚓ StateAnchor published: anchorType=${anchorType} tx=${receipt.hash}`);
+    return receipt.hash;
   }
 }
