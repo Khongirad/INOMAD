@@ -32,6 +32,7 @@ export interface AuthResponse {
     username: string;
     role: string;
     isLegalSubject: boolean;
+    citizenNumber?: string;  // 13-digit sovereign identifier, shown on COMPLETE screen
     status?: string;
     walletStatus?: string;
     walletAddress?: string;
@@ -94,14 +95,14 @@ export async function acceptConstitution(): Promise<ConstitutionResponse> {
  * Get current user's profile
  */
 export async function getMyProfile(): Promise<AuthResponse['user']> {
-  return api.get('/auth/profile');
+  return api.get('/users/me');
 }
 
 /**
- * Logout (clear local token)
+ * Logout — clears all session tokens (access + refresh)
  */
 export function logout(): void {
-  localStorage.removeItem('token');
+  AuthSession.clear();
 }
 
 // ─── Account Recovery API ────────────────────────────────────────────────────

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { register, acceptTOS, acceptConstitution } from '@/lib/api/identity';
+import { AuthSession } from '@/lib/auth/session';
 import { toast } from 'sonner';
 
 const STEPS = {
@@ -16,13 +17,66 @@ const STEPS = {
 };
 
 const TOTAL_FORM_STEPS = 4;
-
 const STEP_LABELS = ['Terms of Service', 'Constitution', 'Oath', 'Account'];
+
+// ── Password Strength ──────────────────────────────────────────────────────
+
+function getPasswordChecks(pw: string) {
+  return {
+    length: pw.length >= 8,
+    letters: /[a-zA-Z]/.test(pw),
+    numbers: /[0-9]/.test(pw),
+  };
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  const checks = getPasswordChecks(password);
+  if (!password) return null;
+
+  const passed = Object.values(checks).filter(Boolean).length;
+  const bars = [
+    passed >= 1 ? 'bg-red-500' : 'bg-zinc-700',
+    passed >= 2 ? 'bg-amber-500' : 'bg-zinc-700',
+    passed >= 3 ? 'bg-green-500' : 'bg-zinc-700',
+  ];
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-1">
+        {bars.map((cls, i) => (
+          <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${cls}`} />
+        ))}
+      </div>
+      <div className="space-y-0.5 text-xs">
+        <p className={checks.length ? 'text-green-400' : 'text-zinc-500'}>
+          {checks.length ? '✅' : '○'} At least 8 characters
+        </p>
+        <p className={checks.letters ? 'text-green-400' : 'text-zinc-500'}>
+          {checks.letters ? '✅' : '○'} Contains letters
+        </p>
+        <p className={checks.numbers ? 'text-green-400' : 'text-zinc-500'}>
+          {checks.numbers ? '✅' : '○'} Contains numbers
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function RegisterPage() {
   const router = useRouter();
+
+  // ── Auth Guard: redirect if already logged in ──────────────────────────────
+  useEffect(() => {
+    if (AuthSession.isAuthenticated()) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
+
   const [currentStep, setCurrentStep] = useState(STEPS.TOS);
   const [loading, setLoading] = useState(false);
+  const [tosLoading, setTosLoading] = useState(false);
   const [error, setError] = useState('');
 
   // Account fields
@@ -39,7 +93,16 @@ export default function RegisterPage() {
   const [tosContent, setTosContent] = useState('');
   const [constitutionContent, setConstitutionContent] = useState('');
 
-  const loadDocument = async (path: string) => {
+  // Completion data
+  const [citizenNumber, setCitizenNumber] = useState('');
+  const [seatId, setSeatId] = useState('');
+
+  // Partial state recovery: which steps have already been done server-side
+  const [tosServerDone, setTosServerDone] = useState(false);
+  const [constitutionServerDone, setConstitutionServerDone] = useState(false);
+  const [registered, setRegistered] = useState(false);
+
+  const loadDocument = async (path: string): Promise<string> => {
     const response = await fetch(path);
     return await response.text();
   };
@@ -48,8 +111,13 @@ export default function RegisterPage() {
 
   const handleTOSNext = async () => {
     if (!tosContent) {
-      const tos = await loadDocument('/documents/terms-of-service.md');
-      setTosContent(tos);
+      setTosLoading(true);
+      try {
+        const tos = await loadDocument('/documents/terms-of-service.md');
+        setTosContent(tos);
+      } finally {
+        setTosLoading(false);
+      }
       return;
     }
     if (!tosAccepted) {
@@ -80,39 +148,64 @@ export default function RegisterPage() {
 
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const checks = getPasswordChecks(password);
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    const hasLetters = /[a-zA-Z]/.test(password);
-    const hasNumbers = /[0-9]/.test(password);
-    if (!hasLetters || !hasNumbers) {
-      setError('Password must contain both letters and numbers');
+    if (!checks.length || !checks.letters || !checks.numbers) {
+      setError('Password must be ≥8 characters with letters and numbers');
       return;
     }
     setLoading(true);
     setError('');
 
     try {
-      await register({ username, password });
-      toast.success('✅ Account registered successfully!');
+      // Step A: Register (if not already done — handles network retry)
+      if (!registered) {
+        const res = await register({ username, password });
+        setCitizenNumber(res.user.citizenNumber ?? '');
+        setSeatId(res.user.seatId ?? '');
+        setRegistered(true);
+        toast.success('✅ Account registered!');
+      }
 
-      await acceptTOS();
-      await acceptConstitution();
-      toast.success('✅ Constitution accepted — you are now a legal subject!');
+      // Step B: Accept TOS (retry-safe)
+      if (!tosServerDone) {
+        await acceptTOS();
+        setTosServerDone(true);
+        toast.success('✅ Terms of Service accepted');
+      }
+
+      // Step C: Accept Constitution (retry-safe)
+      if (!constitutionServerDone) {
+        await acceptConstitution();
+        setConstitutionServerDone(true);
+        toast.success('✅ Constitution accepted — you are now a legal subject!');
+      }
 
       setCurrentStep(STEPS.COMPLETE);
     } catch (err: any) {
-      const errorMsg = err.message || 'Registration failed';
-      setError(errorMsg);
-      toast.error(`❌ ${errorMsg}`);
+      const msg = err.message || 'Registration failed';
+      setError(msg);
+      toast.error(`❌ ${msg}`);
+
+      // Specific hint for partial state
+      if (registered && (!tosServerDone || !constitutionServerDone)) {
+        toast.info('🔄 Account created. Tap "Create Account" again to retry accepting legal documents.');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // ── Copy helper ───────────────────────────────────────────────────────────
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success(`${label} copied!`);
+    });
   };
 
   // ─── Completion Screen ───
@@ -131,7 +224,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-lg p-8 mb-8 space-y-3 text-left">
+          <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-lg p-8 mb-6 space-y-3 text-left">
             <p className="text-lg text-zinc-300">✅ Terms of Service accepted</p>
             <p className="text-lg text-zinc-300">✅ Constitution accepted</p>
             <p className="text-lg text-zinc-300">✅ Sacred Oath taken</p>
@@ -139,6 +232,46 @@ export default function RegisterPage() {
               ✅ Account created — you are a LEGAL SUBJECT
             </p>
           </div>
+
+          {/* Citizen Number Display */}
+          {citizenNumber && (
+            <div className="bg-amber-950/30 border-2 border-amber-600/60 rounded-lg p-6 mb-6">
+              <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-2">
+                Your Citizen Number
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-3xl font-mono font-bold text-amber-200 tracking-widest">
+                  {citizenNumber}
+                </span>
+                <button
+                  onClick={() => copyToClipboard(citizenNumber, 'Citizen number')}
+                  className="p-2 bg-amber-900/40 hover:bg-amber-800/50 rounded-lg transition-colors text-amber-400"
+                  title="Copy citizen number"
+                >
+                  📋
+                </button>
+              </div>
+              <p className="text-zinc-500 text-xs mt-2">
+                This is your permanent sovereign identifier. Keep it safe.
+              </p>
+            </div>
+          )}
+
+          {/* SeatId Display */}
+          {seatId && (
+            <div className="bg-zinc-900/60 border border-zinc-700 rounded-lg p-4 mb-6">
+              <p className="text-zinc-500 text-xs mb-1">Your Seat ID (share with your guarantor):</p>
+              <div className="flex items-center justify-center gap-2">
+                <span className="font-mono text-amber-400 text-sm">{seatId}</span>
+                <button
+                  onClick={() => copyToClipboard(seatId, 'Seat ID')}
+                  className="text-zinc-500 hover:text-amber-400 transition-colors"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="bg-amber-950/20 border border-amber-600/30 rounded-lg p-6 mb-8">
             <p className="text-amber-200 font-semibold mb-2">
@@ -170,7 +303,7 @@ export default function RegisterPage() {
 
   const ErrorBanner = () =>
     error ? (
-      <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg text-red-400">{error}</div>
+      <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg text-red-400 text-sm">{error}</div>
     ) : null;
 
   // ─── Render ───
@@ -221,9 +354,16 @@ export default function RegisterPage() {
               <div className="text-center py-12">
                 <button
                   onClick={handleTOSNext}
-                  className={`px-8 py-4 ${primaryBtn} text-lg`}
+                  disabled={tosLoading}
+                  className={`px-8 py-4 ${primaryBtn} text-lg disabled:opacity-50`}
                 >
-                  📜 Open Terms of Service
+                  {tosLoading ? (
+                    <span className="flex items-center gap-2 justify-center">
+                      <span className="animate-spin text-xl">⏳</span> Loading document…
+                    </span>
+                  ) : (
+                    '📜 Open Terms of Service'
+                  )}
                 </button>
               </div>
             ) : (
@@ -340,29 +480,57 @@ export default function RegisterPage() {
               </div>
             )}
 
+            {/* Partial state recovery banner */}
+            {registered && (!tosServerDone || !constitutionServerDone) && (
+              <div className="p-3 bg-blue-900/20 border border-blue-600/30 rounded-lg text-blue-300 text-sm">
+                🔄 Account created. Tap &ldquo;Create Account&rdquo; again to finish legal acceptance.
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium mb-2">Username *</label>
-              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                className={inputClass} required minLength={3} placeholder="your_username" />
+              <input
+                type="text" value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={inputClass} required minLength={3}
+                placeholder="your_username"
+                disabled={registered} // Don't change username after account is created
+              />
+              {registered && (
+                <p className="text-zinc-600 text-xs mt-1">✓ Account registered as @{username}</p>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Password *</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className={inputClass} required minLength={8} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Confirm Password *</label>
-              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                className={inputClass} required />
-            </div>
+
+            {!registered && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Password *</label>
+                  <input type="password" value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={inputClass} required minLength={8} />
+                  <div className="mt-2">
+                    <PasswordStrength password={password} />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Confirm Password *</label>
+                  <input type="password" value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={inputClass} required />
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+                  )}
+                </div>
+              </>
+            )}
 
             <ErrorBanner />
             <div className="flex gap-4">
               <button type="button" onClick={() => { setError(''); setCurrentStep(STEPS.OATH); }}
-                className={backBtn} disabled={loading}>← Back</button>
-              <button type="submit" disabled={loading}
+                className={backBtn} disabled={loading || registered}>← Back</button>
+              <button type="submit" disabled={loading || (!registered && password !== confirmPassword)}
                 className="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors disabled:opacity-50">
-                {loading ? 'Processing...' : '✅ Create Account'}
+                {loading ? '⏳ Processing…' : registered ? '🔄 Retry Legal Acceptance' : '✅ Create Account'}
               </button>
             </div>
           </form>
