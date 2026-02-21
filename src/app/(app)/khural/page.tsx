@@ -141,7 +141,7 @@ export default function KhuralPage() {
   const stats = {
     total: groups.length,
     arbads: groups.filter((g: KhuralGroup) => g.level === 'ARBAD').length,
-    zuuds: groups.filter((g: KhuralGroup) => g.level === ZUN').length,
+    zuuds: groups.filter((g: KhuralGroup) => g.level === 'ZUN').length,
     myangads: groups.filter((g: KhuralGroup) => g.level === 'MYANGAD').length,
     tumeds: groups.filter((g: KhuralGroup) => g.level === 'TUMED').length,
     totalMembers: groups.reduce((sum: number, g: KhuralGroup) => sum + g.memberCount, 0),
@@ -167,10 +167,10 @@ export default function KhuralPage() {
         <CardContent className="p-4">
           <p className="text-sm font-semibold text-zinc-200 mb-3">🏛️ Structure Khural</p>
           <div className="flex items-center justify-between">
-            {(['ARBAD', ZUN', 'MYANGAD', 'TUMED'] as const).map((level, i) => {
+            {(['ARBAD', 'ZUN', 'MYANGAD', 'TUMED'] as const).map((level, i) => {
               const count =
                 level === 'ARBAD' ? stats.arbads :
-                level === ZUN' ? stats.zuuds :
+                level === 'ZUN' ? stats.zuuds :
                 level === 'MYANGAD' ? stats.myangads :
                 stats.tumeds;
               return (
@@ -220,7 +220,7 @@ export default function KhuralPage() {
 
       {/* Filter */}
       <div className="flex gap-2">
-        {(['ALL', 'ARBAD', ZUN', 'MYANGAD', 'TUMED'] as const).map((level) => (
+        {(['ALL', 'ARBAD', 'ZUN', 'MYANGAD', 'TUMED'] as const).map((level) => (
           <Button
             key={level}
             size="sm"
