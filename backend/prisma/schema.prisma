@@ -284,6 +284,12 @@ model User {
   khuralCandidacies      KhuralCandidate[]   @relation("KhuralCandidacies")
   khuralBallotsCast      KhuralBallot[]      @relation("KhuralBallotsCast")
 
+  // Judicial system (Sprint 6)
+  plaintiffCases         JudicialCase[]      @relation("PlaintiffCases")
+  defendantCases         JudicialCase[]      @relation("DefendantCases")
+  judgeCases             JudicialCase[]      @relation("JudgeCases")
+  issuedVerdicts         JudicialVerdict[]   @relation("IssuedVerdicts")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -2410,24 +2416,95 @@ model CouncilOfJusticeMember {
   @@index([approved])
 }
 
-model JudicialCase {
-  id              String     @id @default(uuid())
-  caseId          Int        @unique
-  plaintiffSeatId String
-  defendantSeatId String
-  caseHash        String
-  description     String
-  rulingType      RulingType
-  status          CaseStatus @default(PENDING)
-  assignedJudge   String?
-  rulingHash      String?
-  ruling          String?
-  filedAt         DateTime   @default(now())
-  ruledAt         DateTime?
+enum JudicialCaseStatus {
+  FILED
+  ACCEPTED
+  HEARING
+  VERDICT_ISSUED
+  CLOSED
+  APPEALED
+}
 
-  @@index([plaintiffSeatId])
-  @@index([defendantSeatId])
+enum JudicialVerdictType {
+  GUILTY
+  NOT_GUILTY
+  DISMISSED
+  SETTLED
+}
+
+/// JudicialCase — Sprint 6 Judicial System
+/// FILED → ACCEPTED (judge assigned) → HEARING → VERDICT_ISSUED → CLOSED
+/// Appeal: VERDICT_ISSUED → APPEALED → HEARING at a higher level
+model JudicialCase {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plaintiffId String
+  plaintiff   User   @relation("PlaintiffCases", fields: [plaintiffId], references: [id])
+
+  defendantId      String?
+  defendant        User?   @relation("DefendantCases", fields: [defendantId], references: [id])
+  defendantOrgId   String?
+  defendantOrgName String?
+
+  judgeId String?
+  judge   User?  @relation("JudgeCases", fields: [judgeId], references: [id])
+
+  title       String
+  description String
+  evidence    String?
+
+  level   HierarchyLevel
+  scopeId String?
+
+  status JudicialCaseStatus @default(FILED)
+
+  filedAt    DateTime  @default(now())
+  acceptedAt DateTime?
+  closedAt   DateTime?
+
+  verdicts JudicialVerdict[]
+  hearings JudicialHearing[]
+
   @@index([status])
+  @@index([plaintiffId])
+  @@index([defendantId])
+  @@index([judgeId])
+  @@index([level])
+}
+
+model JudicialHearing {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  caseId String
+  case   JudicialCase @relation(fields: [caseId], references: [id])
+
+  scheduledAt DateTime
+  notes       String?
+  outcome     String?
+
+  @@index([caseId])
+}
+
+model JudicialVerdict {
+  id       String   @id @default(uuid())
+  issuedAt DateTime @default(now())
+
+  caseId String
+  case   JudicialCase @relation(fields: [caseId], references: [id])
+
+  judgeId String
+  judge   User   @relation("IssuedVerdicts", fields: [judgeId], references: [id])
+
+  verdict     JudicialVerdictType
+  reasoning   String
+  penalty     String?
+  verdictHash String
+
+  @@index([caseId])
+  @@index([judgeId])
 }
 
 model LegalPrecedent {
@@ -5969,3 +6046,4 @@ model KhuralBallot {
   @@index([electionId])
   @@index([voterId])
 }
+

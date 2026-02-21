@@ -45,9 +45,10 @@ export class ChancelleryService {
 
     // 4. Check if user is a judge (assigned to any court case)
     const judgeRecord = await this.prisma.judicialCase.findFirst({
-      where: { assignedJudge: userId },
+      where: { judgeId: userId },
     });
     if (judgeRecord) return;
+
 
     throw new ForbiddenException(
       'Доступ к канцелярии только для нотариусов, юристов и судей',

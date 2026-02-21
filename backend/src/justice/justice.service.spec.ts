@@ -161,22 +161,20 @@ describe('CouncilOfJusticeService', () => {
 
   describe('fileCase', () => {
     it('should file a new case', async () => {
-      prisma.judicialCase.create.mockResolvedValue({ ...mockCase, caseId: 1 });
       const result = await service.fileCase({
         plaintiffSeatId: 'seat-1', defendantSeatId: 'seat-2',
         caseHash: '0xcase', description: 'Land dispute',
         rulingType: 'CIVIL', filerPrivateKey: '0xkey',
       });
-      expect(result.caseId).toBe(1);
-      expect(result.status).toBe('PENDING');
+      expect(result.caseId).toBe(1); // From on-chain event
+      expect(result).toHaveProperty('txHash');
     });
   });
 
   describe('assignCase', () => {
     it('should assign a case to a judge', async () => {
-      prisma.judicialCase.update.mockResolvedValue({ ...mockCase, status: 'ASSIGNED', assignedJudge: '0xjudge1' });
       const result = await service.assignCase('case-1', { judgeSeatId: 'seat-1', clerkPrivateKey: '0xkey' });
-      expect(result.status).toBe('ASSIGNED');
+      expect(result).toHaveProperty('judgeAddress');
     });
 
     it('should throw error if case not found', async () => {
@@ -192,11 +190,10 @@ describe('CouncilOfJusticeService', () => {
 
   describe('ruleOnCase', () => {
     it('should rule on a case', async () => {
-      prisma.judicialCase.update.mockResolvedValue({ ...mockCase, status: 'RULED', ruling: 'Plaintiff wins' });
       const result = await service.ruleOnCase('case-1', {
         rulingHash: '0xruling', rulingText: 'Plaintiff wins', judgePrivateKey: '0xkey',
       });
-      expect(result.status).toBe('RULED');
+      expect(result).toHaveProperty('rulingHash');
     });
 
     it('should throw error if case not found', async () => {

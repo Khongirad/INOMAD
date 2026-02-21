@@ -206,21 +206,10 @@ export class CouncilOfJusticeService {
     const event = receipt.logs.find((log: any) => log.fragment?.name === 'CaseFiled');
     const caseId = event ? Number(event.args[0]) : 0;
 
-    // Store in database
-    const judicialCase = await this.prisma.judicialCase.create({
-      data: {
-        caseId,
-        plaintiffSeatId: dto.plaintiffSeatId,
-        defendantSeatId: dto.defendantSeatId,
-        caseHash: dto.caseHash,
-        description: dto.description,
-        rulingType: dto.rulingType,
-        status: 'PENDING',
-      },
-    });
-
-    this.logger.log(`Case ${caseId} filed successfully`);
-    return judicialCase;
+    // Note: DB-level case creation is handled by JudicialService (Sprint 6).
+    // Return the on-chain case ID for reference.
+    this.logger.log(`Case ${caseId} filed on-chain successfully`);
+    return { caseId, txHash: receipt.hash };
   }
 
   /**
@@ -246,21 +235,12 @@ export class CouncilOfJusticeService {
 
     const contract = this.getCouncilContract(dto.clerkPrivateKey);
 
-    // Assign on-chain
-    const tx = await contract.assignCase(judicialCase.caseId, judge.walletAddress);
-    await tx.wait();
+    // Assign on-chain only (DB assignment handled by JudicialService)
+    const tx = await contract.assignCase(caseId, judge.walletAddress);
+    const receipt2 = await tx.wait();
 
-    // Update database
-    const updated = await this.prisma.judicialCase.update({
-      where: { id: caseId },
-      data: {
-        assignedJudge: judge.walletAddress,
-        status: 'ASSIGNED',
-      },
-    });
-
-    this.logger.log(`Case ${judicialCase.caseId} assigned to judge ${judge.walletAddress}`);
-    return updated;
+    this.logger.log(`Case ${caseId} assigned to judge ${judge.walletAddress} on-chain`);
+    return { caseId, judgeAddress: judge.walletAddress, txHash: receipt2.hash };
   }
 
   /**
@@ -277,27 +257,16 @@ export class CouncilOfJusticeService {
 
     const contract = this.getCouncilContract(dto.judgePrivateKey);
 
-    // Rule on-chain
+    // Rule on-chain (DB verdict creation handled by JudicialService)
     const tx = await contract.ruleOnCase(
-      judicialCase.caseId,
+      caseId,
       dto.rulingHash,
       dto.rulingText,
     );
-    await tx.wait();
+    const receipt3 = await tx.wait();
 
-    // Update database
-    const updated = await this.prisma.judicialCase.update({
-      where: { id: caseId },
-      data: {
-        rulingHash: dto.rulingHash,
-        ruling: dto.rulingText,
-        status: 'RULED',
-        ruledAt: new Date(),
-      },
-    });
-
-    this.logger.log(`Case ${judicialCase.caseId} ruled`);
-    return updated;
+    this.logger.log(`Case ${caseId} ruled on-chain`);
+    return { caseId, rulingHash: dto.rulingHash, txHash: receipt3.hash };
   }
 
   /**
@@ -313,20 +282,16 @@ export class CouncilOfJusticeService {
    * Get cases by plaintiff
    */
   async getCasesByPlaintiff(seatId: string) {
-    return this.prisma.judicialCase.findMany({
-      where: { plaintiffSeatId: seatId },
-      orderBy: { filedAt: 'desc' },
-    });
+    // Legacy - use JudicialService.getMyCases for DB-level queries
+    return [];
   }
 
   /**
    * Get cases by defendant
    */
   async getCasesByDefendant(seatId: string) {
-    return this.prisma.judicialCase.findMany({
-      where: { defendantSeatId: seatId },
-      orderBy: { filedAt: 'desc' },
-    });
+    // Legacy - use JudicialService.getMyCases for DB-level queries
+    return [];
   }
 
   // ============ Legal Precedents ============
@@ -450,7 +415,7 @@ export class CouncilOfJusticeService {
     const [totalMembers, totalCases, pendingCases, totalPrecedents] = await Promise.all([
       this.prisma.councilOfJusticeMember.count({ where: { approved: true } }),
       this.prisma.judicialCase.count(),
-      this.prisma.judicialCase.count({ where: { status: 'PENDING' } }),
+      this.prisma.judicialCase.count({ where: { status: 'FILED' } }),
       this.prisma.legalPrecedent.count(),
     ]);
 
