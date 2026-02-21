@@ -1,5 +1,5 @@
 import { ApiTags } from '@nestjs/swagger';
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Req } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { OrganizationType, BranchType, MemberRole, RatingCategory } from '@prisma/client';
 
@@ -45,6 +45,13 @@ export class OrganizationController {
   @Get('network/:arbanId')
   async getArbanNetwork(@Param('arbanId') arbanId: string) {
     return this.organizationService.getArbanNetwork(arbanId);
+  }
+
+  // ============== My Arban (citizen's community) ==============
+
+  @Get('my-arban')
+  async getMyArban(@Req() req: any) {
+    return this.organizationService.getMyArban(req.user.userId);
   }
 
   // ============== Get by ID ==============

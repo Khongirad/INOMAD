@@ -40,9 +40,11 @@ const NAV_ITEMS = [
   {
     category: "Identity (Soul)",
     items: [
-      { name: "My Seat",  href: "/dashboard", icon: ShieldCheck },
-      { name: "Profile",  href: "/profile",   icon: Users },
-      { name: "My Family", href: "/family",   icon: Users },
+      { name: "My Seat",   href: "/dashboard", icon: ShieldCheck },
+      { name: "Profile",   href: "/profile",   icon: Users       },
+      { name: "My Arban",  href: "/arban",     icon: Users       },
+      { name: "Hierarchy", href: "/hierarchy", icon: TreePine    },
+      { name: "My Family", href: "/family",    icon: Users       },
     ],
   },
   {

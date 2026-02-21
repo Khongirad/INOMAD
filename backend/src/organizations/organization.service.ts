@@ -386,9 +386,64 @@ export class OrganizationService {
     // TODO: Additional family lineage verification
   }
 
+  // ============== My Arban (citizen's community) ==============
+
+  /**
+   * Return the Arban-level org this user belongs to:
+   * priority 1 — they are the leader
+   * priority 2 — they are an active member
+   * Returns null if the user has no Arban yet.
+   */
+  async getMyArban(userId: string) {
+    // Try as leader first (level 1 = Arban)
+    let arban = await this.prisma.organization.findFirst({
+      where: { leaderId: userId, level: 1 },
+      include: {
+        leader: { select: { id: true, username: true, seatId: true, isVerified: true } },
+        members: {
+          where: { leftAt: null },
+          include: { user: { select: { id: true, username: true, seatId: true, isVerified: true } } },
+        },
+        parent: { select: { id: true, name: true, type: true, level: true } },
+        children: { select: { id: true, name: true, type: true, level: true } },
+        _count: { select: { members: true } },
+      },
+    });
+
+    if (!arban) {
+      // Try as member
+      const membership = await this.prisma.organizationMember.findFirst({
+        where: { userId, leftAt: null, organization: { level: 1 } },
+        include: {
+          organization: {
+            include: {
+              leader: { select: { id: true, username: true, seatId: true, isVerified: true } },
+              members: {
+                where: { leftAt: null },
+                include: { user: { select: { id: true, username: true, seatId: true, isVerified: true } } },
+              },
+              parent: { select: { id: true, name: true, type: true, level: true } },
+              children: { select: { id: true, name: true, type: true, level: true } },
+              _count: { select: { members: true } },
+            },
+          },
+        },
+      });
+      arban = membership?.organization ?? null;
+    }
+
+    if (!arban) return null;
+
+    return {
+      ...arban,
+      isLeader: arban.leaderId === userId,
+    };
+  }
+
   // ============== Network Visualization ==============
 
   async getArbanNetwork(arbanId: string) {
+
     return this.prisma.arbanNetwork.findUnique({
       where: { arbanId },
       include: {
