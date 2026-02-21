@@ -1923,7 +1923,7 @@ model MonetaryPolicyChange {
   @@index([effectiveAt])
 }
 
-model FamilyArban {
+model FamilyArbad {
   id                 String             @id @default(uuid())
   arbanId            BigInt             @unique
   husbandSeatId      String // Changed from BigInt to String
@@ -1936,7 +1936,7 @@ model FamilyArban {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   zun                Zun?               @relation(fields: [zunId], references: [zunId])
-  children           FamilyArbanChild[]
+  children           FamilyArbadChild[]
 
   @@index([husbandSeatId])
   @@index([wifeSeatId])
@@ -1944,12 +1944,12 @@ model FamilyArban {
   @@index([khuralRepSeatId])
 }
 
-model FamilyArbanChild {
+model FamilyArbadChild {
   id          String      @id @default(uuid())
   arbanId     BigInt
   childSeatId String // Changed from BigInt to String
   addedAt     DateTime    @default(now())
-  familyArban FamilyArban @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
+  familyArban FamilyArbad @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
 
   @@unique([arbanId, childSeatId])
   @@index([arbanId])
@@ -1962,19 +1962,19 @@ model Zun {
   name           String
   founderArbanId BigInt
   elderSeatId    String? // Changed from BigInt to String
-  myanganId      String? // Parent Myangan
-  myangan        Myangan?      @relation("MyanganZuns", fields: [myanganId], references: [id])
+  myangadId      String? // Parent Myangan
+  myangad        Myangad?      @relation("MyanganZuns", fields: [myangadId], references: [id])
   isActive       Boolean       @default(true)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  memberArbans   FamilyArban[]
+  memberArbads   FamilyArbad[]
 
   @@index([founderArbanId])
   @@index([elderSeatId])
-  @@index([myanganId])
+  @@index([myangadId])
 }
 
-model OrganizationalArban {
+model OrganizationalArbad {
   id           String                @id @default(uuid())
   arbanId      BigInt                @unique
   name         String
@@ -1986,8 +1986,8 @@ model OrganizationalArban {
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
   members      OrgArbanMember[]
-  parent       OrganizationalArban?  @relation("OrgHierarchy", fields: [parentOrgId], references: [arbanId])
-  departments  OrganizationalArban[] @relation("OrgHierarchy")
+  parent       OrganizationalArbad?  @relation("OrgHierarchy", fields: [parentOrgId], references: [arbanId])
+  departments  OrganizationalArbad[] @relation("OrgHierarchy")
 
   // Transparency: Activity and Report tracking
   activities      ActivityEntry[]        @relation("OrgActivities")
@@ -2004,7 +2004,7 @@ model OrgArbanMember {
   arbanId  BigInt
   seatId   String // Changed from BigInt to String
   joinedAt DateTime            @default(now())
-  org      OrganizationalArban @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
+  org      OrganizationalArbad @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
 
   @@unique([arbanId, seatId])
   @@index([arbanId])
@@ -2375,7 +2375,7 @@ model BankEmployee {
   employeeId    BigInt       @unique // On-chain employee ID
   bankArbanId   BigInt // Arban (10) this employee belongs to
   bankZunId     BigInt? // Zun (100) parent
-  bankMyanganId BigInt? // Myangan (1000) parent
+  bankMyanganId BigInt? //  Myangad (1000) parent
   bankTumenId   BigInt? // Tumen (10000) parent
   performance   Int          @default(75)
   position      BankPosition @default(EMPLOYEE)
@@ -3698,7 +3698,7 @@ model ActivityEntry {
 
   // Organizational Context
   orgArbanId     String?
-  orgArban       OrganizationalArban? @relation("OrgActivities", fields: [orgArbanId], references: [id], onDelete: SetNull)
+  orgArban       OrganizationalArbad? @relation("OrgActivities", fields: [orgArbanId], references: [id], onDelete: SetNull)
   hierarchyLevel HierarchyLevel? // 1, 10, 100, 1000, 10000, REPUBLIC, CONFEDERATION
 
   // Power Branch
@@ -3779,7 +3779,7 @@ model BranchActivityReport {
 
   // Organizational context
   orgArbanId String?
-  orgArban   OrganizationalArban? @relation("OrgReports", fields: [orgArbanId], references: [id], onDelete: SetNull)
+  orgArban   OrganizationalArbad? @relation("OrgReports", fields: [orgArbanId], references: [id], onDelete: SetNull)
 
   // Linked activities
   activities ActivityEntry[] @relation("ReportActivities")
@@ -4478,12 +4478,12 @@ model LandEncumbrance {
 }
 
 // ==============================================================================
-// HIERARCHICAL GOVERNANCE — Myangan (1000) → Tumen (10000) → Republic → Confederation
+// HIERARCHICAL GOVERNANCE —  Myangad (1000) → Tumen (10000) → Republic → Confederation
 // ==============================================================================
 
-/// Myangan (Тысяча) — 10 Zuns form a Myangan
+///  Myangad (Тысяча) — 10 Zuns form a Myangan
 /// Military: Battalion | Governance: District council
-model Myangan {
+model Myangad {
   id           String  @id @default(uuid())
   name         String
   region       String // Geographic region
@@ -4495,7 +4495,7 @@ model Myangan {
 
   // Parent Tumen
   tumenId String?
-  tumen   Tumen?  @relation("TumenMyangans", fields: [tumenId], references: [id])
+  tumen   Tumed?  @relation("TumenMyangans", fields: [tumenId], references: [id])
 
   // Member Zuns (should be 10)
   memberZuns Zun[] @relation("MyanganZuns")
@@ -4517,7 +4517,7 @@ model Myangan {
 
 /// Tumen (Десять тысяч) — 10 Myangans form a Tumen
 /// Military: Division | Governance: Regional parliament
-model Tumen {
+model Tumed {
   id           String  @id @default(uuid())
   name         String
   region       String // Geographic region
@@ -4532,11 +4532,11 @@ model Tumen {
   republic   RepublicanKhural? @relation("RepublicTumens", fields: [republicId], references: [id])
 
   // Member Myangans (should be 10)
-  memberMyangans Myangan[] @relation("TumenMyangans")
+  memberMyangads Myangad[] @relation("TumenMyangans")
 
-  // Cooperations (Tumens cooperate, never merge)
-  cooperationsAsA TumenCooperation[] @relation("TumenCoopA")
-  cooperationsAsB TumenCooperation[] @relation("TumenCoopB")
+  // Cooperations (Tumeds cooperate, never merge)
+  cooperationsAsA TumedCooperation[] @relation("TumenCoopA")
+  cooperationsAsB TumedCooperation[] @relation("TumenCoopB")
 
   // Parliament votes by this Tumen's leader
   khuralVotes KhuralVote[] @relation("TumenVotes")
@@ -4573,7 +4573,7 @@ model RepublicanKhural {
   confederation   ConfederativeKhural? @relation("ConfederationRepublics", fields: [confederationId], references: [id])
 
   // Member Tumens
-  memberTumens Tumen[] @relation("RepublicTumens")
+  memberTumeds Tumed[] @relation("RepublicTumens")
 
   // Statistics
   totalMembers Int @default(0)
@@ -4854,7 +4854,7 @@ enum ComplaintStatus {
   UNDER_REVIEW   // Being reviewed by assigned officer
   RESPONDED      // Organization/person responded
   ESCALATED_L2   // Escalated to Zun level
-  ESCALATED_L3   // Escalated to Myangan level
+  ESCALATED_L3   // Escalated to  Myangad level
   ESCALATED_L4   // Escalated to Tumen level
   ESCALATED_L5   // Escalated to Republic level
   ESCALATED_L6   // Escalated to Confederation level
@@ -5125,14 +5125,14 @@ enum CooperationStatus {
 
 /// TumenCooperation — treaty between two Tumens
 /// Tumens are sovereign entities — they COOPERATE, never merge.
-model TumenCooperation {
+model TumedCooperation {
   id String @id @default(uuid())
 
   tumenAId String
-  tumenA   Tumen @relation("TumenCoopA", fields: [tumenAId], references: [id])
+  tumenA   Tumed @relation("TumenCoopA", fields: [tumenAId], references: [id])
 
   tumenBId String
-  tumenB   Tumen @relation("TumenCoopB", fields: [tumenBId], references: [id])
+  tumenB   Tumed @relation("TumenCoopB", fields: [tumenBId], references: [id])
 
   title       String  // Treaty title
   description String? @db.Text // Full treaty text
@@ -5221,7 +5221,7 @@ model KhuralVote {
   voter       User @relation("KhuralVoter", fields: [voterUserId], references: [id])
 
   tumenId String // Which Tumen they represent
-  tumen   Tumen @relation("TumenVotes", fields: [tumenId], references: [id])
+  tumen   Tumed @relation("TumenVotes", fields: [tumenId], references: [id])
 
   vote    VoteChoice
   comment String? // Optional reasoning
