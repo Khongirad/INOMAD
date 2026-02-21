@@ -9,7 +9,7 @@ describe('RegistrationService', () => {
   const mockUser = { id: 'u1', seatId: null, role: 'CITIZEN' };
   const mockTumed = { id: 'tum1', level: 'TUMED', name: 'Novosibirsk Tumed I', childGroups: [] };
   const mockMyangad = { id: 'mya1', level: 'MYANGAD', name: 'Novosibirsk Tumed I - Myangad 1' };
-  const mockZuud = { id: 'zun1', level: 'ZUUN', name: 'Myangad 1 - Zuud 1' };
+  const mockZun = { id: 'zun1', level: 'ZUN', name: 'Myangad 1 - Zun 1' };
   const mockArbad = { id: 'arb1', level: 'ARBAD', name: 'Zuud 1 - Arbad 1' };
   const mockSeat = { id: 'seat1', groupId: 'arb1', index: 0, isLeaderSeat: true, occupantUserId: null };
 
@@ -115,7 +115,7 @@ describe('RegistrationService', () => {
       // findAvailableChild returns a group for each level
       prisma.khuralGroup.findMany
         .mockResolvedValueOnce([{ ...mockMyangad, seats: [], childGroups: [] }]) // for MYANGAD
-        .mockResolvedValueOnce([{ ...mockZuud, seats: [], childGroups: [] }]) // for ZUUN
+        .mockResolvedValueOnce([{ ...mockZun, seats: [], childGroups: [] }]) // for ZUN
         .mockResolvedValueOnce([{ ...mockArbad, seats: [mockSeat], childGroups: [] }]); // for ARBAD
 
       prisma.khuralSeat.count.mockResolvedValue(5); // 5 occupied < 10
