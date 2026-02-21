@@ -65,6 +65,7 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { NewsModule } from './news/news.module';
 import { CitizenshipModule } from './citizenship/citizenship.module';
 import { PublicSquareModule } from './public-square/public-square.module';
+import { CIKModule } from './cik/cik.module';
 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
@@ -139,8 +140,8 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     NewsModule,
     CitizenshipModule,
     PublicSquareModule, // Народная площадь — debates & petitions at every hierarchy level
+    CIKModule,          // Центральная Избирательная Комиссия + Khural elections
   ],
-
   providers: [
     {
       provide: APP_GUARD,

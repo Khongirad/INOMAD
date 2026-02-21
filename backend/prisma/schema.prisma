@@ -277,6 +277,13 @@ model User {
   // Public Square — народные дебаты
   publicSquarePosts      PublicSquarePost[]   @relation("PublicSquarePosts")
 
+  // CIK — Electoral Commission (Sprint 4)
+  cikAppointments        CIK[]               @relation("CIKAppointments")
+  cikMemberships         CIKMember[]         @relation("CIKMemberships")
+  createdKhuralElections KhuralElection[]    @relation("CreatedKhuralElections")
+  khuralCandidacies      KhuralCandidate[]   @relation("KhuralCandidacies")
+  khuralBallotsCast      KhuralBallot[]      @relation("KhuralBallotsCast")
+
   @@index([seatId])
   @@index([organizationId])
   @@index([verificationStatus])
@@ -5809,3 +5816,128 @@ enum SquareStatus {
   CLOSED      // No longer active
 }
 
+// ==============================================================================
+// CIK — CENTRAL ELECTORAL COMMISSION (Sprint 4)
+// ==============================================================================
+
+/// CIK lifecycle:
+/// 1. PROVISIONAL: Creator-appointed to run the first Khural election
+/// 2. PERMANENT:   Khural-appointed after first seating
+/// Provisional CIK self-destructs (DISSOLVED) once Khural convenes.
+
+model CIK {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  type        String   // "PROVISIONAL" | "PERMANENT"
+  status      String   @default("ACTIVE") // "ACTIVE" | "DISSOLVED"
+
+  appointedById String
+  appointedBy   User     @relation("CIKAppointments", fields: [appointedById], references: [id])
+
+  mandate     String?  // Public mandate statement
+  dissolvedAt DateTime?
+
+  members     CIKMember[]
+  elections   KhuralElection[]
+
+  @@index([type, status])
+}
+
+model CIKMember {
+  id     String @id @default(uuid())
+  cikId  String
+  cik    CIK    @relation(fields: [cikId], references: [id])
+
+  userId String
+  user   User   @relation("CIKMemberships", fields: [userId], references: [id])
+
+  role   String @default("MEMBER") // "CHAIR" | "MEMBER"
+  joinedAt DateTime @default(now())
+
+  @@unique([cikId, userId])
+  @@index([userId])
+}
+
+/// KhuralElection — Khural-specific election managed by CIK
+///
+/// Status flow:
+///   NOMINATION → VOTING → CERTIFIED (or CANCELLED)
+///
+/// Result integrity:
+///   resultHash = sha256(electionId | winner1Id:votes | ... | totalVotes | certifiedAt)
+model KhuralElection {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  createdById String
+  createdBy   User    @relation("CreatedKhuralElections", fields: [createdById], references: [id])
+
+  cikId       String?
+  cik         CIK?    @relation(fields: [cikId], references: [id])
+
+  electionType String // "CONFEDERATION" | "REPUBLICAN" | "TUMEN"
+  scopeId      String  // confederationId / republicId / tumenId
+
+  title       String
+  description String?
+
+  seatsCount  Int      @default(1)
+  status      String   @default("NOMINATION") // NOMINATION | VOTING | CERTIFIED | CANCELLED
+
+  nominationDeadline DateTime
+  votingStart        DateTime
+  votingEnd          DateTime
+
+  totalVotes   Int      @default(0)
+  certifiedAt  DateTime?
+  resultHash   String?  // Cryptographic certification of outcome
+  winnerId     String?  // First-place candidateId (userId)
+
+  candidates  KhuralCandidate[]
+  ballots     KhuralBallot[]
+
+  @@index([status])
+  @@index([electionType])
+  @@index([votingStart])
+}
+
+model KhuralCandidate {
+  id         String @id @default(uuid())
+  createdAt  DateTime @default(now())
+
+  electionId String
+  election   KhuralElection @relation(fields: [electionId], references: [id])
+
+  candidateId String
+  candidate   User   @relation("KhuralCandidacies", fields: [candidateId], references: [id])
+
+  platform   String? // Manifesto / programme
+  voteCount  Int     @default(0)
+
+  @@unique([electionId, candidateId])
+  @@index([electionId])
+  @@index([candidateId])
+}
+
+/// KhuralBallot — one citizen, one vote per election.
+/// merkleLeaf = sha256(electionId | voterId | candidateId | castedAt.toISO())
+/// Ballot counts are verifiable against the election resultHash.
+model KhuralBallot {
+  id         String @id @default(uuid())
+  castedAt   DateTime @default(now())
+
+  electionId  String
+  election    KhuralElection @relation(fields: [electionId], references: [id])
+
+  voterId     String
+  voter       User   @relation("KhuralBallotsCast", fields: [voterId], references: [id])
+
+  candidateId String // userId of chosen candidate
+
+  merkleLeaf  String // sha256 proof
+
+  @@unique([electionId, voterId]) // One vote per citizen per election
+  @@index([electionId])
+  @@index([voterId])
+}
