@@ -14,7 +14,7 @@ build-info/
 
 # --- Foundry lock & deps ---
 foundry.lock
-lib/
+/lib/
 
 # --- Hardhat ---
 typechain/
