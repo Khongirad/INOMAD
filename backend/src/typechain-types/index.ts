@@ -2,5 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { ArbadCompletion } from "./ArbadCompletion";
+export type { ArbadCreditLine } from "./ArbadCreditLine";
 export * as factories from "./factories";
 export { ArbadCompletion__factory } from "./factories/ArbadCompletion__factory";
+export { ArbadCreditLine__factory } from "./factories/ArbadCreditLine__factory";

@@ -58,7 +58,7 @@ export class HierarchyController {
   }
 
   @Post('myangads/:myangadId/join')
-  async joinMyangad(@Param('myangadId') myanganId: string, @Body('zunId') zunId: string) {
+  async joinMyangad(@Param("myangadId") myangadId: string, @Body('zunId') zunId: string) {
     return this.hierarchyService.joinMyangad(zunId, myangadId);
   }
 
@@ -74,7 +74,7 @@ export class HierarchyController {
   }
 
   @Post('tumeds/:tumedId/join')
-  async joinTumed(@Param('tumedId') tumedId: string, @Body('myangadId') myanganId: string) {
+  async joinTumed(@Param('tumedId') tumedId: string, @Body('myangadId') myangadId: string) {
     return this.hierarchyService.joinTumed(myangadId, tumedId);
   }
 

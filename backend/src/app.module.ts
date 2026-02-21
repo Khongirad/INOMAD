@@ -16,7 +16,7 @@ import { HealthModule } from './health/health.module';
 import { IdentityModule } from './identity/identity.module';
 import { BankModule } from './bank/bank.module';
 import { CentralBankModule } from './central-bank/central-bank.module';
-import { ArbadModule } from './arbads/arbad.module';
+import { ArbadModule } from './arbans/arbad.module';
 import { DigitalSealModule } from './digital-seal/digital-seal.module';
 import { AcademyModule } from './academy/academy.module';
 import { JusticeModule } from './justice/justice.module';

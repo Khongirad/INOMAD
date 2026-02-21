@@ -35,11 +35,11 @@ export class ArbadVerificationService {
     const [verifier, verified] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: verifierId },
-        select: { currentArbanId: true },
+        select: { currentArbadId: true },
       }),
       this.prisma.user.findUnique({
         where: { id: verifiedId },
-        select: { currentArbanId: true },
+        select: { currentArbadId: true },
       }),
     ]);
 
@@ -47,7 +47,7 @@ export class ArbadVerificationService {
       throw new NotFoundException('User not found');
     }
 
-    if (verifier.currentArbanId !== arbadId || verified.currentArbanId !== arbadId) {
+    if (verifier.currentArbadId !== arbadId || verified.currentArbadId !== arbadId) {
       throw new ForbiddenException('Both users must be members of this Arbad');
     }
 
@@ -135,7 +135,7 @@ export class ArbadVerificationService {
   async isFullyVerified(arbadId: string): Promise<boolean> {
     // Get Arbad members
     const members = await this.prisma.user.findMany({
-      where: { currentArbanId: arbadId },
+      where: { currentArbadId: arbadId },
       select: { id: true },
     });
 
@@ -162,7 +162,7 @@ export class ArbadVerificationService {
    */
   async getVerificationProgress(arbadId: string): Promise<VerificationProgress> {
     const members = await this.prisma.user.findMany({
-      where: { currentArbanId: arbadId },
+      where: { currentArbadId: arbadId },
       select: { id: true },
     });
 
@@ -201,7 +201,7 @@ export class ArbadVerificationService {
   async onFullVerification(arbadId: string): Promise<void> {
     // Get all Arbad members
     const members = await this.prisma.user.findMany({
-      where: { currentArbanId: arbadId },
+      where: { currentArbadId: arbadId },
       select: { id: true },
     });
 
@@ -212,7 +212,7 @@ export class ArbadVerificationService {
         verificationLevel: VerificationLevel.UNVERIFIED, // Only upgrade if still unverified
       },
       data: {
-        verificationLevel: VerificationLevel.ARBAN_VERIFIED,
+        verificationLevel: VerificationLevel.ARBAD_VERIFIED,
         arbadVerifiedAt: new Date(),
         verificationLevelSetAt: new Date(),
       },
@@ -237,7 +237,7 @@ export class ArbadVerificationService {
     // Get all Arbad members except self
     const allMembers = await this.prisma.user.findMany({
       where: {
-        currentArbanId: arbadId,
+        currentArbadId: arbadId,
         id: { not: userId },
       },
       select: {
@@ -355,8 +355,8 @@ export class ArbadVerificationService {
     if (!isComplete) {
       await this.prisma.user.updateMany({
         where: {
-          currentArbanId: arbadId,
-          verificationLevel: VerificationLevel.ARBAN_VERIFIED,
+          currentArbadId: arbadId,
+          verificationLevel: VerificationLevel.ARBAD_VERIFIED,
         },
         data: {
           verificationLevel: VerificationLevel.UNVERIFIED,

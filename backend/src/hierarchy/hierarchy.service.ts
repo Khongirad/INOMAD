@@ -173,7 +173,7 @@ export class HierarchyService {
     return myangad;
   }
 
-  async joinMyangad(zunId: string, myanganId: string) {
+  async joinMyangad(zunId: string, myangadId: string) {
     const myangad = await this.prisma.myangad.findUnique({
       where: { id: myangadId },
       include: { memberZuns: true },
@@ -245,7 +245,7 @@ export class HierarchyService {
     return tumed;
   }
 
-  async joinTumed(myanganId: string, tumedId: string) {
+  async joinTumed(myangadId: string, tumedId: string) {
     const tumed = await this.prisma.tumed.findUnique({
       where: { id: tumedId },
       include: { memberMyangads: true },
@@ -278,7 +278,7 @@ export class HierarchyService {
   // STATISTICS RECALCULATION
   // ────────────────────────────────────
 
-  private async recalcMyangadStats(myanganId: string) {
+  private async recalcMyangadStats(myangadId: string) {
     const myangad = await this.prisma.myangad.findUnique({
       where: { id: myangadId },
       include: {

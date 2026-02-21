@@ -322,7 +322,7 @@ export class VerificationService {
     }
 
     try {
-      await this.distributionService.distributeByLevel(verifiedId, 'ARBAN_VERIFIED');
+      await this.distributionService.distributeByLevel(verifiedId, 'ARBAD_VERIFIED');
       this.logger.log(`✅ Birthright ALTAN distributed to newly verified citizen ${verifiedId}`);
     } catch (e) {
       // Pool not initialized or user already received — log and continue

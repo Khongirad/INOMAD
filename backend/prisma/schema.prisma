@@ -87,7 +87,7 @@ model User {
   verificationLevelSetAt DateTime?
   verificationLevelSetBy String? // Admin userId who set the level
   totalEmitted           Decimal           @default(0) @db.Decimal(18, 2)
-  arbanVerifiedAt        DateTime?
+  arbadVerifiedAt        DateTime?
   zunVerifiedAt          DateTime?
   fullyVerifiedAt        DateTime?
 
@@ -101,7 +101,7 @@ model User {
   // Hierarchical membership
   familyId       String?
   clanId         String?
-  currentArbanId String?
+  currentArbadId String?
   hordeId        String?
   nationId       String?
   organizationId String?
@@ -193,8 +193,8 @@ model User {
   // Tiered Verification Relations
   verificationRequests         VerificationRequest[]     @relation("Requester")
   verificationRequestsReviewed VerificationRequest[]     @relation("Reviewer")
-  arbanVerificationsGiven      ArbanMutualVerification[] @relation("ArbanVerifier")
-  arbanVerificationsReceived   ArbanMutualVerification[] @relation("ArbanVerified")
+  arbanVerificationsGiven      ArbadMutualVerification[] @relation("ArbanVerifier")
+  arbanVerificationsReceived   ArbadMutualVerification[] @relation("ArbanVerified")
 
   // Initial ALTAN Distribution
   distribution UserDistribution?
@@ -565,13 +565,13 @@ model VerificationRequest {
 }
 
 // Arban Mutual Verification (each member verifies others)
-model ArbanMutualVerification {
+model ArbadMutualVerification {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
   // Arban context
-  arbanId String
-  arban   Guild  @relation("ArbanVerifications", fields: [arbanId], references: [id])
+  arbadId String
+  arban   Guild  @relation("ArbanVerifications", fields: [arbadId], references: [id])
 
   // Verifier (member doing the verification)
   verifierId String
@@ -586,8 +586,8 @@ model ArbanMutualVerification {
   notes      String?  @db.Text
   verifiedAt DateTime @default(now())
 
-  @@unique([arbanId, verifierId, verifiedId])
-  @@index([arbanId])
+  @@unique([arbadId, verifierId, verifiedId])
+  @@index([arbadId])
   @@index([verifierId])
   @@index([verifiedId])
 }
@@ -638,7 +638,7 @@ model UserDistribution {
 
   // Received amounts by verification level
   unverifiedReceived    Decimal @default(0) @db.Decimal(18, 2) // 100 ALTAN on registration
-  arbanVerifiedReceived Decimal @default(0) @db.Decimal(18, 2) // 900 more (total 1,000)
+  arbadVerifiedReceived Decimal @default(0) @db.Decimal(18, 2) // 900 more (total 1,000)
   zunReceived           Decimal @default(0) @db.Decimal(18, 2) // 9,000 more (total 10,000)
   fullyReceived         Decimal @default(0) @db.Decimal(18, 2) // Remaining allocation
 
@@ -1035,7 +1035,7 @@ model TimelineEvent {
   // Hierarchical context
   familyId String?
   clanId   String?
-  arbanId  String?
+  arbadId  String?
   hordeId  String?
   nationId String?
 
@@ -1058,7 +1058,7 @@ model TimelineEvent {
   @@index([targetId, createdAt])
   @@index([type, scope])
   @@index([createdAt])
-  @@index([arbanId])
+  @@index([arbadId])
   @@index([clanId])
 }
 
@@ -1630,7 +1630,7 @@ model Guild {
   members             GuildMember[]
   tasks               Task[]
   organizationMembers User[]                    @relation("OrganizationMembers")
-  arbanVerifications  ArbanMutualVerification[] @relation("ArbanVerifications")
+  arbanVerifications  ArbadMutualVerification[] @relation("ArbanVerifications")
 
   @@index([type])
   @@index([professionId])
@@ -1925,7 +1925,7 @@ model MonetaryPolicyChange {
 
 model FamilyArbad {
   id                 String             @id @default(uuid())
-  arbanId            BigInt             @unique
+  arbadId            BigInt             @unique
   husbandSeatId      String // Changed from BigInt to String
   wifeSeatId         String // Changed from BigInt to String
   heirSeatId         String? // Changed from BigInt to String
@@ -1946,13 +1946,13 @@ model FamilyArbad {
 
 model FamilyArbadChild {
   id          String      @id @default(uuid())
-  arbanId     BigInt
+  arbadId     BigInt
   childSeatId String // Changed from BigInt to String
   addedAt     DateTime    @default(now())
-  familyArban FamilyArbad @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
+  familyArban FamilyArbad @relation(fields: [arbadId], references: [arbadId], onDelete: Cascade)
 
-  @@unique([arbanId, childSeatId])
-  @@index([arbanId])
+  @@unique([arbadId, childSeatId])
+  @@index([arbadId])
   @@index([childSeatId])
 }
 
@@ -1960,23 +1960,23 @@ model Zun {
   id             String        @id @default(uuid())
   zunId          BigInt        @unique
   name           String
-  founderArbanId BigInt
+  founderArbadId BigInt
   elderSeatId    String? // Changed from BigInt to String
   myangadId      String? // Parent Myangan
-  myangad        Myangad?      @relation("MyanganZuns", fields: [myangadId], references: [id])
+  myangad        Myangad?      @relation("MyangadZuns", fields: [myangadId], references: [id])
   isActive       Boolean       @default(true)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   memberArbads   FamilyArbad[]
 
-  @@index([founderArbanId])
+  @@index([founderArbadId])
   @@index([elderSeatId])
   @@index([myangadId])
 }
 
 model OrganizationalArbad {
   id           String                @id @default(uuid())
-  arbanId      BigInt                @unique
+  arbadId      BigInt                @unique
   name         String
   orgType      OrgArbanType
   powerBranch  PowerBranchType
@@ -1985,8 +1985,8 @@ model OrganizationalArbad {
   isActive     Boolean               @default(true)
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
-  members      OrgArbanMember[]
-  parent       OrganizationalArbad?  @relation("OrgHierarchy", fields: [parentOrgId], references: [arbanId])
+  members      OrgArbadMember[]
+  parent       OrganizationalArbad?  @relation("OrgHierarchy", fields: [parentOrgId], references: [arbadId])
   departments  OrganizationalArbad[] @relation("OrgHierarchy")
 
   // Transparency: Activity and Report tracking
@@ -1999,21 +1999,21 @@ model OrganizationalArbad {
   @@index([leaderSeatId])
 }
 
-model OrgArbanMember {
+model OrgArbadMember {
   id       String              @id @default(uuid())
-  arbanId  BigInt
+  arbadId  BigInt
   seatId   String // Changed from BigInt to String
   joinedAt DateTime            @default(now())
-  org      OrganizationalArbad @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
+  org      OrganizationalArbad @relation(fields: [arbadId], references: [arbadId], onDelete: Cascade)
 
-  @@unique([arbanId, seatId])
-  @@index([arbanId])
+  @@unique([arbadId, seatId])
+  @@index([arbadId])
   @@index([seatId])
 }
 
 model CreditLine {
   id            String         @id @default(uuid())
-  arbanId       BigInt         @unique
+  arbadId       BigInt         @unique
   creditType    CreditLineType
   creditRating  Int            @default(500)
   creditLimit   Decimal        @db.Decimal(18, 6)
@@ -2027,7 +2027,7 @@ model CreditLine {
   updatedAt     DateTime       @updatedAt
   loans         Loan[]
 
-  @@index([arbanId])
+  @@index([arbadId])
   @@index([creditType])
   @@index([creditRating])
 }
@@ -2035,7 +2035,7 @@ model CreditLine {
 model Loan {
   id           String         @id @default(uuid())
   loanId       BigInt         @unique
-  arbanId      BigInt
+  arbadId      BigInt
   creditType   CreditLineType
   principal    Decimal        @db.Decimal(18, 6)
   interest     Decimal        @db.Decimal(18, 6)
@@ -2046,9 +2046,9 @@ model Loan {
   isDefaulted  Boolean        @default(false)
   txHashBorrow String?
   txHashRepay  String?
-  creditLine   CreditLine     @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
+  creditLine   CreditLine     @relation(fields: [arbadId], references: [arbadId], onDelete: Cascade)
 
-  @@index([arbanId])
+  @@index([arbadId])
   @@index([creditType])
   @@index([isActive])
   @@index([dueDate])
@@ -2060,7 +2060,7 @@ model TierDistribution {
   accountId       BigInt
   tier            Int
   arbanType       TierArbanType
-  arbanId         BigInt
+  arbadId         BigInt
   amount          Decimal       @db.Decimal(18, 6)
   requestedAt     DateTime      @default(now())
   approved        Boolean       @default(false)
@@ -2075,7 +2075,7 @@ model TierDistribution {
   @@index([seatId])
   @@index([tier])
   @@index([arbanType])
-  @@index([arbanId])
+  @@index([arbadId])
   @@index([approved])
   @@index([rejected])
 }
@@ -2125,14 +2125,14 @@ enum VerificationStatus {
 
 enum VerificationLevel {
   UNVERIFIED // Default: new users, 100 ALTAN limit
-  ARBAN_VERIFIED // Arban member with mutual verification, 1000 ALTAN shared
+  ARBAD_VERIFIED // Arban member with mutual verification, 1000 ALTAN shared
   ZUN_VERIFIED // Admin approved, 10,000 ALTAN limit
   FULLY_VERIFIED // Citizen status, unlimited, can own land
 }
 
 enum KhuralLevel {
   ARBAD
-  ZUUD
+  ZUN
   MYANGAD
   TUMED
 }
@@ -2285,7 +2285,7 @@ model ScientistCouncilMember {
   id                 String    @id @default(uuid())
   seatId             String    @unique
   degreeHash         String
-  nominatedByArbanId String
+  nominatedByArbadId String
   field              String // e.g. "Physics", "Biology"
   approvals          Int       @default(0)
   approved           Boolean   @default(false)
@@ -2300,7 +2300,7 @@ model ScientistCouncilMember {
 model WisdomCouncilMember {
   id                 String    @id @default(uuid())
   seatId             String    @unique
-  nominatedByArbanId String
+  nominatedByArbadId String
   virtues            String // e.g. "kind, honest, compassionate, wise"
   approvals          Int       @default(0)
   approved           Boolean   @default(false)
@@ -2403,7 +2403,7 @@ model CouncilOfJusticeMember {
   memberId           Int       @unique
   seatId             String    @unique
   legalEducationHash String
-  nominatedByArbanId String
+  nominatedByArbadId String
   specialization     String
   approvals          Int       @default(0)
   approved           Boolean   @default(false)
@@ -3250,7 +3250,7 @@ enum EventScope {
   INDIVIDUAL
   FAMILY
   CLAN
-  ARBAN
+  ARBAD
   HORDE
   NATION
   CONFEDERATION
@@ -3265,7 +3265,7 @@ enum OrganizationType {
   SERVICE          // Public services
 
   // Hierarchy levels
-  ARBAN            // 10-person unit
+  ARBAD            // 10-person unit
   HUNDRED          // 100-person unit
   THOUSAND         // 1000-person unit
   REPUBLIC         // Republic-level
@@ -3413,7 +3413,7 @@ model Organization {
   // Relations
   ratings      OrganizationRating[]
   achievements OrganizationAchievement[]
-  networkNodes ArbanNetwork[]
+  networkNodes ArbadNetwork[]
   invitations  GuildInvitation[]         @relation("GuildInvitations")
   elections    Election[]                @relation("Elections")
   shareholders OrgShareholder[]          @relation("OrgShareholders")
@@ -3504,12 +3504,12 @@ model OrganizationAchievement {
   @@index([organizationId])
 }
 
-model ArbanNetwork {
+model ArbadNetwork {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
-  arbanId String       @unique
-  arban   Organization @relation(fields: [arbanId], references: [id])
+  arbadId String       @unique
+  arbad   Organization @relation(fields: [arbadId], references: [id])
 
   // Network position (for interactive map)
   positionX Float
@@ -3697,8 +3697,8 @@ model ActivityEntry {
   performedBy       User   @relation("UserActivities", fields: [performedByUserId], references: [id], onDelete: Cascade)
 
   // Organizational Context
-  orgArbanId     String?
-  orgArban       OrganizationalArbad? @relation("OrgActivities", fields: [orgArbanId], references: [id], onDelete: SetNull)
+  orgArbadId     String?
+  orgArbad       OrganizationalArbad? @relation("OrgActivities", fields: [orgArbadId], references: [id], onDelete: SetNull)
   hierarchyLevel HierarchyLevel? // 1, 10, 100, 1000, 10000, REPUBLIC, CONFEDERATION
 
   // Power Branch
@@ -3723,7 +3723,7 @@ model ActivityEntry {
   @@index([performedAt])
   @@index([powerBranch])
   @@index([hierarchyLevel])
-  @@index([orgArbanId])
+  @@index([orgArbadId])
   @@index([performedByUserId])
   @@index([templateId])
   @@index([reportId])
@@ -3778,8 +3778,8 @@ model BranchActivityReport {
   totalActivities Int    @default(0)
 
   // Organizational context
-  orgArbanId String?
-  orgArban   OrganizationalArbad? @relation("OrgReports", fields: [orgArbanId], references: [id], onDelete: SetNull)
+  orgArbadId String?
+  orgArbad   OrganizationalArbad? @relation("OrgReports", fields: [orgArbadId], references: [id], onDelete: SetNull)
 
   // Linked activities
   activities ActivityEntry[] @relation("ReportActivities")
@@ -3795,7 +3795,7 @@ model BranchActivityReport {
   @@index([hierarchyLevel])
   @@index([periodStart])
   @@index([periodType])
-  @@index([orgArbanId])
+  @@index([orgArbadId])
   @@index([isPublic])
 }
 
@@ -4494,15 +4494,15 @@ model Myangad {
   leaderUserId String? // Elected leader
 
   // Parent Tumen
-  tumenId String?
-  tumen   Tumed?  @relation("TumenMyangans", fields: [tumenId], references: [id])
+  tumedId String?
+  tumed   Tumed?  @relation("TumedMyangans", fields: [tumedId], references: [id])
 
   // Member Zuns (should be 10)
-  memberZuns Zun[] @relation("MyanganZuns")
+  memberZuns Zun[] @relation("MyangadZuns")
 
   // Statistics
   totalMembers Int @default(0) // Cached count of all members across Zuns
-  totalArbans  Int @default(0) // Cached count of all Arbans
+  totalArbads  Int @default(0) // Cached count of all Arbans
 
   // Status
   isActive  Boolean  @default(true)
@@ -4510,7 +4510,7 @@ model Myangad {
   updatedAt DateTime @updatedAt
 
   @@index([region])
-  @@index([tumenId])
+  @@index([tumedId])
   @@index([leaderSeatId])
   @@index([isActive])
 }
@@ -4532,18 +4532,18 @@ model Tumed {
   republic   RepublicanKhural? @relation("RepublicTumens", fields: [republicId], references: [id])
 
   // Member Myangans (should be 10)
-  memberMyangads Myangad[] @relation("TumenMyangans")
+  memberMyangads Myangad[] @relation("TumedMyangans")
 
   // Cooperations (Tumeds cooperate, never merge)
-  cooperationsAsA TumedCooperation[] @relation("TumenCoopA")
-  cooperationsAsB TumedCooperation[] @relation("TumenCoopB")
+  cooperationsAsA TumedCooperation[] @relation("TumedCoopA")
+  cooperationsAsB TumedCooperation[] @relation("TumedCoopB")
 
   // Parliament votes by this Tumen's leader
   khuralVotes KhuralVote[] @relation("TumenVotes")
 
   // Statistics
   totalMembers Int @default(0)
-  totalArbans  Int @default(0)
+  totalArbads  Int @default(0)
 
   // Status
   isActive  Boolean  @default(true)
@@ -5128,11 +5128,11 @@ enum CooperationStatus {
 model TumedCooperation {
   id String @id @default(uuid())
 
-  tumenAId String
-  tumenA   Tumed @relation("TumenCoopA", fields: [tumenAId], references: [id])
+  tumedAId String
+  tumedA   Tumed @relation("TumedCoopA", fields: [tumedAId], references: [id])
 
-  tumenBId String
-  tumenB   Tumed @relation("TumenCoopB", fields: [tumenBId], references: [id])
+  tumedBId String
+  tumedB   Tumed @relation("TumedCoopB", fields: [tumedBId], references: [id])
 
   title       String  // Treaty title
   description String? @db.Text // Full treaty text
@@ -5146,9 +5146,9 @@ model TumedCooperation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([tumenAId, tumenBId]) // Only one active cooperation per pair
-  @@index([tumenAId])
-  @@index([tumenBId])
+  @@unique([tumedAId, tumedBId]) // Only one active cooperation per pair
+  @@index([tumedAId])
+  @@index([tumedBId])
   @@index([status])
 }
 
@@ -5220,8 +5220,8 @@ model KhuralVote {
   voterUserId String
   voter       User @relation("KhuralVoter", fields: [voterUserId], references: [id])
 
-  tumenId String // Which Tumen they represent
-  tumen   Tumed @relation("TumenVotes", fields: [tumenId], references: [id])
+  tumedId String // Which Tumen they represent
+  tumed   Tumed @relation("TumenVotes", fields: [tumedId], references: [id])
 
   vote    VoteChoice
   comment String? // Optional reasoning
@@ -5231,7 +5231,7 @@ model KhuralVote {
   @@unique([sessionId, voterUserId]) // One vote per session per leader
   @@index([sessionId])
   @@index([voterUserId])
-  @@index([tumenId])
+  @@index([tumedId])
 }
 
 // ============== ORGANIZATION BANKING ==============

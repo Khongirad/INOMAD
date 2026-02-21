@@ -2,7 +2,7 @@ import { IsEnum, IsString, IsOptional, IsInt, Min, Max } from 'class-validator';
 
 export enum KhuralLevel {
   ARBAD = 'ARBAD',
-  ZUUN = 'ZUUN',
+  ZUN = 'ZUN',
   MYANGAD = 'MYANGAD',
   TUMED = 'TUMED',
 }

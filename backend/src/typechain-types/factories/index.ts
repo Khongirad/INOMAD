@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export { ArbadCompletion__factory } from "./ArbadCompletion__factory";
+export { ArbadCreditLine__factory } from "./ArbadCreditLine__factory";

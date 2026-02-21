@@ -40,7 +40,7 @@ export class TieredVerificationService {
     switch (level) {
       case VerificationLevel.UNVERIFIED:
         return 100; // 100 ALTAN — initial allocation
-      case VerificationLevel.ARBAN_VERIFIED:
+      case VerificationLevel.ARBAD_VERIFIED:
         return 1000; // 1,000 ALTAN — upon Arbad creation
       case VerificationLevel.ZUN_VERIFIED:
         return Number.MAX_SAFE_INTEGER; // All remaining citizen emission
@@ -61,7 +61,7 @@ export class TieredVerificationService {
         verificationLevel: true,
         totalEmitted: true,
         role: true,
-        currentArbanId: true,
+        currentArbadId: true,
       },
     });
 
@@ -78,9 +78,9 @@ export class TieredVerificationService {
     const currentEmissions = parseFloat(user.totalEmitted.toString());
     
     // For ARBAD_VERIFIED, check Arbad group total
-    if (user.verificationLevel === VerificationLevel.ARBAN_VERIFIED && user.currentArbanId) {
+    if (user.verificationLevel === VerificationLevel.ARBAD_VERIFIED && user.currentArbadId) {
       const arbadMembers = await this.prisma.user.findMany({
-        where: { currentArbanId: user.currentArbanId },
+        where: { currentArbadId: user.currentArbadId },
         select: { totalEmitted: true },
       });
 
@@ -136,7 +136,7 @@ export class TieredVerificationService {
         verificationLevel: true,
         totalEmitted: true,
         role: true,
-        currentArbanId: true,
+        currentArbadId: true,
       },
     });
 
@@ -189,7 +189,7 @@ export class TieredVerificationService {
 
     // Check if user is eligible
     if (requestedLevel === VerificationLevel.ZUN_VERIFIED && 
-        user.verificationLevel !== VerificationLevel.ARBAN_VERIFIED) {
+        user.verificationLevel !== VerificationLevel.ARBAD_VERIFIED) {
       throw new BadRequestException('Must be ARBAD_VERIFIED to request ZUN_VERIFIED');
     }
 
@@ -361,7 +361,7 @@ export class TieredVerificationService {
       verificationLevelSetBy: adminId,
     };
 
-    if (level === VerificationLevel.ARBAN_VERIFIED) {
+    if (level === VerificationLevel.ARBAD_VERIFIED) {
       updateData.arbadVerifiedAt = new Date();
     } else if (level === VerificationLevel.ZUN_VERIFIED) {
       updateData.zunVerifiedAt = new Date();

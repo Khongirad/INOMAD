@@ -189,7 +189,7 @@ export class BankHierarchyService {
     return {
       arbadId: Number(path[0]),
       zunId: Number(path[1]),
-      myanganId: Number(path[2]),
+      myangadId: Number(path[2]),
       tumedId: Number(path[3]),
     };
   }
