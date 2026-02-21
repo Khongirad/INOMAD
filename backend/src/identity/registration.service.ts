@@ -46,12 +46,12 @@ export class RegistrationService {
     }
 
     // 3. Find available ZUUN (100)
-    let zuud: any = await this.findAvailableChild(myangad.id, KhuralLevel.ZUUN);
+    let zuud: any = await this.findAvailableChild(myangad.id, KhuralLevel.ZUUD);
     if (!zuud) {
       const zuudCount = await this.prisma.khuralGroup.count({ where: { parentGroupId: myangad.id } });
       zuud = await this.prisma.khuralGroup.create({
         data: {
-          level: KhuralLevel.ZUUN,
+          level: KhuralLevel.ZUUD,
           name: `${myangad.name} - Zuud ${zuudCount + 1}`,
           parentGroupId: myangad.id,
         },

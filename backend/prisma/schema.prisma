@@ -2131,10 +2131,10 @@ enum VerificationLevel {
 }
 
 enum KhuralLevel {
-  ARBAN
-  ZUUN
-  MYANGAN
-  TUMEN
+  ARBAD
+  ZUUD
+  MYANGAD
+  TUMED
 }
 
 enum GuildType {

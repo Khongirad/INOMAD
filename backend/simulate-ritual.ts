@@ -40,7 +40,7 @@ async function main() {
   const zuud = await prisma.khuralGroup.upsert({
     where: { id: 'bry-zuud-id' },
     update: {},
-    create: { id: 'bry-zuud-id', level: 'ZUUN', name: 'Zuud 1', parentGroupId: myangad.id }
+    create: { id: 'bry-zuud-id', level: 'ZUUD', name: 'Zuud 1', parentGroupId: myangad.id }
   });
 
   const arbad = await prisma.khuralGroup.upsert({
