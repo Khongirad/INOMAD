@@ -14,21 +14,21 @@ import type { KhuralGroup, KhuralLevel } from '@/lib/types/models';
 
 const LEVEL_COLORS: Record<string, string> = {
   ARBAD: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-  ZUUN: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  ZUN: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   MYANGAD: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
   TUMED: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
 };
 
 const LEVEL_LABELS: Record<string, string> = {
   ARBAD: 'Arbad (10)',
-  ZUUN: 'Zuud (100)',
+  ZUN: 'Zuud (100)',
   MYANGAD: 'Myangad (1 000)',
   TUMED: 'Tumed (10 000)',
 };
 
 const LEVEL_SIZES: Record<string, number> = {
   ARBAD: 10,
-  ZUUN: 100,
+  ZUN: 100,
   MYANGAD: 1000,
   TUMED: 10000,
 };
@@ -141,7 +141,7 @@ export default function KhuralPage() {
   const stats = {
     total: groups.length,
     arbads: groups.filter((g: KhuralGroup) => g.level === 'ARBAD').length,
-    zuuds: groups.filter((g: KhuralGroup) => g.level === 'ZUUN').length,
+    zuuds: groups.filter((g: KhuralGroup) => g.level === ZUN').length,
     myangads: groups.filter((g: KhuralGroup) => g.level === 'MYANGAD').length,
     tumeds: groups.filter((g: KhuralGroup) => g.level === 'TUMED').length,
     totalMembers: groups.reduce((sum: number, g: KhuralGroup) => sum + g.memberCount, 0),
@@ -167,10 +167,10 @@ export default function KhuralPage() {
         <CardContent className="p-4">
           <p className="text-sm font-semibold text-zinc-200 mb-3">🏛️ Structure Khural</p>
           <div className="flex items-center justify-between">
-            {(['ARBAD', 'ZUUN', 'MYANGAD', 'TUMED'] as const).map((level, i) => {
+            {(['ARBAD', ZUN', 'MYANGAD', 'TUMED'] as const).map((level, i) => {
               const count =
                 level === 'ARBAD' ? stats.arbads :
-                level === 'ZUUN' ? stats.zuuds :
+                level === ZUN' ? stats.zuuds :
                 level === 'MYANGAD' ? stats.myangads :
                 stats.tumeds;
               return (
@@ -220,7 +220,7 @@ export default function KhuralPage() {
 
       {/* Filter */}
       <div className="flex gap-2">
-        {(['ALL', 'ARBAD', 'ZUUN', 'MYANGAD', 'TUMED'] as const).map((level) => (
+        {(['ALL', 'ARBAD', ZUN', 'MYANGAD', 'TUMED'] as const).map((level) => (
           <Button
             key={level}
             size="sm"

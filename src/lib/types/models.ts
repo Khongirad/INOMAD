@@ -171,7 +171,7 @@ export interface GuildMember {
 // KHURAL
 // ============================================================
 
-export type KhuralLevel = 'ARBAD' | 'ZUUN' | 'MYANGAD' | 'TUMED';
+export type KhuralLevel = 'ARBAD' | 'ZUN' | 'MYANGAD' | 'TUMED';
 
 export interface KhuralGroup {
   id: string;
