@@ -88,7 +88,7 @@ PROOF OF CREATION:
 ```
 Article 1-7: PRINCIPLES (Humanity, Democracy, Rule of Law, Transparency, etc.)
 Article 8-15: RIGHTS (Life, Speech, Education, Labor, Data Protection, etc.)
-Article 16-22: GOVERNANCE (Arban/Zun system, Khurals, E-Voting)
+Article 16-22: GOVERNANCE (Arbad/Zun system, Khurals, E-Voting)
 Article 23-30: ECONOMY (Economic Freedom, Central Bank, Network Fee, etc.)
   └─ Article 27: "Сетевой сбор в размере 0.03% взимается со всех 
      транзакций для поддержания инфраструктуры блокчейна. Комиссия 

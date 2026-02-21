@@ -433,7 +433,7 @@ export function useMPCWallet() {
   };
 
   /**
-   * Get guardian suggestions based on Arban
+   * Get guardian suggestions based on Arbad
    */
   const getGuardianSuggestions = async (): Promise<GuardianSuggestion[]> => {
     const response = await api.get<{

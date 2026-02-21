@@ -2,61 +2,61 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { PrismaService } from '../prisma/prisma.service';
 import { CitizenAllocationService } from '../identity/citizen-allocation.service';
 import { ethers } from 'ethers';
-import { ArbanCompletion_ABI } from '../blockchain/abis/arbanCompletion.abi';
-import { ArbanCompletion__factory } from '../typechain-types/factories/ArbanCompletion__factory';
-import { Zun, ZunInfo, ClanTree, FormZunRequest, FormZunResponse } from './types/arban.types';
+import { ArbadCompletion_ABI } from '../blockchain/abis/arbadCompletion.abi';
+import { ArbadCompletion__factory } from '../typechain-types/factories/ArbadCompletion__factory';
+import { Zun, ZunInfo, ClanTree, FormZunRequest, FormZunResponse } from './types/arbad.types';
 
 @Injectable()
 export class ZunService {
   private readonly logger = new Logger(ZunService.name);
-  private contract: ReturnType<typeof ArbanCompletion__factory.connect>;
+  private contract: ReturnType<typeof ArbadCompletion__factory.connect>;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly citizenAllocation: CitizenAllocationService,
   ) {
-    const contractAddress = process.env.ARBAN_COMPLETION_ADDRESS || '';
+    const contractAddress = process.env.ARBAD_COMPLETION_ADDRESS || '';
     
     if (contractAddress && contractAddress !== '') {
       const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-      this.contract = ArbanCompletion__factory.connect(contractAddress, provider);
+      this.contract = ArbadCompletion__factory.connect(contractAddress, provider);
       this.logger.log(`✅ ZunService connected to contract at ${contractAddress}`);
     } else {
-      this.logger.warn('⚠️  ARBAN_COMPLETION_ADDRESS not configured - Zun blockchain features disabled');
+      this.logger.warn('⚠️  ARBAD_COMPLETION_ADDRESS not configured - Zun blockchain features disabled');
       // @ts-ignore - contract will be undefined, methods will throw appropriate errors
       this.contract = null;
     }
   }
 
   /**
-   * Form Zun (Clan) from sibling Family Arbans
+   * Form Zun (Clan) from sibling Family Arbads
    */
   async formZun(request: FormZunRequest, signerWallet: ethers.Wallet): Promise<FormZunResponse> {
-    this.logger.log(`Forming Zun: ${request.zunName} with ${request.arbanIds.length} arbans`);
+    this.logger.log(`Forming Zun: ${request.zunName} with ${request.arbadIds.length} arbads`);
 
     try {
-      if (request.arbanIds.length < 2) {
-        throw new BadRequestException('At least 2 Family Arbans required to form a Zun');
+      if (request.arbadIds.length < 2) {
+        throw new BadRequestException('At least 2 Family Arbads required to form a Zun');
       }
 
-      // Verify all arbans exist and are active
-      for (const arbanId of request.arbanIds) {
-        const arban = await this.prisma.familyArban.findUnique({
-          where: { arbanId: BigInt(arbanId) },
+      // Verify all arbads exist and are active
+      for (const arbadId of request.arbadIds) {
+        const arbad = await this.prisma.familyArbad.findUnique({
+          where: { arbadId: BigInt(arbadId) },
         });
 
-        if (!arban || !arban.isActive) {
-          throw new BadRequestException(`Family Arban ${arbanId} not found or inactive`);
+        if (!arbad || !arbad.isActive) {
+          throw new BadRequestException(`Family Arbad ${arbadId} not found or inactive`);
         }
 
-        if (arban.zunId) {
-          throw new BadRequestException(`Family Arban ${arbanId} already in a Zun`);
+        if (arbad.zunId) {
+          throw new BadRequestException(`Family Arbad ${arbadId} already in a Zun`);
         }
       }
 
       // Call smart contract
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.formZun(request.zunName, request.arbanIds);
+      const tx = await contractWithSigner.formZun(request.zunName, request.arbadIds);
       const receipt = await tx.wait();
 
       // Parse event
@@ -81,15 +81,15 @@ export class ZunService {
         data: {
           zunId: BigInt(zunId.toString()),
           name: request.zunName,
-          founderArbanId: BigInt(request.arbanIds[0]),
+          founderArbadId: BigInt(request.arbadIds[0]),
           isActive: true,
         },
       });
 
-      // Update family arbans
-      await this.prisma.familyArban.updateMany({
+      // Update family arbads
+      await this.prisma.familyArbad.updateMany({
         where: {
-          arbanId: { in: request.arbanIds.map((id) => BigInt(id)) },
+          arbadId: { in: request.arbadIds.map((id) => BigInt(id)) },
         },
         data: {
           zunId: BigInt(zunId.toString()),
@@ -98,7 +98,7 @@ export class ZunService {
 
       this.logger.log(`Zun formed successfully. Zun ID: ${zunId}`);
 
-      // Trigger Level 3 allocation for all Arban members
+      // Trigger Level 3 allocation for all Arbad members
       await this.allocateLevel3ToAllMembers(zun.id);
 
       return {
@@ -151,7 +151,7 @@ export class ZunService {
     const zun = await this.prisma.zun.findUnique({
       where: { zunId: BigInt(zunId) },
       include: {
-        memberArbans: true,
+        memberArbads: true,
       },
     });
 
@@ -162,8 +162,8 @@ export class ZunService {
     return {
       zunId: Number(zun.zunId),
       name: zun.name,
-      founderArbanId: Number(zun.founderArbanId),
-      memberArbanIds: zun.memberArbans.map((a) => Number(a.arbanId)),
+      founderArbadId: Number(zun.founderArbadId),
+      memberArbadIds: zun.memberArbads.map((a) => Number(a.arbadId)),
       elderSeatId: zun.elderSeatId ? zun.elderSeatId || "" : "",
       isActive: zun.isActive,
       createdAt: zun.createdAt,
@@ -171,33 +171,33 @@ export class ZunService {
   }
 
   /**
-   * Get Zuns by Family Arban
+   * Get Zuns by Family Arbad
    */
-  async getZunsByFamily(arbanId: number): Promise<Zun[]> {
-    const arban = await this.prisma.familyArban.findUnique({
-      where: { arbanId: BigInt(arbanId) },
+  async getZunsByFamily(arbadId: number): Promise<Zun[]> {
+    const arbad = await this.prisma.familyArbad.findUnique({
+      where: { arbadId: BigInt(arbadId) },
       include: {
         zun: {
           include: {
-            memberArbans: true,
+            memberArbads: true,
           },
         },
       },
     });
 
-    if (!arban || !arban.zun) {
+    if (!arbad || !arbad.zun) {
       return [];
     }
 
     return [
       {
-        zunId: Number(arban.zun.zunId),
-        name: arban.zun.name,
-        founderArbanId: Number(arban.zun.founderArbanId),
-        memberArbanIds: arban.zun.memberArbans.map((a) => Number(a.arbanId)),
-        elderSeatId: arban.zun.elderSeatId ? arban.zun.elderSeatId || "" : "",
-        isActive: arban.zun.isActive,
-        createdAt: arban.zun.createdAt,
+        zunId: Number(arbad.zun.zunId),
+        name: arbad.zun.name,
+        founderArbadId: Number(arbad.zun.founderArbadId),
+        memberArbadIds: arbad.zun.memberArbads.map((a) => Number(a.arbadId)),
+        elderSeatId: arbad.zun.elderSeatId ? arbad.zun.elderSeatId || "" : "",
+        isActive: arbad.zun.isActive,
+        createdAt: arbad.zun.createdAt,
       },
     ];
   }
@@ -210,7 +210,7 @@ export class ZunService {
 
     try {
       const onchainZun = await this.contract.getZun(zunId);
-      const [name, founderArbanId, memberArbanIds, elderSeatId, isActive] = onchainZun;
+      const [name, founderArbadId, memberArbadIds, elderSeatId, isActive] = onchainZun;
 
       // Upsert zun
       await this.prisma.zun.upsert({
@@ -218,22 +218,22 @@ export class ZunService {
         create: {
           zunId: BigInt(zunId),
           name,
-          founderArbanId: BigInt(founderArbanId.toString()),
+          founderArbadId: BigInt(founderArbadId.toString()),
           elderSeatId: elderSeatId ? String(elderSeatId) : null,
           isActive,
         },
         update: {
           name,
-          founderArbanId: BigInt(founderArbanId.toString()),
+          founderArbadId: BigInt(founderArbadId.toString()),
           elderSeatId: elderSeatId ? String(elderSeatId) : null,
           isActive,
         },
       });
 
-      // Update member arbans
-      await this.prisma.familyArban.updateMany({
+      // Update member arbads
+      await this.prisma.familyArbad.updateMany({
         where: {
-          arbanId: { in: memberArbanIds.map((id: any) => BigInt(id.toString())) },
+          arbadId: { in: memberArbadIds.map((id: any) => BigInt(id.toString())) },
         },
         data: {
           zunId: BigInt(zunId),
@@ -255,28 +255,28 @@ export class ZunService {
     this.logger.log(`Starting Level 3 allocation for all members of Zun ${zunId}`);
 
     try {
-      // Get all member Arbans with their members
+      // Get all member Arbads with their members
       const zun = await this.prisma.zun.findUnique({
         where: { id: zunId },
         include: {
-          memberArbans: {
+          memberArbads: {
             include: { children: true },
           },
         },
       });
 
-      if (!zun || !zun.memberArbans) {
-        this.logger.warn(`Zun ${zunId} has no member Arbans`);
+      if (!zun || !zun.memberArbads) {
+        this.logger.warn(`Zun ${zunId} has no member Arbads`);
         return;
       }
 
       const allSeatIds = new Set<string>();
 
-      // Collect all unique seatIds from member Arbans
-      for (const arban of zun.memberArbans) {
-        allSeatIds.add(arban.husbandSeatId);
-        allSeatIds.add(arban.wifeSeatId);
-        arban.children.forEach((child) => allSeatIds.add(child.childSeatId));
+      // Collect all unique seatIds from member Arbads
+      for (const arbad of zun.memberArbads) {
+        allSeatIds.add(arbad.husbandSeatId);
+        allSeatIds.add(arbad.wifeSeatId);
+        arbad.children.forEach((child) => allSeatIds.add(child.childSeatId));
       }
 
       // Resolve seatIds to userIds
@@ -286,7 +286,7 @@ export class ZunService {
       });
 
       this.logger.log(
-        `Found ${users.length} users to allocate Level 3 funds. Zun has ${zun.memberArbans.length} Arbans.`,
+        `Found ${users.length} users to allocate Level 3 funds. Zun has ${zun.memberArbads.length} Arbads.`,
       );
 
       // Allocate to each user

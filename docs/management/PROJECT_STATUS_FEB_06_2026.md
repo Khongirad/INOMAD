@@ -14,7 +14,7 @@ The INOMAD KHURAL digital governance platform has successfully completed **Phase
 
 - **3-Tier Citizen Allocation** (100 → 5,000 → 9,383 ALTAN)
 - **Universal Basic Income** (400 ALTAN weekly via automated scheduler)
-- **Organizational Arban & Zun Formation** (10-person family units → 100-person Zun formations)
+- **Organizational Arbad & Zun Formation** (10-person family units → 100-person Zun formations)
 - **Transparent Banking Infrastructure** (BankLink system with privacy-preserving identifiers)
 
 **Key Metric:** Full per-capita allocation of **14,483 ALTAN** per citizen now automatically distributed upon Zun formation, plus ongoing **20,800 ALTAN annually** via UBI.
@@ -28,34 +28,34 @@ The INOMAD KHURAL digital governance platform has successfully completed **Phase
 **Implementation Date:** February 5-6, 2026  
 **Status:** Production-Ready
 
-#### Level 2: Arban Membership (5,000 ALTAN)
-- **Trigger:** Citizen joins Family Arban or Organizational Arban
+#### Level 2: Arbad Membership (5,000 ALTAN)
+- **Trigger:** Citizen joins Family Arbad or Organizational Arbad
 - **Integration Points:**
-  - `OrganizationalArbanService.addOrgMember()` - auto-allocates on member addition
-  - `FamilyArbanService` - integration pending (blockchain requirements)
-- **Idempotency:** Transaction history check (`LEVEL_2_ARBAN` memo)
+  - `OrganizationalArbadService.addOrgMember()` - auto-allocates on member addition
+  - `FamilyArbadService` - integration pending (blockchain requirements)
+- **Idempotency:** Transaction history check (`LEVEL_2_ARBAD` memo)
 - **Funding Source:** Pension Fund system account
 - **Service:** `CitizenAllocationService.allocateLevel2Funds()`
 
 #### Level 3: Zun Formation (9,383 ALTAN)
-- **Trigger:** 10 Family Arbans form a Zun (~30 members total)
+- **Trigger:** 10 Family Arbads form a Zun (~30 members total)
 - **Integration Point:** `ZunService.formZun()` - auto-allocates to all members
-- **Distribution:** All Arban members (husbands, wives, children) receive 9,383 ALTAN
+- **Distribution:** All Arbad members (husbands, wives, children) receive 9,383 ALTAN
 - **Total Impact:** ~281,490 ALTAN distributed per Zun formation
 - **Service:** `CitizenAllocationService.allocateLevel3Funds()`
 
 **Technical Highlights:**
 - SeatId → UserId resolution for blockchain compatibility
-- Fail-safe error handling (allocation failure doesn't block Arban/Zun operations)
-- Comprehensive membership verification across Family/Org Arbans
-- Module architecture: `IdentityModule` exports → `ArbanModule` imports
+- Fail-safe error handling (allocation failure doesn't block Arbad/Zun operations)
+- Comprehensive membership verification across Family/Org Arbads
+- Module architecture: `IdentityModule` exports → `ArbadModule` imports
 
 **Files Modified:**
 - `backend/src/identity/citizen-allocation.service.ts` - Core allocation logic
-- `backend/src/arbans/zun.service.ts` - Level 3 integration
-- `backend/src/arbans/organizational-arban.service.ts` - Level 2 integration
+- `backend/src/arbads/zun.service.ts` - Level 3 integration
+- `backend/src/arbads/organizational-arbad.service.ts` - Level 2 integration
 - `backend/src/identity/identity.module.ts` - Service exports
-- `backend/src/arbans/arban.module.ts` - Dependency injection
+- `backend/src/arbads/arbad.module.ts` - Dependency injection
 
 ---
 
@@ -152,10 +152,10 @@ graph TB
         Ver[VerificationService]
     end
     
-    subgraph "Arban Module"
+    subgraph "Arbad Module"
         Zun[ZunService]
-        OrgArban[OrganizationalArbanService]
-        FamArban[FamilyArbanService]
+        OrgArbad[OrganizationalArbadService]
+        FamArbad[FamilyArbadService]
     end
     
     subgraph "Bank Module"
@@ -170,7 +170,7 @@ graph TB
     
     UBI -->|Weekly 400 ALTAN| Alloc
     Zun -->|Level 3: 9,383 ALTAN| Alloc
-    OrgArban -->|Level 2: 5,000 ALTAN| Alloc
+    OrgArbad -->|Level 2: 5,000 ALTAN| Alloc
     Alloc -->|Transfer Funds| Reward
     Reward -->|Update Balance| Ledger
     Ledger -->|Persist| Prisma
@@ -186,10 +186,10 @@ graph TB
 - `UbiPayment` - Weekly UBI payment tracking (NEW)
 
 **Organizational Tables:**
-- `FamilyArban` - Nuclear family units (2 adults + children)
-- `OrganizationalArban` - Company/collective Arbans
-- `OrgArbanMember` - Membership roster
-- `Zun` - 10-Arban formation (founder, elder, member Arbans)
+- `FamilyArbad` - Nuclear family units (2 adults + children)
+- `OrganizationalArbad` - Company/collective Arbads
+- `OrgArbadMember` - Membership roster
+- `Zun` - 10-Arbad formation (founder, elder, member Arbads)
 
 **Governance Tables:**
 - `User` - Citizens, founders, system accounts
@@ -226,9 +226,9 @@ SELECT * FROM "AltanTransaction" WHERE memo = 'Level 1 Identity Verification Awa
 ### Pending Tests 🔄
 
 #### Level 2/3 Allocation E2E
-- **Level 2:** Create Org Arban → Add member → Verify 5,000 ALTAN transfer
-- **Level 3:** Form Zun (10 Arbans) → Verify all ~30 members receive 9,383 ALTAN
-- **Idempotency:** Add member to multiple Arbans → Verify single Level 2 payout
+- **Level 2:** Create Org Arbad → Add member → Verify 5,000 ALTAN transfer
+- **Level 3:** Form Zun (10 Arbads) → Verify all ~30 members receive 9,383 ALTAN
+- **Idempotency:** Add member to multiple Arbads → Verify single Level 2 payout
 
 #### UBI Scheduler E2E
 - **Manual Trigger:** Call `manualDistribution()` → Verify 400 ALTAN × eligible users
@@ -245,7 +245,7 @@ SELECT * FROM "AltanTransaction" WHERE memo = 'Level 1 Identity Verification Awa
 ```
 Initial Allocation (Tiers 1-3):     14,483 ALTAN
   - Level 1 (Verification):            100 ALTAN
-  - Level 2 (Arban Membership):       5,000 ALTAN
+  - Level 2 (Arbad Membership):       5,000 ALTAN
   - Level 3 (Zun Formation):          9,383 ALTAN
 
 Annual UBI:                         20,800 ALTAN
@@ -293,7 +293,7 @@ Year 10 Total:                     222,483 ALTAN
 
 ### Key Dependencies
 - **@nestjs/schedule** - Cron jobs for UBI distribution
-- **ethers** - Blockchain interaction (Arban/Zun contracts)
+- **ethers** - Blockchain interaction (Arbad/Zun contracts)
 - **prisma** - Type-safe database access
 - **decimal.js** - Precise financial calculations
 
@@ -325,7 +325,7 @@ Year 10 Total:                     222,483 ALTAN
 
 #### Allocation (Auto-triggered, Internal)
 - `CitizenAllocationService.allocateLevel1Funds()` - 100 ALTAN on verification
-- `CitizenAllocationService.allocateLevel2Funds()` - 5,000 ALTAN on Arban join
+- `CitizenAllocationService.allocateLevel2Funds()` - 5,000 ALTAN on Arbad join
 - `CitizenAllocationService.allocateLevel3Funds()` - 9,383 ALTAN on Zun formation
 - `UBISchedulerService.distributeWeeklyUBI()` - 400 ALTAN weekly (cron)
 
@@ -335,8 +335,8 @@ Year 10 Total:                     222,483 ALTAN
 - `GET /bank/ledger/transactions/:userId` - Transaction history
 
 #### Organizational
-- `POST /arbans/org/add-member` - Add member (triggers Level 2)
-- `POST /arbans/zun/form` - Form Zun (triggers Level 3)
+- `POST /arbads/org/add-member` - Add member (triggers Level 2)
+- `POST /arbads/zun/form` - Form Zun (triggers Level 3)
 
 #### Admin (Future)
 - `POST /identity/admin/ubi/distribute-manual` - Manual UBI trigger
@@ -346,9 +346,9 @@ Year 10 Total:                     222,483 ALTAN
 ## Known Issues & Limitations
 
 ### Current Blockers
-1. **FamilyArbanService Integration:** Disabled due to blockchain contract requirements
-   - **Impact:** Level 2 allocations not triggered for Family Arban marriages
-   - **Workaround:** Works for Organizational Arbans
+1. **FamilyArbadService Integration:** Disabled due to blockchain contract requirements
+   - **Impact:** Level 2 allocations not triggered for Family Arbad marriages
+   - **Workaround:** Works for Organizational Arbads
    - **Timeline:** Pending blockchain contract deployment
 
 2. **UBI Scheduler Testing:** Not yet tested in production
@@ -420,7 +420,7 @@ Year 10 Total:                     222,483 ALTAN
 ### Immediate Priorities (Next 7 Days)
 1. **Test UBI Scheduler** - Manual trigger, verify DB records
 2. **Test Level 2/3 Allocations E2E** - Complete end-to-end validation
-3. **FamilyArbanService Integration** - Resolve blockchain dependency
+3. **FamilyArbadService Integration** - Resolve blockchain dependency
 4. **Credit Multiplier System** - Track referrals (5x→9x multiplier)
 
 ### Short-Term (Next 30 Days)
@@ -432,7 +432,7 @@ Year 10 Total:                     222,483 ALTAN
 ### Medium-Term (Q1 2026)
 9. **Central Bank Emission Protocol** - Controlled ALTAN minting
 10. **Correspondent Banking** - CB-to-Bank account flows
-11. **Tumen Financial Instruments** - Leadership tier rewards
+11. **Tumed Financial Instruments** - Leadership tier rewards
 12. **Tax Collection System** - Revenue for UBI sustainability
 
 ---
@@ -457,10 +457,10 @@ backend/src/
 │   ├── ubi-scheduler.service.ts       # Weekly UBI cron job (NEW)
 │   ├── identity.module.ts             # Module configuration
 │   └── ...
-├── arbans/
+├── arbads/
 │   ├── zun.service.ts                 # Level 3 integration
-│   ├── organizational-arban.service.ts# Level 2 integration
-│   ├── arban.module.ts                # Module configuration
+│   ├── organizational-arbad.service.ts# Level 2 integration
+│   ├── arbad.module.ts                # Module configuration
 │   └── ...
 ├── bank/
 │   ├── bank-reward.service.ts         # Fund transfer logic
@@ -493,7 +493,7 @@ The INOMAD KHURAL platform has achieved a significant milestone with the complet
 ✅ **Complete Citizen Lifecycle:** 14,483 ALTAN initial allocation + 20,800 ALTAN annually  
 ✅ **Automated Distribution:** Zero manual intervention for Level 1/2/3 allocations  
 ✅ **Universal Basic Income:** Weekly 400 ALTAN automated payments  
-✅ **Organizational Support:** Arban/Zun formations trigger economic rewards  
+✅ **Organizational Support:** Arbad/Zun formations trigger economic rewards  
 ✅ **Production-Ready Codebase:** No TypeScript errors, schema synchronized  
 
 **Next Critical Path:** End-to-end testing of Level 2/3 allocations and UBI scheduler validation before production deployment.

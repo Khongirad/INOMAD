@@ -127,7 +127,7 @@
 **Безопасность:**
 - Шифрование device share через Web Crypto API
 - Shamir Secret Sharing для ключей
-- Arban-based guardian suggestions
+- Arbad-based guardian suggestions
 - Multi-device support
 
 ---
@@ -297,7 +297,7 @@
 ### Database Architecture
 
 **PostgreSQL@16** - 5 баз данных:
-1. `inomad_khural` - Главная БД (Users, Arbans, Wallet, Bank)
+1. `inomad_khural` - Главная БД (Users, Arbads, Wallet, Bank)
 2. `inomad_migration` - Паспорта (AES-256 encrypted)
 3. `inomad_zags` - ЗАГС записи
 4. `inomad_land_registry` - Земельный кадастр
@@ -319,7 +319,7 @@
 
 **Network:** Base Sepolia Testnet  
 **Contracts:**
-- `ArbanKhural.sol` - Arban governance
+- `ArbadKhural.sol` - Arbad governance
 - `BankOfSiberia.sol` - Central bank
 - `DigitalSeal.sol` - 2-of-2 multisig
 - `Academy.sol` - Образовательная система
@@ -339,7 +339,7 @@
 **2. Application Layer**
 - Authentication & Identity (Web3Auth MPC, JWT, Citizen Registry)
 - Government Services (Migration, ZAGS, Land Registry, State Archive)
-- Guild Platform (Arban, Credit/Lending, Digital Seal, Education, Election)
+- Guild Platform (Arbad, Credit/Lending, Digital Seal, Education, Election)
 - Cultural Systems (Dual Calendar, Timeline, Temple of Heaven)
 
 **3. Service Layer**
@@ -371,11 +371,11 @@
 2. **Financial Systems**
    - ✅ Bank of Siberia (central bank)
    - ✅ ALTAN distribution
-   - ✅ Credit & lending (Arban system)
+   - ✅ Credit & lending (Arbad system)
    - ✅ Basic wallet functionality
 
 3. **Governance Systems**
-   - ✅ Two-Type Arban system
+   - ✅ Two-Type Arbad system
    - ✅ Digital Seal (2-of-2 multisig)
    - ✅ Education system
    - ✅ Election system

@@ -61,7 +61,7 @@ export function computeContentHash(title: string, fullText: string): string {
  *   DRAFT → SUBMITTED → DEBATE → VOTING → PASSED → SIGNED → ARCHIVED
  *                                                    ↘ REJECTED
  *
- * Each proposal is tied to a Khural level (Arban..Confederate) and entity.
+ * Each proposal is tied to a Khural level (Arbad..Confederate) and entity.
  * Voting results are cached on the proposal for fast reads.
  */
 @Injectable()

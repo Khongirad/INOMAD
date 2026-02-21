@@ -842,7 +842,7 @@ export const NATIONS: Nation[] = [
       "Бурятская культура сочетает монгольские традиции с тибетским буддизмом и сибирским шаманизмом. Известны эпической поэзией (Гэсэр), горловым пением и характерными круглыми войлочными юртами.",
     traditions: [
       "Sagaalgan (White Month / New Year)",
-      "Surkharban (Three Games festival)",
+      "Surkharbad (Three Games festival)",
       "Yohor (circle dance)",
     ],
     traditionsRu: [

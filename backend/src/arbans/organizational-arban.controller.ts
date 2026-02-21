@@ -13,71 +13,71 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import { OrganizationalArbanService } from './organizational-arban.service';
+import { OrganizationalArbadService } from './organizational-arbad.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ethers } from 'ethers';
-import { OrganizationType } from '../blockchain/abis/arbanCompletion.abi';
+import { OrganizationType } from '../blockchain/abis/arbadCompletion.abi';
 import {
-  CreateOrgArbanRequest,
+  CreateOrgArbadRequest,
   AddOrgMemberRequest,
   SetOrgLeaderRequest,
   CreateDepartmentRequest,
-} from './types/arban.types';
+} from './types/arbad.types';
 
-@ApiTags('Arbans')
-@Controller('arbans/org')
+@ApiTags('Arbads')
+@Controller('arbads/org')
 @UseGuards(JwtAuthGuard)
-export class OrganizationalArbanController {
-  constructor(private readonly orgArbanService: OrganizationalArbanService) {}
+export class OrganizationalArbadController {
+  constructor(private readonly orgArbadService: OrganizationalArbadService) {}
 
   /**
-   * Create Organizational Arban
-   * POST /arbans/org
+   * Create Organizational Arbad
+   * POST /arbads/org
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createOrgArban(@Body() request: CreateOrgArbanRequest, @Request() req: any) {
+  async createOrgArbad(@Body() request: CreateOrgArbadRequest, @Request() req: any) {
     const wallet = this.getWalletFromRequest(req, request.privateKey);
-    return await this.orgArbanService.createOrganizationalArban(request, wallet);
+    return await this.orgArbadService.createOrganizationalArbad(request, wallet);
   }
 
   /**
    * Add member to organization
-   * POST /arbans/org/:arbanId/members
+   * POST /arbads/org/:arbadId/members
    */
-  @Post(':arbanId/members')
+  @Post(':arbadId/members')
   @HttpCode(HttpStatus.CREATED)
   async addOrgMember(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { seatId: string; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
-    const request: AddOrgMemberRequest = { arbanId, seatId: body.seatId };
-    await this.orgArbanService.addOrgMember(request, wallet);
+    const request: AddOrgMemberRequest = { arbadId, seatId: body.seatId };
+    await this.orgArbadService.addOrgMember(request, wallet);
     return { success: true, message: 'Member added successfully' };
   }
 
   /**
    * Set organization leader
-   * PUT /arbans/org/:arbanId/leader
+   * PUT /arbads/org/:arbadId/leader
    */
-  @Put(':arbanId/leader')
+  @Put(':arbadId/leader')
   @HttpCode(HttpStatus.OK)
   async setOrgLeader(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { leaderSeatId: string; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
-    const request: SetOrgLeaderRequest = { arbanId, leaderSeatId: body.leaderSeatId };
-    await this.orgArbanService.setOrgLeader(request, wallet);
+    const request: SetOrgLeaderRequest = { arbadId, leaderSeatId: body.leaderSeatId };
+    await this.orgArbadService.setOrgLeader(request, wallet);
     return { success: true, message: 'Leader set successfully' };
   }
 
   /**
    * Create department
-   * POST /arbans/org/:parentOrgId/departments
+   * POST /arbads/org/:parentOrgId/departments
    */
   @Post(':parentOrgId/departments')
   @HttpCode(HttpStatus.CREATED)
@@ -88,21 +88,21 @@ export class OrganizationalArbanController {
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: CreateDepartmentRequest = { parentOrgId, deptName: body.deptName };
-    return await this.orgArbanService.createDepartment(request, wallet);
+    return await this.orgArbadService.createDepartment(request, wallet);
   }
 
   /**
-   * Get Organizational Arban by ID
-   * GET /arbans/org/:arbanId
+   * Get Organizational Arbad by ID
+   * GET /arbads/org/:arbadId
    */
-  @Get(':arbanId')
-  async getOrgArban(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.orgArbanService.getOrgArban(arbanId);
+  @Get(':arbadId')
+  async getOrgArbad(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.orgArbadService.getOrgArbad(arbadId);
   }
 
   /**
    * Get organizations by type
-   * GET /arbans/org?type=EXECUTIVE
+   * GET /arbads/org?type=EXECUTIVE
    */
   @Get()
   async getOrgsByType(@Query('type') type: string) {
@@ -119,7 +119,7 @@ export class OrganizationalArbanController {
     };
 
     const orgType = typeMap[type] || OrganizationType.NONE;
-    return await this.orgArbanService.getOrgsByType(orgType);
+    return await this.orgArbadService.getOrgsByType(orgType);
   }
 
   private getWalletFromRequest(req: any, privateKey?: string): ethers.Wallet {

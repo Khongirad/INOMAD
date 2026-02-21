@@ -7,10 +7,10 @@ describe('RegistrationService', () => {
   let prisma: any;
 
   const mockUser = { id: 'u1', seatId: null, role: 'CITIZEN' };
-  const mockTumen = { id: 'tum1', level: 'TUMEN', name: 'Novosibirsk Tumen I', childGroups: [] };
-  const mockMyangan = { id: 'mya1', level: 'MYANGAN', name: 'Novosibirsk Tumen I - Myangan 1' };
-  const mockZuun = { id: 'zun1', level: 'ZUUN', name: 'Myangan 1 - Zuun 1' };
-  const mockArban = { id: 'arb1', level: 'ARBAN', name: 'Zuun 1 - Arban 1' };
+  const mockTumed = { id: 'tum1', level: 'TUMED', name: 'Novosibirsk Tumed I', childGroups: [] };
+  const mockMyangad = { id: 'mya1', level: 'MYANGAD', name: 'Novosibirsk Tumed I - Myangad 1' };
+  const mockZuud = { id: 'zun1', level: 'ZUUN', name: 'Myangad 1 - Zuud 1' };
+  const mockArbad = { id: 'arb1', level: 'ARBAD', name: 'Zuud 1 - Arbad 1' };
   const mockSeat = { id: 'seat1', groupId: 'arb1', index: 0, isLeaderSeat: true, occupantUserId: null };
 
   beforeEach(async () => {
@@ -91,8 +91,8 @@ describe('RegistrationService', () => {
       expect(prisma.user.update).toHaveBeenCalled();
     });
 
-    it('reuses existing tumen', async () => {
-      prisma.khuralGroup.findFirst.mockResolvedValue(mockTumen);
+    it('reuses existing tumed', async () => {
+      prisma.khuralGroup.findFirst.mockResolvedValue(mockTumed);
       prisma.khuralGroup.findMany.mockResolvedValue([]);
       prisma.khuralGroup.count.mockResolvedValue(0);
       prisma.khuralSeat.findMany.mockResolvedValue([]);
@@ -104,24 +104,24 @@ describe('RegistrationService', () => {
       });
 
       const r = await service.assignTerritory('u1', 'Novosibirsk');
-      // Should not create a new tumen since one exists
-      expect(r.tumen.id).toBe('tum1');
+      // Should not create a new tumed since one exists
+      expect(r.tumed.id).toBe('tum1');
     });
 
-    it('uses empty seat in existing arban', async () => {
+    it('uses empty seat in existing arbad', async () => {
       prisma.khuralGroup.findFirst
-        .mockResolvedValueOnce(mockTumen);
+        .mockResolvedValueOnce(mockTumed);
       
       // findAvailableChild returns a group for each level
       prisma.khuralGroup.findMany
-        .mockResolvedValueOnce([{ ...mockMyangan, seats: [], childGroups: [] }]) // for MYANGAN
-        .mockResolvedValueOnce([{ ...mockZuun, seats: [], childGroups: [] }]) // for ZUUN
-        .mockResolvedValueOnce([{ ...mockArban, seats: [mockSeat], childGroups: [] }]); // for ARBAN
+        .mockResolvedValueOnce([{ ...mockMyangad, seats: [], childGroups: [] }]) // for MYANGAD
+        .mockResolvedValueOnce([{ ...mockZuud, seats: [], childGroups: [] }]) // for ZUUN
+        .mockResolvedValueOnce([{ ...mockArbad, seats: [mockSeat], childGroups: [] }]); // for ARBAD
 
       prisma.khuralSeat.count.mockResolvedValue(5); // 5 occupied < 10
       prisma.khuralGroup.count.mockResolvedValue(3); // 3 children < 10
 
-      // Return empty seats for the arban
+      // Return empty seats for the arbad
       prisma.khuralSeat.findMany.mockResolvedValue([
         { ...mockSeat, occupantUserId: null },
       ]);
@@ -130,8 +130,8 @@ describe('RegistrationService', () => {
       expect(r.seatIndex).toBe(0);
     });
 
-    it('throws when arban is full and all seats occupied', async () => {
-      prisma.khuralGroup.findFirst.mockResolvedValue(mockTumen);
+    it('throws when arbad is full and all seats occupied', async () => {
+      prisma.khuralGroup.findFirst.mockResolvedValue(mockTumed);
       prisma.khuralGroup.findMany.mockResolvedValue([]);
       prisma.khuralGroup.count.mockResolvedValue(0);
       

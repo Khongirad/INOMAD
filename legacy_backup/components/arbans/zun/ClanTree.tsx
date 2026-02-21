@@ -11,13 +11,13 @@ import {
   Avatar,
 } from '@mui/material';
 import { Group, Star, People } from '@mui/icons-material';
-import { arbanAPI } from '../../../lib/api/arban.api';
+import { arbadAPI } from '../../../lib/api/arbad.api';
 
 interface Zun {
   zunId: number;
   name: string;
-  founderArbanId: number;
-  memberArbanIds: number[];
+  founderArbadId: number;
+  memberArbadIds: number[];
   elderSeatId: number;
   isActive: boolean;
   createdAt: string;
@@ -42,7 +42,7 @@ export const ClanTree: React.FC<ClanTreeProps> = ({ zunId, onSetElder }) => {
     setError(null);
 
     try {
-      const response = await arbanAPI.zun.getZun(zunId);
+      const response = await arbadAPI.zun.getZun(zunId);
       setZun(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load Zun');
@@ -94,9 +94,9 @@ export const ClanTree: React.FC<ClanTreeProps> = ({ zunId, onSetElder }) => {
         <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
           <Card variant="outlined" sx={{ flex: 1, p: 2, textAlign: 'center' }}>
             <People sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
-            <Typography variant="h6">{zun.memberArbanIds.length}</Typography>
+            <Typography variant="h6">{zun.memberArbadIds.length}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Member Arbans
+              Member Arbads
             </Typography>
           </Card>
 
@@ -148,7 +148,7 @@ export const ClanTree: React.FC<ClanTreeProps> = ({ zunId, onSetElder }) => {
             )}
           </Box>
 
-          {/* Member Arbans */}
+          {/* Member Arbads */}
           <Box
             sx={{
               display: 'grid',
@@ -156,24 +156,24 @@ export const ClanTree: React.FC<ClanTreeProps> = ({ zunId, onSetElder }) => {
               gap: 2,
             }}
           >
-            {zun.memberArbanIds.map((arbanId) => (
+            {zun.memberArbadIds.map((arbadId) => (
               <Card
-                key={arbanId}
+                key={arbadId}
                 variant="outlined"
                 sx={{
                   p: 2,
                   textAlign: 'center',
                   bgcolor:
-                    arbanId === zun.founderArbanId ? 'warning.light' : 'background.paper',
+                    arbadId === zun.founderArbadId ? 'warning.light' : 'background.paper',
                   border:
-                    arbanId === zun.founderArbanId ? '2px solid' : '1px solid',
+                    arbadId === zun.founderArbadId ? '2px solid' : '1px solid',
                   borderColor:
-                    arbanId === zun.founderArbanId ? 'warning.main' : 'divider',
+                    arbadId === zun.founderArbadId ? 'warning.main' : 'divider',
                 }}
               >
                 <People sx={{ fontSize: 32, mb: 1 }} />
-                <Typography variant="body1">Arban #{arbanId}</Typography>
-                {arbanId === zun.founderArbanId && (
+                <Typography variant="body1">Arbad #{arbadId}</Typography>
+                {arbadId === zun.founderArbadId && (
                   <Chip
                     label="Founder"
                     size="small"
@@ -207,7 +207,7 @@ export const ClanTree: React.FC<ClanTreeProps> = ({ zunId, onSetElder }) => {
             <strong>Founded:</strong> {new Date(zun.createdAt).toLocaleDateString()}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            <strong>Founder Arban:</strong> #{zun.founderArbanId}
+            <strong>Founder Arbad:</strong> #{zun.founderArbadId}
           </Typography>
           {zun.elderSeatId > 0 && (
             <Typography variant="body2" color="text.secondary">

@@ -74,7 +74,7 @@ export class QuestService {
       }
     }
 
-    // ── Auto-detect republicId from giver's Tumen ──
+    // ── Auto-detect republicId from giver's Tumed ──
     const republicId = await this.detectRepublicId(giverId);
 
     // ── Calculate tax split ──
@@ -478,12 +478,12 @@ export class QuestService {
   //  HELPERS
   // ═══════════════════════════════════════════════════
 
-  /** Detect republic from user's Tumen leadership */
+  /** Detect republic from user's Tumed leadership */
   private async detectRepublicId(userId: string): Promise<string | undefined> {
-    const tumen = await this.prisma.tumen.findFirst({
+    const tumed = await this.prisma.tumed.findFirst({
       where: { leaderUserId: userId },
       select: { republicId: true },
     });
-    return tumen?.republicId || undefined;
+    return tumed?.republicId || undefined;
   }
 }

@@ -12,7 +12,7 @@ import { Decimal } from '@prisma/client/runtime/library';
  * 
  * Distribution Strategy:
  * - UNVERIFIED: 100 ALTAN (anti-fraud protection)
- * - ARBAN_VERIFIED: 1,000 ALTAN total (900 more)
+ * - ARBAD_VERIFIED: 1,000 ALTAN total (900 more)
  * - ZUN_VERIFIED: 10,000 ALTAN total (9,000 more)
  * - FULLY_VERIFIED: Full citizen allocation
  * 
@@ -153,12 +153,12 @@ export class DistributionService {
         updateData.firstDistributionAt = new Date();
         break;
 
-      case 'ARBAN_VERIFIED':
+      case 'ARBAD_VERIFIED':
         // Total should be 1,000 ALTAN (give 900 more)
-        const targetArban = 1000;
-        amount = targetArban - Number(distribution.totalReceived);
+        const targetArbad = 1000;
+        amount = targetArbad - Number(distribution.totalReceived);
         if (amount > 0) {
-          updateData.arbanVerifiedReceived = amount;
+          updateData.arbadVerifiedReceived = amount;
         }
         break;
 
@@ -261,7 +261,7 @@ export class DistributionService {
       percentageReceived: percentageReceived.toFixed(2),
       breakdown: {
         unverified: distribution.unverifiedReceived.toString(),
-        arbanVerified: distribution.arbanVerifiedReceived.toString(),
+        arbadVerified: distribution.arbadVerifiedReceived.toString(),
         zun: distribution.zunReceived.toString(),
         full: distribution.fullyReceived.toString(),
       },

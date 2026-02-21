@@ -133,7 +133,7 @@ if (currentIndex < requiredIndex) {
 8. `certificate.service.ts` - Hash anchoring
 9. `contract-addresses.service.ts` - Guild contracts
 10. `cadastral-map.service.ts` - Region mapping
-11. `family-arban.service.ts` - Contract injection
+11. `family-arbad.service.ts` - Contract injection
 12. `transfer.service.ts` - Verification fix
 13-16. Role guard controllers
 

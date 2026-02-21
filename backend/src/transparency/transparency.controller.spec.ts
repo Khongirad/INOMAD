@@ -39,7 +39,7 @@ describe('TransparencyController', () => {
   it('gets judicial activities', async () => { await controller.getJudicialActivities(); });
   it('gets banking activities', async () => { await controller.getBankingActivities(); });
   it('gets hierarchy activities', async () => {
-    await controller.getHierarchyActivities('LEGISLATIVE' as any, 'NATIONAL' as any, 'ARBAN' as any);
+    await controller.getHierarchyActivities('LEGISLATIVE' as any, 'NATIONAL' as any, 'ARBAD' as any);
   });
   it('gets dashboard', async () => { await controller.getDashboard(); });
   it('exports summary', async () => { await controller.exportSummary(); });

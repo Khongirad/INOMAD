@@ -19,10 +19,10 @@ Democratic governance infrastructure
 |----------|---------|---------|
 | **StatisticsBureau** | `0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1` | Census tracking (10K citizens) |
 | **VotingCenter** | `0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44` | Proposal & vote management |
-| **ArbanKhural #1** | `0x4A679253410272dd5232B3Ff7cF5dbB88f295319` | Local council |
+| **ArbadKhural #1** | `0x4A679253410272dd5232B3Ff7cF5dbB88f295319` | Local council |
 | **ZunKhural #1** | `0x09635F643e140090A9A8Dcd712eD6285858ceBef` | Regional council |
-| **MyangangKhural #1** | `0x67d269191c92Caf3cD7723F116c85e6E9bf55933` | Provincial council |
-| **TumenKhural #1** | `0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690` | National council |
+| **MyangadgKhural #1** | `0x67d269191c92Caf3cD7723F116c85e6E9bf55933` | Provincial council |
+| **TumedKhural #1** | `0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690` | National council |
 
 **Gas Used**: ~8.2M gas
 
@@ -60,11 +60,11 @@ Core currency and monetary policy
 | **JudicialMultiSig** | `0x67d269191c92Caf3cD7723F116c85e6E9bf55933` | Multi-sig for judicial oversight |
 | **CitizenBank** | `0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E` | Personal banking accounts |
 | **InstitutionalBank** | `0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690` | Business/institutional accounts |
-| **BankArbanHierarchy** | `0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB` | Employee hierarchy management |
+| **BankArbadHierarchy** | `0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB` | Employee hierarchy management |
 
 **Configuration**:
 - ✅ JUSTICE_ROLE granted to JudicialMultiSig
-- ✅ ArbanCompletion linked to BankArbanHierarchy
+- ✅ ArbadCompletion linked to BankArbadHierarchy
 - ✅ Chairman role assigned
 - ✅ Admin role assigned
 
@@ -76,8 +76,8 @@ Core currency and monetary policy
 
 ### ✅ Democratic Governance (On-Chain)
 - Create proposals via VotingCenter
-- Vote at 4 hierarchical levels (Arban → Zun → Myangan → Tumen)
-- Census tracking for 10,000 citizens across 500 arbans
+- Vote at 4 hierarchical levels (Arbad → Zun → Myangad → Tumed)
+- Census tracking for 10,000 citizens across 500 arbads
 - Role-based proposal creation
 
 ### ✅ Constitutional Framework (On-Chain)
@@ -115,10 +115,10 @@ All 15 contract addresses added to `/Users/inomadinc/inomad-client/backend/.env`
 # Legislative Branch (Deployed 2026-01-31)
 STATISTICS_BUREAU_ADDRESS="0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1"
 VOTING_CENTER_ADDRESS="0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44"
-ARBAN_KHURAL_1_ADDRESS="0x4A679253410272dd5232B3Ff7cF5dbB88f295319"
+ARBAD_KHURAL_1_ADDRESS="0x4A679253410272dd5232B3Ff7cF5dbB88f295319"
 ZUN_KHURAL_1_ADDRESS="0x09635F643e140090A9A8Dcd712eD6285858ceBef"
-MYANGAN_KHURAL_1_ADDRESS="0x67d269191c92Caf3cD7723F116c85e6E9bf55933"
-TUMEN_KHURAL_1_ADDRESS="0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690"
+MYANGAD_KHURAL_1_ADDRESS="0x67d269191c92Caf3cD7723F116c85e6E9bf55933"
+TUMED_KHURAL_1_ADDRESS="0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690"
 
 # Economic Foundation (Deployed 2026-01-31)
 CORE_LAW_ADDRESS="0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1"

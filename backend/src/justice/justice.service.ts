@@ -8,7 +8,7 @@ export interface NominateMemberDto {
   seatId: string;
   legalEducationHash: string;
   specialization: string;
-  arbanId: string;
+  arbadId: string;
   walletAddress: string;
   nominatorPrivateKey: string;
 }
@@ -94,7 +94,7 @@ export class CouncilOfJusticeService {
       dto.seatId,
       dto.legalEducationHash,
       dto.specialization,
-      dto.arbanId,
+      dto.arbadId,
       dto.walletAddress,
     );
     const receipt = await tx.wait();
@@ -109,7 +109,7 @@ export class CouncilOfJusticeService {
         memberId,
         seatId: dto.seatId,
         legalEducationHash: dto.legalEducationHash,
-        nominatedByArbanId: dto.arbanId,
+        nominatedByArbadId: dto.arbadId,
         specialization: dto.specialization,
         walletAddress: dto.walletAddress,
       },

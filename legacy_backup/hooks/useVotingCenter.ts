@@ -4,16 +4,16 @@ import axios from 'axios';
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 export enum ProposalType {
-  ARBAN_BUDGET = 0,
-  ARBAN_LEADER = 1,
-  ARBAN_PROJECT = 2,
+  ARBAD_BUDGET = 0,
+  ARBAD_LEADER = 1,
+  ARBAD_PROJECT = 2,
   ZUN_POLICY = 3,
   ZUN_ELDER = 4,
   ZUN_BUDGET = 5,
-  MYANGAN_LAW = 6,
-  MYANGAN_LEADER = 7,
-  TUMEN_NATIONAL = 8,
-  TUMEN_CHAIRMAN = 9,
+  MYANGAD_LAW = 6,
+  MYANGAD_LEADER = 7,
+  TUMED_NATIONAL = 8,
+  TUMED_CHAIRMAN = 9,
   CONSTITUTIONAL = 10,
 }
 
@@ -26,10 +26,10 @@ export enum ProposalStatus {
 }
 
 export enum KhuralLevel {
-  ARBAN = 1,
+  ARBAD = 1,
   ZUN = 2,
-  MYANGAN = 3,
-  TUMEN = 4,
+  MYANGAD = 3,
+  TUMED = 4,
 }
 
 export interface Proposal {
@@ -263,16 +263,16 @@ export const useVotingCenter = () => {
  */
 export const getProposalTypeLabel = (type: ProposalType): string => {
   const labels = {
-    [ProposalType.ARBAN_BUDGET]: 'Arban Budget',
-    [ProposalType.ARBAN_LEADER]: 'Arban Leader Election',
-    [ProposalType.ARBAN_PROJECT]: 'Arban Project',
+    [ProposalType.ARBAD_BUDGET]: 'Arbad Budget',
+    [ProposalType.ARBAD_LEADER]: 'Arbad Leader Election',
+    [ProposalType.ARBAD_PROJECT]: 'Arbad Project',
     [ProposalType.ZUN_POLICY]: 'Zun Policy',
     [ProposalType.ZUN_ELDER]: 'Zun Elder Election',
     [ProposalType.ZUN_BUDGET]: 'Zun Budget',
-    [ProposalType.MYANGAN_LAW]: 'Myangan Law',
-    [ProposalType.MYANGAN_LEADER]: 'Myangan Leader Election',
-    [ProposalType.TUMEN_NATIONAL]: 'National Legislation',
-    [ProposalType.TUMEN_CHAIRMAN]: 'National Chairman Election',
+    [ProposalType.MYANGAD_LAW]: 'Myangad Law',
+    [ProposalType.MYANGAD_LEADER]: 'Myangad Leader Election',
+    [ProposalType.TUMED_NATIONAL]: 'National Legislation',
+    [ProposalType.TUMED_CHAIRMAN]: 'National Chairman Election',
     [ProposalType.CONSTITUTIONAL]: 'Constitutional Amendment',
   };
   return labels[type] || 'Unknown';
@@ -297,10 +297,10 @@ export const getStatusLabel = (status: ProposalStatus): string => {
  */
 export const getLevelLabel = (level: KhuralLevel): string => {
   const labels = {
-    [KhuralLevel.ARBAN]: 'Arban',
+    [KhuralLevel.ARBAD]: 'Arbad',
     [KhuralLevel.ZUN]: 'Zun',
-    [KhuralLevel.MYANGAN]: 'Myangan',
-    [KhuralLevel.TUMEN]: 'Tumen (National)',
+    [KhuralLevel.MYANGAD]: 'Myangad',
+    [KhuralLevel.TUMED]: 'Tumed (National)',
   };
   return labels[level] || 'Unknown';
 };

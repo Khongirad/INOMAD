@@ -2,48 +2,48 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { PrismaService } from '../prisma/prisma.service';
 import { CitizenAllocationService } from '../identity/citizen-allocation.service';
 import { ethers } from 'ethers';
-import { ArbanCompletion_ABI, OrganizationType } from '../blockchain/abis/arbanCompletion.abi';
-import { ArbanCompletion__factory } from '../typechain-types/factories/ArbanCompletion__factory';
+import { ArbadCompletion_ABI, OrganizationType } from '../blockchain/abis/arbadCompletion.abi';
+import { ArbadCompletion__factory } from '../typechain-types/factories/ArbadCompletion__factory';
 import {
-  OrganizationalArban,
+  OrganizationalArbad,
   OrgChart,
-  CreateOrgArbanRequest,
-  CreateOrgArbanResponse,
+  CreateOrgArbadRequest,
+  CreateOrgArbadResponse,
   AddOrgMemberRequest,
   SetOrgLeaderRequest,
   CreateDepartmentRequest,
-} from './types/arban.types';
+} from './types/arbad.types';
 
 @Injectable()
-export class OrganizationalArbanService {
-  private readonly logger = new Logger(OrganizationalArbanService.name);
-  private contract: ReturnType<typeof ArbanCompletion__factory.connect>;
+export class OrganizationalArbadService {
+  private readonly logger = new Logger(OrganizationalArbadService.name);
+  private contract: ReturnType<typeof ArbadCompletion__factory.connect>;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly citizenAllocation: CitizenAllocationService,
   ) {
-    const contractAddress = process.env.ARBAN_COMPLETION_ADDRESS || '';
+    const contractAddress = process.env.ARBAD_COMPLETION_ADDRESS || '';
     
     if (contractAddress && contractAddress !== '') {
       const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-      this.contract = ArbanCompletion__factory.connect(contractAddress, provider);
-      this.logger.log(`✅ OrganizationalArbanService connected`);
+      this.contract = ArbadCompletion__factory.connect(contractAddress, provider);
+      this.logger.log(`✅ OrganizationalArbadService connected`);
     } else {
-      this.logger.warn('⚠️  ARBAN_COMPLETION_ADDRESS not configured - Org Arban features disabled');
+      this.logger.warn('⚠️  ARBAD_COMPLETION_ADDRESS not configured - Org Arbad features disabled');
       // @ts-ignore
       this.contract = null;
     }
   }
 
   /**
-   * Create Organizational Arban
+   * Create Organizational Arbad
    */
-  async createOrganizationalArban(
-    request: CreateOrgArbanRequest,
+  async createOrganizationalArbad(
+    request: CreateOrgArbadRequest,
     signerWallet: ethers.Wallet,
-  ): Promise<CreateOrgArbanResponse> {
-    this.logger.log(`Creating Organizational Arban: ${request.name} (${request.orgType})`);
+  ): Promise<CreateOrgArbadResponse> {
+    this.logger.log(`Creating Organizational Arbad: ${request.name} (${request.orgType})`);
 
     try {
       // Convert string orgType to enum if needed
@@ -67,25 +67,25 @@ export class OrganizationalArbanService {
 
       // Call smart contract
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.createOrganizationalArban(request.name, orgTypeValue);
+      const tx = await contractWithSigner.createOrganizationalArbad(request.name, orgTypeValue);
       const receipt = await tx.wait();
 
       // Parse event
       const event = receipt.logs.find((log: any) => {
         try {
           const parsed = this.contract.interface.parseLog(log);
-          return parsed?.name === 'OrgArbanCreated';
+          return parsed?.name === 'OrgArbadCreated';
         } catch {
           return false;
         }
       });
 
       if (!event) {
-        throw new Error('OrgArbanCreated event not found');
+        throw new Error('OrgArbadCreated event not found');
       }
 
       const parsedEvent = this.contract.interface.parseLog(event);
-      const arbanId = parsedEvent?.args.arbanId;
+      const arbadId = parsedEvent?.args.arbadId;
       const powerBranch = parsedEvent?.args.branch;
 
       // Map enum values
@@ -110,9 +110,9 @@ export class OrganizationalArbanService {
       };
 
       // Store in database
-      await this.prisma.organizationalArban.create({
+      await this.prisma.organizationalArbad.create({
         data: {
-          arbanId: BigInt(arbanId.toString()),
+          arbadId: BigInt(arbadId.toString()),
           name: request.name,
           orgType: orgTypeMap[orgTypeValue] as any,
           powerBranch: powerBranchMap[powerBranch] as any,
@@ -120,32 +120,32 @@ export class OrganizationalArbanService {
         },
       });
 
-      this.logger.log(`Organizational Arban created. ID: ${arbanId}`);
+      this.logger.log(`Organizational Arbad created. ID: ${arbadId}`);
 
       return {
-        arbanId: Number(arbanId),
+        arbadId: Number(arbadId),
         txHash: receipt.hash,
       };
     } catch (error) {
-      this.logger.error(`Failed to create org arban: ${error.message}`, error.stack);
+      this.logger.error(`Failed to create org arbad: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   /**
-   * Add member to Organizational Arban
+   * Add member to Organizational Arbad
    */
   async addOrgMember(request: AddOrgMemberRequest, signerWallet: ethers.Wallet): Promise<void> {
-    this.logger.log(`Adding member ${request.seatId} to org ${request.arbanId}`);
+    this.logger.log(`Adding member ${request.seatId} to org ${request.arbadId}`);
 
     try {
-      const org = await this.prisma.organizationalArban.findUnique({
-        where: { arbanId: BigInt(request.arbanId) },
+      const org = await this.prisma.organizationalArbad.findUnique({
+        where: { arbadId: BigInt(request.arbadId) },
         include: { members: true },
       });
 
       if (!org || !org.isActive) {
-        throw new NotFoundException(`Organizational Arban ${request.arbanId} not found or inactive`);
+        throw new NotFoundException(`Organizational Arbad ${request.arbadId} not found or inactive`);
       }
 
       // Check if already member
@@ -156,21 +156,21 @@ export class OrganizationalArbanService {
 
       // Call smart contract
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.addOrgMember(request.arbanId, request.seatId);
+      const tx = await contractWithSigner.addOrgMember(request.arbadId, request.seatId);
       await tx.wait();
 
       // Store in database
-      await this.prisma.orgArbanMember.create({
+      await this.prisma.orgArbadMember.create({
         data: {
-          arbanId: BigInt(request.arbanId),
+          arbadId: BigInt(request.arbadId),
           seatId: request.seatId,
         },
       });
 
-      this.logger.log(`Member added to Org Arban successfully`);
+      this.logger.log(`Member added to Org Arbad successfully`);
 
       // Trigger Level 2 allocation for the new member
-      await this.allocateLevel2ToMember(request.arbanId.toString(), request.seatId);
+      await this.allocateLevel2ToMember(request.arbadId.toString(), request.seatId);
     } catch (error) {
       this.logger.error(`Failed to add member: ${error.message}`, error.stack);
       throw error;
@@ -181,15 +181,15 @@ export class OrganizationalArbanService {
    * Set leader
    */
   async setOrgLeader(request: SetOrgLeaderRequest, signerWallet: ethers.Wallet): Promise<void> {
-    this.logger.log(`Setting leader for org ${request.arbanId}: seat ${request.leaderSeatId}`);
+    this.logger.log(`Setting leader for org ${request.arbadId}: seat ${request.leaderSeatId}`);
 
     try {
-      const org = await this.prisma.organizationalArban.findUnique({
-        where: { arbanId: BigInt(request.arbanId) },
+      const org = await this.prisma.organizationalArbad.findUnique({
+        where: { arbadId: BigInt(request.arbadId) },
       });
 
       if (!org || !org.isActive) {
-        throw new NotFoundException(`Organizational Arban ${request.arbanId} not found or inactive`);
+        throw new NotFoundException(`Organizational Arbad ${request.arbadId} not found or inactive`);
       }
 
       if (org.leaderSeatId) {
@@ -198,12 +198,12 @@ export class OrganizationalArbanService {
 
       // Call smart contract
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.setOrgLeader(request.arbanId, request.leaderSeatId);
+      const tx = await contractWithSigner.setOrgLeader(request.arbadId, request.leaderSeatId);
       await tx.wait();
 
       // Update database
-      await this.prisma.organizationalArban.update({
-        where: { arbanId: BigInt(request.arbanId) },
+      await this.prisma.organizationalArbad.update({
+        where: { arbadId: BigInt(request.arbadId) },
         data: { leaderSeatId: request.leaderSeatId },
       });
 
@@ -220,12 +220,12 @@ export class OrganizationalArbanService {
   async createDepartment(
     request: CreateDepartmentRequest,
     signerWallet: ethers.Wallet,
-  ): Promise<CreateOrgArbanResponse> {
+  ): Promise<CreateOrgArbadResponse> {
     this.logger.log(`Creating department under org ${request.parentOrgId}: ${request.deptName}`);
 
     try {
-      const parent = await this.prisma.organizationalArban.findUnique({
-        where: { arbanId: BigInt(request.parentOrgId) },
+      const parent = await this.prisma.organizationalArbad.findUnique({
+        where: { arbadId: BigInt(request.parentOrgId) },
       });
 
       if (!parent || !parent.isActive) {
@@ -255,9 +255,9 @@ export class OrganizationalArbanService {
       const deptId = parsedEvent?.args.deptId;
 
       // Store in database
-      await this.prisma.organizationalArban.create({
+      await this.prisma.organizationalArbad.create({
         data: {
-          arbanId: BigInt(deptId.toString()),
+          arbadId: BigInt(deptId.toString()),
           name: request.deptName,
           orgType: parent.orgType,
           powerBranch: parent.powerBranch,
@@ -269,7 +269,7 @@ export class OrganizationalArbanService {
       this.logger.log(`Department created. ID: ${deptId}`);
 
       return {
-        arbanId: Number(deptId),
+        arbadId: Number(deptId),
         txHash: receipt.hash,
       };
     } catch (error) {
@@ -279,11 +279,11 @@ export class OrganizationalArbanService {
   }
 
   /**
-   * Get Organizational Arban by ID
+   * Get Organizational Arbad by ID
    */
-  async getOrgArban(arbanId: number): Promise<OrganizationalArban> {
-    const org = await this.prisma.organizationalArban.findUnique({
-      where: { arbanId: BigInt(arbanId) },
+  async getOrgArbad(arbadId: number): Promise<OrganizationalArbad> {
+    const org = await this.prisma.organizationalArbad.findUnique({
+      where: { arbadId: BigInt(arbadId) },
       include: {
         members: true,
         departments: true,
@@ -291,11 +291,11 @@ export class OrganizationalArbanService {
     });
 
     if (!org) {
-      throw new NotFoundException(`Organizational Arban ${arbanId} not found`);
+      throw new NotFoundException(`Organizational Arbad ${arbadId} not found`);
     }
 
     return {
-      arbanId: Number(org.arbanId),
+      arbadId: Number(org.arbadId),
       name: org.name,
       memberSeatIds: org.members.map((m) => m.seatId),
       leaderSeatId: org.leaderSeatId ||  "",
@@ -310,7 +310,7 @@ export class OrganizationalArbanService {
   /**
    * Get orgs by type
    */
-  async getOrgsByType(orgType: OrganizationType): Promise<OrganizationalArban[]> {
+  async getOrgsByType(orgType: OrganizationType): Promise<OrganizationalArbad[]> {
     const typeMap: Record<OrganizationType, string> = {
       [OrganizationType.NONE]: 'NONE',
       [OrganizationType.EXECUTIVE]: 'EXECUTIVE',
@@ -323,7 +323,7 @@ export class OrganizationalArbanService {
       [OrganizationType.EKHE_KHURAL]: 'EKHE_KHURAL',
     };
 
-    const orgs = await this.prisma.organizationalArban.findMany({
+    const orgs = await this.prisma.organizationalArbad.findMany({
       where: {
         orgType: typeMap[orgType] as any,
         isActive: true,
@@ -334,7 +334,7 @@ export class OrganizationalArbanService {
     });
 
     return orgs.map((org) => ({
-      arbanId: Number(org.arbanId),
+      arbadId: Number(org.arbadId),
       name: org.name,
       memberSeatIds: org.members.map((m) => m.seatId),
       leaderSeatId: org.leaderSeatId ||  "",
@@ -373,15 +373,15 @@ export class OrganizationalArbanService {
   }
 
   /**
-   * Allocate Level 2 funds to member who joined Org Arban
+   * Allocate Level 2 funds to member who joined Org Arbad
    * Called automatically after member addition
    */
   private async allocateLevel2ToMember(
-    arbanId: string,
+    arbadId: string,
     seatId: string,
   ): Promise<void> {
     this.logger.log(
-      `Attempting Level 2 allocation for ${seatId} in Org Arban ${arbanId}`,
+      `Attempting Level 2 allocation for ${seatId} in Org Arbad ${arbadId}`,
     );
 
     try {
@@ -401,12 +401,12 @@ export class OrganizationalArbanService {
       // Attempt allocation
       const result = await this.citizenAllocation.allocateLevel2Funds(
         user.id,
-        arbanId,
+        arbadId,
       );
 
       if (result.allocated) {
         this.logger.log(
-          `✅ Allocated ${result.amount} ALTAN to ${seatId} for Org Arban membership`,
+          `✅ Allocated ${result.amount} ALTAN to ${seatId} for Org Arbad membership`,
         );
       } else {
         this.logger.log(

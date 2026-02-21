@@ -12,11 +12,11 @@ describe('VerificationService', () => {
 
   const mockVerifier = {
     id: 'v1', seatId: 'V-SEAT', verificationStatus: 'VERIFIED',
-    khuralSeats: [{ group: { id: 'arban-1', parentGroupId: 'zuun-1' } }],
+    khuralSeats: [{ group: { id: 'arbad-1', parentGroupId: 'zuud-1' } }],
   };
   const mockTarget = {
     id: 'u1', seatId: 'T-SEAT', verificationStatus: 'PENDING',
-    khuralSeats: [{ group: { id: 'arban-1', parentGroupId: 'zuun-1' } }],
+    khuralSeats: [{ group: { id: 'arbad-1', parentGroupId: 'zuud-1' } }],
   };
 
   const mockPrisma = () => ({
@@ -85,10 +85,10 @@ describe('VerificationService', () => {
       await expect(service.submitVerification('V-SEAT', 'bad')).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw if different Arban', async () => {
+    it('should throw if different Arbad', async () => {
       const otherTarget = {
         ...mockTarget,
-        khuralSeats: [{ group: { id: 'arban-2', parentGroupId: 'zuun-1' } }],
+        khuralSeats: [{ group: { id: 'arbad-2', parentGroupId: 'zuud-1' } }],
       };
       prisma.user.findUnique.mockResolvedValue(mockVerifier);
       prisma.user.findFirst.mockResolvedValue(otherTarget);

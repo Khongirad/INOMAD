@@ -9,28 +9,28 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ArbanVerificationService } from './arban-verification.service';
+import { ArbadVerificationService } from './arbad-verification.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@ApiTags('Arbans')
-@Controller('arbans')
+@ApiTags('Arbads')
+@Controller('arbads')
 @UseGuards(JwtAuthGuard)
-export class ArbanVerificationController {
+export class ArbadVerificationController {
   constructor(
-    private readonly arbanVerificationService: ArbanVerificationService,
+    private readonly arbadVerificationService: ArbadVerificationService,
   ) {}
 
   /**
-   * Verify a member in your Arban
+   * Verify a member in your Arbad
    */
-  @Post(':arbanId/verify-member')
+  @Post(':arbadId/verify-member')
   async verifyMember(
-    @Param('arbanId') arbanId: string,
+    @Param('arbadId') arbadId: string,
     @Request() req,
     @Body() body: { memberId: string; notes?: string },
   ) {
-    return this.arbanVerificationService.verifyMember(
-      arbanId,
+    return this.arbadVerificationService.verifyMember(
+      arbadId,
       req.user.sub,
       body.memberId,
       body.notes,
@@ -40,38 +40,38 @@ export class ArbanVerificationController {
   /**
    * Get verification matrix (who verified whom)
    */
-  @Get(':arbanId/verification-matrix')
-  async getVerificationMatrix(@Param('arbanId') arbanId: string) {
-    return this.arbanVerificationService.getVerificationMatrix(arbanId);
+  @Get(':arbadId/verification-matrix')
+  async getVerificationMatrix(@Param('arbadId') arbadId: string) {
+    return this.arbadVerificationService.getVerificationMatrix(arbadId);
   }
 
   /**
-   * Get verification progress for Arban
+   * Get verification progress for Arbad
    */
-  @Get(':arbanId/verification-progress')
-  async getVerificationProgress(@Param('arbanId') arbanId: string) {
-    return this.arbanVerificationService.getVerificationProgress(arbanId);
+  @Get(':arbadId/verification-progress')
+  async getVerificationProgress(@Param('arbadId') arbadId: string) {
+    return this.arbadVerificationService.getVerificationProgress(arbadId);
   }
 
   /**
-   * Check if Arban is fully verified
+   * Check if Arbad is fully verified
    */
-  @Get(':arbanId/is-fully-verified')
-  async isFullyVerified(@Param('arbanId') arbanId: string) {
-    const isComplete = await this.arbanVerificationService.isFullyVerified(arbanId);
+  @Get(':arbadId/is-fully-verified')
+  async isFullyVerified(@Param('arbadId') arbadId: string) {
+    const isComplete = await this.arbadVerificationService.isFullyVerified(arbadId);
     return { isFullyVerified: isComplete };
   }
 
   /**
    * Get list of members user hasn't verified yet
    */
-  @Get(':arbanId/unverified-members')
+  @Get(':arbadId/unverified-members')
   async getUnverifiedMembers(
-    @Param('arbanId') arbanId: string,
+    @Param('arbadId') arbadId: string,
     @Request() req,
   ) {
-    return this.arbanVerificationService.getUnverifiedMembers(
-      arbanId,
+    return this.arbadVerificationService.getUnverifiedMembers(
+      arbadId,
       req.user.sub,
     );
   }
@@ -79,26 +79,26 @@ export class ArbanVerificationController {
   /**
    * Get verification details for a specific member
    */
-  @Get(':arbanId/member/:memberId/verifications')
+  @Get(':arbadId/member/:memberId/verifications')
   async getMemberVerifications(
-    @Param('arbanId') arbanId: string,
+    @Param('arbadId') arbadId: string,
     @Param('memberId') memberId: string,
   ) {
-    return this.arbanVerificationService.getMemberVerifications(arbanId, memberId);
+    return this.arbadVerificationService.getMemberVerifications(arbadId, memberId);
   }
 
   /**
    * Revoke a verification (self or admin)
    */
-  @Delete(':arbanId/verify-member/:verifiedId')
+  @Delete(':arbadId/verify-member/:verifiedId')
   async revokeVerification(
-    @Param('arbanId') arbanId: string,
+    @Param('arbadId') arbadId: string,
     @Param('verifiedId') verifiedId: string,
     @Request() req,
     @Body() body: { reason?: string },
   ) {
-    return this.arbanVerificationService.revokeVerification(
-      arbanId,
+    return this.arbadVerificationService.revokeVerification(
+      arbadId,
       req.user.sub,
       verifiedId,
       req.user.sub,

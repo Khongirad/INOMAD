@@ -7,15 +7,15 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
- * HierarchyService — manages the Arban→Zun→Myangan→Tumen hierarchy.
+ * HierarchyService — manages the Arbad→Zun→Myangad→Tumed hierarchy.
  *
- * Arban levels:
- *   lvl 1 = standalone Arban (10 people)
- *   lvl 2 = Arban in a Zun (manages 100)
- *   lvl 3 = Arban in a Myangan (manages 1000)
- *   lvl 4 = Arban in a Tumen (manages 10000)
+ * Arbad levels:
+ *   lvl 1 = standalone Arbad (10 people)
+ *   lvl 2 = Arbad in a Zun (manages 100)
+ *   lvl 3 = Arbad in a Myangad (manages 1000)
+ *   lvl 4 = Arbad in a Tumed (manages 10000)
  *
- * Tumen is the MAXIMUM unit — Tumens cooperate but NEVER merge.
+ * Tumed is the MAXIMUM unit — Tumeds cooperate but NEVER merge.
  */
 @Injectable()
 export class HierarchyService {
@@ -31,16 +31,16 @@ export class HierarchyService {
     const republics = await this.prisma.republicanKhural.findMany({
       where: { isActive: true },
       include: {
-        memberTumens: {
+        memberTumeds: {
           where: { isActive: true },
           include: {
-            memberMyangans: {
+            memberMyangads: {
               where: { isActive: true },
               include: {
                 memberZuns: {
                   where: { isActive: true },
                   include: {
-                    memberArbans: true,
+                    memberArbads: true,
                   },
                 },
               },
@@ -64,18 +64,18 @@ export class HierarchyService {
   }
 
   // ────────────────────────────────────
-  // ZUN MANAGEMENT (lvl 2: 10 Arbans = 100)
+  // ZUN MANAGEMENT (lvl 2: 10 Arbads = 100)
   // ────────────────────────────────────
 
-  async listZuns(myanganId?: string) {
+  async listZuns(myangadId?: string) {
     const where: any = { isActive: true };
-    if (myanganId) where.myanganId = myanganId;
+    if (myangadId) where.myangadId = myangadId;
 
     return this.prisma.zun.findMany({
       where,
       include: {
-        memberArbans: true,
-        myangan: { select: { id: true, name: true } },
+        memberArbads: true,
+        myangad: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -85,192 +85,192 @@ export class HierarchyService {
     const zun = await this.prisma.zun.findUnique({
       where: { id: zunId },
       include: {
-        memberArbans: true,
-        myangan: { select: { id: true, name: true } },
+        memberArbads: true,
+        myangad: { select: { id: true, name: true } },
       },
     });
     if (!zun) throw new NotFoundException('Цзун не найден');
     return zun;
   }
 
-  async joinZun(arbanId: bigint, zunId: string) {
+  async joinZun(arbadId: bigint, zunId: string) {
     const zun = await this.prisma.zun.findUnique({
       where: { id: zunId },
-      include: { memberArbans: true },
+      include: { memberArbads: true },
     });
     if (!zun) throw new NotFoundException('Цзун не найден');
 
-    // Enforce max 10 Arbans per Zun
-    if (zun.memberArbans.length >= 10) {
+    // Enforce max 10 Arbads per Zun
+    if (zun.memberArbads.length >= 10) {
       throw new BadRequestException('Цзун уже полон (макс. 10 Арбанов)');
     }
 
-    // Check if Arban already belongs to a Zun
-    const arban = await this.prisma.familyArban.findUnique({
-      where: { arbanId },
+    // Check if Arbad already belongs to a Zun
+    const arbad = await this.prisma.familyArbad.findUnique({
+      where: { arbadId },
     });
-    if (!arban) throw new NotFoundException('Арбан не найден');
-    if (arban.zunId) {
+    if (!arbad) throw new NotFoundException('Арбан не найден');
+    if (arbad.zunId) {
       throw new BadRequestException('Арбан уже состоит в другом Цзуне');
     }
 
-    const updated = await this.prisma.familyArban.update({
-      where: { arbanId },
+    const updated = await this.prisma.familyArbad.update({
+      where: { arbadId },
       data: { zunId: zun.zunId },
     });
 
-    this.logger.log(`Arban ${arbanId} joined Zun ${zunId} (lvl 1→2)`);
+    this.logger.log(`Arbad ${arbadId} joined Zun ${zunId} (lvl 1→2)`);
     return updated;
   }
 
-  async leaveZun(arbanId: bigint) {
-    const arban = await this.prisma.familyArban.findUnique({
-      where: { arbanId },
+  async leaveZun(arbadId: bigint) {
+    const arbad = await this.prisma.familyArbad.findUnique({
+      where: { arbadId },
     });
-    if (!arban) throw new NotFoundException('Арбан не найден');
-    if (!arban.zunId) {
+    if (!arbad) throw new NotFoundException('Арбан не найден');
+    if (!arbad.zunId) {
       throw new BadRequestException('Арбан не состоит ни в каком Цзуне');
     }
 
-    const updated = await this.prisma.familyArban.update({
-      where: { arbanId },
+    const updated = await this.prisma.familyArbad.update({
+      where: { arbadId },
       data: { zunId: null },
     });
 
-    this.logger.log(`Arban ${arbanId} left Zun (lvl 2→1)`);
+    this.logger.log(`Arbad ${arbadId} left Zun (lvl 2→1)`);
     return updated;
   }
 
   // ────────────────────────────────────
-  // MYANGAN MANAGEMENT (lvl 3: 10 Zuns = 1000)
+  // MYANGAD MANAGEMENT (lvl 3: 10 Zuns = 1000)
   // ────────────────────────────────────
 
-  async listMyangans(tumenId?: string) {
+  async listMyangads(tumedId?: string) {
     const where: any = { isActive: true };
-    if (tumenId) where.tumenId = tumenId;
+    if (tumedId) where.tumedId = tumedId;
 
-    return this.prisma.myangan.findMany({
+    return this.prisma.myangad.findMany({
       where,
       include: {
-        memberZuns: { include: { _count: { select: { memberArbans: true } } } },
-        tumen: { select: { id: true, name: true } },
+        memberZuns: { include: { _count: { select: { memberArbads: true } } } },
+        tumed: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async getMyangan(id: string) {
-    const myangan = await this.prisma.myangan.findUnique({
+  async getMyangad(id: string) {
+    const myangad = await this.prisma.myangad.findUnique({
       where: { id },
       include: {
         memberZuns: {
-          include: { memberArbans: true },
+          include: { memberArbads: true },
         },
-        tumen: { select: { id: true, name: true } },
+        tumed: { select: { id: true, name: true } },
       },
     });
-    if (!myangan) throw new NotFoundException('Мянган не найден');
-    return myangan;
+    if (!myangad) throw new NotFoundException('Мянган не найден');
+    return myangad;
   }
 
-  async joinMyangan(zunId: string, myanganId: string) {
-    const myangan = await this.prisma.myangan.findUnique({
-      where: { id: myanganId },
+  async joinMyangad(zunId: string, myangadId: string) {
+    const myangad = await this.prisma.myangad.findUnique({
+      where: { id: myangadId },
       include: { memberZuns: true },
     });
-    if (!myangan) throw new NotFoundException('Мянган не найден');
+    if (!myangad) throw new NotFoundException('Мянган не найден');
 
-    // Enforce max 10 Zuns per Myangan
-    if (myangan.memberZuns.length >= 10) {
+    // Enforce max 10 Zuns per Myangad
+    if (myangad.memberZuns.length >= 10) {
       throw new BadRequestException('Мянган уже полон (макс. 10 Цзунов)');
     }
 
-    // Check Zun exists and isn't already in a Myangan
+    // Check Zun exists and isn't already in a Myangad
     const zun = await this.prisma.zun.findUnique({ where: { id: zunId } });
     if (!zun) throw new NotFoundException('Цзун не найден');
-    if (zun.myanganId) {
+    if (zun.myangadId) {
       throw new BadRequestException('Цзун уже состоит в другом Мянгане');
     }
 
     const updated = await this.prisma.zun.update({
       where: { id: zunId },
-      data: { myanganId },
+      data: { myangadId },
     });
 
-    // Recalculate Myangan stats
-    await this.recalcMyanganStats(myanganId);
-    this.logger.log(`Zun ${zunId} joined Myangan ${myanganId} (lvl 2→3)`);
+    // Recalculate Myangad stats
+    await this.recalcMyangadStats(myangadId);
+    this.logger.log(`Zun ${zunId} joined Myangad ${myangadId} (lvl 2→3)`);
     return updated;
   }
 
   // ────────────────────────────────────
-  // TUMEN MANAGEMENT (lvl 4: 10 Myangans = 10000)
+  // TUMED MANAGEMENT (lvl 4: 10 Myangads = 10000)
   // ────────────────────────────────────
 
-  async listTumens(republicId?: string) {
+  async listTumeds(republicId?: string) {
     const where: any = { isActive: true };
     if (republicId) where.republicId = republicId;
 
-    return this.prisma.tumen.findMany({
+    return this.prisma.tumed.findMany({
       where,
       include: {
-        memberMyangans: {
+        memberMyangads: {
           include: { _count: { select: { memberZuns: true } } },
         },
         republic: { select: { id: true, name: true } },
-        cooperationsAsA: { where: { status: 'ACTIVE' }, include: { tumenB: { select: { id: true, name: true } } } },
-        cooperationsAsB: { where: { status: 'ACTIVE' }, include: { tumenA: { select: { id: true, name: true } } } },
+        cooperationsAsA: { where: { status: 'ACTIVE' }, include: { tumedB: { select: { id: true, name: true } } } },
+        cooperationsAsB: { where: { status: 'ACTIVE' }, include: { tumedA: { select: { id: true, name: true } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async getTumen(id: string) {
-    const tumen = await this.prisma.tumen.findUnique({
+  async getTumed(id: string) {
+    const tumed = await this.prisma.tumed.findUnique({
       where: { id },
       include: {
-        memberMyangans: {
+        memberMyangads: {
           include: {
             memberZuns: {
-              include: { _count: { select: { memberArbans: true } } },
+              include: { _count: { select: { memberArbads: true } } },
             },
           },
         },
         republic: { select: { id: true, name: true } },
-        cooperationsAsA: { include: { tumenB: { select: { id: true, name: true } } } },
-        cooperationsAsB: { include: { tumenA: { select: { id: true, name: true } } } },
+        cooperationsAsA: { include: { tumedB: { select: { id: true, name: true } } } },
+        cooperationsAsB: { include: { tumedA: { select: { id: true, name: true } } } },
       },
     });
-    if (!tumen) throw new NotFoundException('Тумэн не найден');
-    return tumen;
+    if (!tumed) throw new NotFoundException('Тумэн не найден');
+    return tumed;
   }
 
-  async joinTumen(myanganId: string, tumenId: string) {
-    const tumen = await this.prisma.tumen.findUnique({
-      where: { id: tumenId },
-      include: { memberMyangans: true },
+  async joinTumed(myangadId: string, tumedId: string) {
+    const tumed = await this.prisma.tumed.findUnique({
+      where: { id: tumedId },
+      include: { memberMyangads: true },
     });
-    if (!tumen) throw new NotFoundException('Тумэн не найден');
+    if (!tumed) throw new NotFoundException('Тумэн не найден');
 
-    // Enforce max 10 Myangans per Tumen
-    if (tumen.memberMyangans.length >= 10) {
+    // Enforce max 10 Myangads per Tumed
+    if (tumed.memberMyangads.length >= 10) {
       throw new BadRequestException('Тумэн уже полон (макс. 10 Мянганов)');
     }
 
-    const myangan = await this.prisma.myangan.findUnique({ where: { id: myanganId } });
-    if (!myangan) throw new NotFoundException('Мянган не найден');
-    if (myangan.tumenId) {
+    const myangad = await this.prisma.myangad.findUnique({ where: { id: myangadId } });
+    if (!myangad) throw new NotFoundException('Мянган не найден');
+    if (myangad.tumedId) {
       throw new BadRequestException('Мянган уже состоит в другом Тумэне');
     }
 
-    const updated = await this.prisma.myangan.update({
-      where: { id: myanganId },
-      data: { tumenId },
+    const updated = await this.prisma.myangad.update({
+      where: { id: myangadId },
+      data: { tumedId },
     });
 
-    // Recalculate Tumen stats
-    await this.recalcTumenStats(tumenId);
-    this.logger.log(`Myangan ${myanganId} joined Tumen ${tumenId} (lvl 3→4)`);
+    // Recalculate Tumed stats
+    await this.recalcTumedStats(tumedId);
+    this.logger.log(`Myangad ${myangadId} joined Tumed ${tumedId} (lvl 3→4)`);
     return updated;
   }
 
@@ -278,78 +278,78 @@ export class HierarchyService {
   // STATISTICS RECALCULATION
   // ────────────────────────────────────
 
-  private async recalcMyanganStats(myanganId: string) {
-    const myangan = await this.prisma.myangan.findUnique({
-      where: { id: myanganId },
+  private async recalcMyangadStats(myangadId: string) {
+    const myangad = await this.prisma.myangad.findUnique({
+      where: { id: myangadId },
       include: {
-        memberZuns: { include: { memberArbans: true } },
+        memberZuns: { include: { memberArbads: true } },
       },
     });
-    if (!myangan) return;
+    if (!myangad) return;
 
-    const totalArbans = myangan.memberZuns.reduce(
-      (acc, zun) => acc + zun.memberArbans.length,
+    const totalArbads = myangad.memberZuns.reduce(
+      (acc, zun) => acc + zun.memberArbads.length,
       0,
     );
-    const totalMembers = totalArbans * 10; // Each Arban = 10 people
+    const totalMembers = totalArbads * 10; // Each Arbad = 10 people
 
-    await this.prisma.myangan.update({
-      where: { id: myanganId },
-      data: { totalArbans, totalMembers },
+    await this.prisma.myangad.update({
+      where: { id: myangadId },
+      data: { totalArbads, totalMembers },
     });
   }
 
-  private async recalcTumenStats(tumenId: string) {
-    const tumen = await this.prisma.tumen.findUnique({
-      where: { id: tumenId },
+  private async recalcTumedStats(tumedId: string) {
+    const tumed = await this.prisma.tumed.findUnique({
+      where: { id: tumedId },
       include: {
-        memberMyangans: {
-          include: { memberZuns: { include: { memberArbans: true } } },
+        memberMyangads: {
+          include: { memberZuns: { include: { memberArbads: true } } },
         },
       },
     });
-    if (!tumen) return;
+    if (!tumed) return;
 
-    let totalArbans = 0;
-    for (const myangan of tumen.memberMyangans) {
-      for (const zun of myangan.memberZuns) {
-        totalArbans += zun.memberArbans.length;
+    let totalArbads = 0;
+    for (const myangad of tumed.memberMyangads) {
+      for (const zun of myangad.memberZuns) {
+        totalArbads += zun.memberArbads.length;
       }
     }
-    const totalMembers = totalArbans * 10;
+    const totalMembers = totalArbads * 10;
 
-    await this.prisma.tumen.update({
-      where: { id: tumenId },
-      data: { totalArbans, totalMembers },
+    await this.prisma.tumed.update({
+      where: { id: tumedId },
+      data: { totalArbads, totalMembers },
     });
   }
 
   // ────────────────────────────────────
-  // TUMEN COOPERATION (not merger!)
+  // TUMED COOPERATION (not merger!)
   // ────────────────────────────────────
 
   async proposeCooperation(
-    tumenId: string,
-    targetTumenId: string,
+    tumedId: string,
+    targetTumedId: string,
     userId: string,
     data: { title: string; description?: string; treaty?: string },
   ) {
-    // Verify proposer is Tumen leader
-    const tumen = await this.prisma.tumen.findUnique({ where: { id: tumenId } });
-    if (!tumen) throw new NotFoundException('Тумэн не найден');
-    if (tumen.leaderUserId !== userId) {
+    // Verify proposer is Tumed leader
+    const tumed = await this.prisma.tumed.findUnique({ where: { id: tumedId } });
+    if (!tumed) throw new NotFoundException('Тумэн не найден');
+    if (tumed.leaderUserId !== userId) {
       throw new BadRequestException('Только лидер Тумэна может предложить сотрудничество');
     }
 
-    const targetTumen = await this.prisma.tumen.findUnique({ where: { id: targetTumenId } });
-    if (!targetTumen) throw new NotFoundException('Целевой Тумэн не найден');
+    const targetTumed = await this.prisma.tumed.findUnique({ where: { id: targetTumedId } });
+    if (!targetTumed) throw new NotFoundException('Целевой Тумэн не найден');
 
     // Check for existing cooperation
-    const existing = await this.prisma.tumenCooperation.findFirst({
+    const existing = await this.prisma.tumedCooperation.findFirst({
       where: {
         OR: [
-          { tumenAId: tumenId, tumenBId: targetTumenId },
-          { tumenAId: targetTumenId, tumenBId: tumenId },
+          { tumedAId: tumedId, tumedBId: targetTumedId },
+          { tumedAId: targetTumedId, tumedBId: tumedId },
         ],
         status: { in: ['PROPOSED', 'ACTIVE'] },
       },
@@ -358,10 +358,10 @@ export class HierarchyService {
       throw new BadRequestException('Сотрудничество или предложение уже существует');
     }
 
-    const cooperation = await this.prisma.tumenCooperation.create({
+    const cooperation = await this.prisma.tumedCooperation.create({
       data: {
-        tumenAId: tumenId,
-        tumenBId: targetTumenId,
+        tumedAId: tumedId,
+        tumedBId: targetTumedId,
         title: data.title,
         description: data.description,
         treaty: data.treaty,
@@ -370,29 +370,29 @@ export class HierarchyService {
       },
     });
 
-    // Notify target Tumen leader
-    if (targetTumen.leaderUserId) {
+    // Notify target Tumed leader
+    if (targetTumed.leaderUserId) {
       await this.prisma.notification.create({
         data: {
-          userId: targetTumen.leaderUserId,
+          userId: targetTumed.leaderUserId,
           type: 'NEW_MESSAGE',
           title: 'Предложение о сотрудничестве',
-          body: `Тумэн "${tumen.name}" предлагает сотрудничество: ${data.title}`,
-          linkUrl: `/hierarchy/tumens/${targetTumenId}`,
+          body: `Тумэн "${tumed.name}" предлагает сотрудничество: ${data.title}`,
+          linkUrl: `/hierarchy/tumeds/${targetTumedId}`,
         },
       });
     }
 
-    this.logger.log(`Cooperation proposed: ${tumenId} → ${targetTumenId}`);
+    this.logger.log(`Cooperation proposed: ${tumedId} → ${targetTumedId}`);
     return cooperation;
   }
 
   async respondToCooperation(cooperationId: string, userId: string, accept: boolean) {
-    const coop = await this.prisma.tumenCooperation.findUnique({
+    const coop = await this.prisma.tumedCooperation.findUnique({
       where: { id: cooperationId },
       include: {
-        tumenA: true,
-        tumenB: true,
+        tumedA: true,
+        tumedB: true,
       },
     });
     if (!coop) throw new NotFoundException('Предложение не найдено');
@@ -400,60 +400,60 @@ export class HierarchyService {
       throw new BadRequestException('Предложение уже обработано');
     }
 
-    // Only target Tumen leader can respond
-    if (coop.tumenB.leaderUserId !== userId) {
+    // Only target Tumed leader can respond
+    if (coop.tumedB.leaderUserId !== userId) {
       throw new BadRequestException('Только лидер целевого Тумэна может ответить');
     }
 
     if (accept) {
-      const updated = await this.prisma.tumenCooperation.update({
+      const updated = await this.prisma.tumedCooperation.update({
         where: { id: cooperationId },
         data: { status: 'ACTIVE', signedAt: new Date() },
       });
-      this.logger.log(`Cooperation accepted: ${coop.tumenAId} ↔ ${coop.tumenBId}`);
+      this.logger.log(`Cooperation accepted: ${coop.tumedAId} ↔ ${coop.tumedBId}`);
       return updated;
     } else {
-      const updated = await this.prisma.tumenCooperation.update({
+      const updated = await this.prisma.tumedCooperation.update({
         where: { id: cooperationId },
         data: { status: 'DISSOLVED' },
       });
-      this.logger.log(`Cooperation rejected: ${coop.tumenAId} ↗ ${coop.tumenBId}`);
+      this.logger.log(`Cooperation rejected: ${coop.tumedAId} ↗ ${coop.tumedBId}`);
       return updated;
     }
   }
 
   async dissolveCooperation(cooperationId: string, userId: string) {
-    const coop = await this.prisma.tumenCooperation.findUnique({
+    const coop = await this.prisma.tumedCooperation.findUnique({
       where: { id: cooperationId },
-      include: { tumenA: true, tumenB: true },
+      include: { tumedA: true, tumedB: true },
     });
     if (!coop) throw new NotFoundException('Сотрудничество не найдено');
     if (coop.status !== 'ACTIVE') {
       throw new BadRequestException('Сотрудничество не активно');
     }
 
-    // Either Tumen leader can dissolve
-    if (coop.tumenA.leaderUserId !== userId && coop.tumenB.leaderUserId !== userId) {
+    // Either Tumed leader can dissolve
+    if (coop.tumedA.leaderUserId !== userId && coop.tumedB.leaderUserId !== userId) {
       throw new BadRequestException('Только лидер одного из Тумэнов может расторгнуть');
     }
 
-    const updated = await this.prisma.tumenCooperation.update({
+    const updated = await this.prisma.tumedCooperation.update({
       where: { id: cooperationId },
       data: { status: 'DISSOLVED' },
     });
 
-    this.logger.log(`Cooperation dissolved: ${coop.tumenAId} ↔ ${coop.tumenBId}`);
+    this.logger.log(`Cooperation dissolved: ${coop.tumedAId} ↔ ${coop.tumedBId}`);
     return updated;
   }
 
-  async listCooperations(tumenId: string) {
-    return this.prisma.tumenCooperation.findMany({
+  async listCooperations(tumedId: string) {
+    return this.prisma.tumedCooperation.findMany({
       where: {
-        OR: [{ tumenAId: tumenId }, { tumenBId: tumenId }],
+        OR: [{ tumedAId: tumedId }, { tumedBId: tumedId }],
       },
       include: {
-        tumenA: { select: { id: true, name: true, region: true, totalMembers: true } },
-        tumenB: { select: { id: true, name: true, region: true, totalMembers: true } },
+        tumedA: { select: { id: true, name: true, region: true, totalMembers: true } },
+        tumedB: { select: { id: true, name: true, region: true, totalMembers: true } },
       },
       orderBy: { createdAt: 'desc' },
     });

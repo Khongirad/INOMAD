@@ -19,8 +19,8 @@ import {
   AddMemberDto,
   ChangeMemberRoleDto,
   SetPermissionsDto,
-  CreateMyanganDto,
-  CreateTumenDto,
+  CreateMyangadDto,
+  CreateTumedDto,
   CreateRepublicDto,
 } from './dto/unified-org.dto';
 
@@ -30,7 +30,7 @@ import {
  * A facade over all 4 existing organization systems:
  * - Guild (simple guilds/clans)
  * - Organization (hierarchical orgs with ratings)
- * - OrganizationalArban (4 branches of power)
+ * - OrganizationalArbad (4 branches of power)
  * - KhuralGroup (parliamentary seats)
  *
  * Provides a SINGLE standardized API for ALL organization types.
@@ -571,14 +571,14 @@ export class UnifiedOrgService {
   }
 
   // ===========================================================================
-  // HIERARCHY — Myangan, Tumen, Republic, Confederation
+  // HIERARCHY — Myangad, Tumed, Republic, Confederation
   // ===========================================================================
 
   /**
-   * Create a Myangan from existing Zuns
+   * Create a Myangad from existing Zuns
    */
-  async createMyangan(dto: CreateMyanganDto) {
-    return this.prisma.myangan.create({
+  async createMyangad(dto: CreateMyangadDto) {
+    return this.prisma.myangad.create({
       data: {
         name: dto.name,
         region: dto.region,
@@ -589,47 +589,47 @@ export class UnifiedOrgService {
   }
 
   /**
-   * Assign a Zun to a Myangan
+   * Assign a Zun to a Myangad
    */
-  async assignZunToMyangan(zunId: string, myanganId: string) {
-    // Check max 10 Zuns per Myangan
-    const count = await this.prisma.zun.count({ where: { myanganId } });
+  async assignZunToMyangad(zunId: string, myangadId: string) {
+    // Check max 10 Zuns per Myangad
+    const count = await this.prisma.zun.count({ where: { myangadId } });
     if (count >= 10) {
-      throw new BadRequestException('Myangan already has 10 Zuns (maximum reached)');
+      throw new BadRequestException('Myangad already has 10 Zuns (maximum reached)');
     }
 
     return this.prisma.zun.update({
       where: { id: zunId },
-      data: { myanganId },
+      data: { myangadId },
     });
   }
 
   /**
-   * Create a Tumen from existing Myangans
+   * Create a Tumed from existing Myangads
    */
-  async createTumen(dto: CreateTumenDto) {
-    return this.prisma.tumen.create({
+  async createTumed(dto: CreateTumedDto) {
+    return this.prisma.tumed.create({
       data: {
         name: dto.name,
         region: dto.region,
         description: dto.description,
       },
-      include: { memberMyangans: true },
+      include: { memberMyangads: true },
     });
   }
 
   /**
-   * Assign a Myangan to a Tumen
+   * Assign a Myangad to a Tumed
    */
-  async assignMyanganToTumen(myanganId: string, tumenId: string) {
-    const count = await this.prisma.myangan.count({ where: { tumenId } });
+  async assignMyangadToTumed(myangadId: string, tumedId: string) {
+    const count = await this.prisma.myangad.count({ where: { tumedId } });
     if (count >= 10) {
-      throw new BadRequestException('Tumen already has 10 Myangans (maximum reached)');
+      throw new BadRequestException('Tumed already has 10 Myangads (maximum reached)');
     }
 
-    return this.prisma.myangan.update({
-      where: { id: myanganId },
-      data: { tumenId },
+    return this.prisma.myangad.update({
+      where: { id: myangadId },
+      data: { tumedId },
     });
   }
 
@@ -643,21 +643,21 @@ export class UnifiedOrgService {
         republicKey: dto.republicKey,
         description: dto.description,
       },
-      include: { memberTumens: true },
+      include: { memberTumeds: true },
     });
   }
 
   /**
-   * Get full hierarchy view (Confederation → Republic → Tumen → Myangan → Zun)
+   * Get full hierarchy view (Confederation → Republic → Tumed → Myangad → Zun)
    */
   async getHierarchyTree() {
     const confederation = await this.prisma.confederativeKhural.findFirst({
       include: {
         memberRepublics: {
           include: {
-            memberTumens: {
+            memberTumeds: {
               include: {
-                memberMyangans: {
+                memberMyangads: {
                   include: {
                     memberZuns: {
                       select: {
@@ -666,7 +666,7 @@ export class UnifiedOrgService {
                         zunId: true,
                         elderSeatId: true,
                         isActive: true,
-                        _count: { select: { memberArbans: true } },
+                        _count: { select: { memberArbads: true } },
                       },
                     },
                   },
@@ -682,22 +682,22 @@ export class UnifiedOrgService {
     const standaloneRepublics = await this.prisma.republicanKhural.findMany({
       where: { confederationId: null },
     });
-    const standaloneTumens = await this.prisma.tumen.findMany({
+    const standaloneTumeds = await this.prisma.tumed.findMany({
       where: { republicId: null },
     });
-    const standaloneMyangans = await this.prisma.myangan.findMany({
-      where: { tumenId: null },
+    const standaloneMyangads = await this.prisma.myangad.findMany({
+      where: { tumedId: null },
     });
     const standaloneZuns = await this.prisma.zun.findMany({
-      where: { myanganId: null },
+      where: { myangadId: null },
     });
 
     return {
       confederation,
       standalone: {
         republics: standaloneRepublics,
-        tumens: standaloneTumens,
-        myangans: standaloneMyangans,
+        tumeds: standaloneTumeds,
+        myangads: standaloneMyangads,
         zuns: standaloneZuns,
       },
     };
@@ -852,7 +852,7 @@ export class UnifiedOrgService {
   /**
    * Validate whether a user can join an organization in a specific power branch.
    *
-   * LEGISLATIVE:  Only family representatives (one spouse from a FamilyArban).
+   * LEGISLATIVE:  Only family representatives (one spouse from a FamilyArbad).
    * EXECUTIVE:    One family member OR any single adult (18+).
    * JUDICIAL:     One family member OR any single adult (18+).
    * BANKING:      One family member OR any single adult (18+).
@@ -868,8 +868,8 @@ export class UnifiedOrgService {
     if (!user) throw new NotFoundException('User not found');
 
     if (powerBranch === 'LEGISLATIVE') {
-      // LEGISLATIVE: must be a spouse in a FamilyArban
-      const familyArban = await this.prisma.familyArban.findFirst({
+      // LEGISLATIVE: must be a spouse in a FamilyArbad
+      const familyArbad = await this.prisma.familyArbad.findFirst({
         where: {
           OR: [
             { husbandSeatId: userId },
@@ -877,7 +877,7 @@ export class UnifiedOrgService {
           ],
         },
       });
-      if (!familyArban) {
+      if (!familyArbad) {
         throw new ForbiddenException(
           'В Законодательной ветви могут быть только представители Семьи (один из супругов)',
         );
@@ -885,7 +885,7 @@ export class UnifiedOrgService {
     } else {
       // EXECUTIVE / JUDICIAL / BANKING:
       // One family member OR any single adult (18+)
-      const familyArban = await this.prisma.familyArban.findFirst({
+      const familyArbad = await this.prisma.familyArbad.findFirst({
         where: {
           OR: [
             { husbandSeatId: userId },
@@ -894,7 +894,7 @@ export class UnifiedOrgService {
         },
       });
 
-      if (!familyArban) {
+      if (!familyArbad) {
         // Not a family member — must be a single adult 18+
         if (!user.dateOfBirth) {
           throw new ForbiddenException(

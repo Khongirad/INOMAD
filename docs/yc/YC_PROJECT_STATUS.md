@@ -33,7 +33,7 @@
 **Status**: Production-ready, 1,247 users registered (testnet)
 
 ### 2. **Governance (Khural) System** ✅
-- **State Map**: Hierarchical Arban visualization (Tumen→Myangan→Zuun→Arban)
+- **State Map**: Hierarchical Arbad visualization (Tumed→Myangad→Zuud→Arbad)
 - **Territory Management**: Digital/physical territory claiming
 - **State Archives**: Blockchain-verified historical records
 - Parliamentary structure (8 Republican Khurals + Confederate Khural)
@@ -43,7 +43,7 @@
 ### 3. **Executive (Guild) System** ✅
 - **Quest Board**: RPG-style task marketplace for citizens
 - **Cooperatives**: Guild/cooperative management (4 types: Guild, Production, Trade, Service)
-- Credit lines for Arban members
+- Credit lines for Arbad members
 - Education credential tracking
 
 **Status**: Complete with mock data, API integration in progress
@@ -111,10 +111,10 @@
 - **Immutable revenue**: Cannot be changed without constitutional amendment
 - **Scaling potential**: $300K ARR at 1M transactions/day
 
-### 2. Arban Governance Model
+### 2. Arbad Governance Model
 - **10-member households** as fundamental unit
-- **Hierarchical democracy**: Arban (10) → Zun (100) → Myangan (1,000) → Tumen (10,000)
-- **Dual structure**: Family Arbans + Organizational Arbans
+- **Hierarchical democracy**: Arbad (10) → Zun (100) → Myangad (1,000) → Tumed (10,000)
+- **Dual structure**: Family Arbads + Organizational Arbads
 - Based on Mongolian military organization (proven 800+ year model)
 
 ### 3. MPC Wallet Architecture
@@ -148,7 +148,7 @@
 ### Fully Implemented Pages
 1. ✅ **Login/Registration** - "Gates of Khural" with Web3Auth
 2. ✅ **Dashboard (My Seat)** - Command center with citizen ID
-3. ✅ **My Family** - Family Arban management
+3. ✅ **My Family** - Family Arbad management
 4. ✅ **State Map** - Hierarchical structure visualization
 5. ✅ **Territory** - Territory claiming and management
 6. ✅ **Archives** - Blockchain-verified state history
@@ -263,7 +263,7 @@ Location: `/inomad_khural_demo.webp` (12 MB)
 
 **Unique Moat**: Only platform combining:
 - Constitutional blockchain (immutable law enforcement)
-- Indigenous governance model (Arban system)
+- Indigenous governance model (Arbad system)
 - Cultural preservation (dual calendar, archives)
 - Complete digital nation stack (legislative, executive, judicial, economic)
 

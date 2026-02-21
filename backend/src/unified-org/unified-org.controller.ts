@@ -22,8 +22,8 @@ import {
   ChangeMemberRoleDto,
   SetPermissionsDto,
   RateOrganizationDto,
-  CreateMyanganDto,
-  CreateTumenDto,
+  CreateMyangadDto,
+  CreateTumedDto,
   CreateRepublicDto,
 } from './dto/unified-org.dto';
 import { OrganizationType, BranchType, RatingCategory } from '@prisma/client';
@@ -176,30 +176,30 @@ export class UnifiedOrgController {
   // HIERARCHY MANAGEMENT
   // ===========================================================================
 
-  @Post('hierarchy/myangan')
-  async createMyangan(@Body() dto: CreateMyanganDto) {
-    return this.orgService.createMyangan(dto);
+  @Post('hierarchy/myangad')
+  async createMyangad(@Body() dto: CreateMyangadDto) {
+    return this.orgService.createMyangad(dto);
   }
 
-  @Post('hierarchy/myangan/:myanganId/assign-zun')
-  async assignZunToMyangan(
-    @Param('myanganId') myanganId: string,
+  @Post('hierarchy/myangad/:myangadId/assign-zun')
+  async assignZunToMyangad(
+    @Param('myangadId') myangadId: string,
     @Body('zunId') zunId: string,
   ) {
-    return this.orgService.assignZunToMyangan(zunId, myanganId);
+    return this.orgService.assignZunToMyangad(zunId, myangadId);
   }
 
-  @Post('hierarchy/tumen')
-  async createTumen(@Body() dto: CreateTumenDto) {
-    return this.orgService.createTumen(dto);
+  @Post('hierarchy/tumed')
+  async createTumed(@Body() dto: CreateTumedDto) {
+    return this.orgService.createTumed(dto);
   }
 
-  @Post('hierarchy/tumen/:tumenId/assign-myangan')
-  async assignMyanganToTumen(
-    @Param('tumenId') tumenId: string,
-    @Body('myanganId') myanganId: string,
+  @Post('hierarchy/tumed/:tumedId/assign-myangad')
+  async assignMyangadToTumed(
+    @Param('tumedId') tumedId: string,
+    @Body('myangadId') myangadId: string,
   ) {
-    return this.orgService.assignMyanganToTumen(myanganId, tumenId);
+    return this.orgService.assignMyangadToTumed(myangadId, tumedId);
   }
 
   @Post('hierarchy/republic')

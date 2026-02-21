@@ -28,7 +28,7 @@ export class TieredVerificationService {
    *
    * Уровни эмиссии:
    *   UNVERIFIED  = 100 ALTAN    (начальный)
-   *   ARBAN       = 1,000 ALTAN  (создание Арбана)
+   *   ARBAD       = 1,000 ALTAN  (создание Арбана)
    *   ZUN+        = безлимит     (вся оставшаяся эмиссия гражданина)
    */
   getEmissionLimit(level: VerificationLevel, role?: UserRole): number {
@@ -40,8 +40,8 @@ export class TieredVerificationService {
     switch (level) {
       case VerificationLevel.UNVERIFIED:
         return 100; // 100 ALTAN — initial allocation
-      case VerificationLevel.ARBAN_VERIFIED:
-        return 1000; // 1,000 ALTAN — upon Arban creation
+      case VerificationLevel.ARBAD_VERIFIED:
+        return 1000; // 1,000 ALTAN — upon Arbad creation
       case VerificationLevel.ZUN_VERIFIED:
         return Number.MAX_SAFE_INTEGER; // All remaining citizen emission
       case VerificationLevel.FULLY_VERIFIED:
@@ -61,7 +61,7 @@ export class TieredVerificationService {
         verificationLevel: true,
         totalEmitted: true,
         role: true,
-        currentArbanId: true,
+        currentArbadId: true,
       },
     });
 
@@ -77,19 +77,19 @@ export class TieredVerificationService {
     const limit = this.getEmissionLimit(user.verificationLevel, user.role);
     const currentEmissions = parseFloat(user.totalEmitted.toString());
     
-    // For ARBAN_VERIFIED, check Arban group total
-    if (user.verificationLevel === VerificationLevel.ARBAN_VERIFIED && user.currentArbanId) {
-      const arbanMembers = await this.prisma.user.findMany({
-        where: { currentArbanId: user.currentArbanId },
+    // For ARBAD_VERIFIED, check Arbad group total
+    if (user.verificationLevel === VerificationLevel.ARBAD_VERIFIED && user.currentArbadId) {
+      const arbadMembers = await this.prisma.user.findMany({
+        where: { currentArbadId: user.currentArbadId },
         select: { totalEmitted: true },
       });
 
-      const arbanTotal = arbanMembers.reduce(
+      const arbadTotal = arbadMembers.reduce(
         (sum, member) => sum + parseFloat(member.totalEmitted.toString()),
         0
       );
 
-      return arbanTotal + amount <= limit;
+      return arbadTotal + amount <= limit;
     }
 
     // Individual limit check
@@ -136,7 +136,7 @@ export class TieredVerificationService {
         verificationLevel: true,
         totalEmitted: true,
         role: true,
-        currentArbanId: true,
+        currentArbadId: true,
       },
     });
 
@@ -189,8 +189,8 @@ export class TieredVerificationService {
 
     // Check if user is eligible
     if (requestedLevel === VerificationLevel.ZUN_VERIFIED && 
-        user.verificationLevel !== VerificationLevel.ARBAN_VERIFIED) {
-      throw new BadRequestException('Must be ARBAN_VERIFIED to request ZUN_VERIFIED');
+        user.verificationLevel !== VerificationLevel.ARBAD_VERIFIED) {
+      throw new BadRequestException('Must be ARBAD_VERIFIED to request ZUN_VERIFIED');
     }
 
     if (requestedLevel === VerificationLevel.FULLY_VERIFIED && 
@@ -361,8 +361,8 @@ export class TieredVerificationService {
       verificationLevelSetBy: adminId,
     };
 
-    if (level === VerificationLevel.ARBAN_VERIFIED) {
-      updateData.arbanVerifiedAt = new Date();
+    if (level === VerificationLevel.ARBAD_VERIFIED) {
+      updateData.arbadVerifiedAt = new Date();
     } else if (level === VerificationLevel.ZUN_VERIFIED) {
       updateData.zunVerifiedAt = new Date();
     } else if (level === VerificationLevel.FULLY_VERIFIED) {

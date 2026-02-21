@@ -98,9 +98,9 @@
 ### GovernanceIntegration.t.sol
 **Changes**: Multiple fixes
 1. Added `ulas.transferOwnership(address(this))` in setUp
-2. Changed `isCandidate(myangan1)` → `isCandidate(address(tumen1))`
+2. Changed `isCandidate(myangad1)` → `isCandidate(address(tumed1))`
 3. Removed problematic `isCouncilMember()` assertion
-**Reason**: Ownership chains + Tumen contracts register, not leaders
+**Reason**: Ownership chains + Tumed contracts register, not leaders
 
 ### FounderBootstrap.t.sol
 **Changes**: WalletRegistry setup  

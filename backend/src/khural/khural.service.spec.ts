@@ -29,11 +29,11 @@ describe('KhuralService', () => {
   describe('createGroup', () => {
     it('should create group with 10 seats', async () => {
       prisma.khuralGroup.create.mockResolvedValue({
-        id: 'g1', level: 'ARBAN', name: 'Test', seats: Array.from({ length: 10 }, (_, i) => ({
+        id: 'g1', level: 'ARBAD', name: 'Test', seats: Array.from({ length: 10 }, (_, i) => ({
           index: i, isLeaderSeat: i === 0,
         })),
       });
-      const result = await service.createGroup({ level: 'ARBAN', name: 'Test' } as any);
+      const result = await service.createGroup({ level: 'ARBAD', name: 'Test' } as any);
       expect(result.seats).toHaveLength(10);
       expect(result.seats[0].isLeaderSeat).toBe(true);
     });
@@ -140,9 +140,9 @@ describe('KhuralService', () => {
 
     it('should filter by level', async () => {
       prisma.khuralGroup.findMany.mockResolvedValue([]);
-      await service.listGroups('ARBAN');
+      await service.listGroups('ARBAD');
       expect(prisma.khuralGroup.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { level: 'ARBAN' } }),
+        expect.objectContaining({ where: { level: 'ARBAD' } }),
       );
     });
   });

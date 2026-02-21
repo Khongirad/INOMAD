@@ -20,7 +20,7 @@ describe('DistributionService', () => {
   const mockDistribution = {
     userId: 'u1', totalAllocation: d(8689.65),
     totalReceived: d(100), remainingBalance: d(8589.65),
-    unverifiedReceived: d(100), arbanVerifiedReceived: d(0),
+    unverifiedReceived: d(100), arbadVerifiedReceived: d(0),
     zunReceived: d(0), fullyReceived: d(0),
     firstDistributionAt: new Date(), lastDistributionAt: new Date(),
     fullyDistributedAt: null,
@@ -104,8 +104,8 @@ describe('DistributionService', () => {
       expect(r.amount).toBe(100);
     });
 
-    it('distributes for ARBAN_VERIFIED level', async () => {
-      const r = await service.distributeByLevel('u1', 'ARBAN_VERIFIED');
+    it('distributes for ARBAD_VERIFIED level', async () => {
+      const r = await service.distributeByLevel('u1', 'ARBAD_VERIFIED');
       expect(r.distributed).toBe(true);
       expect(r.amount).toBe(900); // 1000 - 100 already received
     });
@@ -208,7 +208,7 @@ describe('DistributionService', () => {
     it('throws when pool not found', async () => {
       prisma.userDistribution.findUnique.mockResolvedValue(mockDistribution);
       prisma.distributionPool.findFirst.mockResolvedValue(null);
-      await expect(service.distributeByLevel('u1', 'ARBAN_VERIFIED'))
+      await expect(service.distributeByLevel('u1', 'ARBAD_VERIFIED'))
         .rejects.toThrow('No active distribution pool');
     });
   });

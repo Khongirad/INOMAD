@@ -18,10 +18,10 @@ import {
   Schedule,
   AccountBalance,
 } from '@mui/icons-material';
-import { arbanAPI } from '../../../lib/api/arban.api';
+import { arbadAPI } from '../../../lib/api/arbad.api';
 
 interface CreditLine {
-  arbanId: number;
+  arbadId: number;
   creditType: number;
   creditRating: number;
   creditLimit: string;
@@ -58,25 +58,25 @@ interface CreditDashboard {
 }
 
 interface CreditDashboardProps {
-  arbanId: number;
+  arbadId: number;
   type: 'family' | 'org';
 }
 
-export const CreditDashboard: React.FC<CreditDashboardProps> = ({ arbanId, type }) => {
+export const CreditDashboard: React.FC<CreditDashboardProps> = ({ arbadId, type }) => {
   const [dashboard, setDashboard] = useState<CreditDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboard();
-  }, [arbanId, type]);
+  }, [arbadId, type]);
 
   const loadDashboard = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await arbanAPI.credit[type].getDashboard(arbanId);
+      const response = await arbadAPI.credit[type].getDashboard(arbadId);
       setDashboard(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load dashboard');

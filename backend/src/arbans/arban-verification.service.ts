@@ -16,30 +16,30 @@ export interface VerificationProgress {
 }
 
 @Injectable()
-export class ArbanVerificationService {
+export class ArbadVerificationService {
   constructor(
     private prisma: PrismaService,
     private tieredVerificationService: TieredVerificationService,
   ) {}
 
   /**
-   * Member verifies another member in the same Arban
+   * Member verifies another member in the same Arbad
    */
   async verifyMember(
-    arbanId: string,
+    arbadId: string,
     verifierId: string,
     verifiedId: string,
     notes?: string
   ) {
-    // Validate both users are in the same Arban
+    // Validate both users are in the same Arbad
     const [verifier, verified] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: verifierId },
-        select: { currentArbanId: true },
+        select: { currentArbadId: true },
       }),
       this.prisma.user.findUnique({
         where: { id: verifiedId },
-        select: { currentArbanId: true },
+        select: { currentArbadId: true },
       }),
     ]);
 
@@ -47,8 +47,8 @@ export class ArbanVerificationService {
       throw new NotFoundException('User not found');
     }
 
-    if (verifier.currentArbanId !== arbanId || verified.currentArbanId !== arbanId) {
-      throw new ForbiddenException('Both users must be members of this Arban');
+    if (verifier.currentArbadId !== arbadId || verified.currentArbadId !== arbadId) {
+      throw new ForbiddenException('Both users must be members of this Arbad');
     }
 
     if (verifierId === verifiedId) {
@@ -56,10 +56,10 @@ export class ArbanVerificationService {
     }
 
     // Check if already verified
-    const existing = await this.prisma.arbanMutualVerification.findUnique({
+    const existing = await this.prisma.arbadMutualVerification.findUnique({
       where: {
-        arbanId_verifierId_verifiedId: {
-          arbanId,
+        arbadId_verifierId_verifiedId: {
+          arbadId,
           verifierId,
           verifiedId,
         },
@@ -71,9 +71,9 @@ export class ArbanVerificationService {
     }
 
     // Create verification
-    const verification = await this.prisma.arbanMutualVerification.create({
+    const verification = await this.prisma.arbadMutualVerification.create({
       data: {
-        arbanId,
+        arbadId,
         verifierId,
         verifiedId,
         notes,
@@ -90,16 +90,16 @@ export class ArbanVerificationService {
       },
     });
 
-    // Check if Arban is now fully verified
-    const isComplete = await this.isFullyVerified(arbanId);
+    // Check if Arbad is now fully verified
+    const isComplete = await this.isFullyVerified(arbadId);
     
     if (isComplete) {
-      await this.onFullVerification(arbanId);
+      await this.onFullVerification(arbadId);
     }
 
     return {
       verification,
-      isArbanComplete: isComplete,
+      isArbadComplete: isComplete,
     };
   }
 
@@ -107,9 +107,9 @@ export class ArbanVerificationService {
    * Get verification matrix (who verified whom)
    * Returns: { memberId: [verifierIds] }
    */
-  async getVerificationMatrix(arbanId: string): Promise<VerificationMatrix> {
-    const verifications = await this.prisma.arbanMutualVerification.findMany({
-      where: { arbanId },
+  async getVerificationMatrix(arbadId: string): Promise<VerificationMatrix> {
+    const verifications = await this.prisma.arbadMutualVerification.findMany({
+      where: { arbadId },
       select: {
         verifierId: true,
         verifiedId: true,
@@ -129,26 +129,26 @@ export class ArbanVerificationService {
   }
 
   /**
-   * Check if Arban is fully verified (all combinations)
+   * Check if Arbad is fully verified (all combinations)
    * For 5 members: need 20 verifications (each member verifies 4 others)
    */
-  async isFullyVerified(arbanId: string): Promise<boolean> {
-    // Get Arban members
+  async isFullyVerified(arbadId: string): Promise<boolean> {
+    // Get Arbad members
     const members = await this.prisma.user.findMany({
-      where: { currentArbanId: arbanId },
+      where: { currentArbadId: arbadId },
       select: { id: true },
     });
 
     const memberCount = members.length;
 
-    // Must have exactly 5 members for Arban
+    // Must have exactly 5 members for Arbad
     if (memberCount !== 5) {
       return false;
     }
 
     // Count total verifications
-    const verificationCount = await this.prisma.arbanMutualVerification.count({
-      where: { arbanId },
+    const verificationCount = await this.prisma.arbadMutualVerification.count({
+      where: { arbadId },
     });
 
     // For 5 members: 5 * 4 = 20 verifications needed (each verifies 4 others)
@@ -158,11 +158,11 @@ export class ArbanVerificationService {
   }
 
   /**
-   * Get verification progress for an Arban
+   * Get verification progress for an Arbad
    */
-  async getVerificationProgress(arbanId: string): Promise<VerificationProgress> {
+  async getVerificationProgress(arbadId: string): Promise<VerificationProgress> {
     const members = await this.prisma.user.findMany({
-      where: { currentArbanId: arbanId },
+      where: { currentArbadId: arbadId },
       select: { id: true },
     });
 
@@ -178,8 +178,8 @@ export class ArbanVerificationService {
       };
     }
 
-    const verificationCount = await this.prisma.arbanMutualVerification.count({
-      where: { arbanId },
+    const verificationCount = await this.prisma.arbadMutualVerification.count({
+      where: { arbadId },
     });
 
     const requiredCount = memberCount * (memberCount - 1); // 20 for 5 members
@@ -196,48 +196,48 @@ export class ArbanVerificationService {
   }
 
   /**
-   * Auto-upgrade all Arban members when verification is complete
+   * Auto-upgrade all Arbad members when verification is complete
    */
-  async onFullVerification(arbanId: string): Promise<void> {
-    // Get all Arban members
+  async onFullVerification(arbadId: string): Promise<void> {
+    // Get all Arbad members
     const members = await this.prisma.user.findMany({
-      where: { currentArbanId: arbanId },
+      where: { currentArbadId: arbadId },
       select: { id: true },
     });
 
-    // Update all members to ARBAN_VERIFIED
+    // Update all members to ARBAD_VERIFIED
     await this.prisma.user.updateMany({
       where: {
         id: { in: members.map(m => m.id) },
         verificationLevel: VerificationLevel.UNVERIFIED, // Only upgrade if still unverified
       },
       data: {
-        verificationLevel: VerificationLevel.ARBAN_VERIFIED,
-        arbanVerifiedAt: new Date(),
+        verificationLevel: VerificationLevel.ARBAD_VERIFIED,
+        arbadVerifiedAt: new Date(),
         verificationLevelSetAt: new Date(),
       },
     });
 
-    // Mark Arban as fully verified
+    // Mark Arbad as fully verified
     await this.prisma.guild.update({
-      where: { id: arbanId },
+      where: { id: arbadId },
       data: {
         // Note: isFullyVerified field needs to be added to Guild model
         // For now, we track via verification count
       },
     });
 
-    console.log(`✅ Arban ${arbanId} fully verified! Upgraded ${members.length} members to ARBAN_VERIFIED`);
+    console.log(`✅ Arbad ${arbadId} fully verified! Upgraded ${members.length} members to ARBAD_VERIFIED`);
   }
 
   /**
    * Get list of members user hasn't verified yet
    */
-  async getUnverifiedMembers(arbanId: string, userId: string) {
-    // Get all Arban members except self
+  async getUnverifiedMembers(arbadId: string, userId: string) {
+    // Get all Arbad members except self
     const allMembers = await this.prisma.user.findMany({
       where: {
-        currentArbanId: arbanId,
+        currentArbadId: arbadId,
         id: { not: userId },
       },
       select: {
@@ -249,9 +249,9 @@ export class ArbanVerificationService {
     });
 
     // Get already verified members
-    const verified = await this.prisma.arbanMutualVerification.findMany({
+    const verified = await this.prisma.arbadMutualVerification.findMany({
       where: {
-        arbanId,
+        arbadId,
         verifierId: userId,
       },
       select: { verifiedId: true },
@@ -266,12 +266,12 @@ export class ArbanVerificationService {
   /**
    * Get verification details for a specific member
    */
-  async getMemberVerifications(arbanId: string, memberId: string) {
+  async getMemberVerifications(arbadId: string, memberId: string) {
     const [givenVerifications, receivedVerifications] = await Promise.all([
       // Verifications given by this member
-      this.prisma.arbanMutualVerification.findMany({
+      this.prisma.arbadMutualVerification.findMany({
         where: {
-          arbanId,
+          arbadId,
           verifierId: memberId,
         },
         include: {
@@ -285,9 +285,9 @@ export class ArbanVerificationService {
         },
       }),
       // Verifications received by this member
-      this.prisma.arbanMutualVerification.findMany({
+      this.prisma.arbadMutualVerification.findMany({
         where: {
-          arbanId,
+          arbadId,
           verifiedId: memberId,
         },
         include: {
@@ -316,7 +316,7 @@ export class ArbanVerificationService {
    * Revoke a verification (admin/creator only or self)
    */
   async revokeVerification(
-    arbanId: string,
+    arbadId: string,
     verifierId: string,
     verifiedId: string,
     revokedBy: string,
@@ -338,34 +338,34 @@ export class ArbanVerificationService {
     }
 
     // Delete verification
-    await this.prisma.arbanMutualVerification.delete({
+    await this.prisma.arbadMutualVerification.delete({
       where: {
-        arbanId_verifierId_verifiedId: {
-          arbanId,
+        arbadId_verifierId_verifiedId: {
+          arbadId,
           verifierId,
           verifiedId,
         },
       },
     });
 
-    // Check if Arban is still fully verified
-    const isComplete = await this.isFullyVerified(arbanId);
+    // Check if Arbad is still fully verified
+    const isComplete = await this.isFullyVerified(arbadId);
 
     // If it was complete but now isn't, downgrade members
     if (!isComplete) {
       await this.prisma.user.updateMany({
         where: {
-          currentArbanId: arbanId,
-          verificationLevel: VerificationLevel.ARBAN_VERIFIED,
+          currentArbadId: arbadId,
+          verificationLevel: VerificationLevel.ARBAD_VERIFIED,
         },
         data: {
           verificationLevel: VerificationLevel.UNVERIFIED,
-          arbanVerifiedAt: null,
+          arbadVerifiedAt: null,
           verificationLevelSetAt: new Date(),
         },
       });
     }
 
-    return { success: true, isArbanStillComplete: isComplete };
+    return { success: true, isArbadStillComplete: isComplete };
   }
 }

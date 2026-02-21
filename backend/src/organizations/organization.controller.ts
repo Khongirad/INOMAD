@@ -42,16 +42,16 @@ export class OrganizationController {
     return this.organizationService.getFullNetworkMap();
   }
 
-  @Get('network/:arbanId')
-  async getArbanNetwork(@Param('arbanId') arbanId: string) {
-    return this.organizationService.getArbanNetwork(arbanId);
+  @Get('network/:arbadId')
+  async getArbadNetwork(@Param('arbadId') arbadId: string) {
+    return this.organizationService.getArbadNetwork(arbadId);
   }
 
-  // ============== My Arban (citizen's community) ==============
+  // ============== My Arbad (citizen's community) ==============
 
-  @Get('my-arban')
-  async getMyArban(@Req() req: any) {
-    return this.organizationService.getMyArban(req.user.userId);
+  @Get('my-arbad')
+  async getMyArbad(@Req() req: any) {
+    return this.organizationService.getMyArbad(req.user.userId);
   }
 
   // ============== Get by ID ==============

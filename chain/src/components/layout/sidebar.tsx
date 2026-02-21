@@ -33,7 +33,7 @@ const NAV_ITEMS = [
   {
     category: "Legislative (Khural)",
     items: [
-      { name: "State Map", href: "/khural", icon: Building2 }, // Tumen/Myangan/Zuun/Arban
+      { name: "State Map", href: "/khural", icon: Building2 }, // Tumed/Myangad/Zuud/Arbad
       { name: "Archives", href: "/registries/history", icon: ScrollText },
     ],
   },

@@ -19,125 +19,125 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Arban API
-export const arbanAPI = {
-  // Family Arban
+// Arbad API
+export const arbadAPI = {
+  // Family Arbad
   family: {
     registerMarriage: (data: { husbandSeatId: number; wifeSeatId: number }) =>
-      apiClient.post('/arbans/family/marriage', data),
+      apiClient.post('/arbads/family/marriage', data),
 
-    addChild: (arbanId: number, childSeatId: number) =>
-      apiClient.post(`/arbans/family/${arbanId}/children`, { childSeatId }),
+    addChild: (arbadId: number, childSeatId: number) =>
+      apiClient.post(`/arbads/family/${arbadId}/children`, { childSeatId }),
 
-    changeHeir: (arbanId: number, newHeirSeatId: number) =>
-      apiClient.put(`/arbans/family/${arbanId}/heir`, { newHeirSeatId }),
+    changeHeir: (arbadId: number, newHeirSeatId: number) =>
+      apiClient.put(`/arbads/family/${arbadId}/heir`, { newHeirSeatId }),
 
-    setKhuralRep: (arbanId: number, repSeatId: number, birthYear: number) =>
-      apiClient.post(`/arbans/family/${arbanId}/khural-rep`, { repSeatId, birthYear }),
+    setKhuralRep: (arbadId: number, repSeatId: number, birthYear: number) =>
+      apiClient.post(`/arbads/family/${arbadId}/khural-rep`, { repSeatId, birthYear }),
 
     getKhuralReps: () =>
-      apiClient.get('/arbans/family/khural-reps'),
+      apiClient.get('/arbads/family/khural-reps'),
 
-    getFamilyArban: (arbanId: number) =>
-      apiClient.get(`/arbans/family/${arbanId}`),
+    getFamilyArbad: (arbadId: number) =>
+      apiClient.get(`/arbads/family/${arbadId}`),
 
-    getFamilyArbanBySeat: (seatId: number) =>
-      apiClient.get(`/arbans/family/by-seat/${seatId}`),
+    getFamilyArbadBySeat: (seatId: number) =>
+      apiClient.get(`/arbads/family/by-seat/${seatId}`),
 
-    checkKhuralEligibility: (arbanId: number) =>
-      apiClient.get(`/arbans/family/${arbanId}/khural-eligible`),
+    checkKhuralEligibility: (arbadId: number) =>
+      apiClient.get(`/arbads/family/${arbadId}/khural-eligible`),
 
-    sync: (arbanId: number) =>
-      apiClient.post(`/arbans/family/${arbanId}/sync`),
+    sync: (arbadId: number) =>
+      apiClient.post(`/arbads/family/${arbadId}/sync`),
   },
 
   // Zun (Clan)
   zun: {
-    formZun: (data: { zunName: string; arbanIds: number[] }) =>
-      apiClient.post('/arbans/zun', data),
+    formZun: (data: { zunName: string; arbadIds: number[] }) =>
+      apiClient.post('/arbads/zun', data),
 
     setElder: (zunId: number, elderSeatId: number) =>
-      apiClient.put(`/arbans/zun/${zunId}/elder`, { elderSeatId }),
+      apiClient.put(`/arbads/zun/${zunId}/elder`, { elderSeatId }),
 
     getZun: (zunId: number) =>
-      apiClient.get(`/arbans/zun/${zunId}`),
+      apiClient.get(`/arbads/zun/${zunId}`),
 
-    getZunsByFamily: (arbanId: number) =>
-      apiClient.get(`/arbans/zun/by-family/${arbanId}`),
+    getZunsByFamily: (arbadId: number) =>
+      apiClient.get(`/arbads/zun/by-family/${arbadId}`),
 
     sync: (zunId: number) =>
-      apiClient.post(`/arbans/zun/${zunId}/sync`),
+      apiClient.post(`/arbads/zun/${zunId}/sync`),
   },
 
-  // Organizational Arban
+  // Organizational Arbad
   org: {
     create: (data: { name: string; orgType: number }) =>
-      apiClient.post('/arbans/org', data),
+      apiClient.post('/arbads/org', data),
 
-    addMember: (arbanId: number, seatId: number) =>
-      apiClient.post(`/arbans/org/${arbanId}/members`, { seatId }),
+    addMember: (arbadId: number, seatId: number) =>
+      apiClient.post(`/arbads/org/${arbadId}/members`, { seatId }),
 
-    setLeader: (arbanId: number, leaderSeatId: number) =>
-      apiClient.put(`/arbans/org/${arbanId}/leader`, { leaderSeatId }),
+    setLeader: (arbadId: number, leaderSeatId: number) =>
+      apiClient.put(`/arbads/org/${arbadId}/leader`, { leaderSeatId }),
 
     createDepartment: (parentOrgId: number, deptName: string) =>
-      apiClient.post(`/arbans/org/${parentOrgId}/departments`, { deptName }),
+      apiClient.post(`/arbads/org/${parentOrgId}/departments`, { deptName }),
 
-    getOrg: (arbanId: number) =>
-      apiClient.get(`/arbans/org/${arbanId}`),
+    getOrg: (arbadId: number) =>
+      apiClient.get(`/arbads/org/${arbadId}`),
 
     getOrgsByType: (type: string) =>
-      apiClient.get(`/arbans/org?type=${type}`),
+      apiClient.get(`/arbads/org?type=${type}`),
   },
 
   // Credit System
   credit: {
     family: {
-      open: (arbanId: number) =>
-        apiClient.post(`/arbans/credit/family/${arbanId}/open`),
+      open: (arbadId: number) =>
+        apiClient.post(`/arbads/credit/family/${arbadId}/open`),
 
-      borrow: (arbanId: number, amount: string, durationDays: number) =>
-        apiClient.post(`/arbans/credit/family/${arbanId}/borrow`, { amount, durationDays }),
+      borrow: (arbadId: number, amount: string, durationDays: number) =>
+        apiClient.post(`/arbads/credit/family/${arbadId}/borrow`, { amount, durationDays }),
 
-      repay: (arbanId: number, loanIdx: number) =>
-        apiClient.post(`/arbans/credit/family/${arbanId}/repay`, { loanIdx }),
+      repay: (arbadId: number, loanIdx: number) =>
+        apiClient.post(`/arbads/credit/family/${arbadId}/repay`, { loanIdx }),
 
-      getCreditLine: (arbanId: number) =>
-        apiClient.get(`/arbans/credit/family/${arbanId}`),
+      getCreditLine: (arbadId: number) =>
+        apiClient.get(`/arbads/credit/family/${arbadId}`),
 
-      getLoans: (arbanId: number) =>
-        apiClient.get(`/arbans/credit/family/${arbanId}/loans`),
+      getLoans: (arbadId: number) =>
+        apiClient.get(`/arbads/credit/family/${arbadId}/loans`),
 
-      getDashboard: (arbanId: number) =>
-        apiClient.get(`/arbans/credit/family/${arbanId}/dashboard`),
+      getDashboard: (arbadId: number) =>
+        apiClient.get(`/arbads/credit/family/${arbadId}/dashboard`),
     },
 
     org: {
-      open: (arbanId: number) =>
-        apiClient.post(`/arbans/credit/org/${arbanId}/open`),
+      open: (arbadId: number) =>
+        apiClient.post(`/arbads/credit/org/${arbadId}/open`),
 
-      borrow: (arbanId: number, amount: string, durationDays: number) =>
-        apiClient.post(`/arbans/credit/org/${arbanId}/borrow`, { amount, durationDays }),
+      borrow: (arbadId: number, amount: string, durationDays: number) =>
+        apiClient.post(`/arbads/credit/org/${arbadId}/borrow`, { amount, durationDays }),
 
-      repay: (arbanId: number, loanIdx: number) =>
-        apiClient.post(`/arbans/credit/org/${arbanId}/repay`, { loanIdx }),
+      repay: (arbadId: number, loanIdx: number) =>
+        apiClient.post(`/arbads/credit/org/${arbadId}/repay`, { loanIdx }),
 
-      getCreditLine: (arbanId: number) =>
-        apiClient.get(`/arbans/credit/org/${arbanId}`),
+      getCreditLine: (arbadId: number) =>
+        apiClient.get(`/arbads/credit/org/${arbadId}`),
 
-      getLoans: (arbanId: number) =>
-        apiClient.get(`/arbans/credit/org/${arbanId}/loans`),
+      getLoans: (arbadId: number) =>
+        apiClient.get(`/arbads/credit/org/${arbadId}/loans`),
 
-      getDashboard: (arbanId: number) =>
-        apiClient.get(`/arbans/credit/org/${arbanId}/dashboard`),
+      getDashboard: (arbadId: number) =>
+        apiClient.get(`/arbads/credit/org/${arbadId}/dashboard`),
     },
 
     admin: {
       setInterestRate: (rateBps: number) =>
-        apiClient.put('/arbans/credit/interest-rate', { rateBps }),
+        apiClient.put('/arbads/credit/interest-rate', { rateBps }),
 
       getInterestRate: () =>
-        apiClient.get('/arbans/credit/interest-rate'),
+        apiClient.get('/arbads/credit/interest-rate'),
     },
   },
 };

@@ -62,7 +62,7 @@ graph TB
             ECON["bank/ · central-bank/ · tax/<br/>distribution/ · marketplace/ · org-banking/"]
         end
         subgraph "⚔️ Guild & Governance"
-            GUILD["khural/ · legislative/ · elections/<br/>guilds/ · arbans/ · justice/<br/>parliament/ · hierarchy/ · disputes/"]
+            GUILD["khural/ · legislative/ · elections/<br/>guilds/ · arbads/ · justice/<br/>parliament/ · hierarchy/ · disputes/"]
         end
         subgraph "🌙 Culture"
             CULT["calendar/ · temple/ · timeline/<br/>history/ · education/ · academy/"]
@@ -98,15 +98,15 @@ graph TB
     AUTH --> L1
 ```
 
-### Parliamentary Hierarchy (Arban Model)
+### Parliamentary Hierarchy (Arbad Model)
 
 ```mermaid
 graph TB
     CK["Confederate Khural<br/>Federal Parliament"] --> RK["Republican Khurals (8)<br/>Regional Parliaments"]
-    RK --> T["Tumen (10,000)<br/>Division"]
-    T --> M["Myangan (1,000)<br/>Battalion"]
+    RK --> T["Tumed (10,000)<br/>Division"]
+    T --> M["Myangad (1,000)<br/>Battalion"]
     M --> Z["Zun (100)<br/>Company"]
-    Z --> A["Arban (10)<br/>Household — fundamental democratic unit"]
+    Z --> A["Arbad (10)<br/>Household — fundamental democratic unit"]
 
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style CK fill:#bbf,stroke:#333,stroke-width:2px
@@ -123,7 +123,7 @@ graph TB
 | 🔐 **Authentication** | `auth/`, `mpc-wallet/` | ✅ | JWT sessions, Web3Auth MPC wallets, password login |
 | 👤 **Identity** | `identity/`, `users/`, `seat-binding/` | ✅ | Citizen registry, KYC, seat binding |
 | 🏦 **Banking** | `bank/`, `central-bank/` | ✅ | Dual banking (Central + Citizen), ALTAN currency |
-| 🏛️ **Parliament** | `khural/`, `legislative/` | ✅ | Arban→Zun→Myangan→Tumen, voting center |
+| 🏛️ **Parliament** | `khural/`, `legislative/` | ✅ | Arbad→Zun→Myangad→Tumed, voting center |
 | ⚖️ **Justice** | `justice/` | ✅ | Dispute resolution, arbitration |
 | 📋 **Elections** | `elections/` | ✅ | On-chain voting, candidate management |
 | 🏗️ **Guilds** | `guilds/`, `professions/` | ✅ | Professional guilds, skill certification |
@@ -157,7 +157,7 @@ graph TB
 ```mermaid
 graph LR
     subgraph "Governance"
-        A1["Arban.sol · ArbanKhural.sol<br/>Zun.sol · ZunKhural.sol<br/>Myangan.sol · Tumen.sol<br/>TumenKhural.sol<br/>ConfederativeKhural.sol"]
+        A1["Arbad.sol · ArbadKhural.sol<br/>Zun.sol · ZunKhural.sol<br/>Myangad.sol · Tumed.sol<br/>TumedKhural.sol<br/>ConfederativeKhural.sol"]
     end
     subgraph "Finance"
         A2["Altan.sol · AltanCentralBank.sol<br/>CitizenBank.sol · EscrowBank.sol<br/>AltanSettlement.sol<br/>SovereignWealthFund.sol<br/>TaxAuthority.sol · Exchange.sol"]
@@ -191,11 +191,11 @@ graph LR
 - **Article 36**: FreezeLaw — Supreme Court emergency powers
 - **Immutable**: Constitutional law enforced at protocol level — no legislative override
 
-### 2. Arban Governance Model
+### 2. Arbad Governance Model
 - **10-member households** as fundamental democratic unit
-- **Dual structure**: Family Arbans (blood/social) + Organizational Arbans (professional)
+- **Dual structure**: Family Arbads (blood/social) + Organizational Arbads (professional)
 - **Direct democracy**: Citizens vote at every hierarchical level
-- **Credit system**: Community-backed lending within Arbans
+- **Credit system**: Community-backed lending within Arbads
 
 ### 3. ALTAN — Sovereign Currency
 - **Native currency** of the Siberian Confederation
@@ -352,7 +352,7 @@ cd packages/blockchain-l1 && go test ./x/corelaw/...
 2. **37 Constitutional Articles** — Siberian Confederation governance framework
 3. **Article 27 Revenue Model** — 0.03% network fee → INOMAD INC
 4. **133 Smart Contracts** — Full sovereign governance on-chain
-5. **Arban Governance System** — 10-member household democratic model
+5. **Arbad Governance System** — 10-member household democratic model
 6. **61-Module Platform** — Sovereign digital nation infrastructure
 
 ### Legal Documentation
@@ -379,7 +379,7 @@ See [PROOF_OF_AUTHORSHIP.md](docs/blockchain/PROOF_OF_AUTHORSHIP.md) for:
 
 ### Architecture
 - [Core Invariants](docs/architecture/CORE_INVARIANTS.md)
-- [Arban System](docs/architecture/ARBAN_SYSTEM_GUIDE.md)
+- [Arbad System](docs/architecture/ARBAD_SYSTEM_GUIDE.md)
 - [Enterprise Architecture](docs/architecture/altan_l1_enterprise_architecture.md)
 - [Legislative Architecture](docs/architecture/legislative_architecture.md)
 - [Wallet/Bank Architecture](docs/architecture/wallet_bank_architecture.md)

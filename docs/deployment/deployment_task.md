@@ -11,10 +11,10 @@ Deploy ALTAN smart contracts to blockchain (local Anvil → testnet → mainnet)
 - [x] Check contract compilation
 - [x] Deploy StatisticsBureau contract
 - [x] Deploy VotingCenter contract  
-- [x] Deploy ArbanKhural #1
+- [x] Deploy ArbadKhural #1
 - [x] Deploy ZunKhural #1
-- [x] Deploy MyangangKhural #1
-- [x] Deploy TumenKhural #1
+- [x] Deploy MyangadgKhural #1
+- [x] Deploy TumedKhural #1
 - [x] Initialize census data
 - [x] Configure roles and permissions
 - [x] Update backend .env with addresses
@@ -34,10 +34,10 @@ Deploy ALTAN smart contracts to blockchain (local Anvil → testnet → mainnet)
 |----------|---------|---------|
 | StatisticsBureau | `0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1` | Census tracking |
 | VotingCenter | `0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44` | Vote management |
-| ArbanKhural #1 | `0x4A679253410272dd5232B3Ff7cF5dbB88f295319` | Local council |
+| ArbadKhural #1 | `0x4A679253410272dd5232B3Ff7cF5dbB88f295319` | Local council |
 | ZunKhural #1 | `0x09635F643e140090A9A8Dcd712eD6285858ceBef` | Regional council |
-| MyangangKhural #1 | `0x67d269191c92Caf3cD7723F116c85e6E9bf55933` | Provincial council |
-| TumenKhural #1 | `0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690` | National council |
+| MyangadgKhural #1 | `0x67d269191c92Caf3cD7723F116c85e6E9bf55933` | Provincial council |
+| TumedKhural #1 | `0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690` | National council |
 
 ---
 
@@ -91,7 +91,7 @@ Required for on-chain marketplace:
 - [ ] Deploy InstitutionalBank
 - [ ] Deploy CitizenWalletGuard
 - [ ] Deploy JudicialMultiSig
-- [ ] Deploy BankArbanHierarchy
+- [ ] Deploy BankArbadHierarchy
 - [ ] Configure bank hierarchy
 - [ ] Grant banking roles
 
@@ -123,7 +123,7 @@ Required for on-chain marketplace:
 ### Option A: Integration Testing (Recommended)
 Test the deployed Legislative contracts:
 1. Create test proposal via backend API
-2. Add representatives to Arban
+2. Add representatives to Arbad
 3. Test voting flow
 4. Verify on-chain state
 

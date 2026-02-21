@@ -35,8 +35,8 @@ describe('RecoveryService', () => {
     },
     mPCWallet: { findUnique: jest.fn(), update: jest.fn() },
     user: { findUnique: jest.fn() },
-    familyArban: { findMany: jest.fn() },
-    orgArbanMember: { findMany: jest.fn() },
+    familyArbad: { findMany: jest.fn() },
+    orgArbadMember: { findMany: jest.fn() },
   });
 
   const mockNotification = () => ({
@@ -89,11 +89,11 @@ describe('RecoveryService', () => {
   describe('suggestGuardians', () => {
     it('should suggest spouse as HIGH trust', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', seatId: 'seat-1' });
-      prisma.familyArban.findMany.mockResolvedValue([{
+      prisma.familyArbad.findMany.mockResolvedValue([{
         husbandSeatId: 'seat-1', wifeSeatId: 'seat-2', khuralRepSeatId: 'seat-3',
         children: [{ childSeatId: 'seat-4' }],
       }]);
-      prisma.orgArbanMember.findMany.mockResolvedValue([]);
+      prisma.orgArbadMember.findMany.mockResolvedValue([]);
       const result = await service.suggestGuardians('user-1');
       expect(result.length).toBeGreaterThanOrEqual(1);
       const spouse = result.find(s => s.trust === 'HIGH' && s.type === 'SPOUSE');
@@ -102,11 +102,11 @@ describe('RecoveryService', () => {
 
     it('should suggest khural rep as HIGH trust', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', seatId: 'seat-1' });
-      prisma.familyArban.findMany.mockResolvedValue([{
+      prisma.familyArbad.findMany.mockResolvedValue([{
         husbandSeatId: 'seat-1', wifeSeatId: null, khuralRepSeatId: 'seat-rep',
         children: [],
       }]);
-      prisma.orgArbanMember.findMany.mockResolvedValue([]);
+      prisma.orgArbadMember.findMany.mockResolvedValue([]);
       const result = await service.suggestGuardians('user-1');
       const rep = result.find(s => s.type === 'KHURAL_REP');
       expect(rep?.trust).toBe('HIGH');
@@ -114,11 +114,11 @@ describe('RecoveryService', () => {
 
     it('should suggest children as MEDIUM trust', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', seatId: 'seat-1' });
-      prisma.familyArban.findMany.mockResolvedValue([{
+      prisma.familyArbad.findMany.mockResolvedValue([{
         husbandSeatId: 'seat-1', wifeSeatId: null, khuralRepSeatId: null,
         children: [{ childSeatId: 'seat-child' }],
       }]);
-      prisma.orgArbanMember.findMany.mockResolvedValue([]);
+      prisma.orgArbadMember.findMany.mockResolvedValue([]);
       const result = await service.suggestGuardians('user-1');
       const child = result.find(s => s.type === 'FAMILY');
       expect(child?.trust).toBe('MEDIUM');
@@ -126,8 +126,8 @@ describe('RecoveryService', () => {
 
     it('should suggest org leader as MEDIUM trust', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'user-1', seatId: 'seat-1' });
-      prisma.familyArban.findMany.mockResolvedValue([]);
-      prisma.orgArbanMember.findMany.mockResolvedValue([{
+      prisma.familyArbad.findMany.mockResolvedValue([]);
+      prisma.orgArbadMember.findMany.mockResolvedValue([{
         org: { leaderSeatId: 'seat-leader' },
       }]);
       const result = await service.suggestGuardians('user-1');

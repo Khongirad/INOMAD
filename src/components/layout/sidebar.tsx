@@ -42,7 +42,7 @@ const NAV_ITEMS = [
     items: [
       { name: "My Seat",   href: "/dashboard", icon: ShieldCheck },
       { name: "Profile",   href: "/profile",   icon: Users       },
-      { name: "My Arban",  href: "/arban",     icon: Users       },
+      { name: "My Arbad",  href: "/arbad",     icon: Users       },
       { name: "Hierarchy", href: "/hierarchy", icon: TreePine    },
       { name: "My Family", href: "/family",    icon: Users       },
     ],

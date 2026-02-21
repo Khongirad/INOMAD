@@ -262,15 +262,15 @@ INOMAD KHURAL has **no email-based password reset**. Recovery is done through th
 ### Option A — Via Guarantor (Верификатор)
 The user contacts the citizen who originally verified them (поручитель). The guarantor raises a recovery request through the system, which an admin or the system processes to issue a new password or recovery token.
 
-### Option B — Via Arban (if established)
-If the user is already a member of an Arban and has trusted members there, the Arban can collectively initiate a recovery request. This requires a quorum — e.g. ≥ 3 Arban members confirming the identity of the requester.
+### Option B — Via Arbad (if established)
+If the user is already a member of an Arbad and has trusted members there, the Arbad can collectively initiate a recovery request. This requires a quorum — e.g. ≥ 3 Arbad members confirming the identity of the requester.
 
 > **Rationale:** There is no anonymous recovery. Every citizen is embedded in a chain of social accountability. Your identity is guaranteed by real people — and recovery goes through those same people.
 
 | Scenario | Recovery Path | Status |
 |----------|--------------|--------|
 | Has guarantor | Contact guarantor → raise recovery request | 🔮 Planned |
-| Has Arban with members | Arban quorum recovery | 🔮 Planned |
+| Has Arbad with members | Arbad quorum recovery | 🔮 Planned |
 | No social connections yet | Contact system admin (bootstrap only) | ⚠️ Manual fallback |
 
 ---
@@ -318,7 +318,7 @@ POST /verification/verify/:userId   ← guarantor action
 |---------|---------|
 | **Bank of Siberia** (`/bank`) | Personal accounts, ALTAN balance, transfers |
 | **Currency Exchange** (`/exchange`) | Buy/sell ALTAN with external currencies |
-| **Arban Credit Line** | Arban-based micro-credit in ALTAN |
+| **Arbad Credit Line** | Arbad-based micro-credit in ALTAN |
 | **UBI Scheduler** | Weekly 400 ALTAN distribution to active verified citizens |
 
 ---

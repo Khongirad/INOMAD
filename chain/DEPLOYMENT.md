@@ -57,7 +57,7 @@ COUNCIL_OF_JUSTICE_ADDRESS="0x59b670e9fa9d0a427751af201d676719a970857b"
 1. Restart backend to load new addresses
 2. Test Academy endpoints with deployed contract
 3. Test Justice endpoints with deployed contract
-4. Integrate DigitalSeal with Arban credit system
+4. Integrate DigitalSeal with Arbad credit system
 
 ---
 

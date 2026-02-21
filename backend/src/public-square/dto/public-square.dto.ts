@@ -7,7 +7,7 @@ export class CreatePublicSquarePostDto {
   @IsEnum(HierarchyLevel)
   level: HierarchyLevel;
 
-  @ApiProperty({ description: 'ID of the Arban/Zun/Myangan/Tumen/Republic this post belongs to' })
+  @ApiProperty({ description: 'ID of the Arbad/Zun/Myangad/Tumed/Republic this post belongs to' })
   @IsString()
   scopeId: string;
 

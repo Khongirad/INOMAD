@@ -59,9 +59,9 @@ src/
 ├── auth/                  # Authentication
 │   ├── auth.service.ts
 │   └── guards/            # JWT, roles
-├── arbans/                # Arban system
-│   ├── family-arban.*     # FamilyArban CRUD
-│   ├── organizational-arban.* # OrgArban CRUD
+├── arbads/                # Arbad system
+│   ├── family-arbad.*     # FamilyArbad CRUD
+│   ├── organizational-arbad.* # OrgArbad CRUD
 │   ├── credit.*           # Credit lines
 │   └── zun.*              # Clan management
 ├── mpc-wallet/            # MPC Wallet (NEW)
@@ -80,7 +80,7 @@ src/
 src/
 ├── app/                   # Next.js pages
 ├── components/
-│   ├── arbans/            # Arban components
+│   ├── arbads/            # Arbad components
 │   │   ├── family/        # MarriageRegistration, etc.
 │   │   ├── credit/        # CreditDashboard, BorrowForm
 │   │   └── zun/           # ClanTree
@@ -118,16 +118,16 @@ test/
 
 ## Key Concepts
 
-### Arban System
+### Arbad System
 
-Two types of Arbans:
+Two types of Arbads:
 
-1. **FamilyArban** (Семейный Арбан)
+1. **FamilyArbad** (Семейный Арбан)
    - Husband + Wife + Children
    - Khural Representative elected from group
    - Linked to Zun (clan)
 
-2. **OrganizationalArban** (Организационный Арбан)
+2. **OrganizationalArbad** (Организационный Арбан)
    - 10 members + 1 leader
    - For work/guild units
    - Own credit line
@@ -143,11 +143,11 @@ Device Share (browser) + Server Share (backend) = Sign Transaction
 Recovery options:
 - **SOCIAL**: Guardians approve (spouse + khural rep)
 - **EMAIL**: Verification code
-- **ARBAN**: Arban-based recovery
+- **ARBAD**: Arbad-based recovery
 
 ### Credit System
 
-Each Arban has a credit line:
+Each Arbad has a credit line:
 - `creditRating`: 300-850 score
 - `creditLimit`: Max borrowable amount
 - `borrowed`: Current debt

@@ -13,7 +13,7 @@ export const councilOfJusticeAbi = [
       { "name": "seatId", "type": "uint256", "internalType": "uint256" },
       { "name": "legalEducationHash", "type": "bytes32", "internalType": "bytes32" },
       { "name": "specialization", "type": "string", "internalType": "string" },
-      { "name": "arbanId", "type": "uint256", "internalType": "uint256" },
+      { "name": "arbadId", "type": "uint256", "internalType": "uint256" },
       { "name": "walletAddress", "type": "address", "internalType": "address" }
     ],
     "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],

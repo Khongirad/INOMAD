@@ -18,7 +18,7 @@ const SCOPES = [
   { value: 'INDIVIDUAL', label: 'Individual' },
   { value: 'FAMILY', label: 'Family' },
   { value: 'CLAN', label: 'Clan' },
-  { value: 'ARBAN', label: 'Arban' },
+  { value: 'ARBAD', label: 'Arbad' },
   { value: 'HORDE', label: 'Horde' },
   { value: 'NATION', label: 'Nation' },
   { value: 'CONFEDERATION', label: 'Confederation' },
@@ -65,7 +65,7 @@ export function HistoricalRecordForm({ onSubmit, initialData }: HistoricalRecord
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="e.g., The founding of Arban Alpha"
+          placeholder="e.g., The founding of Arbad Alpha"
         />
       </div>
 
@@ -125,7 +125,7 @@ export function HistoricalRecordForm({ onSubmit, initialData }: HistoricalRecord
             value={formData.scopeId}
             onChange={(e) => setFormData({ ...formData, scopeId: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="ID of the entity (user, clan, arban, etc.)"
+            placeholder="ID of the entity (user, clan, arbad, etc.)"
           />
         </div>
       </div>

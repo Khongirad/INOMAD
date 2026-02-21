@@ -31,7 +31,7 @@ export function createMockBlockchainService(): any {
     }),
     verifySeatOwnership: jest.fn().mockResolvedValue(true),
     getTaxEngineContract: jest.fn().mockReturnValue(mockContract),
-    getArbanRegistryContract: jest.fn().mockReturnValue(mockContract),
+    getArbadRegistryContract: jest.fn().mockReturnValue(mockContract),
     getSeatSBTContract: jest.fn().mockReturnValue(mockContract),
   };
 }

@@ -15,10 +15,10 @@
 |----------|---------|--------|
 | StatisticsBureau | `0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1` | ✅ Live |
 | VotingCenter | `0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44` | ✅ Live |
-| ArbanKhural #1 | `0x4A679253410272dd5232B3Ff7cF5dbB88f295319` | ✅ Live |
+| ArbadKhural #1 | `0x4A679253410272dd5232B3Ff7cF5dbB88f295319` | ✅ Live |
 | ZunKhural #1 | `0x09635F643e140090A9A8Dcd712eD6285858ceBef` | ✅ Live |
-| MyangangKhural #1 | `0x67d269191c92Caf3cD7723F116c85e6E9bf55933` | ✅ Live |
-| TumenKhural #1 | `0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690` | ✅ Live |
+| MyangadgKhural #1 | `0x67d269191c92Caf3cD7723F116c85e6E9bf55933` | ✅ Live |
+| TumedKhural #1 | `0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690` | ✅ Live |
 
 ### Phase 2: Economic Foundation (4 contracts)
 | Contract | Address | Status |
@@ -35,7 +35,7 @@
 | JudicialMultiSig | `0x67d269191c92Caf3cD7723F116c85e6E9bf55933` | ✅ Live |
 | CitizenBank | `0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E` | ✅ Live |
 | InstitutionalBank | `0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690` | ✅ Live |
-| BankArbanHierarchy | `0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB` | ✅ Live |
+| BankArbadHierarchy | `0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB` | ✅ Live |
 
 ---
 

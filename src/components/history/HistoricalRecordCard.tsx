@@ -32,7 +32,7 @@ export default function HistoricalRecordCard({ record, onClick }: HistoricalReco
     INDIVIDUAL: 'bg-purple-500/20 text-purple-400',
     FAMILY: 'bg-blue-500/20 text-blue-400',
     CLAN: 'bg-green-500/20 text-green-400',
-    ARBAN: 'bg-yellow-500/20 text-yellow-400',
+    ARBAD: 'bg-yellow-500/20 text-yellow-400',
     HORDE: 'bg-red-500/20 text-red-400',
     NATION: 'bg-pink-500/20 text-pink-400',
     CONFEDERATION: 'bg-gold-primary/20 text-gold-primary',

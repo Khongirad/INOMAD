@@ -1,8 +1,8 @@
-jest.mock('../typechain-types/factories/ArbanCompletion__factory', () => ({
-  ArbanCompletion__factory: { connect: jest.fn() },
+jest.mock('../typechain-types/factories/ArbadCompletion__factory', () => ({
+  ArbadCompletion__factory: { connect: jest.fn() },
 }));
-jest.mock('../blockchain/abis/arbanCompletion.abi', () => ({
-  ArbanCompletion_ABI: [],
+jest.mock('../blockchain/abis/arbadCompletion.abi', () => ({
+  ArbadCompletion_ABI: [],
 }));
 jest.mock('ethers', () => ({
   ethers: {
@@ -12,37 +12,37 @@ jest.mock('ethers', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { FamilyArbanController } from './family-arban.controller';
-import { FamilyArbanService } from './family-arban.service';
+import { FamilyArbadController } from './family-arbad.controller';
+import { FamilyArbadService } from './family-arbad.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-describe('FamilyArbanController', () => {
-  let controller: FamilyArbanController;
+describe('FamilyArbadController', () => {
+  let controller: FamilyArbadController;
   let service: any;
   const req = { user: { sub: 'u1', privateKey: '0xKEY' } };
 
   beforeEach(async () => {
     const mockService = {
-      registerMarriage: jest.fn().mockResolvedValue({ arbanId: 1, txHash: '0x1' }),
+      registerMarriage: jest.fn().mockResolvedValue({ arbadId: 1, txHash: '0x1' }),
       addChild: jest.fn().mockResolvedValue(undefined),
       changeHeir: jest.fn().mockResolvedValue(undefined),
       setKhuralRepresentative: jest.fn().mockResolvedValue(undefined),
       getKhuralRepresentatives: jest.fn().mockResolvedValue([]),
-      getFamilyArban: jest.fn().mockResolvedValue({ arbanId: 1 }),
-      getFamilyArbanBySeat: jest.fn().mockResolvedValue({ arbanId: 1 }),
+      getFamilyArbad: jest.fn().mockResolvedValue({ arbadId: 1 }),
+      getFamilyArbadBySeat: jest.fn().mockResolvedValue({ arbadId: 1 }),
       checkKhuralEligibility: jest.fn().mockResolvedValue(true),
       syncFromBlockchain: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [FamilyArbanController],
-      providers: [{ provide: FamilyArbanService, useValue: mockService }],
+      controllers: [FamilyArbadController],
+      providers: [{ provide: FamilyArbadService, useValue: mockService }],
     })
       .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
       .compile();
 
-    controller = module.get(FamilyArbanController);
-    service = module.get(FamilyArbanService);
+    controller = module.get(FamilyArbadController);
+    service = module.get(FamilyArbadService);
   });
 
   it('should be defined', () => expect(controller).toBeDefined());
@@ -51,7 +51,7 @@ describe('FamilyArbanController', () => {
     const r = await controller.registerMarriage(
       { husbandSeatId: 'h1', wifeSeatId: 'w1' }, req,
     );
-    expect(r.arbanId).toBe(1);
+    expect(r.arbadId).toBe(1);
   });
 
   it('adds child', async () => {
@@ -76,14 +76,14 @@ describe('FamilyArbanController', () => {
     expect(service.getKhuralRepresentatives).toHaveBeenCalled();
   });
 
-  it('gets family arban by id', async () => {
-    const r = await controller.getFamilyArban(1);
-    expect(r.arbanId).toBe(1);
+  it('gets family arbad by id', async () => {
+    const r = await controller.getFamilyArbad(1);
+    expect(r.arbadId).toBe(1);
   });
 
-  it('gets family arban by seat', async () => {
-    await controller.getFamilyArbanBySeat('seat1');
-    expect(service.getFamilyArbanBySeat).toHaveBeenCalledWith('seat1');
+  it('gets family arbad by seat', async () => {
+    await controller.getFamilyArbadBySeat('seat1');
+    expect(service.getFamilyArbadBySeat).toHaveBeenCalledWith('seat1');
   });
 
   it('checks khural eligibility', async () => {

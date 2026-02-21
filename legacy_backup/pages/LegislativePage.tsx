@@ -43,7 +43,7 @@ export const LegislativePage: React.FC = () => {
       <CreateProposal
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        defaultLevel={KhuralLevel.ARBAN}
+        defaultLevel={KhuralLevel.ARBAD}
         defaultKhuralId={1}
         privateKey={privateKey}
       />

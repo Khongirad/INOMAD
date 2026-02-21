@@ -134,7 +134,7 @@ export default function UnlockCeremonyPage() {
              <div className="mb-6">
                <h3 className="text-xl text-white font-bold mb-2">Step 1: Initiate Protocol</h3>
                <p className="text-zinc-500 text-sm">
-                 This will broadcast your request to your Arban (local unit).
+                 This will broadcast your request to your Arbad (local unit).
                </p>
              </div>
              <Button 

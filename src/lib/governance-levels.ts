@@ -6,10 +6,10 @@
  */
 
 export type GovernanceLevel = 
-  | 'ARBAN'      // 10 people
-  | 'ZUN'        // 100 people (10 Arbans)
-  | 'MYANGAN'    // 1,000 people (10 Zuns)
-  | 'TUMEN'      // 10,000 people (10 Myangans)
+  | 'ARBAD'      // 10 people
+  | 'ZUN'        // 100 people (10 Arbads)
+  | 'MYANGAD'    // 1,000 people (10 Zuns)
+  | 'TUMED'      // 10,000 people (10 Myangads)
   | 'REPUBLIC'   // Republic Khural
   | 'CONFEDERATION'; // Confederation Khural
 
@@ -24,8 +24,8 @@ export interface LevelConfig {
 }
 
 export const GOVERNANCE_LEVELS: Record<GovernanceLevel, LevelConfig> = {
-  ARBAN: {
-    name: 'Arban',
+  ARBAD: {
+    name: 'Arbad',
     color: '#CD7F32',      // Bronze
     glowColor: 'rgba(205, 127, 50, 0.3)',
     borderColor: '#B87333',
@@ -42,8 +42,8 @@ export const GOVERNANCE_LEVELS: Record<GovernanceLevel, LevelConfig> = {
     rank: 2,
     memberCount: 100,
   },
-  MYANGAN: {
-    name: 'Myangan',
+  MYANGAD: {
+    name: 'Myangad',
     color: '#FFD700',      // Gold
     glowColor: 'rgba(255, 215, 0, 0.3)',
     borderColor: '#DAA520',
@@ -51,8 +51,8 @@ export const GOVERNANCE_LEVELS: Record<GovernanceLevel, LevelConfig> = {
     rank: 3,
     memberCount: 1000,
   },
-  TUMEN: {
-    name: 'Tumen',
+  TUMED: {
+    name: 'Tumed',
     color: '#E5E4E2',      // Platinum
     glowColor: 'rgba(229, 228, 226, 0.3)',
     borderColor: '#C9C9C9',

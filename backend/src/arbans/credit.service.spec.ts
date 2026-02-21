@@ -1,6 +1,6 @@
-// Mock ArbanCreditLine__factory to prevent import error
-jest.mock('../typechain-types/factories/ArbanCreditLine__factory', () => ({
-  ArbanCreditLine__factory: {
+// Mock ArbadCreditLine__factory to prevent import error
+jest.mock('../typechain-types/factories/ArbadCreditLine__factory', () => ({
+  ArbadCreditLine__factory: {
     connect: jest.fn().mockReturnValue({
       connect: jest.fn(),
       getFamilyCreditLine: jest.fn(),
@@ -22,7 +22,7 @@ describe('CreditService', () => {
 
   beforeEach(async () => {
     // Clear contract env so constructor doesn't try to connect
-    delete process.env.ARBAN_CREDIT_LINE_ADDRESS;
+    delete process.env.ARBAD_CREDIT_LINE_ADDRESS;
 
     prisma = {
       creditLine: {
@@ -35,7 +35,7 @@ describe('CreditService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
-      familyArban: {
+      familyArbad: {
         findUnique: jest.fn(),
       },
     };
@@ -58,7 +58,7 @@ describe('CreditService', () => {
 
   describe('getCreditLine', () => {
     const mockCreditLine = {
-      arbanId: BigInt(1),
+      arbadId: BigInt(1),
       creditType: 'FAMILY',
       creditRating: 700,
       creditLimit: '10000000000',
@@ -74,7 +74,7 @@ describe('CreditService', () => {
     it('returns mapped credit line for FAMILY', async () => {
       prisma.creditLine.findUnique.mockResolvedValue(mockCreditLine);
       const result = await service.getCreditLine(1, 'FAMILY');
-      expect(result.arbanId).toBe(1);
+      expect(result.arbadId).toBe(1);
       expect(result.creditRating).toBe(700);
       expect(result.isActive).toBe(true);
       expect(result.available).toBeDefined();
@@ -93,14 +93,14 @@ describe('CreditService', () => {
     it('returns mapped credit line for ORG', async () => {
       prisma.creditLine.findUnique.mockResolvedValue({ ...mockCreditLine, creditType: 'ORG' });
       const result = await service.getCreditLine(1, 'ORG');
-      expect(result.arbanId).toBe(1);
+      expect(result.arbadId).toBe(1);
     });
   });
 
   describe('getLoans', () => {
     const mockLoan = {
       loanId: BigInt(1),
-      arbanId: BigInt(1),
+      arbadId: BigInt(1),
       creditType: 'FAMILY',
       principal: '5000000',
       interest: '250000',
@@ -135,7 +135,7 @@ describe('CreditService', () => {
 
   describe('getCreditDashboard', () => {
     const mockCreditLine = {
-      arbanId: BigInt(1),
+      arbadId: BigInt(1),
       creditType: 'FAMILY',
       creditRating: 700,
       creditLimit: '10000000',
@@ -155,13 +155,13 @@ describe('CreditService', () => {
       prisma.creditLine.findUnique.mockResolvedValue(mockCreditLine);
       prisma.loan.findMany.mockResolvedValue([
         {
-          loanId: BigInt(1), arbanId: BigInt(1), creditType: 'FAMILY',
+          loanId: BigInt(1), arbadId: BigInt(1), creditType: 'FAMILY',
           principal: '1000000', interest: '50000',
           dueDate: now, borrowedAt: monthAgo, repaidAt: now,
           isActive: false, isDefaulted: false,
         },
         {
-          loanId: BigInt(2), arbanId: BigInt(1), creditType: 'FAMILY',
+          loanId: BigInt(2), arbadId: BigInt(1), creditType: 'FAMILY',
           principal: '2000000', interest: '100000',
           dueDate: now, borrowedAt: monthAgo, repaidAt: null,
           isActive: true, isDefaulted: false,
@@ -190,13 +190,13 @@ describe('CreditService', () => {
       prisma.creditLine.findUnique.mockResolvedValue(mockCreditLine);
       prisma.loan.findMany.mockResolvedValue([
         {
-          loanId: BigInt(1), arbanId: BigInt(1), creditType: 'FAMILY',
+          loanId: BigInt(1), arbadId: BigInt(1), creditType: 'FAMILY',
           principal: '1000000', interest: '50000',
           dueDate: now, borrowedAt: monthAgo, repaidAt: now,
           isActive: false, isDefaulted: true,
         },
         {
-          loanId: BigInt(2), arbanId: BigInt(1), creditType: 'FAMILY',
+          loanId: BigInt(2), arbadId: BigInt(1), creditType: 'FAMILY',
           principal: '1000000', interest: '50000',
           dueDate: now, borrowedAt: monthAgo, repaidAt: now,
           isActive: false, isDefaulted: false,
@@ -215,23 +215,23 @@ describe('CreditService', () => {
 
   describe('openFamilyCreditLine', () => {
     it('throws if credit line already exists', async () => {
-      prisma.creditLine.findUnique.mockResolvedValue({ arbanId: BigInt(1) });
+      prisma.creditLine.findUnique.mockResolvedValue({ arbadId: BigInt(1) });
       await expect(
         service.openFamilyCreditLine(1, {} as any),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('throws if family arban not found', async () => {
+    it('throws if family arbad not found', async () => {
       prisma.creditLine.findUnique.mockResolvedValue(null);
-      prisma.familyArban.findUnique.mockResolvedValue(null);
+      prisma.familyArbad.findUnique.mockResolvedValue(null);
       await expect(
         service.openFamilyCreditLine(1, {} as any),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('throws if family arban inactive', async () => {
+    it('throws if family arbad inactive', async () => {
       prisma.creditLine.findUnique.mockResolvedValue(null);
-      prisma.familyArban.findUnique.mockResolvedValue({ arbanId: BigInt(1), isActive: false });
+      prisma.familyArbad.findUnique.mockResolvedValue({ arbadId: BigInt(1), isActive: false });
       await expect(
         service.openFamilyCreditLine(1, {} as any),
       ).rejects.toThrow(BadRequestException);
@@ -242,14 +242,14 @@ describe('CreditService', () => {
     it('throws if credit line not found', async () => {
       prisma.creditLine.findUnique.mockResolvedValue(null);
       await expect(
-        service.borrowFamily({ arbanId: 1, amount: '100', durationDays: 30, creditType: 'FAMILY' } as any, {} as any),
+        service.borrowFamily({ arbadId: 1, amount: '100', durationDays: 30, creditType: 'FAMILY' } as any, {} as any),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('throws if credit type is not FAMILY', async () => {
       prisma.creditLine.findUnique.mockResolvedValue({ creditType: 'ORG' });
       await expect(
-        service.borrowFamily({ arbanId: 1, amount: '100', durationDays: 30, creditType: 'FAMILY' } as any, {} as any),
+        service.borrowFamily({ arbadId: 1, amount: '100', durationDays: 30, creditType: 'FAMILY' } as any, {} as any),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -258,14 +258,14 @@ describe('CreditService', () => {
     it('throws if loan index out of bounds', async () => {
       prisma.loan.findMany.mockResolvedValue([]);
       await expect(
-        service.repayFamily({ arbanId: 1, loanIdx: 0 } as any, {} as any),
+        service.repayFamily({ arbadId: 1, loanIdx: 0 } as any, {} as any),
       ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('openOrgCreditLine', () => {
     it('throws if credit line already exists', async () => {
-      prisma.creditLine.findUnique.mockResolvedValue({ arbanId: BigInt(1) });
+      prisma.creditLine.findUnique.mockResolvedValue({ arbadId: BigInt(1) });
       await expect(
         service.openOrgCreditLine(1, {} as any),
       ).rejects.toThrow(BadRequestException);
@@ -276,14 +276,14 @@ describe('CreditService', () => {
     it('throws if credit line not found', async () => {
       prisma.creditLine.findUnique.mockResolvedValue(null);
       await expect(
-        service.borrowOrg({ arbanId: 1, amount: '100', durationDays: 30, creditType: 'ORG' } as any, {} as any),
+        service.borrowOrg({ arbadId: 1, amount: '100', durationDays: 30, creditType: 'ORG' } as any, {} as any),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('throws if credit type is not ORG', async () => {
       prisma.creditLine.findUnique.mockResolvedValue({ creditType: 'FAMILY' });
       await expect(
-        service.borrowOrg({ arbanId: 1, amount: '100', durationDays: 30, creditType: 'ORG' } as any, {} as any),
+        service.borrowOrg({ arbadId: 1, amount: '100', durationDays: 30, creditType: 'ORG' } as any, {} as any),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -292,7 +292,7 @@ describe('CreditService', () => {
     it('throws if loan index out of bounds', async () => {
       prisma.loan.findMany.mockResolvedValue([]);
       await expect(
-        service.repayOrg({ arbanId: 1, loanIdx: 0 } as any, {} as any),
+        service.repayOrg({ arbadId: 1, loanIdx: 0 } as any, {} as any),
       ).rejects.toThrow(NotFoundException);
     });
   });

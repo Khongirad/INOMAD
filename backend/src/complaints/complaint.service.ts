@@ -10,10 +10,10 @@ import { ComplaintStatus, ComplaintCategory, DisputeSourceType } from '@prisma/c
 
 /**
  * Hierarchy levels for complaint escalation:
- * 1 = Arban (Family/Org)
+ * 1 = Arbad (Family/Org)
  * 2 = Zun (Company of 100)
- * 3 = Myangan (Battalion of 1000)
- * 4 = Tumen (Division of 10000)
+ * 3 = Myangad (Battalion of 1000)
+ * 4 = Tumed (Division of 10000)
  * 5 = Republic (Republican Khural)
  * 6 = Confederation (Confederative Khural)
  * 7 = Court (CouncilOfJustice)

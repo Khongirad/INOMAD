@@ -23,7 +23,7 @@ import type {
   TypedContractMethod,
 } from "./common";
 
-export interface ArbanCompletionInterface extends Interface {
+export interface ArbadCompletionInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "INITIAL_ORG_SIZE"
@@ -32,50 +32,50 @@ export interface ArbanCompletionInterface extends Interface {
       | "addChild"
       | "addOrgMember"
       | "changeHeir"
-      | "childCreatesOwnArban"
+      | "childCreatesOwnArbad"
       | "createDepartment"
-      | "createOrganizationalArban"
-      | "familyArbans"
+      | "createOrganizationalArbad"
+      | "familyArbads"
       | "formScientificCouncil"
       | "formZun"
-      | "getArbanTypeForSeat"
-      | "getFamilyArban"
+      | "getArbadTypeForSeat"
+      | "getFamilyArbad"
       | "getKhuralRepresentatives"
-      | "getOrgArban"
+      | "getOrgArbad"
       | "getZun"
       | "isEligibleForTier2"
       | "isEligibleForTier3"
       | "isMarried"
       | "isValidKhuralRepresentative"
-      | "nextFamilyArbanId"
-      | "nextOrgArbanId"
+      | "nextFamilyArbadId"
+      | "nextOrgArbadId"
       | "nextZunId"
-      | "orgArbans"
+      | "orgArbads"
       | "owner"
       | "registerMarriage"
       | "scientificCouncilId"
-      | "seatToFamilyArban"
-      | "seatToOrgArban"
+      | "seatToFamilyArbad"
+      | "seatToOrgArbad"
       | "setKhuralRepresentative"
       | "setOrgLeader"
       | "setZunElder"
-      | "totalFamilyArbans"
-      | "totalOrgArbans"
+      | "totalFamilyArbads"
+      | "totalOrgArbads"
       | "transferOwnership"
       | "zuns"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
-      | "ArbanJoinedZun"
+      | "ArbadJoinedZun"
       | "ChildAdded"
-      | "ChildCreatedOwnArban"
+      | "ChildCreatedOwnArbad"
       | "DepartmentCreated"
       | "HeirChanged"
       | "HeirSet"
       | "KhuralRepresentativeSet"
       | "MarriageRegistered"
-      | "OrgArbanCreated"
+      | "OrgArbadCreated"
       | "OrgLeaderSet"
       | "OrgMemberAdded"
       | "OrgMemberRemoved"
@@ -110,7 +110,7 @@ export interface ArbanCompletionInterface extends Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "childCreatesOwnArban",
+    functionFragment: "childCreatesOwnArbad",
     values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
@@ -118,11 +118,11 @@ export interface ArbanCompletionInterface extends Interface {
     values: [BigNumberish, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "createOrganizationalArban",
+    functionFragment: "createOrganizationalArbad",
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "familyArbans",
+    functionFragment: "familyArbads",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -134,11 +134,11 @@ export interface ArbanCompletionInterface extends Interface {
     values: [string, BigNumberish[]]
   ): string;
   encodeFunctionData(
-    functionFragment: "getArbanTypeForSeat",
+    functionFragment: "getArbadTypeForSeat",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "getFamilyArban",
+    functionFragment: "getFamilyArbad",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -146,7 +146,7 @@ export interface ArbanCompletionInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getOrgArban",
+    functionFragment: "getOrgArbad",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -170,16 +170,16 @@ export interface ArbanCompletionInterface extends Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "nextFamilyArbanId",
+    functionFragment: "nextFamilyArbadId",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "nextOrgArbanId",
+    functionFragment: "nextOrgArbadId",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "nextZunId", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "orgArbans",
+    functionFragment: "orgArbads",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -192,11 +192,11 @@ export interface ArbanCompletionInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "seatToFamilyArban",
+    functionFragment: "seatToFamilyArbad",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "seatToOrgArban",
+    functionFragment: "seatToOrgArbad",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -212,11 +212,11 @@ export interface ArbanCompletionInterface extends Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "totalFamilyArbans",
+    functionFragment: "totalFamilyArbads",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "totalOrgArbans",
+    functionFragment: "totalOrgArbads",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -244,7 +244,7 @@ export interface ArbanCompletionInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "changeHeir", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "childCreatesOwnArban",
+    functionFragment: "childCreatesOwnArbad",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -252,11 +252,11 @@ export interface ArbanCompletionInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "createOrganizationalArban",
+    functionFragment: "createOrganizationalArbad",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "familyArbans",
+    functionFragment: "familyArbads",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -265,11 +265,11 @@ export interface ArbanCompletionInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "formZun", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "getArbanTypeForSeat",
+    functionFragment: "getArbadTypeForSeat",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getFamilyArban",
+    functionFragment: "getFamilyArbad",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -277,7 +277,7 @@ export interface ArbanCompletionInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getOrgArban",
+    functionFragment: "getOrgArbad",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getZun", data: BytesLike): Result;
@@ -295,15 +295,15 @@ export interface ArbanCompletionInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "nextFamilyArbanId",
+    functionFragment: "nextFamilyArbadId",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "nextOrgArbanId",
+    functionFragment: "nextOrgArbadId",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "nextZunId", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "orgArbans", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "orgArbads", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "registerMarriage",
@@ -314,11 +314,11 @@ export interface ArbanCompletionInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "seatToFamilyArban",
+    functionFragment: "seatToFamilyArbad",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "seatToOrgArban",
+    functionFragment: "seatToOrgArbad",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -334,11 +334,11 @@ export interface ArbanCompletionInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "totalFamilyArbans",
+    functionFragment: "totalFamilyArbads",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "totalOrgArbans",
+    functionFragment: "totalOrgArbads",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -348,12 +348,12 @@ export interface ArbanCompletionInterface extends Interface {
   decodeFunctionResult(functionFragment: "zuns", data: BytesLike): Result;
 }
 
-export namespace ArbanJoinedZunEvent {
-  export type InputTuple = [zunId: BigNumberish, arbanId: BigNumberish];
-  export type OutputTuple = [zunId: bigint, arbanId: bigint];
+export namespace ArbadJoinedZunEvent {
+  export type InputTuple = [zunId: BigNumberish, arbadId: BigNumberish];
+  export type OutputTuple = [zunId: bigint, arbadId: bigint];
   export interface OutputObject {
     zunId: bigint;
-    arbanId: bigint;
+    arbadId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -362,10 +362,10 @@ export namespace ArbanJoinedZunEvent {
 }
 
 export namespace ChildAddedEvent {
-  export type InputTuple = [arbanId: BigNumberish, childSeatId: BigNumberish];
-  export type OutputTuple = [arbanId: bigint, childSeatId: bigint];
+  export type InputTuple = [arbadId: BigNumberish, childSeatId: BigNumberish];
+  export type OutputTuple = [arbadId: bigint, childSeatId: bigint];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     childSeatId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -374,20 +374,20 @@ export namespace ChildAddedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace ChildCreatedOwnArbanEvent {
+export namespace ChildCreatedOwnArbadEvent {
   export type InputTuple = [
-    parentArbanId: BigNumberish,
-    newArbanId: BigNumberish,
+    parentArbadId: BigNumberish,
+    newArbadId: BigNumberish,
     childSeatId: BigNumberish
   ];
   export type OutputTuple = [
-    parentArbanId: bigint,
-    newArbanId: bigint,
+    parentArbadId: bigint,
+    newArbadId: bigint,
     childSeatId: bigint
   ];
   export interface OutputObject {
-    parentArbanId: bigint;
-    newArbanId: bigint;
+    parentArbadId: bigint;
+    newArbadId: bigint;
     childSeatId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -416,17 +416,17 @@ export namespace DepartmentCreatedEvent {
 
 export namespace HeirChangedEvent {
   export type InputTuple = [
-    arbanId: BigNumberish,
+    arbadId: BigNumberish,
     oldHeirSeatId: BigNumberish,
     newHeirSeatId: BigNumberish
   ];
   export type OutputTuple = [
-    arbanId: bigint,
+    arbadId: bigint,
     oldHeirSeatId: bigint,
     newHeirSeatId: bigint
   ];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     oldHeirSeatId: bigint;
     newHeirSeatId: bigint;
   }
@@ -437,10 +437,10 @@ export namespace HeirChangedEvent {
 }
 
 export namespace HeirSetEvent {
-  export type InputTuple = [arbanId: BigNumberish, heirSeatId: BigNumberish];
-  export type OutputTuple = [arbanId: bigint, heirSeatId: bigint];
+  export type InputTuple = [arbadId: BigNumberish, heirSeatId: BigNumberish];
+  export type OutputTuple = [arbadId: bigint, heirSeatId: bigint];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     heirSeatId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -451,17 +451,17 @@ export namespace HeirSetEvent {
 
 export namespace KhuralRepresentativeSetEvent {
   export type InputTuple = [
-    arbanId: BigNumberish,
+    arbadId: BigNumberish,
     repSeatId: BigNumberish,
     birthYear: BigNumberish
   ];
   export type OutputTuple = [
-    arbanId: bigint,
+    arbadId: bigint,
     repSeatId: bigint,
     birthYear: bigint
   ];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     repSeatId: bigint;
     birthYear: bigint;
   }
@@ -473,17 +473,17 @@ export namespace KhuralRepresentativeSetEvent {
 
 export namespace MarriageRegisteredEvent {
   export type InputTuple = [
-    arbanId: BigNumberish,
+    arbadId: BigNumberish,
     husbandSeatId: BigNumberish,
     wifeSeatId: BigNumberish
   ];
   export type OutputTuple = [
-    arbanId: bigint,
+    arbadId: bigint,
     husbandSeatId: bigint,
     wifeSeatId: bigint
   ];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     husbandSeatId: bigint;
     wifeSeatId: bigint;
   }
@@ -493,21 +493,21 @@ export namespace MarriageRegisteredEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace OrgArbanCreatedEvent {
+export namespace OrgArbadCreatedEvent {
   export type InputTuple = [
-    arbanId: BigNumberish,
+    arbadId: BigNumberish,
     name: string,
     orgType: BigNumberish,
     branch: BigNumberish
   ];
   export type OutputTuple = [
-    arbanId: bigint,
+    arbadId: bigint,
     name: string,
     orgType: bigint,
     branch: bigint
   ];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     name: string;
     orgType: bigint;
     branch: bigint;
@@ -519,10 +519,10 @@ export namespace OrgArbanCreatedEvent {
 }
 
 export namespace OrgLeaderSetEvent {
-  export type InputTuple = [arbanId: BigNumberish, leaderSeatId: BigNumberish];
-  export type OutputTuple = [arbanId: bigint, leaderSeatId: bigint];
+  export type InputTuple = [arbadId: BigNumberish, leaderSeatId: BigNumberish];
+  export type OutputTuple = [arbadId: bigint, leaderSeatId: bigint];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     leaderSeatId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -532,10 +532,10 @@ export namespace OrgLeaderSetEvent {
 }
 
 export namespace OrgMemberAddedEvent {
-  export type InputTuple = [arbanId: BigNumberish, seatId: BigNumberish];
-  export type OutputTuple = [arbanId: bigint, seatId: bigint];
+  export type InputTuple = [arbadId: BigNumberish, seatId: BigNumberish];
+  export type OutputTuple = [arbadId: bigint, seatId: bigint];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     seatId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -545,10 +545,10 @@ export namespace OrgMemberAddedEvent {
 }
 
 export namespace OrgMemberRemovedEvent {
-  export type InputTuple = [arbanId: BigNumberish, seatId: BigNumberish];
-  export type OutputTuple = [arbanId: bigint, seatId: bigint];
+  export type InputTuple = [arbadId: BigNumberish, seatId: BigNumberish];
+  export type OutputTuple = [arbadId: bigint, seatId: bigint];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     seatId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -599,13 +599,13 @@ export namespace ZunFormedEvent {
   export type InputTuple = [
     zunId: BigNumberish,
     name: string,
-    arbanIds: BigNumberish[]
+    arbadIds: BigNumberish[]
   ];
-  export type OutputTuple = [zunId: bigint, name: string, arbanIds: bigint[]];
+  export type OutputTuple = [zunId: bigint, name: string, arbadIds: bigint[]];
   export interface OutputObject {
     zunId: bigint;
     name: string;
-    arbanIds: bigint[];
+    arbadIds: bigint[];
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -613,11 +613,11 @@ export namespace ZunFormedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export interface ArbanCompletion extends BaseContract {
-  connect(runner?: ContractRunner | null): ArbanCompletion;
+export interface ArbadCompletion extends BaseContract {
+  connect(runner?: ContractRunner | null): ArbadCompletion;
   waitForDeployment(): Promise<this>;
 
-  interface: ArbanCompletionInterface;
+  interface: ArbadCompletionInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -663,26 +663,26 @@ export interface ArbanCompletion extends BaseContract {
   MAX_ORG_MEMBERS: TypedContractMethod<[], [bigint], "view">;
 
   addChild: TypedContractMethod<
-    [arbanId: BigNumberish, childSeatId: BigNumberish],
+    [arbadId: BigNumberish, childSeatId: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   addOrgMember: TypedContractMethod<
-    [arbanId: BigNumberish, seatId: BigNumberish],
+    [arbadId: BigNumberish, seatId: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   changeHeir: TypedContractMethod<
-    [arbanId: BigNumberish, newHeirSeatId: BigNumberish],
+    [arbadId: BigNumberish, newHeirSeatId: BigNumberish],
     [void],
     "nonpayable"
   >;
 
-  childCreatesOwnArban: TypedContractMethod<
+  childCreatesOwnArbad: TypedContractMethod<
     [
-      parentArbanId: BigNumberish,
+      parentArbadId: BigNumberish,
       childSeatId: BigNumberish,
       spouseSeatId: BigNumberish
     ],
@@ -696,13 +696,13 @@ export interface ArbanCompletion extends BaseContract {
     "nonpayable"
   >;
 
-  createOrganizationalArban: TypedContractMethod<
+  createOrganizationalArbad: TypedContractMethod<
     [name: string, orgType: BigNumberish],
     [bigint],
     "nonpayable"
   >;
 
-  familyArbans: TypedContractMethod<
+  familyArbads: TypedContractMethod<
     [arg0: BigNumberish],
     [
       [
@@ -716,7 +716,7 @@ export interface ArbanCompletion extends BaseContract {
         boolean,
         bigint
       ] & {
-        arbanId: bigint;
+        arbadId: bigint;
         husbandSeatId: bigint;
         wifeSeatId: bigint;
         heirSeatId: bigint;
@@ -737,19 +737,19 @@ export interface ArbanCompletion extends BaseContract {
   >;
 
   formZun: TypedContractMethod<
-    [zunName: string, arbanIds: BigNumberish[]],
+    [zunName: string, arbadIds: BigNumberish[]],
     [bigint],
     "nonpayable"
   >;
 
-  getArbanTypeForSeat: TypedContractMethod<
+  getArbadTypeForSeat: TypedContractMethod<
     [seatId: BigNumberish],
-    [[bigint, bigint] & { arbanType: bigint; arbanId: bigint }],
+    [[bigint, bigint] & { arbadType: bigint; arbadId: bigint }],
     "view"
   >;
 
-  getFamilyArban: TypedContractMethod<
-    [arbanId: BigNumberish],
+  getFamilyArbad: TypedContractMethod<
+    [arbadId: BigNumberish],
     [
       [bigint, bigint, bigint[], bigint, bigint, bigint, boolean] & {
         husbandSeatId: bigint;
@@ -766,8 +766,8 @@ export interface ArbanCompletion extends BaseContract {
 
   getKhuralRepresentatives: TypedContractMethod<[], [bigint[]], "view">;
 
-  getOrgArban: TypedContractMethod<
-    [arbanId: BigNumberish],
+  getOrgArbad: TypedContractMethod<
+    [arbadId: BigNumberish],
     [
       [string, bigint[], bigint, bigint, bigint, boolean] & {
         name: string;
@@ -786,8 +786,8 @@ export interface ArbanCompletion extends BaseContract {
     [
       [string, bigint, bigint[], bigint, boolean] & {
         name: string;
-        founderArbanId: bigint;
-        memberArbanIds: bigint[];
+        founderArbadId: bigint;
+        memberArbadIds: bigint[];
         elderSeatId: bigint;
         isActive: boolean;
       }
@@ -810,22 +810,22 @@ export interface ArbanCompletion extends BaseContract {
   isMarried: TypedContractMethod<[arg0: BigNumberish], [boolean], "view">;
 
   isValidKhuralRepresentative: TypedContractMethod<
-    [arbanId: BigNumberish, seatId: BigNumberish],
+    [arbadId: BigNumberish, seatId: BigNumberish],
     [boolean],
     "view"
   >;
 
-  nextFamilyArbanId: TypedContractMethod<[], [bigint], "view">;
+  nextFamilyArbadId: TypedContractMethod<[], [bigint], "view">;
 
-  nextOrgArbanId: TypedContractMethod<[], [bigint], "view">;
+  nextOrgArbadId: TypedContractMethod<[], [bigint], "view">;
 
   nextZunId: TypedContractMethod<[], [bigint], "view">;
 
-  orgArbans: TypedContractMethod<
+  orgArbads: TypedContractMethod<
     [arg0: BigNumberish],
     [
       [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint] & {
-        arbanId: bigint;
+        arbadId: bigint;
         name: string;
         leaderSeatId: bigint;
         orgType: bigint;
@@ -848,22 +848,22 @@ export interface ArbanCompletion extends BaseContract {
 
   scientificCouncilId: TypedContractMethod<[], [bigint], "view">;
 
-  seatToFamilyArban: TypedContractMethod<
+  seatToFamilyArbad: TypedContractMethod<
     [arg0: BigNumberish],
     [bigint],
     "view"
   >;
 
-  seatToOrgArban: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
+  seatToOrgArbad: TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
 
   setKhuralRepresentative: TypedContractMethod<
-    [arbanId: BigNumberish, repSeatId: BigNumberish, birthYear: BigNumberish],
+    [arbadId: BigNumberish, repSeatId: BigNumberish, birthYear: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   setOrgLeader: TypedContractMethod<
-    [arbanId: BigNumberish, leaderSeatId: BigNumberish],
+    [arbadId: BigNumberish, leaderSeatId: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -874,9 +874,9 @@ export interface ArbanCompletion extends BaseContract {
     "nonpayable"
   >;
 
-  totalFamilyArbans: TypedContractMethod<[], [bigint], "view">;
+  totalFamilyArbads: TypedContractMethod<[], [bigint], "view">;
 
-  totalOrgArbans: TypedContractMethod<[], [bigint], "view">;
+  totalOrgArbads: TypedContractMethod<[], [bigint], "view">;
 
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
@@ -890,7 +890,7 @@ export interface ArbanCompletion extends BaseContract {
       [bigint, string, bigint, bigint, boolean, bigint] & {
         zunId: bigint;
         name: string;
-        founderArbanId: bigint;
+        founderArbadId: bigint;
         elderSeatId: bigint;
         isActive: boolean;
         createdAt: bigint;
@@ -915,29 +915,29 @@ export interface ArbanCompletion extends BaseContract {
   getFunction(
     nameOrSignature: "addChild"
   ): TypedContractMethod<
-    [arbanId: BigNumberish, childSeatId: BigNumberish],
+    [arbadId: BigNumberish, childSeatId: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "addOrgMember"
   ): TypedContractMethod<
-    [arbanId: BigNumberish, seatId: BigNumberish],
+    [arbadId: BigNumberish, seatId: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "changeHeir"
   ): TypedContractMethod<
-    [arbanId: BigNumberish, newHeirSeatId: BigNumberish],
+    [arbadId: BigNumberish, newHeirSeatId: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "childCreatesOwnArban"
+    nameOrSignature: "childCreatesOwnArbad"
   ): TypedContractMethod<
     [
-      parentArbanId: BigNumberish,
+      parentArbadId: BigNumberish,
       childSeatId: BigNumberish,
       spouseSeatId: BigNumberish
     ],
@@ -952,14 +952,14 @@ export interface ArbanCompletion extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "createOrganizationalArban"
+    nameOrSignature: "createOrganizationalArbad"
   ): TypedContractMethod<
     [name: string, orgType: BigNumberish],
     [bigint],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "familyArbans"
+    nameOrSignature: "familyArbads"
   ): TypedContractMethod<
     [arg0: BigNumberish],
     [
@@ -974,7 +974,7 @@ export interface ArbanCompletion extends BaseContract {
         boolean,
         bigint
       ] & {
-        arbanId: bigint;
+        arbadId: bigint;
         husbandSeatId: bigint;
         wifeSeatId: bigint;
         heirSeatId: bigint;
@@ -993,21 +993,21 @@ export interface ArbanCompletion extends BaseContract {
   getFunction(
     nameOrSignature: "formZun"
   ): TypedContractMethod<
-    [zunName: string, arbanIds: BigNumberish[]],
+    [zunName: string, arbadIds: BigNumberish[]],
     [bigint],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "getArbanTypeForSeat"
+    nameOrSignature: "getArbadTypeForSeat"
   ): TypedContractMethod<
     [seatId: BigNumberish],
-    [[bigint, bigint] & { arbanType: bigint; arbanId: bigint }],
+    [[bigint, bigint] & { arbadType: bigint; arbadId: bigint }],
     "view"
   >;
   getFunction(
-    nameOrSignature: "getFamilyArban"
+    nameOrSignature: "getFamilyArbad"
   ): TypedContractMethod<
-    [arbanId: BigNumberish],
+    [arbadId: BigNumberish],
     [
       [bigint, bigint, bigint[], bigint, bigint, bigint, boolean] & {
         husbandSeatId: bigint;
@@ -1025,9 +1025,9 @@ export interface ArbanCompletion extends BaseContract {
     nameOrSignature: "getKhuralRepresentatives"
   ): TypedContractMethod<[], [bigint[]], "view">;
   getFunction(
-    nameOrSignature: "getOrgArban"
+    nameOrSignature: "getOrgArbad"
   ): TypedContractMethod<
-    [arbanId: BigNumberish],
+    [arbadId: BigNumberish],
     [
       [string, bigint[], bigint, bigint, bigint, boolean] & {
         name: string;
@@ -1047,8 +1047,8 @@ export interface ArbanCompletion extends BaseContract {
     [
       [string, bigint, bigint[], bigint, boolean] & {
         name: string;
-        founderArbanId: bigint;
-        memberArbanIds: bigint[];
+        founderArbadId: bigint;
+        memberArbadIds: bigint[];
         elderSeatId: bigint;
         isActive: boolean;
       }
@@ -1067,26 +1067,26 @@ export interface ArbanCompletion extends BaseContract {
   getFunction(
     nameOrSignature: "isValidKhuralRepresentative"
   ): TypedContractMethod<
-    [arbanId: BigNumberish, seatId: BigNumberish],
+    [arbadId: BigNumberish, seatId: BigNumberish],
     [boolean],
     "view"
   >;
   getFunction(
-    nameOrSignature: "nextFamilyArbanId"
+    nameOrSignature: "nextFamilyArbadId"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "nextOrgArbanId"
+    nameOrSignature: "nextOrgArbadId"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "nextZunId"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "orgArbans"
+    nameOrSignature: "orgArbads"
   ): TypedContractMethod<
     [arg0: BigNumberish],
     [
       [bigint, string, bigint, bigint, bigint, bigint, boolean, bigint] & {
-        arbanId: bigint;
+        arbadId: bigint;
         name: string;
         leaderSeatId: bigint;
         orgType: bigint;
@@ -1112,22 +1112,22 @@ export interface ArbanCompletion extends BaseContract {
     nameOrSignature: "scientificCouncilId"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "seatToFamilyArban"
+    nameOrSignature: "seatToFamilyArbad"
   ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
   getFunction(
-    nameOrSignature: "seatToOrgArban"
+    nameOrSignature: "seatToOrgArbad"
   ): TypedContractMethod<[arg0: BigNumberish], [bigint], "view">;
   getFunction(
     nameOrSignature: "setKhuralRepresentative"
   ): TypedContractMethod<
-    [arbanId: BigNumberish, repSeatId: BigNumberish, birthYear: BigNumberish],
+    [arbadId: BigNumberish, repSeatId: BigNumberish, birthYear: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "setOrgLeader"
   ): TypedContractMethod<
-    [arbanId: BigNumberish, leaderSeatId: BigNumberish],
+    [arbadId: BigNumberish, leaderSeatId: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -1139,10 +1139,10 @@ export interface ArbanCompletion extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "totalFamilyArbans"
+    nameOrSignature: "totalFamilyArbads"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "totalOrgArbans"
+    nameOrSignature: "totalOrgArbads"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "transferOwnership"
@@ -1155,7 +1155,7 @@ export interface ArbanCompletion extends BaseContract {
       [bigint, string, bigint, bigint, boolean, bigint] & {
         zunId: bigint;
         name: string;
-        founderArbanId: bigint;
+        founderArbadId: bigint;
         elderSeatId: bigint;
         isActive: boolean;
         createdAt: bigint;
@@ -1165,11 +1165,11 @@ export interface ArbanCompletion extends BaseContract {
   >;
 
   getEvent(
-    key: "ArbanJoinedZun"
+    key: "ArbadJoinedZun"
   ): TypedContractEvent<
-    ArbanJoinedZunEvent.InputTuple,
-    ArbanJoinedZunEvent.OutputTuple,
-    ArbanJoinedZunEvent.OutputObject
+    ArbadJoinedZunEvent.InputTuple,
+    ArbadJoinedZunEvent.OutputTuple,
+    ArbadJoinedZunEvent.OutputObject
   >;
   getEvent(
     key: "ChildAdded"
@@ -1179,11 +1179,11 @@ export interface ArbanCompletion extends BaseContract {
     ChildAddedEvent.OutputObject
   >;
   getEvent(
-    key: "ChildCreatedOwnArban"
+    key: "ChildCreatedOwnArbad"
   ): TypedContractEvent<
-    ChildCreatedOwnArbanEvent.InputTuple,
-    ChildCreatedOwnArbanEvent.OutputTuple,
-    ChildCreatedOwnArbanEvent.OutputObject
+    ChildCreatedOwnArbadEvent.InputTuple,
+    ChildCreatedOwnArbadEvent.OutputTuple,
+    ChildCreatedOwnArbadEvent.OutputObject
   >;
   getEvent(
     key: "DepartmentCreated"
@@ -1221,11 +1221,11 @@ export interface ArbanCompletion extends BaseContract {
     MarriageRegisteredEvent.OutputObject
   >;
   getEvent(
-    key: "OrgArbanCreated"
+    key: "OrgArbadCreated"
   ): TypedContractEvent<
-    OrgArbanCreatedEvent.InputTuple,
-    OrgArbanCreatedEvent.OutputTuple,
-    OrgArbanCreatedEvent.OutputObject
+    OrgArbadCreatedEvent.InputTuple,
+    OrgArbadCreatedEvent.OutputTuple,
+    OrgArbadCreatedEvent.OutputObject
   >;
   getEvent(
     key: "OrgLeaderSet"
@@ -1278,15 +1278,15 @@ export interface ArbanCompletion extends BaseContract {
   >;
 
   filters: {
-    "ArbanJoinedZun(uint256,uint256)": TypedContractEvent<
-      ArbanJoinedZunEvent.InputTuple,
-      ArbanJoinedZunEvent.OutputTuple,
-      ArbanJoinedZunEvent.OutputObject
+    "ArbadJoinedZun(uint256,uint256)": TypedContractEvent<
+      ArbadJoinedZunEvent.InputTuple,
+      ArbadJoinedZunEvent.OutputTuple,
+      ArbadJoinedZunEvent.OutputObject
     >;
-    ArbanJoinedZun: TypedContractEvent<
-      ArbanJoinedZunEvent.InputTuple,
-      ArbanJoinedZunEvent.OutputTuple,
-      ArbanJoinedZunEvent.OutputObject
+    ArbadJoinedZun: TypedContractEvent<
+      ArbadJoinedZunEvent.InputTuple,
+      ArbadJoinedZunEvent.OutputTuple,
+      ArbadJoinedZunEvent.OutputObject
     >;
 
     "ChildAdded(uint256,uint256)": TypedContractEvent<
@@ -1300,15 +1300,15 @@ export interface ArbanCompletion extends BaseContract {
       ChildAddedEvent.OutputObject
     >;
 
-    "ChildCreatedOwnArban(uint256,uint256,uint256)": TypedContractEvent<
-      ChildCreatedOwnArbanEvent.InputTuple,
-      ChildCreatedOwnArbanEvent.OutputTuple,
-      ChildCreatedOwnArbanEvent.OutputObject
+    "ChildCreatedOwnArbad(uint256,uint256,uint256)": TypedContractEvent<
+      ChildCreatedOwnArbadEvent.InputTuple,
+      ChildCreatedOwnArbadEvent.OutputTuple,
+      ChildCreatedOwnArbadEvent.OutputObject
     >;
-    ChildCreatedOwnArban: TypedContractEvent<
-      ChildCreatedOwnArbanEvent.InputTuple,
-      ChildCreatedOwnArbanEvent.OutputTuple,
-      ChildCreatedOwnArbanEvent.OutputObject
+    ChildCreatedOwnArbad: TypedContractEvent<
+      ChildCreatedOwnArbadEvent.InputTuple,
+      ChildCreatedOwnArbadEvent.OutputTuple,
+      ChildCreatedOwnArbadEvent.OutputObject
     >;
 
     "DepartmentCreated(uint256,uint256,string)": TypedContractEvent<
@@ -1366,15 +1366,15 @@ export interface ArbanCompletion extends BaseContract {
       MarriageRegisteredEvent.OutputObject
     >;
 
-    "OrgArbanCreated(uint256,string,uint8,uint8)": TypedContractEvent<
-      OrgArbanCreatedEvent.InputTuple,
-      OrgArbanCreatedEvent.OutputTuple,
-      OrgArbanCreatedEvent.OutputObject
+    "OrgArbadCreated(uint256,string,uint8,uint8)": TypedContractEvent<
+      OrgArbadCreatedEvent.InputTuple,
+      OrgArbadCreatedEvent.OutputTuple,
+      OrgArbadCreatedEvent.OutputObject
     >;
-    OrgArbanCreated: TypedContractEvent<
-      OrgArbanCreatedEvent.InputTuple,
-      OrgArbanCreatedEvent.OutputTuple,
-      OrgArbanCreatedEvent.OutputObject
+    OrgArbadCreated: TypedContractEvent<
+      OrgArbadCreatedEvent.InputTuple,
+      OrgArbadCreatedEvent.OutputTuple,
+      OrgArbadCreatedEvent.OutputObject
     >;
 
     "OrgLeaderSet(uint256,uint256)": TypedContractEvent<

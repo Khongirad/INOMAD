@@ -39,7 +39,7 @@ const XP_REWARDS: Record<string, number> = {
   PROPOSAL_SUBMITTED: 40,
   PROPOSAL_DEBATE: 10,
   MARRIAGE_REGISTERED: 50,
-  ARBAN_JOINED: 30,
+  ARBAD_JOINED: 30,
   DAILY_LOGIN: 5,
   ACHIEVEMENT_EARNED: 0, // Varies per achievement
 };
@@ -66,7 +66,7 @@ const ACHIEVEMENTS = [
   { key: 'first_org', name: 'Первая Организация', description: 'Вступите в организацию', category: 'SOCIAL', icon: '🏢', xpReward: 25 },
   { key: 'org_leader', name: 'Лидер', description: 'Станьте лидером организации', category: 'SOCIAL', icon: '👑', xpReward: 100 },
   { key: 'married', name: 'Семейная Жизнь', description: 'Заключите брак или гражданский союз', category: 'SOCIAL', icon: '💍', xpReward: 50 },
-  { key: 'first_arban', name: 'Десятник', description: 'Вступите в Арбан', category: 'SOCIAL', icon: '🐴', xpReward: 30 },
+  { key: 'first_arbad', name: 'Десятник', description: 'Вступите в Арбан', category: 'SOCIAL', icon: '🐴', xpReward: 30 },
 
   // Streaks
   { key: '7_day_streak', name: 'Неделя Активности', description: 'Активность 7 дней подряд', category: 'CULTURAL', icon: '🔥', xpReward: 50 },
@@ -330,9 +330,9 @@ export class GamificationService {
       achievementsToCheck.push({ key: 'married', condition: true });
     }
 
-    // Arban achievements
-    if (action === 'ARBAN_JOINED') {
-      achievementsToCheck.push({ key: 'first_arban', condition: true });
+    // Arbad achievements
+    if (action === 'ARBAD_JOINED') {
+      achievementsToCheck.push({ key: 'first_arbad', condition: true });
     }
 
     // Try to award each achievement

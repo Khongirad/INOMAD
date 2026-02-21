@@ -25,10 +25,10 @@ Backend перешел от полного краха к рабочему сос
 - JwtModule → ArchiveModule
 - CentralBankAuthService экспортирован
 - Circular dependencies → forwardRef()
-- FamilyArbanService временно отключен
+- FamilyArbadService временно отключен
 
 ### Blockchain Integration
-- Условная инициализация контрактов (Zun, Credit, OrgArban)
+- Условная инициализация контрактов (Zun, Credit, OrgArbad)
 - Graceful degradation при отсутствии blockchain
 - Null checks для contract addresses
 
@@ -52,7 +52,7 @@ Backend перешел от полного краха к рабочему сос
 
 **На этой неделе**:
 - Integration testing
-- Blockchain node для Arban features
+- Blockchain node для Arbad features
 - Environment variables конфигурация
 
 ---

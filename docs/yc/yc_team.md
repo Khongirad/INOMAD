@@ -19,7 +19,7 @@ I am building **iNomad** not just as a startup, but as a lifeboat for 190+ indig
 "I do not impose a political model; I provide the technology for self-determination."
 
 **Key Competency**:
-- Deep understanding of **Nomadic Democracy** (Arban/Khural systems).
+- Deep understanding of **Nomadic Democracy** (Arbad/Khural systems).
 - Strategic vision of **Dual Banking** (Crypto + Fiat compliance).
 - **System Architecture**: Designed a scalable L1 capable of supporting a multi-continental confederation.
 

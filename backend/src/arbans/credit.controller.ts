@@ -17,10 +17,10 @@ import { CreditService } from './credit.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CentralBankGuard } from '../auth/guards/central-bank.guard';
 import { ethers } from 'ethers';
-import { BorrowRequest, RepayLoanRequest } from './types/arban.types';
+import { BorrowRequest, RepayLoanRequest } from './types/arbad.types';
 
-@ApiTags('Arbans')
-@Controller('arbans/credit')
+@ApiTags('Arbads')
+@Controller('arbads/credit')
 @UseGuards(JwtAuthGuard)
 export class CreditController {
   constructor(private readonly creditService: CreditService) {}
@@ -29,33 +29,33 @@ export class CreditController {
 
   /**
    * Open Family credit line
-   * POST /arbans/credit/family/:arbanId/open
+   * POST /arbads/credit/family/:arbadId/open
    */
-  @Post('family/:arbanId/open')
+  @Post('family/:arbadId/open')
   @HttpCode(HttpStatus.CREATED)
   async openFamilyCreditLine(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
-    return await this.creditService.openFamilyCreditLine(arbanId, wallet);
+    return await this.creditService.openFamilyCreditLine(arbadId, wallet);
   }
 
   /**
    * Borrow from Family credit line
-   * POST /arbans/credit/family/:arbanId/borrow
+   * POST /arbads/credit/family/:arbadId/borrow
    */
-  @Post('family/:arbanId/borrow')
+  @Post('family/:arbadId/borrow')
   @HttpCode(HttpStatus.CREATED)
   async borrowFamily(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { amount: string; durationDays: number; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: BorrowRequest = {
-      arbanId,
+      arbadId,
       creditType: 'FAMILY',
       amount: body.amount,
       durationDays: body.durationDays,
@@ -65,18 +65,18 @@ export class CreditController {
 
   /**
    * Repay Family loan
-   * POST /arbans/credit/family/:arbanId/repay
+   * POST /arbads/credit/family/:arbadId/repay
    */
-  @Post('family/:arbanId/repay')
+  @Post('family/:arbadId/repay')
   @HttpCode(HttpStatus.OK)
   async repayFamily(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { loanIdx: number; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: RepayLoanRequest = {
-      arbanId,
+      arbadId,
       creditType: 'FAMILY',
       loanIdx: body.loanIdx,
     };
@@ -86,62 +86,62 @@ export class CreditController {
 
   /**
    * Get Family credit line
-   * GET /arbans/credit/family/:arbanId
+   * GET /arbads/credit/family/:arbadId
    */
-  @Get('family/:arbanId')
-  async getFamilyCreditLine(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.creditService.getCreditLine(arbanId, 'FAMILY');
+  @Get('family/:arbadId')
+  async getFamilyCreditLine(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.creditService.getCreditLine(arbadId, 'FAMILY');
   }
 
   /**
    * Get Family loans
-   * GET /arbans/credit/family/:arbanId/loans
+   * GET /arbads/credit/family/:arbadId/loans
    */
-  @Get('family/:arbanId/loans')
-  async getFamilyLoans(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.creditService.getLoans(arbanId, 'FAMILY');
+  @Get('family/:arbadId/loans')
+  async getFamilyLoans(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.creditService.getLoans(arbadId, 'FAMILY');
   }
 
   /**
    * Get Family credit dashboard
-   * GET /arbans/credit/family/:arbanId/dashboard
+   * GET /arbads/credit/family/:arbadId/dashboard
    */
-  @Get('family/:arbanId/dashboard')
-  async getFamilyCreditDashboard(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.creditService.getCreditDashboard(arbanId, 'FAMILY');
+  @Get('family/:arbadId/dashboard')
+  async getFamilyCreditDashboard(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.creditService.getCreditDashboard(arbadId, 'FAMILY');
   }
 
   // ==================== ORG CREDIT ====================
 
   /**
    * Open Org credit line
-   * POST /arbans/credit/org/:arbanId/open
+   * POST /arbads/credit/org/:arbadId/open
    */
-  @Post('org/:arbanId/open')
+  @Post('org/:arbadId/open')
   @HttpCode(HttpStatus.CREATED)
   async openOrgCreditLine(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
-    return await this.creditService.openOrgCreditLine(arbanId, wallet);
+    return await this.creditService.openOrgCreditLine(arbadId, wallet);
   }
 
   /**
    * Borrow from Org credit line
-   * POST /arbans/credit/org/:arbanId/borrow
+   * POST /arbads/credit/org/:arbadId/borrow
    */
-  @Post('org/:arbanId/borrow')
+  @Post('org/:arbadId/borrow')
   @HttpCode(HttpStatus.CREATED)
   async borrowOrg(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { amount: string; durationDays: number; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: BorrowRequest = {
-      arbanId,
+      arbadId,
       creditType: 'ORG',
       amount: body.amount,
       durationDays: body.durationDays,
@@ -151,18 +151,18 @@ export class CreditController {
 
   /**
    * Repay Org loan
-   * POST /arbans/credit/org/:arbanId/repay
+   * POST /arbads/credit/org/:arbadId/repay
    */
-  @Post('org/:arbanId/repay')
+  @Post('org/:arbadId/repay')
   @HttpCode(HttpStatus.OK)
   async repayOrg(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { loanIdx: number; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: RepayLoanRequest = {
-      arbanId,
+      arbadId,
       creditType: 'ORG',
       loanIdx: body.loanIdx,
     };
@@ -172,36 +172,36 @@ export class CreditController {
 
   /**
    * Get Org credit line
-   * GET /arbans/credit/org/:arbanId
+   * GET /arbads/credit/org/:arbadId
    */
-  @Get('org/:arbanId')
-  async getOrgCreditLine(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.creditService.getCreditLine(arbanId, 'ORG');
+  @Get('org/:arbadId')
+  async getOrgCreditLine(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.creditService.getCreditLine(arbadId, 'ORG');
   }
 
   /**
    * Get Org loans
-   * GET /arbans/credit/org/:arbanId/loans
+   * GET /arbads/credit/org/:arbadId/loans
    */
-  @Get('org/:arbanId/loans')
-  async getOrgLoans(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.creditService.getLoans(arbanId, 'ORG');
+  @Get('org/:arbadId/loans')
+  async getOrgLoans(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.creditService.getLoans(arbadId, 'ORG');
   }
 
   /**
    * Get Org credit dashboard
-   * GET /arbans/credit/org/:arbanId/dashboard
+   * GET /arbads/credit/org/:arbadId/dashboard
    */
-  @Get('org/:arbanId/dashboard')
-  async getOrgCreditDashboard(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.creditService.getCreditDashboard(arbanId, 'ORG');
+  @Get('org/:arbadId/dashboard')
+  async getOrgCreditDashboard(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.creditService.getCreditDashboard(arbadId, 'ORG');
   }
 
   // ==================== CENTRAL BANK ADMIN ====================
 
   /**
    * Set interest rate (Central Bank only)
-   * PUT /arbans/credit/interest-rate
+   * PUT /arbads/credit/interest-rate
    */
   @Put('interest-rate')
   @UseGuards(CentralBankGuard)
@@ -214,7 +214,7 @@ export class CreditController {
 
   /**
    * Get current interest rate
-   * GET /arbans/credit/interest-rate
+   * GET /arbads/credit/interest-rate
    */
   @Get('interest-rate')
   async getCurrentInterestRate() {

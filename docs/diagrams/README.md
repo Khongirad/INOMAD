@@ -22,14 +22,14 @@ These `.mmd` files can be viewed:
 | `11-state-structure-full-ru.mmd` | Complete state structure with all branches (Russian) |
 | `20-governance-levels.mmd` | Four-level governance: People → Branches → Institutions → Economy |
 
-### Organizational Units (Arban System)
+### Organizational Units (Arbad System)
 
 | File | Description |
 |------|-------------|
-| `14-tumen-myangan-structure.mmd` | Tumen (10,000) → Myangan (1,000) structure |
-| `16-myangan-zuun-structure.mmd` | Myangan (1,000) → Zuun (100) structure |
-| `19-zuun-structure.mmd` | Zuun leader with managers and Arban leaders (detailed) |
-| `18-arban-structure.mmd` | Arban (10) unit: leader, 9 members, and families |
+| `14-tumed-myangad-structure.mmd` | Tumed (10,000) → Myangad (1,000) structure |
+| `16-myangad-zuud-structure.mmd` | Myangad (1,000) → Zuud (100) structure |
+| `19-zuud-structure.mmd` | Zuud leader with managers and Arbad leaders (detailed) |
+| `18-arbad-structure.mmd` | Arbad (10) unit: leader, 9 members, and families |
 
 ### Banking & Finance
 
@@ -80,7 +80,7 @@ These `.mmd` files can be viewed:
 | File | Description |
 |------|-------------|
 | `15-central-bank-network-alt.mmd` | Same as `13-central-bank-network.mmd` |
-| `17-myangan-zuun-structure-alt.mmd` | Same as `16-myangan-zuun-structure.mmd` |
+| `17-myangad-zuud-structure-alt.mmd` | Same as `16-myangad-zuud-structure.mmd` |
 
 ---
 

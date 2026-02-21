@@ -60,7 +60,7 @@
 # Environment variables required:
 ALTAN_ADDRESS=?
 CENTRAL_BANK_ADDRESS=?
-ARBAN_COMPLETION_ADDRESS=?
+ARBAD_COMPLETION_ADDRESS=?
 CHAIRMAN_ADDRESS=?
 RPC_URL=?
 PRIVATE_KEY=?
@@ -214,8 +214,8 @@ PRIVATE_KEY=?
 
 ### ✅ Completed Systems (85% Complete)
 - ✅ Citizen Registration & Verification
-- ✅ Family Arbans & Marriage
-- ✅ Organizational Arbans
+- ✅ Family Arbads & Marriage
+- ✅ Organizational Arbads
 - ✅ Bank of Siberia (3 tiers)
 - ✅ Credit System
 - ✅ **Tax System** ← Complete!

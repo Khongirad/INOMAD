@@ -27,7 +27,7 @@ describe('OrgQuestService', () => {
       create: jest.fn(), findUnique: jest.fn(), findMany: jest.fn(),
       count: jest.fn(), update: jest.fn(), updateMany: jest.fn(),
     },
-    tumen: { findFirst: jest.fn() },
+    tumed: { findFirst: jest.fn() },
     $transaction: jest.fn((args) => Promise.all(args)),
   });
 
@@ -55,7 +55,7 @@ describe('OrgQuestService', () => {
       prisma.organization.findUnique.mockResolvedValue(mockOrg);
       prisma.organizationMember.findUnique.mockResolvedValue({ role: 'ADMIN' });
       prisma.orgPermission.findUnique.mockResolvedValue({ canCreateTasks: true });
-      prisma.tumen.findFirst.mockResolvedValue({ republicId: 'rep-1' });
+      prisma.tumed.findFirst.mockResolvedValue({ republicId: 'rep-1' });
       prisma.orgQuest.create.mockResolvedValue(mockTask);
       const result = await service.createTask('org-1', 'creator-1', {
         title: 'Task', description: 'Desc', objectives: [{ description: 'Go' }], category: 'GENERAL',

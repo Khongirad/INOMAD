@@ -178,17 +178,17 @@ Benefit: Рост стоимости оставшихся токенов
 │ REPUBLIC      │   │ REPUBLIC      │   │ REPUBLIC      │
 │ KHURAL        │   │ KHURAL        │   │ KHURAL        │
 │ (Yakutia)     │   │ (Buryatia)    │   │ (N Republics) │
-│ Лидеры Tumen  │   │ Лидеры Tumen  │   │ Лидеры Tumen  │
+│ Лидеры Tumed  │   │ Лидеры Tumed  │   │ Лидеры Tumed  │
 └───────┬───────┘   └───────────────┘   └───────────────┘
         │
 ┌───────▼───────┐
-│ TUMEN KHURAL  │ × N (по кол-ву Tumen в республике)
+│ TUMED KHURAL  │ × N (по кол-ву Tumed в республике)
 │ 10,000 семей  │
-│ Лидеры Myangan│
+│ Лидеры Myangad│
 └───────┬───────┘
         │
 ┌───────▼───────┐
-│MYANGAN KHURAL │ × 10
+│MYANGAD KHURAL │ × 10
 │ 1,000 семей   │
 │ Лидеры Zun    │
 └───────┬───────┘
@@ -196,11 +196,11 @@ Benefit: Рост стоимости оставшихся токенов
 ┌───────▼───────┐
 │  ZUN KHURAL   │ × 10
 │ 100 семей     │
-│ Лидеры Arban  │
+│ Лидеры Arbad  │
 └───────┬───────┘
         │
 ┌───────▼───────┐
-│ ARBAN KHURAL  │ × 10
+│ ARBAD KHURAL  │ × 10
 │ 10 семей      │
 │ Прямое голос. │
 └───────────────┘
@@ -210,11 +210,11 @@ Benefit: Рост стоимости оставшихся токенов
 
 | Уровень | Юрисдикция | Состав | Голосование |
 |---------|------------|--------|-------------|
-| **Arban** | Местные вопросы | 10 семей (~50 чел) | Прямая демократия |
-| **Zun** | Район | 100 семей (~500 чел) | Представители Arban |
-| **Myangan** | Провинция | 1,000 семей (~5K чел) | Представители Zun |
-| **Tumen** | Область/Округ | 10,000 семей (~50K чел) | Представители Myangan |
-| **Republic Khural** | Республика | Все Tumen республики | **Лидеры Tumen** |
+| **Arbad** | Местные вопросы | 10 семей (~50 чел) | Прямая демократия |
+| **Zun** | Район | 100 семей (~500 чел) | Представители Arbad |
+| **Myangad** | Провинция | 1,000 семей (~5K чел) | Представители Zun |
+| **Tumed** | Область/Округ | 10,000 семей (~50K чел) | Представители Myangad |
+| **Republic Khural** | Республика | Все Tumed республики | **Лидеры Tumed** |
 | **Confederation** | Конфедерация | 145M граждан | **Лидеры Республик** |
 
 ### 3.3 Обновлённый Proto
@@ -222,18 +222,18 @@ Benefit: Рост стоимости оставшихся токенов
 ```protobuf
 // proto/altan/khural/v1/khural.proto
 enum KhuralLevel {
-  ARBAN = 0;           // 10 families - local
+  ARBAD = 0;           // 10 families - local
   ZUN = 1;             // 100 families - district  
-  MYANGAN = 2;         // 1,000 families - province
-  TUMEN = 3;           // 10,000 families - region
-  REPUBLIC = 4;        // Republic (all Tumens) - Лидеры Tumen
+  MYANGAD = 2;         // 1,000 families - province
+  TUMED = 3;           // 10,000 families - region
+  REPUBLIC = 4;        // Republic (all Tumeds) - Лидеры Tumed
   CONFEDERATION = 5;   // All Republics - Лидеры Республик
 }
 
 message RepublicKhural {
   string id = 1;
   string republic_name = 2;           // "Yakutia", "Buryatia", etc.
-  repeated string tumen_leader_ids = 3;  // Leaders of all Tumens
+  repeated string tumed_leader_ids = 3;  // Leaders of all Tumeds
   uint64 total_population = 4;
 }
 
@@ -415,13 +415,13 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
             ┌─────────────────────┼─────────────────────┐
             │                     │                     │
     ┌───────▼───────┐     ┌───────▼───────┐     ┌───────▼───────┐
-    │ TUMEN KHURAL  │     │ TUMEN KHURAL  │     │ TUMEN KHURAL  │
+    │ TUMED KHURAL  │     │ TUMED KHURAL  │     │ TUMED KHURAL  │
     │ Republic #1   │     │ Republic #2   │     │ Republic #N   │
     │ (10K families)│     │ (10K families)│     │ (10K families)│
     └───────┬───────┘     └───────┬───────┘     └───────────────┘
             │
     ┌───────▼───────┐
-    │ MYANGAN KHURAL│ × 10
+    │ MYANGAD KHURAL│ × 10
     │ (1K families) │
     └───────┬───────┘
             │
@@ -431,7 +431,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
     └───────┬───────┘
             │
     ┌───────▼───────┐
-    │ ARBAN KHURAL  │ × 10
+    │ ARBAD KHURAL  │ × 10
     │ (10 families) │
     └───────────────┘
 ```
@@ -440,21 +440,21 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 | Level | Jurisdiction | Population | Voting |
 |-------|-------------|------------|--------|
-| **Arban** | Local community | 10 families (~50 people) | Direct democracy |
-| **Zun** | District | 100 families (~500 people) | Arban representatives |
-| **Myangan** | Province | 1,000 families (~5,000 people) | Zun representatives |
-| **Tumen** | Republic | 10,000 families (~50,000 people) | Myangan representatives |
-| **Confederation** | All Republics | 145 million citizens | Tumen representatives |
+| **Arbad** | Local community | 10 families (~50 people) | Direct democracy |
+| **Zun** | District | 100 families (~500 people) | Arbad representatives |
+| **Myangad** | Province | 1,000 families (~5,000 people) | Zun representatives |
+| **Tumed** | Republic | 10,000 families (~50,000 people) | Myangad representatives |
+| **Confederation** | All Republics | 145 million citizens | Tumed representatives |
 
 ### 2.3 Updated Proto Definition
 
 ```protobuf
 // proto/altan/khural/v1/khural.proto
 enum KhuralLevel {
-  ARBAN = 0;         // 10 families - local
+  ARBAD = 0;         // 10 families - local
   ZUN = 1;           // 100 families - district
-  MYANGAN = 2;       // 1,000 families - province
-  TUMEN = 3;         // 10,000 families - REPUBLIC laws
+  MYANGAD = 2;       // 1,000 families - province
+  TUMED = 3;         // 10,000 families - REPUBLIC laws
   CONFEDERATION = 4; // All republics - CONFEDERATION laws
 }
 
@@ -472,7 +472,7 @@ message Khural {
 message ConfederationKhural {
   string id = 1;
   repeated string republic_ids = 2;  // All participating republics
-  repeated string tumen_representatives = 3;
+  repeated string tumed_representatives = 3;
   uint64 total_population = 4;  // 145 million
 }
 ```
@@ -665,7 +665,7 @@ func (k Keeper) IsTaxPeriodActive(ctx context.Context) bool {
 |---|--------|-------------|
 | 1 | x/corelaw | Constitutional law (37 articles) |
 | 2 | x/citizen | Citizen registry (145M population) |
-| 3 | x/arban | Social structure (family + org) |
+| 3 | x/arbad | Social structure (family + org) |
 | 4 | x/khural | 5-level democratic governance |
 | 5 | x/justice | Supreme Court & judicial orders |
 | 6 | x/centralbank | Monetary policy & emission |
@@ -706,10 +706,10 @@ func (k Keeper) IsTaxPeriodActive(ctx context.Context) bool {
   "khural": {
     "params": {
       "levels": 5,
-      "arban_size": 10,
+      "arbad_size": 10,
       "zun_size": 10,
-      "myangan_size": 10,
-      "tumen_size": 10
+      "myangad_size": 10,
+      "tumed_size": 10
     },
     "confederation": {
       "name": "Confederation Khural",

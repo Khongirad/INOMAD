@@ -190,7 +190,7 @@ func DefaultGenesis() *GenesisState {
 
 ---
 
-## 📅 Phase 3: x/citizen + x/arban (Week 2 - Feb 10-16)
+## 📅 Phase 3: x/citizen + x/arbad (Week 2 - Feb 10-16)
 
 ### x/citizen Module (Days 9-11)
 
@@ -208,12 +208,12 @@ message Citizen {
   string wallet_address = 2;
   CitizenStatus status = 3;
   VerificationLevel verification = 4;
-  string arban_id = 5;
+  string arbad_id = 5;
 }
 
 message CensusData {
   uint64 total_citizens = 1;
-  uint64 total_arbans = 2;
+  uint64 total_arbads = 2;
   uint64 verified_citizens = 3;
 }
 ```
@@ -225,20 +225,20 @@ message CensusData {
 
 ---
 
-### x/arban Module (Days 12-14)
+### x/arbad Module (Days 12-14)
 
 #### Tasks
-- [ ] Scaffold x/arban module
-- [ ] Family arban type
-- [ ] Organizational arban type
+- [ ] Scaffold x/arbad module
+- [ ] Family arbad type
+- [ ] Organizational arbad type
 - [ ] Member management
 - [ ] Hierarchy queries
 
 ```protobuf
-// proto/altan/arban/v1/arban.proto
-message Arban {
+// proto/altan/arbad/v1/arbad.proto
+message Arbad {
   string id = 1;
-  ArbanType type = 2;  // FAMILY or ORGANIZATIONAL
+  ArbadType type = 2;  // FAMILY or ORGANIZATIONAL
   string name = 3;
   repeated Member members = 4;
   string khural_id = 5;
@@ -253,7 +253,7 @@ message Member {
 
 **Deliverables Week 2**:
 - ✅ x/citizen module complete
-- ✅ x/arban module complete
+- ✅ x/arbad module complete
 - ✅ Integration between modules
 - ✅ Tests for both modules
 
@@ -265,17 +265,17 @@ message Member {
 
 #### Days 15-17: Core Structure
 - [ ] Scaffold x/khural module
-- [ ] Define 4 levels (Arban, Zun, Myangan, Tumen)
+- [ ] Define 4 levels (Arbad, Zun, Myangad, Tumed)
 - [ ] Proposal creation
 - [ ] Voting mechanism
 
 ```protobuf
 // proto/altan/khural/v1/khural.proto
 enum KhuralLevel {
-  ARBAN = 0;    // 10 families
+  ARBAD = 0;    // 10 families
   ZUN = 1;      // 100 families
-  MYANGAN = 2;  // 1,000 families
-  TUMEN = 3;    // 10,000 families
+  MYANGAD = 2;  // 1,000 families
+  TUMED = 3;    // 10,000 families
 }
 
 message Khural {
@@ -341,7 +341,7 @@ func (k Keeper) TallyVotes(ctx context.Context, proposalId uint64) (*VotingResul
 
 #### Days 20-21: Integration
 - [ ] Connect with x/citizen (voter eligibility)
-- [ ] Connect with x/arban (representation)
+- [ ] Connect with x/arbad (representation)
 - [ ] CLI commands
 - [ ] Tests
 
@@ -349,7 +349,7 @@ func (k Keeper) TallyVotes(ctx context.Context, proposalId uint64) (*VotingResul
 - ✅ x/khural 4-level hierarchy
 - ✅ Proposal system
 - ✅ Voting mechanism
-- ✅ Full integration with citizen/arban
+- ✅ Full integration with citizen/arbad
 
 ---
 
@@ -441,7 +441,7 @@ func (k Keeper) Transfer(ctx context.Context, from, to string, amount sdk.Coins)
 
 ```yaml
 Test Scenarios:
-1. Citizen registers → Joins arban → Votes
+1. Citizen registers → Joins arbad → Votes
 2. Central bank emits → Bank receives → Transfer with fee
 3. Proposal created → Voted → Executed
 4. Law frozen → No more changes
@@ -558,9 +558,9 @@ Infrastructure:
 - ✅ 80%+ test coverage
 
 ### Phase 3 (Week 2)
-- ✅ Citizens can register and join arbans
+- ✅ Citizens can register and join arbads
 - ✅ Census query returns correct data
-- ✅ Arban hierarchy queries work
+- ✅ Arbad hierarchy queries work
 
 ### Phase 4 (Week 3)
 - ✅ 4-level Khural structure functional
@@ -625,7 +625,7 @@ altan/
 │   └── altan/
 │       ├── corelaw/v1/
 │       ├── citizen/v1/
-│       ├── arban/v1/
+│       ├── arbad/v1/
 │       ├── khural/v1/
 │       ├── centralbank/v1/
 │       └── banking/v1/
@@ -636,7 +636,7 @@ altan/
 │   │   ├── genesis.go
 │   │   └── module.go
 │   ├── citizen/
-│   ├── arban/
+│   ├── arbad/
 │   ├── khural/
 │   ├── centralbank/
 │   └── banking/

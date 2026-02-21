@@ -171,7 +171,7 @@ export interface GuildMember {
 // KHURAL
 // ============================================================
 
-export type KhuralLevel = 'ARBAN' | 'ZUUN' | 'MYANGAN' | 'TUMEN';
+export type KhuralLevel = 'ARBAD' | 'ZUUN' | 'MYANGAD' | 'TUMED';
 
 export interface KhuralGroup {
   id: string;
@@ -260,10 +260,10 @@ export interface CourtCaseStats {
 // ============================================================
 
 export type OrganizationType =
-  | 'ARBAN'
+  | 'ARBAD'
   | 'ZUN'
-  | 'MYANGAN'
-  | 'TUMEN'
+  | 'MYANGAD'
+  | 'TUMED'
   | 'REPUBLIC'
   | 'CONFEDERATION'
   | 'GUILD'

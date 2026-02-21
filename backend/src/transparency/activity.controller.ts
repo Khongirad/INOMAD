@@ -32,7 +32,7 @@ export class ActivityController {
       actionDescription: string;
       actionParameters: Record<string, any>;
       powerBranch: PowerBranchType;
-      orgArbanId?: string;
+      orgArbadId?: string;
       hierarchyLevel?: HierarchyLevel;
       durationMinutes?: number;
     },

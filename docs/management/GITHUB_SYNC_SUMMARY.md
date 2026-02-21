@@ -86,7 +86,7 @@
 **Application Layer:**
 1. **Authentication & Identity** - Web3Auth MPC, JWT, Citizen Registry
 2. **Government Services** - Migration, ZAGS, Land Registry, State Archive
-3. **Guild Platform** - Arban System, Credit/Lending, Digital Seal, Education, Election
+3. **Guild Platform** - Arbad System, Credit/Lending, Digital Seal, Education, Election
 4. **Marketplace & Economy** - Product Listings, Orders, Escrow, Reputation (🆕)
 5. **Cultural Systems** - Dual Calendar, Timeline, Temple of Heaven
 
@@ -98,7 +98,7 @@
 
 **Data Layer:**
 - 6 PostgreSQL баз данных (изолированные для приватности)
-- Main DB: Users, Arbans, Bank, Wallet
+- Main DB: Users, Arbads, Bank, Wallet
 - Migration DB: Encrypted passport data
 - ZAGS DB: Civil registry
 - Land Registry DB: Property ownership
@@ -106,7 +106,7 @@
 
 **Blockchain Layer:**
 - Base Sepolia Testnet
-- Smart Contracts: ArbanKhural, BankOfSiberia, DigitalSeal, Academy, **MarketplaceEscrow (🆕)**
+- Smart Contracts: ArbadKhural, BankOfSiberia, DigitalSeal, Academy, **MarketplaceEscrow (🆕)**
 
 ---
 

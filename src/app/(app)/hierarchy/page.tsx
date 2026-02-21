@@ -15,7 +15,7 @@ import { api } from '@/lib/api/client';
 
 const LEVELS = [
   {
-    key: 'arban',  int: 1,    label: 'Арбан',    sub: '10 граждан',      color: 'amber',
+    key: 'arbad',  int: 1,    label: 'Арбан',    sub: '10 граждан',      color: 'amber',
     icon: <Users className="h-5 w-5" />,
     description: 'Базовая ячейка. Семьи, соседи, малый бизнес. Вы избираете лидера Арбана.',
   },
@@ -25,12 +25,12 @@ const LEVELS = [
     description: 'Округ. 10 Арбанов. Лидеры Арбанов избирают главу Зуна по 4 ветвям.',
   },
   {
-    key: 'myangan', int: 100, label: 'Мьянган',  sub: '1 000 граждан',   color: 'blue',
+    key: 'myangad', int: 100, label: 'Мьянган',  sub: '1 000 граждан',   color: 'blue',
     icon: <Shield className="h-5 w-5" />,
     description: 'Район. 10 Зунов. Главы Зунов избирают главу Мьянгана.',
   },
   {
-    key: 'tumen',  int: 1000, label: 'Тумэн',    sub: '10 000 граждан',  color: 'purple',
+    key: 'tumed',  int: 1000, label: 'Тумэн',    sub: '10 000 граждан',  color: 'purple',
     icon: <Globe className="h-5 w-5" />,
     description: 'Город / провинция. 10 Мьянганов. Управляет территориальной автономией.',
   },
@@ -57,7 +57,7 @@ const POWERS: Record<string, {
   judicial:   { label: string; desc: string; href: string; icon: React.ReactNode }[];
   forum:      { label: string; desc: string; href: string; icon: React.ReactNode }[];
 }> = {
-  arban: {
+  arbad: {
     governance: [
       { label: 'Выборы Арбана',  desc: 'Избрать лидера по каждой ветви власти', href: '/elections/khural', icon: <Vote className="h-4 w-4" /> },
       { label: 'Дашборд',       desc: 'Состояние государства на уровне Арбана',  href: '/governance',       icon: <Activity className="h-4 w-4" /> },
@@ -94,7 +94,7 @@ const POWERS: Record<string, {
       { label: 'Площадь Зуна',  desc: 'Петиции и дебаты на уровне Зуна',        href: '/square',            icon: <Megaphone className="h-4 w-4" /> },
     ],
   },
-  myangan: {
+  myangad: {
     governance: [
       { label: 'Выборы Мьянгана', desc: 'Главы Зунов избирают власть района',   href: '/elections/khural',  icon: <Vote className="h-4 w-4" /> },
       { label: 'Государство',    desc: 'Полный статус государственного аппарата', href: '/governance',        icon: <Activity className="h-4 w-4" /> },
@@ -116,7 +116,7 @@ const POWERS: Record<string, {
       { label: 'Архив',          desc: 'История решений Мьянгана',               href: '/registries/history', icon: <FileText className="h-4 w-4" /> },
     ],
   },
-  tumen: {
+  tumed: {
     governance: [
       { label: 'Выборы Тумэна',  desc: 'Главы Мьянганов избирают власть Тумэна', href: '/elections/khural', icon: <Vote className="h-4 w-4" /> },
       { label: 'Дашборд',        desc: 'Полный государственный дашборд Тумэна',   href: '/governance',        icon: <Activity className="h-4 w-4" /> },
@@ -231,7 +231,7 @@ function LevelPanel({ lvl }: { lvl: typeof LEVELS[0] }) {
 // ── Main ──────────────────────────────────────────────────────────────────
 
 export default function HierarchyPage() {
-  const [activeLvl, setActiveLvl] = useState('arban');
+  const [activeLvl, setActiveLvl] = useState('arbad');
   const [stats, setStats] = useState<{ citizens?: number; orgs?: number; elections?: number } | null>(null);
 
   useEffect(() => {

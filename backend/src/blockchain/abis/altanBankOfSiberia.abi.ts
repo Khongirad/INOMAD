@@ -1,11 +1,11 @@
 /**
  * Updated ABI for AltanBankOfSiberia contract
- * Includes new tier distribution system for Family and Organizational Arbans
+ * Includes new tier distribution system for Family and Organizational Arbads
  */
 export const AltanBankOfSiberia_ABI = [
   // ==================== ADMIN ====================
   
-  'function setArbanCompletion(address arbanCompletion_)',
+  'function setArbadCompletion(address arbadCompletion_)',
   'function setTierAmounts(uint256 tier1, uint256 tier2Family, uint256 tier2Org, uint256 tier3Family, uint256 tier3Org)',
   'function addBanker(address banker)',
   'function removeBanker(address banker)',
@@ -39,10 +39,10 @@ export const AltanBankOfSiberia_ABI = [
   'function hasReceivedTier(uint256 seatId, uint256 tier) view returns (bool)',
   
   // Pending distributions
-  'function pendingDistributions(uint256 idx) view returns (uint256 seatId, uint256 accountId, uint256 tier, uint8 arbanType, uint256 arbanId, uint256 amount, uint256 requestedAt, bool approved, bool rejected, address approvedBy, uint256 approvedAt)',
+  'function pendingDistributions(uint256 idx) view returns (uint256 seatId, uint256 accountId, uint256 tier, uint8 arbadType, uint256 arbadId, uint256 amount, uint256 requestedAt, bool approved, bool rejected, address approvedBy, uint256 approvedAt)',
   
   // State
-  'function arbanCompletion() view returns (address)',
+  'function arbadCompletion() view returns (address)',
   'function totalDistributed() view returns (uint256)',
   'function distributionPool() view returns (address)',
   
@@ -63,7 +63,7 @@ export const AltanBankOfSiberia_ABI = [
 /**
  * Enums for AltanBankOfSiberia
  */
-export enum ArbanTypeDistrib {
+export enum ArbadTypeDistrib {
   NONE = 0,
   FAMILY = 1,
   ORG = 2,

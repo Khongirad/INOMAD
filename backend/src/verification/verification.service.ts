@@ -312,7 +312,7 @@ export class VerificationService {
     // ── BIRTHRIGHT DISTRIBUTION ─────────────────────────────────────────────
     // Automatically distribute ALTAN to newly verified citizen.
     // UNVERIFIED → receives 100 ALTAN on registration (registerCitizenForDistribution)
-    // ARBAN_VERIFIED → receives 900 more (total 1,000 ALTAN)
+    // ARBAD_VERIFIED → receives 900 more (total 1,000 ALTAN)
     // Fails silently if distribution pool not initialized yet.
     try {
       // Ensure citizen is registered in distribution system first
@@ -322,7 +322,7 @@ export class VerificationService {
     }
 
     try {
-      await this.distributionService.distributeByLevel(verifiedId, 'ARBAN_VERIFIED');
+      await this.distributionService.distributeByLevel(verifiedId, 'ARBAD_VERIFIED');
       this.logger.log(`✅ Birthright ALTAN distributed to newly verified citizen ${verifiedId}`);
     } catch (e) {
       // Pool not initialized or user already received — log and continue

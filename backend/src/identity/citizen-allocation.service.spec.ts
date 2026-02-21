@@ -29,10 +29,10 @@ describe('CitizenAllocationService', () => {
         findFirst: jest.fn().mockResolvedValue(null),
         findMany: jest.fn().mockResolvedValue([]),
       },
-      familyArban: {
+      familyArbad: {
         findUnique: jest.fn().mockResolvedValue(null),
       },
-      orgArbanMember: {
+      orgArbadMember: {
         findFirst: jest.fn().mockResolvedValue(null),
       },
       zun: {
@@ -92,53 +92,53 @@ describe('CitizenAllocationService', () => {
   describe('allocateLevel2Funds', () => {
     it('skips when already allocated', async () => {
       prisma.altanTransaction.findFirst.mockResolvedValue({ id: 'existing' });
-      const r = await service.allocateLevel2Funds('u1', 'arban1');
+      const r = await service.allocateLevel2Funds('u1', 'arbad1');
       expect(r.allocated).toBe(false);
       expect(r.amount).toBe(0);
     });
     it('throws when user not found', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
-      await expect(service.allocateLevel2Funds('u1', 'arban1')).rejects.toThrow('not found');
+      await expect(service.allocateLevel2Funds('u1', 'arbad1')).rejects.toThrow('not found');
     });
-    it('throws when not arban member', async () => {
+    it('throws when not arbad member', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'SEAT-001' });
       await expect(service.allocateLevel2Funds('u1', '99999')).rejects.toThrow('not a member');
     });
-    it('allocates when member via family arban (husband)', async () => {
+    it('allocates when member via family arbad (husband)', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'SEAT-001' });
-      prisma.familyArban.findUnique.mockResolvedValue({
+      prisma.familyArbad.findUnique.mockResolvedValue({
         husbandSeatId: 'SEAT-001', wifeSeatId: 'SEAT-002', children: [],
       });
       const r = await service.allocateLevel2Funds('u1', '10001');
       expect(r.allocated).toBe(true);
       expect(r.amount).toBe(5000);
     });
-    it('allocates when member via family arban (wife)', async () => {
+    it('allocates when member via family arbad (wife)', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'SEAT-002' });
-      prisma.familyArban.findUnique.mockResolvedValue({
+      prisma.familyArbad.findUnique.mockResolvedValue({
         husbandSeatId: 'SEAT-001', wifeSeatId: 'SEAT-002', children: [],
       });
       const r = await service.allocateLevel2Funds('u1', '10001');
       expect(r.allocated).toBe(true);
     });
-    it('allocates when member via family arban (child)', async () => {
+    it('allocates when member via family arbad (child)', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'SEAT-003' });
-      prisma.familyArban.findUnique.mockResolvedValue({
+      prisma.familyArbad.findUnique.mockResolvedValue({
         husbandSeatId: 'SEAT-001', wifeSeatId: 'SEAT-002',
         children: [{ childSeatId: 'SEAT-003' }],
       });
       const r = await service.allocateLevel2Funds('u1', '10001');
       expect(r.allocated).toBe(true);
     });
-    it('allocates when member via org arban', async () => {
+    it('allocates when member via org arbad', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'SEAT-001' });
-      prisma.orgArbanMember.findFirst.mockResolvedValue({ seatId: 'SEAT-001' });
+      prisma.orgArbadMember.findFirst.mockResolvedValue({ seatId: 'SEAT-001' });
       const r = await service.allocateLevel2Funds('u1', '12345');
       expect(r.allocated).toBe(true);
     });
     it('throws when pension fund not found', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'SEAT-001' });
-      prisma.familyArban.findUnique.mockResolvedValue({
+      prisma.familyArbad.findUnique.mockResolvedValue({
         husbandSeatId: 'SEAT-001', wifeSeatId: null, children: [],
       });
       prisma.user.findFirst.mockResolvedValue(null);
@@ -164,7 +164,7 @@ describe('CitizenAllocationService', () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'SEAT-001' });
       prisma.zun.findUnique.mockResolvedValue({
         id: 'zun1',
-        memberArbans: [
+        memberArbads: [
           { husbandSeatId: 'SEAT-001', wifeSeatId: null, children: [] },
         ],
       });
@@ -195,10 +195,10 @@ describe('CitizenAllocationService', () => {
     });
   });
 
-  describe('verifyArbanMembership (private)', () => {
+  describe('verifyArbadMembership (private)', () => {
     it('returns false when user has no seatId', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: null });
-      const r = await (service as any).verifyArbanMembership('u1', '99999');
+      const r = await (service as any).verifyArbadMembership('u1', '99999');
       expect(r).toBe(false);
     });
   });
@@ -209,9 +209,9 @@ describe('CitizenAllocationService', () => {
       const r = await (service as any).verifyZunMembership('u1', 'zun1');
       expect(r).toBe(false);
     });
-    it('returns false when zun has no member arbans', async () => {
+    it('returns false when zun has no member arbads', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', seatId: 'S1' });
-      prisma.zun.findUnique.mockResolvedValue({ memberArbans: [] });
+      prisma.zun.findUnique.mockResolvedValue({ memberArbads: [] });
       const r = await (service as any).verifyZunMembership('u1', 'zun1');
       expect(r).toBe(false);
     });

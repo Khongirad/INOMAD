@@ -7,7 +7,7 @@ import { Public } from '../auth/decorators/public.decorator';
 
 /**
  * PUBLIC Transparency Controller - No authentication required
- * All endpoints accessible to any arban member
+ * All endpoints accessible to any arbad member
  */
 @Public()
 @ApiTags('Transparency')
@@ -141,7 +141,7 @@ export class TransparencyController {
   @Get('export/summary')
   
   async exportSummary(
-    @Query('orgArbanId') orgArbanId?: string,
+    @Query('orgArbadId') orgArbadId?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('powerBranch') powerBranch?: PowerBranchType,
@@ -150,7 +150,7 @@ export class TransparencyController {
     const end = endDate ? new Date(endDate) : new Date();
 
     return this.activityService.generateActivitySummary({
-      orgArbanId,
+      orgArbadId,
       startDate: start,
       endDate: end,
       powerBranch,

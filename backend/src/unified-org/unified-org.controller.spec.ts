@@ -24,10 +24,10 @@ describe('UnifiedOrgController', () => {
       getPermissions: jest.fn().mockResolvedValue({}),
       setPermissions: jest.fn().mockResolvedValue({ set: true }),
       rateOrganization: jest.fn().mockResolvedValue({ rated: true }),
-      createMyangan: jest.fn().mockResolvedValue({ id: 'm1' }),
-      assignZunToMyangan: jest.fn().mockResolvedValue({ assigned: true }),
-      createTumen: jest.fn().mockResolvedValue({ id: 't1' }),
-      assignMyanganToTumen: jest.fn().mockResolvedValue({ assigned: true }),
+      createMyangad: jest.fn().mockResolvedValue({ id: 'm1' }),
+      assignZunToMyangad: jest.fn().mockResolvedValue({ assigned: true }),
+      createTumed: jest.fn().mockResolvedValue({ id: 't1' }),
+      assignMyangadToTumed: jest.fn().mockResolvedValue({ assigned: true }),
       createRepublic: jest.fn().mockResolvedValue({ id: 'r1' }),
     };
     const module: TestingModule = await Test.createTestingModule({
@@ -54,9 +54,9 @@ describe('UnifiedOrgController', () => {
   it('getPermissions', async () => { await controller.getPermissions('org1'); expect(service.getPermissions).toHaveBeenCalledWith('org1'); });
   it('setPermissions', async () => { await controller.setPermissions('org1', req, {} as any); expect(service.setPermissions).toHaveBeenCalledWith('org1', 'u1', {}); });
   it('rateOrganization', async () => { await controller.rateOrganization('org1', req, { category: 'SERVICE' as any, score: 5 } as any); expect(service.rateOrganization).toHaveBeenCalled(); });
-  it('createMyangan', async () => { await controller.createMyangan({} as any); expect(service.createMyangan).toHaveBeenCalled(); });
-  it('assignZunToMyangan', async () => { await controller.assignZunToMyangan('m1', 'z1'); expect(service.assignZunToMyangan).toHaveBeenCalledWith('z1', 'm1'); });
-  it('createTumen', async () => { await controller.createTumen({} as any); expect(service.createTumen).toHaveBeenCalled(); });
-  it('assignMyanganToTumen', async () => { await controller.assignMyanganToTumen('t1', 'm1'); expect(service.assignMyanganToTumen).toHaveBeenCalledWith('m1', 't1'); });
+  it('createMyangad', async () => { await controller.createMyangad({} as any); expect(service.createMyangad).toHaveBeenCalled(); });
+  it('assignZunToMyangad', async () => { await controller.assignZunToMyangad('m1', 'z1'); expect(service.assignZunToMyangad).toHaveBeenCalledWith('z1', 'm1'); });
+  it('createTumed', async () => { await controller.createTumed({} as any); expect(service.createTumed).toHaveBeenCalled(); });
+  it('assignMyangadToTumed', async () => { await controller.assignMyangadToTumed('t1', 'm1'); expect(service.assignMyangadToTumed).toHaveBeenCalledWith('m1', 't1'); });
   it('createRepublic', async () => { await controller.createRepublic({} as any); expect(service.createRepublic).toHaveBeenCalled(); });
 });

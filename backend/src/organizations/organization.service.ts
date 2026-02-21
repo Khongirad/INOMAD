@@ -386,17 +386,17 @@ export class OrganizationService {
     // TODO: Additional family lineage verification
   }
 
-  // ============== My Arban (citizen's community) ==============
+  // ============== My Arbad (citizen's community) ==============
 
   /**
-   * Return the Arban-level org this user belongs to:
+   * Return the Arbad-level org this user belongs to:
    * priority 1 — they are the leader
    * priority 2 — they are an active member
-   * Returns null if the user has no Arban yet.
+   * Returns null if the user has no Arbad yet.
    */
-  async getMyArban(userId: string) {
-    // Try as leader first (level 1 = Arban)
-    let arban = await this.prisma.organization.findFirst({
+  async getMyArbad(userId: string) {
+    // Try as leader first (level 1 = Arbad)
+    let arbad = await this.prisma.organization.findFirst({
       where: { leaderId: userId, level: 1 },
       include: {
         leader: { select: { id: true, username: true, seatId: true, isVerified: true } },
@@ -410,7 +410,7 @@ export class OrganizationService {
       },
     });
 
-    if (!arban) {
+    if (!arbad) {
       // Try as member
       const membership = await this.prisma.organizationMember.findFirst({
         where: { userId, leftAt: null, organization: { level: 1 } },
@@ -429,25 +429,25 @@ export class OrganizationService {
           },
         },
       });
-      arban = membership?.organization ?? null;
+      arbad = membership?.organization ?? null;
     }
 
-    if (!arban) return null;
+    if (!arbad) return null;
 
     return {
-      ...arban,
-      isLeader: arban.leaderId === userId,
+      ...arbad,
+      isLeader: arbad.leaderId === userId,
     };
   }
 
   // ============== Network Visualization ==============
 
-  async getArbanNetwork(arbanId: string) {
+  async getArbadNetwork(arbadId: string) {
 
-    return this.prisma.arbanNetwork.findUnique({
-      where: { arbanId },
+    return this.prisma.arbadNetwork.findUnique({
+      where: { arbadId },
       include: {
-        arban: {
+        arbad: {
           include: {
             leader: true,
             members: true,
@@ -458,9 +458,9 @@ export class OrganizationService {
   }
 
   async getFullNetworkMap() {
-    const networks = await this.prisma.arbanNetwork.findMany({
+    const networks = await this.prisma.arbadNetwork.findMany({
       include: {
-        arban: {
+        arbad: {
           include: {
             leader: true,
           },
@@ -474,10 +474,10 @@ export class OrganizationService {
     // Transform to D3.js graph format
     return {
       nodes: networks.map((n) => ({
-        id: n.arbanId,
-        name: n.arban.name,
-        type: n.arban.type,
-        rating: Number(n.arban.overallRating),
+        id: n.arbadId,
+        name: n.arbad.name,
+        type: n.arbad.type,
+        rating: Number(n.arbad.overallRating),
         layer: n.layer,
         x: n.positionX,
         y: n.positionY,
@@ -486,7 +486,7 @@ export class OrganizationService {
       })),
       links: networks.flatMap((n) =>
         n.connectedTo.map((targetId) => ({
-          source: n.arbanId,
+          source: n.arbadId,
           target: targetId,
         })),
       ),

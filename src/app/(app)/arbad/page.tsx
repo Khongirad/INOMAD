@@ -34,7 +34,7 @@ interface OrgNode {
 
 const LEVELS = [
   {
-    n: 1, key: 'arban', label: 'Арбан', sub: '10 граждан',
+    n: 1, key: 'arbad', label: 'Арбан', sub: '10 граждан',
     color: 'amber',
     desc: 'Базовая ячейка гражданина. 10 человек — семьи, соседи. Самостоятельная или входит в Зун.',
     icon: <Users className="h-5 w-5" />,
@@ -48,14 +48,14 @@ const LEVELS = [
     powers: ['Общие квесты и контракты', 'Биржа ALTAN', 'Суд уровня округа', 'Законотворчество Зуна'],
   },
   {
-    n: 3, key: 'myangan', label: 'Мьянган', sub: '10 Зунов · 100 Арбанов · 1 000 граждан',
+    n: 3, key: 'myangad', label: 'Мьянган', sub: '10 Зунов · 100 Арбанов · 1 000 граждан',
     color: 'blue',
     desc: '10 Зунов = Мьянган (район). Главы Зунов избирают власть района. Своё казначейство и налоги.',
     icon: <Shield className="h-5 w-5" />,
     powers: ['Казначейство района', 'Государственные предприятия', 'Верховный суд района', 'Региональные законы'],
   },
   {
-    n: 4, key: 'tumen', label: 'Тумэн', sub: '10 Мьянганов · 1 000 Арбанов · 10 000 граждан',
+    n: 4, key: 'tumed', label: 'Тумэн', sub: '10 Мьянганов · 1 000 Арбанов · 10 000 граждан',
     color: 'purple',
     desc: '10 Мьянганов = Тумэн (провинция / город). Полная территориальная автономия. Суверенный фонд.',
     icon: <Globe className="h-5 w-5" />,
@@ -195,7 +195,7 @@ function ActiveLevel({ lvl, org }: { lvl: typeof LEVELS[0]; org: OrgNode }) {
   const fillPct = Math.round((memberCount / (lvl.n === 1 ? 10 : memberCount)) * 100);
 
   const ACTIONS: Record<string, { icon: React.ReactNode; l: string; d: string; href: string }[]> = {
-    arban: [
+    arbad: [
       { icon: <Vote className="h-4 w-4" />,         l: 'Выборы Хурала',   d: 'Избрать лидера Арбана по 4 ветвям',           href: '/elections/khural' },
       { icon: <Briefcase className="h-4 w-4" />,    l: 'Квесты',           d: 'Задачи для граждан Арбана',                   href: '/quests'           },
       { icon: <FileText className="h-4 w-4" />,     l: 'Контракты',        d: 'Договоры между гражданами',                   href: '/chancellery'      },
@@ -209,14 +209,14 @@ function ActiveLevel({ lvl, org }: { lvl: typeof LEVELS[0]; org: OrgNode }) {
       { icon: <Gavel className="h-4 w-4" />,        l: 'Суд Зуна',       d: 'Дела уровня округа',                          href: '/judicial'         },
       { icon: <Activity className="h-4 w-4" />,     l: 'Дашборд',         d: 'Состояние власти на уровне Зуна',             href: '/governance'       },
     ],
-    myangan: [
+    myangad: [
       { icon: <Vote className="h-4 w-4" />,         l: 'Выборы Мьянгана', d: 'Главы Зунов избирают районную власть',        href: '/elections/khural' },
       { icon: <BarChart3 className="h-4 w-4" />,    l: 'Казначейство',    d: 'Бюджет и налоги района',                     href: '/treasury'         },
       { icon: <Building2 className="h-4 w-4" />,    l: 'Гос. предприятия', d: 'Корпорации уровня Мьянгана',                href: '/cooperatives'     },
       { icon: <Scale className="h-4 w-4" />,        l: 'Суд Мьянгана',   d: 'Уголовные и административные дела',           href: '/judicial'         },
       { icon: <FileText className="h-4 w-4" />,     l: 'Парламент',       d: 'Законодательные инициативы района',           href: '/parliament'       },
     ],
-    tumen: [
+    tumed: [
       { icon: <Crown className="h-4 w-4" />,        l: 'Хурал Тумэна',   d: 'Верховная палата Тумэна',                     href: '/khural'           },
       { icon: <Star className="h-4 w-4" />,         l: 'Суверенный Фонд', d: 'Инвестиции и стратегические резервы',        href: '/fund'             },
       { icon: <Zap className="h-4 w-4" />,          l: 'Казначейство',    d: 'Государственный бюджет Тумэна',              href: '/treasury'         },
@@ -270,8 +270,8 @@ function ActiveLevel({ lvl, org }: { lvl: typeof LEVELS[0]; org: OrgNode }) {
       {/* Body */}
       <div className="p-5 space-y-5">
 
-        {/* Members (only for Arban level — small enough to show) */}
-        {lvl.key === 'arban' && org.members && org.members.length > 0 && (
+        {/* Members (only for Arbad level — small enough to show) */}
+        {lvl.key === 'arbad' && org.members && org.members.length > 0 && (
           <div>
             <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-2">
               👥 Члены ({org.members.length}/10)
@@ -301,11 +301,11 @@ function ActiveLevel({ lvl, org }: { lvl: typeof LEVELS[0]; org: OrgNode }) {
         )}
 
         {/* Child count for higher levels */}
-        {lvl.key !== 'arban' && org.children && (
+        {lvl.key !== 'arbad' && org.children && (
           <div>
             <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mb-2">
               {lvl.key === 'zun' ? '🏘 Арбаны'
-                : lvl.key === 'myangan' ? '🏙 Зуны'
+                : lvl.key === 'myangad' ? '🏙 Зуны'
                 : '🌆 Мьянганы'} ({org.children.length}/{10})
             </p>
             <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
@@ -342,21 +342,21 @@ function ActiveLevel({ lvl, org }: { lvl: typeof LEVELS[0]; org: OrgNode }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────
 
-export default function ArbanPage() {
+export default function ArbadPage() {
   const [loading, setLoading] = useState(true);
-  // hierarchy: [arban, zun, myangan, tumen] — null if not member
+  // hierarchy: [arbad, zun, myangad, tumed] — null if not member
   const [hierarchy, setHierarchy] = useState<(OrgNode | null)[]>([null, null, null, null]);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        // Step 1: load the user's Arban
-        const arban = await api.get<OrgNode>('/organizations/my-arban').catch(() => null);
-        const chain: (OrgNode | null)[] = [arban, null, null, null];
+        // Step 1: load the user's Arbad
+        const arbad = await api.get<OrgNode>('/organizations/my-arbad').catch(() => null);
+        const chain: (OrgNode | null)[] = [arbad, null, null, null];
 
         // Step 2: walk up the parent chain via parent.id
-        let cursor: OrgNode | null = arban;
+        let cursor: OrgNode | null = arbad;
         for (let i = 1; i < 4 && cursor?.parent?.id; i++) {
           try {
             cursor = await api.get<OrgNode>(`/organizations/${cursor.parent.id}`);
@@ -422,7 +422,7 @@ export default function ArbanPage() {
           })}
         </div>
 
-        {/* No Arban at all */}
+        {/* No Arbad at all */}
         {!hierarchy[0] && (
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 text-center mb-6">
             <Users className="h-10 w-10 text-amber-400 mx-auto mb-3" />

@@ -12,7 +12,7 @@ import {
   HttpStatus,
   ParseIntPipe,
 } from '@nestjs/common';
-import { FamilyArbanService } from './family-arban.service';
+import { FamilyArbadService } from './family-arbad.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ethers } from 'ethers';
 import {
@@ -20,126 +20,126 @@ import {
   AddChildRequest,
   ChangeHeirRequest,
   SetKhuralRepRequest,
-} from './types/arban.types';
+} from './types/arbad.types';
 
-@ApiTags('Arbans')
-@Controller('arbans/family')
+@ApiTags('Arbads')
+@Controller('arbads/family')
 @UseGuards(JwtAuthGuard)
-export class FamilyArbanController {
-  constructor(private readonly familyArbanService: FamilyArbanService) {}
+export class FamilyArbadController {
+  constructor(private readonly familyArbadService: FamilyArbadService) {}
 
   /**
-   * Register marriage and create Family Arban
-   * POST /arbans/family/marriage
+   * Register marriage and create Family Arbad
+   * POST /arbads/family/marriage
    */
   @Post('marriage')
   @HttpCode(HttpStatus.CREATED)
   async registerMarriage(@Body() request: RegisterMarriageRequest, @Request() req: any) {
     // Get user's wallet from request body (privateKey sent by client)
     const wallet = this.getWalletFromRequest(req, request.privateKey);
-    return await this.familyArbanService.registerMarriage(request, wallet);
+    return await this.familyArbadService.registerMarriage(request, wallet);
   }
 
   /**
-   * Add child to Family Arban
-   * POST /arbans/family/:arbanId/children
+   * Add child to Family Arbad
+   * POST /arbads/family/:arbadId/children
    */
-  @Post(':arbanId/children')
+  @Post(':arbadId/children')
   @HttpCode(HttpStatus.CREATED)
   async addChild(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { childSeatId: string; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
-    const request: AddChildRequest = { arbanId, childSeatId: body.childSeatId };
-    await this.familyArbanService.addChild(request, wallet);
+    const request: AddChildRequest = { arbadId, childSeatId: body.childSeatId };
+    await this.familyArbadService.addChild(request, wallet);
     return { success: true, message: 'Child added successfully' };
   }
 
   /**
    * Change heir
-   * PUT /arbans/family/:arbanId/heir
+   * PUT /arbads/family/:arbadId/heir
    */
-  @Put(':arbanId/heir')
+  @Put(':arbadId/heir')
   @HttpCode(HttpStatus.OK)
   async changeHeir(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { newHeirSeatId: string; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
-    const request: ChangeHeirRequest = { arbanId, newHeirSeatId: body.newHeirSeatId };
-    await this.familyArbanService.changeHeir(request, wallet);
+    const request: ChangeHeirRequest = { arbadId, newHeirSeatId: body.newHeirSeatId };
+    await this.familyArbadService.changeHeir(request, wallet);
     return { success: true, message: 'Heir changed successfully' };
   }
 
   /**
    * Set Khural representative
-   * POST /arbans/family/:arbanId/khural-rep
+   * POST /arbads/family/:arbadId/khural-rep
    */
-  @Post(':arbanId/khural-rep')
+  @Post(':arbadId/khural-rep')
   @HttpCode(HttpStatus.OK)
   async setKhuralRep(
-    @Param('arbanId', ParseIntPipe) arbanId: number,
+    @Param('arbadId', ParseIntPipe) arbadId: number,
     @Body() body: { repSeatId: string; birthYear: number; privateKey?: string },
     @Request() req: any,
   ) {
     const wallet = this.getWalletFromRequest(req, body.privateKey);
     const request: SetKhuralRepRequest = {
-      arbanId,
+      arbadId,
       repSeatId: body.repSeatId,
       birthYear: body.birthYear,
     };
-    await this.familyArbanService.setKhuralRepresentative(request, wallet);
+    await this.familyArbadService.setKhuralRepresentative(request, wallet);
     return { success: true, message: 'Khural representative set successfully' };
   }
 
   /**
    * Get all Khural representatives
-   * GET /arbans/family/khural-reps
+   * GET /arbads/family/khural-reps
    */
   @Get('khural-reps')
   async getKhuralRepresentatives() {
-    return await this.familyArbanService.getKhuralRepresentatives();
+    return await this.familyArbadService.getKhuralRepresentatives();
   }
 
   /**
-   * Get Family Arban by ID
-   * GET /arbans/family/:arbanId
+   * Get Family Arbad by ID
+   * GET /arbads/family/:arbadId
    */
-  @Get(':arbanId')
-  async getFamilyArban(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.familyArbanService.getFamilyArban(arbanId);
+  @Get(':arbadId')
+  async getFamilyArbad(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.familyArbadService.getFamilyArbad(arbadId);
   }
 
   /**
-   * Get Family Arban by seat ID
-   * GET /arbans/family/by-seat/:seatId
+   * Get Family Arbad by seat ID
+   * GET /arbads/family/by-seat/:seatId
    */
   @Get('by-seat/:seatId')
-  async getFamilyArbanBySeat(@Param('seatId') seatId: string) {
-    return await this.familyArbanService.getFamilyArbanBySeat(seatId);
+  async getFamilyArbadBySeat(@Param('seatId') seatId: string) {
+    return await this.familyArbadService.getFamilyArbadBySeat(seatId);
   }
 
   /**
    * Check Khural eligibility
-   * GET /arbans/family/:arbanId/khural-eligible
+   * GET /arbads/family/:arbadId/khural-eligible
    */
-  @Get(':arbanId/khural-eligible')
-  async checkKhuralEligibility(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    const eligible = await this.familyArbanService.checkKhuralEligibility(arbanId);
-    return { arbanId, eligible };
+  @Get(':arbadId/khural-eligible')
+  async checkKhuralEligibility(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    const eligible = await this.familyArbadService.checkKhuralEligibility(arbadId);
+    return { arbadId, eligible };
   }
 
   /**
-   * Sync Family Arban from blockchain
-   * POST /arbans/family/:arbanId/sync
+   * Sync Family Arbad from blockchain
+   * POST /arbads/family/:arbadId/sync
    */
-  @Post(':arbanId/sync')
+  @Post(':arbadId/sync')
   @HttpCode(HttpStatus.OK)
-  async syncFromBlockchain(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    await this.familyArbanService.syncFromBlockchain(arbanId);
+  async syncFromBlockchain(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    await this.familyArbadService.syncFromBlockchain(arbadId);
     return { success: true, message: 'Sync completed' };
   }
 

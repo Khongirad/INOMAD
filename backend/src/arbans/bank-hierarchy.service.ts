@@ -4,18 +4,18 @@ import { ethers } from 'ethers';
 
 /**
  * @title BankHierarchyService
- * @notice Backend service for BankArbanHierarchy contract integration
+ * @notice Backend service for BankArbadHierarchy contract integration
  * 
  * Manages bank employee registration with citizen verification:
- * 1. Verifies employee is a citizen (has SeatSBT and Arban membership)
- * 2. Registers employee in BankArbanHierarchy
+ * 1. Verifies employee is a citizen (has SeatSBT and Arbad membership)
+ * 2. Registers employee in BankArbadHierarchy
  * 3. Tracks performance and hierarchy positions
  */
 @Injectable()
 export class BankHierarchyService {
   private readonly logger = new Logger(BankHierarchyService.name);
   private contract: ethers.Contract | null = null;
-  private arbanCompletionContract: ethers.Contract | null = null;
+  private arbadCompletionContract: ethers.Contract | null = null;
   private provider: ethers.Provider | null = null;
   private signer: ethers.Wallet | null = null;
 
@@ -35,10 +35,10 @@ export class BankHierarchyService {
     try {
       const rpcUrl = this.configService.get('ALTAN_RPC_URL');
       const contractAddress = this.configService.get('BANK_HIERARCHY_ADDRESS');
-      const arbanCompletionAddress = this.configService.get('ARBAN_COMPLETION_ADDRESS');
+      const arbadCompletionAddress = this.configService.get('ARBAD_COMPLETION_ADDRESS');
       const privateKey = this.configService.get('BANK_ADMIN_PRIVATE_KEY');
 
-      if (!rpcUrl || !contractAddress || !arbanCompletionAddress) {
+      if (!rpcUrl || !contractAddress || !arbadCompletionAddress) {
         this.logger.warn('Bank hierarchy contract not configured');
         return;
       }
@@ -46,22 +46,22 @@ export class BankHierarchyService {
       this.provider = new ethers.JsonRpcProvider(rpcUrl);
       this.signer = new ethers.Wallet(privateKey, this.provider);
 
-      // BankArbanHierarchy ABI (simplified)
+      // BankArbadHierarchy ABI (simplified)
       const hierarchyAbi = [
-        'function registerEmployee(uint256 arbanId, address wallet, uint256 seatId) external returns (uint256)',
-        'function getEmployee(uint256 id) external view returns (tuple(uint256 id, address wallet, uint256 seatId, uint256 arbanId, uint64 joinedAt, uint64 lastActiveAt, uint256 performanceScore, bool isActive))',
-        'function getHierarchyPath(uint256 employeeId) external view returns (uint256 arbanId, uint256 zunId, uint256 myanganId, uint256 tumenId)',
+        'function registerEmployee(uint256 arbadId, address wallet, uint256 seatId) external returns (uint256)',
+        'function getEmployee(uint256 id) external view returns (tuple(uint256 id, address wallet, uint256 seatId, uint256 arbadId, uint64 joinedAt, uint64 lastActiveAt, uint256 performanceScore, bool isActive))',
+        'function getHierarchyPath(uint256 employeeId) external view returns (uint256 arbadId, uint256 zunId, uint256 myangadId, uint256 tumedId)',
         'function updatePerformance(uint256 employeeId, uint256 newScore) external',
         'function canBePromoted(uint256 employeeId) external view returns (bool)',
       ];
 
-      // ArbanCompletion ABI
-      const arbanAbi = [
-        'function getArbanTypeForSeat(uint256 seatId) external view returns (uint8 arbanType, uint256 arbanId)',
+      // ArbadCompletion ABI
+      const arbadAbi = [
+        'function getArbadTypeForSeat(uint256 seatId) external view returns (uint8 arbadType, uint256 arbadId)',
       ];
 
       this.contract = new ethers.Contract(contractAddress, hierarchyAbi, this.signer);
-      this.arbanCompletionContract = new ethers.Contract(arbanCompletionAddress, arbanAbi, this.provider);
+      this.arbadCompletionContract = new ethers.Contract(arbadCompletionAddress, arbadAbi, this.provider);
 
       this.logger.log('BankHierarchy contract initialized');
     } catch (error) {
@@ -77,25 +77,25 @@ export class BankHierarchyService {
   async registerEmployee(employeeData: {
     seatId: number;
     wallet: string;
-    bankArbanId: number; // Bank Arban (10-person unit)
+    bankArbadId: number; // Bank Arbad (10-person unit)
   }): Promise<number> {
     if (!this.contract) {
       throw new Error('Contract not initialized');
     }
 
-    // 1. Verify citizen exists in ArbanCompletion
-    const arbanMembership = await this.verifyArbanMembership(employeeData.seatId);
+    // 1. Verify citizen exists in ArbadCompletion
+    const arbadMembership = await this.verifyArbadMembership(employeeData.seatId);
     
-    if (!arbanMembership.isCitizen) {
-      throw new Error('Employee must be a citizen with Arban membership');
+    if (!arbadMembership.isCitizen) {
+      throw new Error('Employee must be a citizen with Arbad membership');
     }
 
     this.logger.log(`Registering employee: seatId=${employeeData.seatId}, wallet=${employeeData.wallet}`);
 
-    // 2. Register in BankArbanHierarchy
+    // 2. Register in BankArbadHierarchy
     try {
       const tx = await this.contract.registerEmployee(
-        employeeData.bankArbanId,
+        employeeData.bankArbadId,
         employeeData.wallet,
         employeeData.seatId
       );
@@ -129,28 +129,28 @@ export class BankHierarchyService {
   }
 
   /**
-   * Verify citizen has Arban membership
+   * Verify citizen has Arbad membership
    */
-  private async verifyArbanMembership(seatId: number): Promise<{
+  private async verifyArbadMembership(seatId: number): Promise<{
     isCitizen: boolean;
-    arbanType: 'FAMILY' | 'ORGANIZATIONAL' | 'NONE';
-    arbanId: number;
+    arbadType: 'FAMILY' | 'ORGANIZATIONAL' | 'NONE';
+    arbadId: number;
   }> {
-    if (!this.arbanCompletionContract) {
-      throw new Error('ArbanCompletion contract not initialized');
+    if (!this.arbadCompletionContract) {
+      throw new Error('ArbadCompletion contract not initialized');
     }
 
-    const result = await this.arbanCompletionContract.getArbanTypeForSeat(seatId);
+    const result = await this.arbadCompletionContract.getArbadTypeForSeat(seatId);
     
-    const arbanType = result[0]; // 0=NONE, 1=FAMILY, 2=ORGANIZATIONAL
-    const arbanId = Number(result[1]);
+    const arbadType = result[0]; // 0=NONE, 1=FAMILY, 2=ORGANIZATIONAL
+    const arbadId = Number(result[1]);
 
     const typeMap = ['NONE', 'FAMILY', 'ORGANIZATIONAL'];
     
     return {
-      isCitizen: arbanType !== 0,
-      arbanType: typeMap[arbanType] as any,
-      arbanId,
+      isCitizen: arbadType !== 0,
+      arbadType: typeMap[arbadType] as any,
+      arbadId,
     };
   }
 
@@ -168,7 +168,7 @@ export class BankHierarchyService {
       id: Number(emp.id),
       wallet: emp.wallet,
       seatId: Number(emp.seatId),
-      arbanId: Number(emp.arbanId),
+      arbadId: Number(emp.arbadId),
       joinedAt: new Date(Number(emp.joinedAt) * 1000),
       lastActiveAt: new Date(Number(emp.lastActiveAt) * 1000),
       performanceScore: Number(emp.performanceScore),
@@ -187,10 +187,10 @@ export class BankHierarchyService {
     const path = await this.contract.getHierarchyPath(employeeId);
     
     return {
-      arbanId: Number(path[0]),
+      arbadId: Number(path[0]),
       zunId: Number(path[1]),
-      myanganId: Number(path[2]),
-      tumenId: Number(path[3]),
+      myangadId: Number(path[2]),
+      tumedId: Number(path[3]),
     };
   }
 

@@ -148,7 +148,7 @@ export default function ParliamentPage() {
           <div>
             <h1 className="text-2xl font-bold">Parliament / Parliament</h1>
             <p className="text-sm text-muted-foreground">
-              Khural — sessions and voting by Tumen leaders
+              Khural — sessions and voting by Tumed leaders
             </p>
           </div>
         </div>
@@ -193,8 +193,8 @@ export default function ParliamentPage() {
       )}
 
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm mb-4">
-        <strong>Only Tumen leaders</strong> have the right to vote in Khural.
-        In the Republican Khural, Tumen leaders of the Republic vote.
+        <strong>Only Tumed leaders</strong> have the right to vote in Khural.
+        In the Republican Khural, Tumed leaders of the Republic vote.
       </div>
 
       {/* Empty state */}
@@ -332,7 +332,7 @@ export default function ParliamentPage() {
                 {v.vote === 'AGAINST' && <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />}
                 {v.vote === 'ABSTAIN' && <MinusCircle className="h-3.5 w-3.5 text-orange-500 shrink-0" />}
                 <span className="text-sm">
-                  {v.voter?.username} ({v.tumen?.name})
+                  {v.voter?.username} ({v.tumed?.name})
                 </span>
                 {v.comment && (
                   <span className="text-xs text-muted-foreground ml-auto">"{v.comment}"</span>
@@ -402,7 +402,7 @@ export default function ParliamentPage() {
           </DialogHeader>
 
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-sm mb-2">
-            ⚠️ You are voting as a Tumen leader. One vote per session.
+            ⚠️ You are voting as a Tumed leader. One vote per session.
           </div>
 
           <div className="space-y-4">

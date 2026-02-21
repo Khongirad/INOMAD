@@ -16,10 +16,10 @@ Legislative Branch (Законодательная власть)
 │   ├── Manages all votes & proposals
 │   ├── Controlled by Legislative authority
 │   └── Used by:
-│       ├─ ArbanKhural (10 families)
+│       ├─ ArbadKhural (10 families)
 │       ├─ ZunKhural (100 families)
-│       ├─ MyangangKhural (1000 families)
-│       └─ TumenKhural (10000 families)
+│       ├─ MyangadgKhural (1000 families)
+│       └─ TumedKhural (10000 families)
 │
 ├── StatisticsBureau.sol (Бюро статистики)
 │   ├── Collects voting data
@@ -31,10 +31,10 @@ Legislative Branch (Законодательная власть)
 │       └─ Government
 │
 └── Khural Hierarchy
-    ├── ArbanKhural.sol (Arban level)
+    ├── ArbadKhural.sol (Arbad level)
     ├── ZunKhural.sol (Zun level)
-    ├── MyangangKhural.sol (Myangan level)
-    └── TumenKhural.sol (National level)
+    ├── MyangadgKhural.sol (Myangad level)
+    └── TumedKhural.sol (National level)
 ```
 
 ---
@@ -78,7 +78,7 @@ pm2 restart inomad-backend
 - JudicialMultiSig  
 - CitizenBank
 - InstitutionalBank
-- BankArbanHierarchy
+- BankArbadHierarchy
 
 **Time**: 4 hours
 
@@ -112,12 +112,12 @@ contract VotingCenter is AccessControl {
     bytes32 public constant KHURAL_ROLE = keccak256("KHURAL_ROLE");
     
     enum ProposalType {
-        ARBAN_BUDGET,      // Arban-level budget
-        ARBAN_LEADER,      // Elect Arban leader
+        ARBAD_BUDGET,      // Arbad-level budget
+        ARBAD_LEADER,      // Elect Arbad leader
         ZUN_POLICY,        // Zun-level policy
         ZUN_ELDER,         // Elect Zun elder
-        MYANGAN_LAW,       // Myangan regional law
-        TUMEN_NATIONAL,    // National legislation
+        MYANGAD_LAW,       // Myangad regional law
+        TUMED_NATIONAL,    // National legislation
         CONSTITUTIONAL     // Constitution amendment
     }
     
@@ -134,7 +134,7 @@ contract VotingCenter is AccessControl {
         uint256 id;
         ProposalType proposalType;
         address proposer;
-        uint256 khuralLevel;      // 1=Arban, 2=Zun, 3=Myangan, 4=Tumen
+        uint256 khuralLevel;      // 1=Arbad, 2=Zun, 3=Myangad, 4=Tumed
         uint256 khuralId;         // ID of specific Khural
         string title;
         string description;
@@ -317,13 +317,13 @@ contract VotingCenter is AccessControl {
     }
     
     function _calculateQuorum(uint256 level) internal pure returns (uint256) {
-        // Arban: 6/10 (60%)
+        // Arbad: 6/10 (60%)
         if (level == 1) return 6;
         // Zun: 6/10 (60%)
         if (level == 2) return 6;
-        // Myangan: 7/10 (70%)
+        // Myangad: 7/10 (70%)
         if (level == 3) return 7;
-        // Tumen: 8/10 (80%)
+        // Tumed: 8/10 (80%)
         return 8;
     }
     
@@ -375,10 +375,10 @@ contract StatisticsBureau is AccessControl {
     struct CensusData {
         uint256 totalCitizens;
         uint256 totalFamilies;
-        uint256 totalArbans;
+        uint256 totalArbads;
         uint256 totalZuns;
-        uint256 totalMyangans;
-        uint256 totalTumens;
+        uint256 totalMyangads;
+        uint256 totalTumeds;
         uint256 lastCensus;
     }
     
@@ -414,18 +414,18 @@ contract StatisticsBureau is AccessControl {
     function updateCensus(
         uint256 citizens,
         uint256 families,
-        uint256 arbans,
+        uint256 arbads,
         uint256 zuns,
-        uint256 myangans,
-        uint256 tumens
+        uint256 myangads,
+        uint256 tumeds
     ) external onlyRole(LEGISLATIVE_ROLE) {
         census = CensusData({
             totalCitizens: citizens,
             totalFamilies: families,
-            totalArbans: arbans,
+            totalArbads: arbads,
             totalZuns: zuns,
-            totalMyangans: myangans,
-            totalTumens: tumens,
+            totalMyangads: myangads,
+            totalTumeds: tumeds,
             lastCensus: block.timestamp
         });
         
@@ -439,7 +439,7 @@ contract StatisticsBureau is AccessControl {
 }
 ```
 
-#### **ArbanKhural.sol** (Uses VotingCenter)
+#### **ArbadKhural.sol** (Uses VotingCenter)
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -448,19 +448,19 @@ pragma solidity ^0.8.24;
 import "./VotingCenter.sol";
 
 /**
- * @title ArbanKhural
- * @notice Arban-level (10 families) legislative assembly
+ * @title ArbadKhural
+ * @notice Arbad-level (10 families) legislative assembly
  * 
  * Design:
  * - 10 family representatives vote
  * - Proposals managed by VotingCenter
  * - Decisions on local budget, projects, leader
  */
-contract ArbanKhural is AccessControl {
+contract ArbadKhural is AccessControl {
     bytes32 public constant REPRESENTATIVE_ROLE = keccak256("REPRESENTATIVE_ROLE");
     
     VotingCenter public votingCenter;
-    uint256 public arbanId;
+    uint256 public arbadId;
     
     // Representatives (max 10)
     address[] public representatives;
@@ -468,11 +468,11 @@ contract ArbanKhural is AccessControl {
     
     constructor(
         address admin,
-        uint256 _arbanId,
+        uint256 _arbadId,
         address _votingCenter
     ) {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        arbanId = _arbanId;
+        arbadId = _arbadId;
         votingCenter = VotingCenter(_votingCenter);
     }
     
@@ -497,8 +497,8 @@ contract ArbanKhural is AccessControl {
         
         return votingCenter.createProposal(
             proposalType,
-            1, // Arban level
-            arbanId,
+            1, // Arbad level
+            arbadId,
             title,
             description,
             executionData,
@@ -514,9 +514,9 @@ contract ArbanKhural is AccessControl {
 
 ### Contracts to Create:
 
-1. **ZunKhural.sol** - 10 Arban delegates vote
-2. **MyangangKhural.sol** - 10 Zun delegates vote
-3. **TumenKhural.sol** - 10 Myangan delegates vote (National)
+1. **ZunKhural.sol** - 10 Arbad delegates vote
+2. **MyangadgKhural.sol** - 10 Zun delegates vote
+3. **TumedKhural.sol** - 10 Myangad delegates vote (National)
 
 All use the same VotingCenter.
 
@@ -565,12 +565,12 @@ model Vote {
 }
 
 enum ProposalType {
-  ARBAN_BUDGET
-  ARBAN_LEADER
+  ARBAD_BUDGET
+  ARBAD_LEADER
   ZUN_POLICY
   ZUN_ELDER
-  MYANGAN_LAW
-  TUMEN_NATIONAL
+  MYANGAD_LAW
+  TUMED_NATIONAL
   CONSTITUTIONAL
 }
 
@@ -633,14 +633,14 @@ export class StatisticsBureauService {
 | Mon | Deploy Bank contracts | 5 contracts live |
 | Tue | Create VotingCenter.sol | Core voting hub |
 | Wed | Create StatisticsBureau.sol | Stats tracking |
-| Thu | Create ArbanKhural.sol | Arban voting |
+| Thu | Create ArbadKhural.sol | Arbad voting |
 | Fri | Test & Deploy | Voting system live |
 
 ### Week 2: Hierarchy + Frontend
 
 | Day | Task | Output |
 |-----|------|--------|
-| Mon | ZunKhural, MyangangKhural, TumenKhural | Full hierarchy |
+| Mon | ZunKhural, MyangadgKhural, TumedKhural | Full hierarchy |
 | Tue | Backend services | API ready |
 | Wed | Database migration | Schema ready |
 | Thu-Fri | Frontend components | Voting UI |
@@ -683,7 +683,7 @@ StatisticsBureau:
 ├── VOTING_CENTER_ROLE → Record votes
 └── DEFAULT_ADMIN_ROLE → System admin
 
-ArbanKhural/ZunKhural/etc:
+ArbadKhural/ZunKhural/etc:
 ├── REPRESENTATIVE_ROLE → Voting rights
 └── DEFAULT_ADMIN_ROLE → Add representatives
 ```
@@ -718,7 +718,7 @@ After 2 weeks:
 
 **Architecture**: Centralized VotingCenter manages all legislative votes
 **Control**: Legislative Branch has LEGISLATIVE_ROLE
-**Hierarchy**: Arban → Zun → Myangan → Tumen
+**Hierarchy**: Arbad → Zun → Myangad → Tumed
 **Data**: StatisticsBureau tracks everything
 **Integration**: Links to Temple of Heaven for scientific analysis
 

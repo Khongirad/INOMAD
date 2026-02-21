@@ -267,9 +267,9 @@ export default function UnifiedOrgDashboard() {
       GUILD: '🛡️ Guild',
       COMMITTEE: '📋 Committee',
       SERVICE: '🏛️ State Service',
-      ARBAN: '⚔️ Arban (10)',
-      HUNDRED: '🏘️ Zuun (100)',
-      THOUSAND: '🏙️ Myangan (1000)',
+      ARBAD: '⚔️ Arbad (10)',
+      HUNDRED: '🏘️ Zuud (100)',
+      THOUSAND: '🏙️ Myangad (1000)',
       REPUBLIC: '🏛️ Republic',
       CONFEDERATION: '🌍 Confederation',
     };

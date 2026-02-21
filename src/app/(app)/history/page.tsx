@@ -167,7 +167,7 @@ export default function HistoryPage() {
               • Historical records document significant events and periods in INOMAD KHURAL's history
             </p>
             <p>
-              • Records can be written at any hierarchical level (individual, family, clan, arban, etc.)
+              • Records can be written at any hierarchical level (individual, family, clan, arbad, etc.)
             </p>
             <p>
               • All records must be reviewed and published by an admin before becoming official

@@ -11,7 +11,7 @@ describe('CouncilOfJusticeService', () => {
   const mockMember = {
     id: 'mem-1', memberId: 1, seatId: 'seat-1',
     legalEducationHash: '0xhash', specialization: 'Civil',
-    nominatedByArbanId: 'arban-1', walletAddress: '0xjudge1',
+    nominatedByArbadId: 'arbad-1', walletAddress: '0xjudge1',
     approved: false, approvals: 2, approvedAt: null, createdAt: new Date(),
   };
 
@@ -116,7 +116,7 @@ describe('CouncilOfJusticeService', () => {
       prisma.councilOfJusticeMember.create.mockResolvedValue({ ...mockMember, memberId: 1 });
       const result = await service.nominateMember({
         seatId: 'seat-1', legalEducationHash: '0xhash', specialization: 'Civil',
-        arbanId: 'arban-1', walletAddress: '0xjudge1', nominatorPrivateKey: '0xkey',
+        arbadId: 'arbad-1', walletAddress: '0xjudge1', nominatorPrivateKey: '0xkey',
       });
       expect(result.seatId).toBe('seat-1');
       expect(blockchain.getContractWithSigner).toHaveBeenCalled();

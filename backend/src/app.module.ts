@@ -16,7 +16,7 @@ import { HealthModule } from './health/health.module';
 import { IdentityModule } from './identity/identity.module';
 import { BankModule } from './bank/bank.module';
 import { CentralBankModule } from './central-bank/central-bank.module';
-import { ArbanModule } from './arbans/arban.module';
+import { ArbadModule } from './arbads/arbad.module';
 import { DigitalSealModule } from './digital-seal/digital-seal.module';
 import { AcademyModule } from './academy/academy.module';
 import { JusticeModule } from './justice/justice.module';
@@ -94,7 +94,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     IdentityModule,
     BankModule,
     CentralBankModule,
-    ArbanModule,
+    ArbadModule,
     DigitalSealModule,
     AcademyModule,
     JusticeModule,
@@ -133,8 +133,8 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     WorkActModule,      // Universal Work-Act Completion System
     DisputeModule,      // Pre-complaint negotiation (bound to contracts/quests/work-acts)
     ChancelleryModule,  // Contract registry for lawyers and notaries
-    HierarchyModule,    // Zun→Myangan→Tumen hierarchy + cooperation
-    ParliamentModule,   // Khural sessions and voting (Tumen leaders only)
+    HierarchyModule,    // Zun→Myangad→Tumed hierarchy + cooperation
+    ParliamentModule,   // Khural sessions and voting (Tumed leaders only)
     OrgQuestModule,     // Organization Task Board (quests/missions for all orgs)
     RegionalReputationModule, // Territorial reputation per republic
     OrgBankingModule,   // Org banking with dual authorization & daily reports

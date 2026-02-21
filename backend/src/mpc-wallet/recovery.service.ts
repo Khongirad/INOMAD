@@ -13,7 +13,7 @@ import * as crypto from 'crypto';
  * Recovery Service
  * 
  * Manages social recovery and guardian system for MPC wallets.
- * Integrates with Arban structure for automatic guardian suggestions.
+ * Integrates with Arbad structure for automatic guardian suggestions.
  */
 @Injectable()
 export class RecoveryService {
@@ -68,7 +68,7 @@ export class RecoveryService {
   }
 
   /**
-   * Suggest guardians based on Arban membership
+   * Suggest guardians based on Arbad membership
    */
   async suggestGuardians(userId: string): Promise<Array<{
     type: GuardianType;
@@ -94,8 +94,8 @@ export class RecoveryService {
     
     if (!user) return suggestions;
     
-    // Find Family Arban where user is a member
-    const familyArbans = await this.prisma.familyArban.findMany({
+    // Find Family Arbad where user is a member
+    const familyArbads = await this.prisma.familyArbad.findMany({
       where: {
         OR: [
           { husbandSeatId: user.seatId },
@@ -107,11 +107,11 @@ export class RecoveryService {
       }
     });
     
-    for (const arban of familyArbans) {
+    for (const arbad of familyArbads) {
       // Spouse - highest trust
-      const spouseSeatId = arban.husbandSeatId === user.seatId 
-        ? arban.wifeSeatId 
-        : arban.husbandSeatId;
+      const spouseSeatId = arbad.husbandSeatId === user.seatId 
+        ? arbad.wifeSeatId 
+        : arbad.husbandSeatId;
         
       if (spouseSeatId) {
         suggestions.push({
@@ -124,11 +124,11 @@ export class RecoveryService {
       }
       
       // Khural Representative - high trust (using khuralRepSeatId field)
-      if (arban.khuralRepSeatId) {
+      if (arbad.khuralRepSeatId) {
         suggestions.push({
           type: GuardianType.KHURAL_REP,
-          userId: arban.khuralRepSeatId,
-          ref: arban.khuralRepSeatId,
+          userId: arbad.khuralRepSeatId,
+          ref: arbad.khuralRepSeatId,
           name: 'Khural Representative',
           relationship: 'Khural Representative',
           trust: 'HIGH',
@@ -136,7 +136,7 @@ export class RecoveryService {
       }
       
       // Adult children - medium trust (using childSeatId field)
-      for (const child of arban.children) {
+      for (const child of arbad.children) {
         if (child.childSeatId) {
           suggestions.push({
             type: GuardianType.FAMILY,
@@ -149,8 +149,8 @@ export class RecoveryService {
       }
     }
     
-    // Find Organizational Arban memberships (using orgArbanMember model)
-    const orgMemberships = await this.prisma.orgArbanMember.findMany({
+    // Find Organizational Arbad memberships (using orgArbadMember model)
+    const orgMemberships = await this.prisma.orgArbadMember.findMany({
       where: { seatId: user.seatId },
       include: {
         org: true,

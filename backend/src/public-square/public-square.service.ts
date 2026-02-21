@@ -21,8 +21,8 @@ import { CreatePublicSquarePostDto, VotePublicSquareDto } from './dto/public-squ
  * to the next hierarchy level, until they reach CONFEDERATION → Khural proposal.
  *
  * Escalation ladder:
- *   LEVEL_10 (Arban) → LEVEL_100 (Zun) → LEVEL_1000 (Myangan)
- *   → LEVEL_10000 (Tumen) → REPUBLIC → CONFEDERATION
+ *   LEVEL_10 (Arbad) → LEVEL_100 (Zun) → LEVEL_1000 (Myangad)
+ *   → LEVEL_10000 (Tumed) → REPUBLIC → CONFEDERATION
  *   → Khural legislative proposal
  */
 @Injectable()
@@ -237,10 +237,10 @@ export class PublicSquareService {
   private defaultThreshold(level: HierarchyLevel): number {
     const thresholds: Record<HierarchyLevel, number> = {
       LEVEL_1: 0,
-      LEVEL_10: 5,         // Arban: 5 signatures → Zun
-      LEVEL_100: 25,       // Zun: 25 → Myangan
-      LEVEL_1000: 100,     // Myangan: 100 → Tumen
-      LEVEL_10000: 500,    // Tumen: 500 → Republic
+      LEVEL_10: 5,         // Arbad: 5 signatures → Zun
+      LEVEL_100: 25,       // Zun: 25 → Myangad
+      LEVEL_1000: 100,     // Myangad: 100 → Tumed
+      LEVEL_10000: 500,    // Tumed: 500 → Republic
       REPUBLIC: 2000,      // Republic: 2000 → Confederation
       CONFEDERATION: 10000, // Confederation: 10000 → Khural
     };

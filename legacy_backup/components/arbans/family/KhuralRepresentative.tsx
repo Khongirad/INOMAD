@@ -15,17 +15,17 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { HowToVote, Warning } from '@mui/icons-material';
-import { arbanAPI } from '../../../lib/api/arban.api';
+import { arbadAPI } from '../../../lib/api/arbad.api';
 
 interface KhuralRepresentativeProps {
-  arbanId: number;
+  arbadId: number;
   husbandSeatId: number;
   wifeSeatId: number;
   onSuccess?: () => void;
 }
 
 export const KhuralRepresentative: React.FC<KhuralRepresentativeProps> = ({
-  arbanId,
+  arbadId,
   husbandSeatId,
   wifeSeatId,
   onSuccess,
@@ -51,7 +51,7 @@ export const KhuralRepresentative: React.FC<KhuralRepresentativeProps> = ({
     setError(null);
 
     try {
-      await arbanAPI.family.setKhuralRep(arbanId, selectedSeatId, Number(birthYear));
+      await arbadAPI.family.setKhuralRep(arbadId, selectedSeatId, Number(birthYear));
       setSuccess(true);
       
       if (onSuccess) {
@@ -72,7 +72,7 @@ export const KhuralRepresentative: React.FC<KhuralRepresentativeProps> = ({
             Khural representative set successfully!
           </Alert>
           <Typography variant="body1">
-            Seat #{selectedSeatId} is now representing Family Arban #{arbanId} in the Khural.
+            Seat #{selectedSeatId} is now representing Family Arbad #{arbadId} in the Khural.
           </Typography>
         </CardContent>
       </Card>
@@ -91,7 +91,7 @@ export const KhuralRepresentative: React.FC<KhuralRepresentativeProps> = ({
 
         <Alert severity="info" sx={{ mb: 3 }}>
           The Khural is the Legislative branch (like US Senate). One representative per Family
-          Arban must be either the husband or wife, and must be under 60 years old.
+          Arbad must be either the husband or wife, and must be under 60 years old.
         </Alert>
 
         {error && (

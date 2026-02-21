@@ -14,8 +14,8 @@ interface ContractAddresses {
   
   // Citizen domain
   CitizenActivation?: string;
-  ArbanRegistry?: string;
-  ArbanCompletion?: string; // Family Arban completion contract
+  ArbadRegistry?: string;
+  ArbadCompletion?: string; // Family Arbad completion contract
   ZunRegistry?: string;
   ElectionRegistry?: string;
   BranchRegistry?: string;
@@ -179,12 +179,12 @@ export class ContractAddressesService {
   }
 
   /**
-   * Get guild/arban contracts
+   * Get guild/arbad contracts
    */
   getGuildContracts() {
     return {
-      arbanRegistry: this.addresses.ArbanRegistry,
-      arbanCompletion: this.addresses.ArbanCompletion,
+      arbadRegistry: this.addresses.ArbadRegistry,
+      arbadCompletion: this.addresses.ArbadCompletion,
       zunRegistry: this.addresses.ZunRegistry,
       electionRegistry: this.addresses.ElectionRegistry,
       branchRegistry: this.addresses.BranchRegistry,

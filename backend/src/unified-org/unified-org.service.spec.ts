@@ -51,13 +51,13 @@ describe('UnifiedOrgService', () => {
       notification: {
         create: jest.fn(),
       },
-      myangan: {
+      myangad: {
         create: jest.fn(),
         update: jest.fn(),
         findMany: jest.fn(),
         count: jest.fn(),
       },
-      tumen: {
+      tumed: {
         create: jest.fn(),
         findMany: jest.fn(),
       },
@@ -76,7 +76,7 @@ describe('UnifiedOrgService', () => {
       user: {
         findUnique: jest.fn(),
       },
-      familyArban: {
+      familyArbad: {
         findFirst: jest.fn(),
       },
       $transaction: jest.fn(),
@@ -356,55 +356,55 @@ describe('UnifiedOrgService', () => {
   // HIERARCHY
   // =============================================================
 
-  describe('createMyangan', () => {
-    it('creates myangan', async () => {
-      prisma.myangan.create.mockResolvedValue({ id: 'm1', name: 'Myangan1', memberZuns: [] });
-      const result = await service.createMyangan({ name: 'Myangan1', region: 'North' });
-      expect(result.name).toBe('Myangan1');
+  describe('createMyangad', () => {
+    it('creates myangad', async () => {
+      prisma.myangad.create.mockResolvedValue({ id: 'm1', name: 'Myangad1', memberZuns: [] });
+      const result = await service.createMyangad({ name: 'Myangad1', region: 'North' });
+      expect(result.name).toBe('Myangad1');
     });
   });
 
-  describe('assignZunToMyangan', () => {
+  describe('assignZunToMyangad', () => {
     it('assigns zun', async () => {
       prisma.zun.count.mockResolvedValue(5);
-      prisma.zun.update.mockResolvedValue({ id: 'z1', myanganId: 'm1' });
+      prisma.zun.update.mockResolvedValue({ id: 'z1', myangadId: 'm1' });
 
-      const result = await service.assignZunToMyangan('z1', 'm1');
-      expect(result.myanganId).toBe('m1');
+      const result = await service.assignZunToMyangad('z1', 'm1');
+      expect(result.myangadId).toBe('m1');
     });
 
-    it('throws if myangan full (10 zuns)', async () => {
+    it('throws if myangad full (10 zuns)', async () => {
       prisma.zun.count.mockResolvedValue(10);
-      await expect(service.assignZunToMyangan('z1', 'm1')).rejects.toThrow(BadRequestException);
+      await expect(service.assignZunToMyangad('z1', 'm1')).rejects.toThrow(BadRequestException);
     });
   });
 
-  describe('createTumen', () => {
-    it('creates tumen', async () => {
-      prisma.tumen.create.mockResolvedValue({ id: 't1', name: 'Tumen1', memberMyangans: [] });
-      const result = await service.createTumen({ name: 'Tumen1', region: 'East' });
-      expect(result.name).toBe('Tumen1');
+  describe('createTumed', () => {
+    it('creates tumed', async () => {
+      prisma.tumed.create.mockResolvedValue({ id: 't1', name: 'Tumed1', memberMyangads: [] });
+      const result = await service.createTumed({ name: 'Tumed1', region: 'East' });
+      expect(result.name).toBe('Tumed1');
     });
   });
 
-  describe('assignMyanganToTumen', () => {
-    it('assigns myangan to tumen', async () => {
-      prisma.myangan.count.mockResolvedValue(5);
-      prisma.myangan.update.mockResolvedValue({ id: 'm1', tumenId: 't1' });
+  describe('assignMyangadToTumed', () => {
+    it('assigns myangad to tumed', async () => {
+      prisma.myangad.count.mockResolvedValue(5);
+      prisma.myangad.update.mockResolvedValue({ id: 'm1', tumedId: 't1' });
 
-      const result = await service.assignMyanganToTumen('m1', 't1');
-      expect(result.tumenId).toBe('t1');
+      const result = await service.assignMyangadToTumed('m1', 't1');
+      expect(result.tumedId).toBe('t1');
     });
 
-    it('throws if tumen full (10 myangans)', async () => {
-      prisma.myangan.count.mockResolvedValue(10);
-      await expect(service.assignMyanganToTumen('m1', 't1')).rejects.toThrow(BadRequestException);
+    it('throws if tumed full (10 myangads)', async () => {
+      prisma.myangad.count.mockResolvedValue(10);
+      await expect(service.assignMyangadToTumed('m1', 't1')).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('createRepublic', () => {
     it('creates republic', async () => {
-      prisma.republicanKhural.create.mockResolvedValue({ id: 'r1', name: 'Republic1', memberTumens: [] });
+      prisma.republicanKhural.create.mockResolvedValue({ id: 'r1', name: 'Republic1', memberTumeds: [] });
       const result = await service.createRepublic({ name: 'Republic1', republicKey: 'REP1' });
       expect(result.name).toBe('Republic1');
     });
@@ -414,8 +414,8 @@ describe('UnifiedOrgService', () => {
     it('returns full hierarchy including standalone entities', async () => {
       prisma.confederativeKhural.findFirst.mockResolvedValue({ id: 'conf1', memberRepublics: [] });
       prisma.republicanKhural.findMany.mockResolvedValue([]);
-      prisma.tumen.findMany.mockResolvedValue([]);
-      prisma.myangan.findMany.mockResolvedValue([]);
+      prisma.tumed.findMany.mockResolvedValue([]);
+      prisma.myangad.findMany.mockResolvedValue([]);
       prisma.zun.findMany.mockResolvedValue([{ id: 'z1' }]);
 
       const result = await service.getHierarchyTree();
@@ -525,7 +525,7 @@ describe('UnifiedOrgService', () => {
 
     it('allows legislative member who is spouse', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', dateOfBirth: null });
-      prisma.familyArban.findFirst.mockResolvedValue({ husbandSeatId: 'u1' });
+      prisma.familyArbad.findFirst.mockResolvedValue({ husbandSeatId: 'u1' });
 
       await expect(
         service.validateBranchMembership('u1', 'LEGISLATIVE' as any),
@@ -534,7 +534,7 @@ describe('UnifiedOrgService', () => {
 
     it('rejects legislative member without family', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', dateOfBirth: null });
-      prisma.familyArban.findFirst.mockResolvedValue(null);
+      prisma.familyArbad.findFirst.mockResolvedValue(null);
 
       await expect(
         service.validateBranchMembership('u1', 'LEGISLATIVE' as any),
@@ -543,7 +543,7 @@ describe('UnifiedOrgService', () => {
 
     it('allows executive member with family', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', dateOfBirth: null });
-      prisma.familyArban.findFirst.mockResolvedValue({ wifeSeatId: 'u1' });
+      prisma.familyArbad.findFirst.mockResolvedValue({ wifeSeatId: 'u1' });
 
       await expect(
         service.validateBranchMembership('u1', 'EXECUTIVE' as any),
@@ -554,7 +554,7 @@ describe('UnifiedOrgService', () => {
       const dob = new Date();
       dob.setFullYear(dob.getFullYear() - 20); // 20 years old
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', dateOfBirth: dob });
-      prisma.familyArban.findFirst.mockResolvedValue(null);
+      prisma.familyArbad.findFirst.mockResolvedValue(null);
 
       await expect(
         service.validateBranchMembership('u1', 'EXECUTIVE' as any),
@@ -565,7 +565,7 @@ describe('UnifiedOrgService', () => {
       const dob = new Date();
       dob.setFullYear(dob.getFullYear() - 16); // 16 years old
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', dateOfBirth: dob });
-      prisma.familyArban.findFirst.mockResolvedValue(null);
+      prisma.familyArbad.findFirst.mockResolvedValue(null);
 
       await expect(
         service.validateBranchMembership('u1', 'EXECUTIVE' as any),
@@ -574,7 +574,7 @@ describe('UnifiedOrgService', () => {
 
     it('rejects if no dateOfBirth for non-family single user', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'u1', dateOfBirth: null });
-      prisma.familyArban.findFirst.mockResolvedValue(null);
+      prisma.familyArbad.findFirst.mockResolvedValue(null);
 
       await expect(
         service.validateBranchMembership('u1', 'JUDICIAL' as any),

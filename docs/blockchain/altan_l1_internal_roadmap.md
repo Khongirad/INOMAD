@@ -95,13 +95,13 @@ func (k Keeper) CollectAnnualTax(ctx sdk.Context, citizen sdk.AccAddress) error 
 
 **Hierarchy**:
 ```
-Arban (10 families)
+Arbad (10 families)
   ↓
-Zun (100 families = 10 Arbans)
+Zun (100 families = 10 Arbads)
   ↓
-Myangang (1,000 families = 10 Zuns)
+Myangadg (1,000 families = 10 Zuns)
   ↓
-Tumen (10,000 families = 10 Myangangs)
+Tumed (10,000 families = 10 Myangadgs)
   ↓
 Republican Khural (Province level)
   ↓
@@ -112,7 +112,7 @@ Confederative Khural (National level)
 ```go
 type Proposal struct {
     ID          uint64
-    Level       KhuralLevel  // ARBAN, ZUN, MYANGANG, TUMEN, REPUBLICAN, CONFEDERATIVE
+    Level       KhuralLevel  // ARBAD, ZUN, MYANGADG, TUMED, REPUBLICAN, CONFEDERATIVE
     Title       string
     Description string
     ProposedBy  sdk.AccAddress
@@ -153,7 +153,7 @@ func (k Keeper) Vote(ctx sdk.Context, proposalID uint64, voter sdk.AccAddress, v
 **Subsidiarity Principle** (Article 21):
 - Proposals start at lowest competent level
 - Escalate only if local Khural cannot resolve
-- Example: Road repair → Arban → Zun → Myangang (stop when decided)
+- Example: Road repair → Arbad → Zun → Myangadg (stop when decided)
 
 **Timeline**: 3 weeks (complex governance logic)
 
@@ -393,8 +393,8 @@ func (k Keeper) TransferLand(
 
 **Week 4 (Keeper Layer)**:
 - CreateProposal, Vote, TallyVotes
-- Membership management (who is in Arban/Zun/etc)
-- Escalation logic (Arban → Zun → Myangang)
+- Membership management (who is in Arbad/Zun/etc)
+- Escalation logic (Arbad → Zun → Myangadg)
 
 **Week 5 (Integration)**:
 - Connect to x/corelaw (constitutional amendments)
@@ -539,7 +539,7 @@ x/land (depends on banking for payments, khural for disputes)
 - Tax payment tracker
 
 **Smart Contracts** (Migration):
-- Pause new ArbanCreditLine on Polygon
+- Pause new ArbadCreditLine on Polygon
 - Recreate credit system on ALTAN L1 (native module)
 
 ---
@@ -549,7 +549,7 @@ x/land (depends on banking for payments, khural for disputes)
 ### Month 1 (Testnet):
 - 1,000 wallets created
 - 100 land parcels claimed
-- 10 Arban proposals voted on
+- 10 Arbad proposals voted on
 - 0 critical bugs
 
 ### Month 3 (Mainnet Soft Launch):

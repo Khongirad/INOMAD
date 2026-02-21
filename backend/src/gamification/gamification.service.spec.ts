@@ -357,15 +357,15 @@ describe('GamificationService', () => {
     });
   });
 
-  // ─── checkAchievements for ARBAN_JOINED ─
-  describe('checkAchievements for ARBAN_JOINED', () => {
-    it('should check arban achievement', async () => {
+  // ─── checkAchievements for ARBAD_JOINED ─
+  describe('checkAchievements for ARBAD_JOINED', () => {
+    it('should check arbad achievement', async () => {
       prisma.citizenLevel.findUnique.mockResolvedValue(mockCitizenLevel);
       prisma.reputationProfile.findUnique.mockResolvedValue({ questsCompleted: 0, contractsSigned: 0 });
       prisma.achievement.findUnique.mockResolvedValue(null);
       prisma.achievement.create.mockResolvedValue({});
       prisma.xPTransaction.create.mockResolvedValue({});
-      await service.checkAchievements('user-1', 'ARBAN_JOINED');
+      await service.checkAchievements('user-1', 'ARBAD_JOINED');
       expect(prisma.achievement.create).toHaveBeenCalled();
     });
   });

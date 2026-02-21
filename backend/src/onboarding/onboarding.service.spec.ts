@@ -10,7 +10,7 @@ describe('OnboardingService', () => {
 
   const mockProgress = {
     userId: 'u1', constitutionRead: false, walletCreated: false,
-    firstTransfer: false, arbanJoined: false, questCompleted: false,
+    firstTransfer: false, arbadJoined: false, questCompleted: false,
     voteCast: false, currentStep: 0, totalSteps: 6, isComplete: false,
     completedAt: null, xpBonusClaimed: false,
   };
@@ -78,7 +78,7 @@ describe('OnboardingService', () => {
       prisma.onboardingProgress.findUnique.mockResolvedValue({
         ...mockProgress,
         constitutionRead: true, walletCreated: true, firstTransfer: true,
-        arbanJoined: true, questCompleted: true, voteCast: false,
+        arbadJoined: true, questCompleted: true, voteCast: false,
         xpBonusClaimed: false,
       });
       const r = await service.completeStep('u1', 'voteCast');

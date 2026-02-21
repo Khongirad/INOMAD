@@ -1,4 +1,4 @@
-# Arban System - Complete Architecture Guide
+# Arbad System - Complete Architecture Guide
 **Version**: 1.0  
 **Date**: January 30, 2026  
 **Status**: Production Ready (90% test coverage)
@@ -9,8 +9,8 @@
 
 1. [Overview](#overview)
 2. [Two-Type Architecture](#two-type-architecture)
-3. [Family Arban System](#family-arban-system)
-4. [Organizational Arban System](#organizational-arban-system)
+3. [Family Arbad System](#family-arbad-system)
+4. [Organizational Arbad System](#organizational-arbad-system)
 5. [Zun (Clan) System](#zun-clan-system)
 6. [Credit Line System](#credit-line-system)
 7. [3-Tier Distribution](#3-tier-distribution)
@@ -24,20 +24,20 @@
 
 ## Overview
 
-### What is Arban?
+### What is Arbad?
 
-**Arban** (монг. Арван) = группа из 10 человек, базовая единица традиционной монгольской системы организации.
+**Arbad** (монг. Арван) = группа из 10 человек, базовая единица традиционной монгольской системы организации.
 
-iNomad реализует **Two-Type Arban System**:
-- **Type 1: Family Arban** — семейные ячейки (муж, жена, дети) для Законодательной ветви (Khural)
-- **Type 2: Organizational Arban** — рабочие группы (до 10 человек) для Исполнительной/Судебной/Банковской ветвей
+iNomad реализует **Two-Type Arbad System**:
+- **Type 1: Family Arbad** — семейные ячейки (муж, жена, дети) для Законодательной ветви (Khural)
+- **Type 2: Organizational Arbad** — рабочие группы (до 10 человек) для Исполнительной/Судебной/Банковской ветвей
 
 ### Key Principles
 
 1. **Dual Purpose**: семейные и организационные структуры
 2. **Economic Unit**: каждый арбан имеет кредитную линию
 3. **Governance**: семейные арбаны → Khural, орг. арбаны → управление
-4. **Scalability**: 10 арбанов = 1 Зун, 10 зунов = 1 Myangan, etc.
+4. **Scalability**: 10 арбанов = 1 Зун, 10 зунов = 1 Myangad, etc.
 
 ---
 
@@ -45,8 +45,8 @@ iNomad реализует **Two-Type Arban System**:
 
 ```mermaid
 graph TD
-    A[Arban System] --> B[Family Arban]
-    A --> C[Organizational Arban]
+    A[Arbad System] --> B[Family Arbad]
+    A --> C[Organizational Arbad]
     
     B --> B1[Legislative Branch]
     B --> B2[Khural Representation]
@@ -58,7 +58,7 @@ graph TD
     C --> C4[Org Credit Line]
     
     B1 --> D[Zun Formation]
-    D --> E[10 Family Arbans]
+    D --> E[10 Family Arbads]
     
     C1 --> F[Departments]
     F --> G[Hierarchical Org Structure]
@@ -66,7 +66,7 @@ graph TD
 
 ### Comparison Table
 
-| Feature | Family Arban | Organizational Arban |
+| Feature | Family Arbad | Organizational Arbad |
 |---------|-------------|---------------------|
 | **Purpose** | Legislative representation | Executive/Judicial/Banking work |
 | **Size** | 2-10 (Husband+Wife+Children) | 2-10 members |
@@ -80,12 +80,12 @@ graph TD
 
 ---
 
-## Family Arban System
+## Family Arbad System
 
 ### Structure
 
 ```
-Family Arban #1
+Family Arbad #1
 ├── Husband (Seat #1) ⭐ Founder
 ├── Wife (Seat #2) ⭐ Founder
 ├── Children (up to 8)
@@ -137,11 +137,11 @@ sequenceDiagram
     
     H->>Sys: Register Marriage
     W->>Sys: Confirm Marriage
-    Sys->>Sys: Create Family Arban #1
+    Sys->>Sys: Create Family Arbad #1
     Sys->>Sys: Assign Credit Line (Rating: 500)
     
     H->>Sys: Add Child (Seat #3)
-    Sys->>Sys: Update Family Arban
+    Sys->>Sys: Update Family Arbad
     Sys->>Sys: Tier 2 Eligibility: YES
     
     H->>Sys: Designate Heir (Seat #3)
@@ -155,10 +155,10 @@ sequenceDiagram
 ### Database Schema
 
 ```sql
--- Family Arban
-CREATE TABLE FamilyArban (
+-- Family Arbad
+CREATE TABLE FamilyArbad (
     id UUID PRIMARY KEY,
-    arbanId BIGINT UNIQUE,
+    arbadId BIGINT UNIQUE,
     husbandSeatId BIGINT NOT NULL,
     wifeSeatId BIGINT NOT NULL,
     heirSeatId BIGINT,
@@ -171,23 +171,23 @@ CREATE TABLE FamilyArban (
 );
 
 -- Children
-CREATE TABLE FamilyArbanChild (
+CREATE TABLE FamilyArbadChild (
     id UUID PRIMARY KEY,
-    arbanId BIGINT REFERENCES FamilyArban(arbanId),
+    arbadId BIGINT REFERENCES FamilyArbad(arbadId),
     childSeatId BIGINT NOT NULL,
     addedAt TIMESTAMP DEFAULT NOW(),
-    UNIQUE(arbanId, childSeatId)
+    UNIQUE(arbadId, childSeatId)
 );
 ```
 
 ---
 
-## Organizational Arban System
+## Organizational Arbad System
 
 ### Types
 
 ```typescript
-enum OrgArbanType {
+enum OrgArbadType {
   EXECUTIVE        // Правительство, Президентская администрация
   JUDICIAL         // Суды, судебная система
   BANKING          // Центральный банк, коммерческие банки
@@ -202,7 +202,7 @@ enum OrgArbanType {
 ### Structure
 
 ```
-Ministry of Finance (Org Arban #100)
+Ministry of Finance (Org Arbad #100)
 ├── Type: EXECUTIVE
 ├── Power Branch: EXECUTIVE
 ├── Leader: Seat #10 (Minister)
@@ -214,35 +214,35 @@ Ministry of Finance (Org Arban #100)
 │   └── ... (6 more members)
 ├── Parent Org: None (Top-level)
 └── Departments
-    ├── Budget Department (Org Arban #101)
-    ├── Tax Authority (Org Arban #102)
-    └── Treasury Department (Org Arban #103)
+    ├── Budget Department (Org Arbad #101)
+    ├── Tax Authority (Org Arbad #102)
+    └── Treasury Department (Org Arbad #103)
 ```
 
 ### Hierarchical Organization
 
 ```mermaid
 graph TD
-    A[President Admin<br/>Org Arban #1] --> B[Ministry of Finance<br/>Org Arban #100]
-    A --> C[Ministry of Justice<br/>Org Arban #200]
-    A --> D[Ministry of Education<br/>Org Arban #300]
+    A[President Admin<br/>Org Arbad #1] --> B[Ministry of Finance<br/>Org Arbad #100]
+    A --> C[Ministry of Justice<br/>Org Arbad #200]
+    A --> D[Ministry of Education<br/>Org Arbad #300]
     
-    B --> B1[Budget Dept<br/>Org Arban #101]
-    B --> B2[Tax Authority<br/>Org Arban #102]
-    B --> B3[Treasury<br/>Org Arban #103]
+    B --> B1[Budget Dept<br/>Org Arbad #101]
+    B --> B2[Tax Authority<br/>Org Arbad #102]
+    B --> B3[Treasury<br/>Org Arbad #103]
     
-    C --> C1[Supreme Court<br/>Org Arban #201]
-    C --> C2[District Courts<br/>Org Arban #202]
+    C --> C1[Supreme Court<br/>Org Arbad #201]
+    C --> C2[District Courts<br/>Org Arbad #202]
 ```
 
 ### Database Schema
 
 ```sql
-CREATE TABLE OrganizationalArban (
+CREATE TABLE OrganizationalArbad (
     id UUID PRIMARY KEY,
-    arbanId BIGINT UNIQUE,
+    arbadId BIGINT UNIQUE,
     name VARCHAR(255) NOT NULL,
-    orgType OrgArbanType NOT NULL,
+    orgType OrgArbadType NOT NULL,
     powerBranch PowerBranchType NOT NULL,
     parentOrgId BIGINT,
     leaderSeatId BIGINT,
@@ -251,12 +251,12 @@ CREATE TABLE OrganizationalArban (
     updatedAt TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE OrgArbanMember (
+CREATE TABLE OrgArbadMember (
     id UUID PRIMARY KEY,
-    arbanId BIGINT REFERENCES OrganizationalArban(arbanId),
+    arbadId BIGINT REFERENCES OrganizationalArbad(arbadId),
     seatId BIGINT NOT NULL,
     joinedAt TIMESTAMP DEFAULT NOW(),
-    UNIQUE(arbanId, seatId)
+    UNIQUE(arbadId, seatId)
 );
 ```
 
@@ -270,29 +270,29 @@ CREATE TABLE OrgArbanMember (
 
 ```
 Borjigin Clan (Zun #1)
-├── Founder Arban: Family Arban #1
-├── Elder: Seat #1 (from Founder Arban)
-├── Member Arbans (10 total)
-│   ├── Family Arban #1 (Founder) ⭐
-│   ├── Family Arban #2
-│   ├── Family Arban #3
-│   ├── Family Arban #4
-│   ├── Family Arban #5
-│   ├── Family Arban #6
-│   ├── Family Arban #7
-│   ├── Family Arban #8
-│   ├── Family Arban #9
-│   └── Family Arban #10
+├── Founder Arbad: Family Arbad #1
+├── Elder: Seat #1 (from Founder Arbad)
+├── Member Arbads (10 total)
+│   ├── Family Arbad #1 (Founder) ⭐
+│   ├── Family Arbad #2
+│   ├── Family Arbad #3
+│   ├── Family Arbad #4
+│   ├── Family Arbad #5
+│   ├── Family Arbad #6
+│   ├── Family Arbad #7
+│   ├── Family Arbad #8
+│   ├── Family Arbad #9
+│   └── Family Arbad #10
 └── Total Members: ~50-100 citizens
 ```
 
 ### Scaling Hierarchy
 
 ```
-1 Family Arban = 2-10 citizens
-10 Family Arbans = 1 Zun (~20-100 citizens)
-10 Zuns = 1 Myangan (~200-1000 citizens)
-10 Myangans = 1 Tumen (~2000-10000 citizens)
+1 Family Arbad = 2-10 citizens
+10 Family Arbads = 1 Zun (~20-100 citizens)
+10 Zuns = 1 Myangad (~200-1000 citizens)
+10 Myangads = 1 Tumed (~2000-10000 citizens)
 ```
 
 ### Database Schema
@@ -302,7 +302,7 @@ CREATE TABLE Zun (
     id UUID PRIMARY KEY,
     zunId BIGINT UNIQUE,
     name VARCHAR(255) NOT NULL,
-    founderArbanId BIGINT NOT NULL,
+    founderArbadId BIGINT NOT NULL,
     elderSeatId BIGINT,
     isActive BOOLEAN DEFAULT TRUE,
     createdAt TIMESTAMP DEFAULT NOW(),
@@ -336,7 +336,7 @@ creditLimit = baseLimit * (creditRating / 500)
 
 ### Example Credit Lines
 
-| Arban Type | Rating | Limit (₳) | Available (₳) | Borrowed (₳) |
+| Arbad Type | Rating | Limit (₳) | Available (₳) | Borrowed (₳) |
 |-----------|--------|-----------|---------------|-------------|
 | Family #1 | 500 | 10,000 | 5,000 | 5,000 |
 | Family #2 | 650 | 13,000 | 13,000 | 0 |
@@ -348,7 +348,7 @@ creditLimit = baseLimit * (creditRating / 500)
 ```typescript
 interface Loan {
   loanId: bigint;          // Unique loan ID
-  arbanId: bigint;         // Which arban borrowed
+  arbadId: bigint;         // Which arbad borrowed
   principal: Decimal;      // Amount borrowed
   interest: Decimal;       // Interest amount
   dueDate: Date;           // When to repay
@@ -364,7 +364,7 @@ interface Loan {
 ```sql
 CREATE TABLE CreditLine (
     id UUID PRIMARY KEY,
-    arbanId BIGINT UNIQUE,
+    arbadId BIGINT UNIQUE,
     creditType CreditLineType, -- FAMILY or ORG
     creditRating INT DEFAULT 500,
     creditLimit DECIMAL(18,6),
@@ -381,7 +381,7 @@ CREATE TABLE CreditLine (
 CREATE TABLE Loan (
     id UUID PRIMARY KEY,
     loanId BIGINT UNIQUE,
-    arbanId BIGINT REFERENCES CreditLine(arbanId),
+    arbadId BIGINT REFERENCES CreditLine(arbadId),
     principal DECIMAL(18,6),
     interest DECIMAL(18,6),
     dueDate TIMESTAMP,
@@ -462,8 +462,8 @@ CREATE TABLE TierDistribution (
     seatId BIGINT NOT NULL,
     accountId BIGINT NOT NULL,
     tier INT NOT NULL, -- 1, 2, or 3
-    arbanType TierArbanType, -- FAMILY or ORG
-    arbanId BIGINT NOT NULL,
+    arbadType TierArbadType, -- FAMILY or ORG
+    arbadId BIGINT NOT NULL,
     amount DECIMAL(18,6),
     requestedAt TIMESTAMP DEFAULT NOW(),
     approved BOOLEAN DEFAULT FALSE,
@@ -488,60 +488,60 @@ CREATE TABLE TierReceived (
 
 ## API Reference
 
-See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) and [ARBAN_TESTING_GUIDE.md](./ARBAN_TESTING_GUIDE.md)
+See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) and [ARBAD_TESTING_GUIDE.md](./ARBAD_TESTING_GUIDE.md)
 
 ### Quick Reference
 
-**Family Arbans**:
-- `POST /arbans/family` - Create
-- `GET /arbans/family/:id` - Get details
-- `PATCH /arbans/family/:id/heir` - Designate heir
-- `PATCH /arbans/family/:id/khural-rep` - Assign representative
+**Family Arbads**:
+- `POST /arbads/family` - Create
+- `GET /arbads/family/:id` - Get details
+- `PATCH /arbads/family/:id/heir` - Designate heir
+- `PATCH /arbads/family/:id/khural-rep` - Assign representative
 
-**Organizational Arbans**:
-- `POST /arbans/organizational` - Create
-- `GET /arbans/organizational/:id` - Get details
-- `PATCH /arbans/organizational/:id/leader` - Assign leader
+**Organizational Arbads**:
+- `POST /arbads/organizational` - Create
+- `GET /arbads/organizational/:id` - Get details
+- `PATCH /arbads/organizational/:id/leader` - Assign leader
 
 **Zun**:
-- `POST /arbans/zun` - Create
-- `GET /arbans/zun/:id` - Get details
-- `PATCH /arbans/zun/:id/elder` - Assign elder
+- `POST /arbads/zun` - Create
+- `GET /arbads/zun/:id` - Get details
+- `PATCH /arbads/zun/:id/elder` - Assign elder
 
 **Credit Lines**:
-- `POST /arbans/credit/lines` - Create credit line
-- `GET /arbans/credit/lines/:id` - Get credit line
-- `POST /arbans/credit/loans` - Borrow
-- `PATCH /arbans/credit/loans/:id/repay` - Repay
+- `POST /arbads/credit/lines` - Create credit line
+- `GET /arbads/credit/lines/:id` - Get credit line
+- `POST /arbads/credit/loans` - Borrow
+- `PATCH /arbads/credit/loans/:id/repay` - Repay
 
 ---
 
 ## Smart Contracts
 
-### ArbanCompletion.sol
+### ArbadCompletion.sol
 
-**Purpose**: Arban creation and eligibility logic
+**Purpose**: Arbad creation and eligibility logic
 
 **Key Functions**:
 ```solidity
-function createFamilyArban(uint256 arbanId, uint256 husbandSeat, uint256 wifeSeat) external
-function createOrganizationalArban(uint256 arbanId, uint256[] memory members) external
+function createFamilyArbad(uint256 arbadId, uint256 husbandSeat, uint256 wifeSeat) external
+function createOrganizationalArbad(uint256 arbadId, uint256[] memory members) external
 function isEligibleForTier2(uint256 seatId) external view returns (bool)
 function isEligibleForTier3(uint256 seatId) external view returns (bool)
-function getArbanTypeForSeat(uint256 seatId) external view returns (ArbanType, uint256)
+function getArbadTypeForSeat(uint256 seatId) external view returns (ArbadType, uint256)
 ```
 
-### ArbanCreditLine.sol
+### ArbadCreditLine.sol
 
 **Purpose**: Credit line management and loan tracking
 
 **Key Functions**:
 ```solidity
-function openCreditLine(uint256 arbanId, CreditLineType creditType) external
-function borrow(uint256 arbanId, uint256 amount, uint256 dueDate) external
+function openCreditLine(uint256 arbadId, CreditLineType creditType) external
+function borrow(uint256 arbadId, uint256 amount, uint256 dueDate) external
 function repay(uint256 loanId) external
-function updateCreditRating(uint256 arbanId, int256 change) external
-function getCreditLine(uint256 arbanId) external view returns (CreditLine memory)
+function updateCreditRating(uint256 arbadId, int256 change) external
+function getCreditLine(uint256 arbadId) external view returns (CreditLine memory)
 ```
 
 ---
@@ -555,7 +555,7 @@ function getCreditLine(uint256 arbanId) external view returns (CreditLine memory
 3. **BorrowForm.tsx** - Borrow interface
 4. **LoansList.tsx** - Active loans display
 
-### Family Arban
+### Family Arbad
 
 1. **FamilyTree.tsx** - Family hierarchy visualization
 2. **KhuralRepresentative.tsx** - Representative info
@@ -574,10 +574,10 @@ function getCreditLine(uint256 arbanId) external view returns (CreditLine memory
 
 ```
 1. Муж (Seat #1) и Жена (Seat #2) регистрируют брак
-2. Система создаёт Family Arban #1
+2. Система создаёт Family Arbad #1
 3. Система автоматически создаёт Credit Line (rating: 500, limit: 10,000₳)
 4. Семья имеет доступ к Tier 1 distribution
-5. Рождается ребёнок → добавляется в arban (Seat #3)
+5. Рождается ребёнок → добавляется в arbad (Seat #3)
 6. Теперь семья eligible для Tier 2 (есть дети)
 7. Муж назначается Khural representative
 8. Теперь семья eligible для Tier 3
@@ -586,7 +586,7 @@ function getCreditLine(uint256 arbanId) external view returns (CreditLine memory
 ### Use Case 2: Government Department
 
 ```
-1. Создаётся Ministry of Finance (Org Arban #100)
+1. Создаётся Ministry of Finance (Org Arbad #100)
 2. Добавляются 10 членов (Seats #10-19)
 3. Назначается лидер (Seat #10 = Minister)
 4. Создаётся Credit Line (rating: 500, limit: 50,000₳)
@@ -599,8 +599,8 @@ function getCreditLine(uint256 arbanId) external view returns (CreditLine memory
 
 ```
 1. 10 семей формируют Zun #1 "Borjigin Clan"
-2. Family Arban #1 = founder arban
-3. Husband from Arban #1 назначается Elder
+2. Family Arbad #1 = founder arbad
+3. Husband from Arbad #1 назначается Elder
 4. Клан может координировать Khural representation
 5. Общие решения на уровне клана
 ```
@@ -609,7 +609,7 @@ function getCreditLine(uint256 arbanId) external view returns (CreditLine memory
 
 ## Summary
 
-### What Makes Arban System Unique
+### What Makes Arbad System Unique
 
 1. **Dual-Purpose**: одна архитектура для семей И организаций
 2. **Economic**: каждый арбан = экономическая единица с кредитом
@@ -619,8 +619,8 @@ function getCreditLine(uint256 arbanId) external view returns (CreditLine memory
 
 ### Statistics
 
-- **Database Models**: 10 (FamilyArban, Org, Zun, Credit, Loan, Distribution...)
-- **Smart Contracts**: 4 new (ArbanCompletion, ArbanCreditLine, CitizenVerification, DailySettlement)
+- **Database Models**: 10 (FamilyArbad, Org, Zun, Credit, Loan, Distribution...)
+- **Smart Contracts**: 4 new (ArbadCompletion, ArbadCreditLine, CitizenVerification, DailySettlement)
 - **Backend Services**: 4 (Family, Org, Zun, Credit)
 - **Frontend Components**: 9 (Credit, Family, Zun)
 - **API Endpoints**: 20+ endpoints

@@ -27,8 +27,8 @@ export class HierarchyController {
 
   // ── ZUNS ──
   @Get('zuns')
-  async listZuns(@Query('myanganId') myanganId?: string) {
-    return this.hierarchyService.listZuns(myanganId);
+  async listZuns(@Query('myangadId') myangadId?: string) {
+    return this.hierarchyService.listZuns(myangadId);
   }
 
   @Get('zuns/:id')
@@ -37,55 +37,55 @@ export class HierarchyController {
   }
 
   @Post('zuns/:zunId/join')
-  async joinZun(@Param('zunId') zunId: string, @Body('arbanId') arbanId: string) {
-    return this.hierarchyService.joinZun(BigInt(arbanId), zunId);
+  async joinZun(@Param('zunId') zunId: string, @Body('arbadId') arbadId: string) {
+    return this.hierarchyService.joinZun(BigInt(arbadId), zunId);
   }
 
   @Post('zuns/:zunId/leave')
-  async leaveZun(@Body('arbanId') arbanId: string) {
-    return this.hierarchyService.leaveZun(BigInt(arbanId));
+  async leaveZun(@Body('arbadId') arbadId: string) {
+    return this.hierarchyService.leaveZun(BigInt(arbadId));
   }
 
-  // ── MYANGANS ──
-  @Get('myangans')
-  async listMyangans(@Query('tumenId') tumenId?: string) {
-    return this.hierarchyService.listMyangans(tumenId);
+  // ── MYANGADS ──
+  @Get('myangads')
+  async listMyangads(@Query('tumedId') tumedId?: string) {
+    return this.hierarchyService.listMyangads(tumedId);
   }
 
-  @Get('myangans/:id')
-  async getMyangan(@Param('id') id: string) {
-    return this.hierarchyService.getMyangan(id);
+  @Get('myangads/:id')
+  async getMyangad(@Param('id') id: string) {
+    return this.hierarchyService.getMyangad(id);
   }
 
-  @Post('myangans/:myanganId/join')
-  async joinMyangan(@Param('myanganId') myanganId: string, @Body('zunId') zunId: string) {
-    return this.hierarchyService.joinMyangan(zunId, myanganId);
+  @Post('myangads/:myangadId/join')
+  async joinMyangad(@Param('myangadId') myangadId: string, @Body('zunId') zunId: string) {
+    return this.hierarchyService.joinMyangad(zunId, myangadId);
   }
 
-  // ── TUMENS ──
-  @Get('tumens')
-  async listTumens(@Query('republicId') republicId?: string) {
-    return this.hierarchyService.listTumens(republicId);
+  // ── TUMEDS ──
+  @Get('tumeds')
+  async listTumeds(@Query('republicId') republicId?: string) {
+    return this.hierarchyService.listTumeds(republicId);
   }
 
-  @Get('tumens/:id')
-  async getTumen(@Param('id') id: string) {
-    return this.hierarchyService.getTumen(id);
+  @Get('tumeds/:id')
+  async getTumed(@Param('id') id: string) {
+    return this.hierarchyService.getTumed(id);
   }
 
-  @Post('tumens/:tumenId/join')
-  async joinTumen(@Param('tumenId') tumenId: string, @Body('myanganId') myanganId: string) {
-    return this.hierarchyService.joinTumen(myanganId, tumenId);
+  @Post('tumeds/:tumedId/join')
+  async joinTumed(@Param('tumedId') tumedId: string, @Body('myangadId') myangadId: string) {
+    return this.hierarchyService.joinTumed(myangadId, tumedId);
   }
 
-  // ── TUMEN COOPERATION ──
-  @Post('tumens/:tumenId/cooperate')
+  // ── TUMED COOPERATION ──
+  @Post('tumeds/:tumedId/cooperate')
   async proposeCooperation(
-    @Param('tumenId') tumenId: string,
+    @Param('tumedId') tumedId: string,
     @Req() req: any,
-    @Body() body: { targetTumenId: string; title: string; description?: string; treaty?: string },
+    @Body() body: { targetTumedId: string; title: string; description?: string; treaty?: string },
   ) {
-    return this.hierarchyService.proposeCooperation(tumenId, body.targetTumenId, req.user.id, body);
+    return this.hierarchyService.proposeCooperation(tumedId, body.targetTumedId, req.user.id, body);
   }
 
   @Patch('cooperations/:id/respond')
@@ -102,8 +102,8 @@ export class HierarchyController {
     return this.hierarchyService.dissolveCooperation(id, req.user.id);
   }
 
-  @Get('tumens/:tumenId/cooperations')
-  async listCooperations(@Param('tumenId') tumenId: string) {
-    return this.hierarchyService.listCooperations(tumenId);
+  @Get('tumeds/:tumedId/cooperations')
+  async listCooperations(@Param('tumedId') tumedId: string) {
+    return this.hierarchyService.listCooperations(tumedId);
   }
 }

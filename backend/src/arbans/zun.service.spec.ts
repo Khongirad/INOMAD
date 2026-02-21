@@ -9,8 +9,8 @@ jest.mock('ethers', () => ({
   },
 }));
 
-jest.mock('../typechain-types/factories/ArbanCompletion__factory', () => ({
-  ArbanCompletion__factory: {
+jest.mock('../typechain-types/factories/ArbadCompletion__factory', () => ({
+  ArbadCompletion__factory: {
     connect: jest.fn().mockReturnValue(null), // Will be overridden in beforeEach
   },
 }));
@@ -21,16 +21,16 @@ describe('ZunService', () => {
   let citizenAllocation: any;
 
   beforeEach(async () => {
-    process.env.ARBAN_COMPLETION_ADDRESS = '0xCONTRACT';
+    process.env.ARBAD_COMPLETION_ADDRESS = '0xCONTRACT';
     process.env.RPC_URL = 'http://localhost:8545';
 
     const mockPrisma = {
-      familyArban: {
+      familyArbad: {
         findUnique: jest.fn().mockResolvedValue({
-          arbanId: BigInt(1), isActive: true, zunId: null,
+          arbadId: BigInt(1), isActive: true, zunId: null,
           zun: {
-            zunId: BigInt(1), name: 'TestZun', founderArbanId: BigInt(1),
-            memberArbans: [{ arbanId: BigInt(1) }], elderSeatId: 's1',
+            zunId: BigInt(1), name: 'TestZun', founderArbadId: BigInt(1),
+            memberArbads: [{ arbadId: BigInt(1) }], elderSeatId: 's1',
             isActive: true, createdAt: new Date(),
           },
         }),
@@ -39,8 +39,8 @@ describe('ZunService', () => {
       zun: {
         create: jest.fn().mockResolvedValue({ id: 'z1', zunId: BigInt(1) }),
         findUnique: jest.fn().mockResolvedValue({
-          zunId: BigInt(1), name: 'TestZun', founderArbanId: BigInt(1),
-          memberArbans: [{ arbanId: BigInt(1) }, { arbanId: BigInt(2) }],
+          zunId: BigInt(1), name: 'TestZun', founderArbadId: BigInt(1),
+          memberArbads: [{ arbadId: BigInt(1) }, { arbadId: BigInt(2) }],
           elderSeatId: 's1', isActive: true, createdAt: new Date(),
         }),
         update: jest.fn().mockResolvedValue({}),
@@ -89,7 +89,7 @@ describe('ZunService', () => {
 
   describe('constructor', () => {
     it('handles no address', () => {
-      delete process.env.ARBAN_COMPLETION_ADDRESS;
+      delete process.env.ARBAD_COMPLETION_ADDRESS;
       const s = new ZunService(prisma, citizenAllocation);
       expect(s).toBeDefined();
     });
@@ -98,32 +98,32 @@ describe('ZunService', () => {
   describe('formZun', () => {
     it('forms zun successfully', async () => {
       prisma.zun.findUnique.mockResolvedValue({
-        id: 'z1', memberArbans: [{
+        id: 'z1', memberArbads: [{
           husbandSeatId: 's1', wifeSeatId: 's2', children: [{ childSeatId: 's3' }],
         }],
       });
       const r = await service.formZun({
-        zunName: 'TestZun', arbanIds: [1, 2],
+        zunName: 'TestZun', arbadIds: [1, 2],
       }, {} as any);
       expect(r.zunId).toBe(1);
     });
-    it('throws with less than 2 arbans', async () => {
+    it('throws with less than 2 arbads', async () => {
       await expect(service.formZun(
-        { zunName: 'TestZun', arbanIds: [1] }, {} as any,
+        { zunName: 'TestZun', arbadIds: [1] }, {} as any,
       )).rejects.toThrow('At least 2');
     });
-    it('throws when arban not found', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue(null);
+    it('throws when arbad not found', async () => {
+      prisma.familyArbad.findUnique.mockResolvedValue(null);
       await expect(service.formZun(
-        { zunName: 'TestZun', arbanIds: [1, 2] }, {} as any,
+        { zunName: 'TestZun', arbadIds: [1, 2] }, {} as any,
       )).rejects.toThrow('not found or inactive');
     });
-    it('throws when arban already in zun', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue({
-        arbanId: BigInt(1), isActive: true, zunId: BigInt(99),
+    it('throws when arbad already in zun', async () => {
+      prisma.familyArbad.findUnique.mockResolvedValue({
+        arbadId: BigInt(1), isActive: true, zunId: BigInt(99),
       });
       await expect(service.formZun(
-        { zunName: 'TestZun', arbanIds: [1, 2] }, {} as any,
+        { zunName: 'TestZun', arbadIds: [1, 2] }, {} as any,
       )).rejects.toThrow('already in a Zun');
     });
   });
@@ -156,12 +156,12 @@ describe('ZunService', () => {
       expect(r).toHaveLength(1);
     });
     it('returns empty when no zun', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue({ arbanId: BigInt(1), zun: null });
+      prisma.familyArbad.findUnique.mockResolvedValue({ arbadId: BigInt(1), zun: null });
       const r = await service.getZunsByFamily(1);
       expect(r).toEqual([]);
     });
-    it('returns empty when arban not found', async () => {
-      prisma.familyArban.findUnique.mockResolvedValue(null);
+    it('returns empty when arbad not found', async () => {
+      prisma.familyArbad.findUnique.mockResolvedValue(null);
       const r = await service.getZunsByFamily(999);
       expect(r).toEqual([]);
     });
@@ -181,20 +181,20 @@ describe('ZunService', () => {
   describe('allocateLevel3ToAllMembers', () => {
     it('allocates to all members', async () => {
       prisma.zun.findUnique.mockResolvedValue({
-        id: 'z1', memberArbans: [{
+        id: 'z1', memberArbads: [{
           husbandSeatId: 's1', wifeSeatId: 's2', children: [{ childSeatId: 's3' }],
         }],
       });
       await (service as any).allocateLevel3ToAllMembers('z1');
       expect(citizenAllocation.allocateLevel3Funds).toHaveBeenCalled();
     });
-    it('handles no member arbans', async () => {
+    it('handles no member arbads', async () => {
       prisma.zun.findUnique.mockResolvedValue(null);
       await (service as any).allocateLevel3ToAllMembers('z1');
     });
     it('logs when already allocated', async () => {
       prisma.zun.findUnique.mockResolvedValue({
-        id: 'z1', memberArbans: [{
+        id: 'z1', memberArbads: [{
           husbandSeatId: 's1', wifeSeatId: 's2', children: [],
         }],
       });
@@ -203,7 +203,7 @@ describe('ZunService', () => {
     });
     it('handles allocation error gracefully', async () => {
       prisma.zun.findUnique.mockResolvedValue({
-        id: 'z1', memberArbans: [{
+        id: 'z1', memberArbads: [{
           husbandSeatId: 's1', wifeSeatId: 's2', children: [],
         }],
       });

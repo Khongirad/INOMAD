@@ -8,7 +8,7 @@ export interface LogActivityParams {
   actionParameters: Record<string, any>;
   performedByUserId: string;
   powerBranch: PowerBranchType;
-  orgArbanId?: string;
+  orgArbadId?: string;
   hierarchyLevel?: HierarchyLevel;
   templateId?: string;
   txHash?: string;
@@ -35,7 +35,7 @@ export class ActivityLogService {
           actionParameters: params.actionParameters as Prisma.InputJsonValue,
           performedByUserId: params.performedByUserId,
           powerBranch: params.powerBranch,
-          orgArbanId: params.orgArbanId,
+          orgArbadId: params.orgArbadId,
           hierarchyLevel: params.hierarchyLevel,
           templateId: params.templateId,
           txHash: params.txHash,
@@ -46,7 +46,7 @@ export class ActivityLogService {
         },
         include: {
           performedBy: { select: { seatId: true, username: true } },
-          orgArban: { select: { name: true, powerBranch: true } },
+          orgArbad: { select: { name: true, powerBranch: true } },
           template: { select: { code: true, name: true } },
         },
       });
@@ -67,7 +67,7 @@ export class ActivityLogService {
   async getActivities(options: {
     powerBranch?: PowerBranchType;
     hierarchyLevel?: HierarchyLevel;
-    orgArbanId?: string;
+    orgArbadId?: string;
     startTime?: Date;
     endTime?: Date;
     userId?: string;
@@ -78,7 +78,7 @@ export class ActivityLogService {
 
     if (options.powerBranch) where.powerBranch = options.powerBranch;
     if (options.hierarchyLevel) where.hierarchyLevel = options.hierarchyLevel;
-    if (options.orgArbanId) where.orgArbanId = options.orgArbanId;
+    if (options.orgArbadId) where.orgArbadId = options.orgArbadId;
     if (options.userId) where.performedByUserId = options.userId;
     if (options.startTime || options.endTime) {
       where.performedAt = {};
@@ -91,7 +91,7 @@ export class ActivityLogService {
         where,
         include: {
           performedBy: { select: { seatId: true, username: true } },
-          orgArban: { select: { name: true, powerBranch: true } },
+          orgArbad: { select: { name: true, powerBranch: true } },
           template: { select: { code: true, name: true } },
         },
         orderBy: { performedAt: 'desc' },
@@ -105,7 +105,7 @@ export class ActivityLogService {
   }
 
   /**
-   * Get activities for specific hierarchy rollup (e.g., all activities from Arban to Republic)
+   * Get activities for specific hierarchy rollup (e.g., all activities from Arbad to Republic)
    */
   async getHierarchyActivities(
     powerBranch: PowerBranchType,
@@ -142,7 +142,7 @@ export class ActivityLogService {
       where,
       include: {
         performedBy: { select: { seatId: true, username: true } },
-        orgArban: { select: { name: true, powerBranch: true } },
+        orgArbad: { select: { name: true, powerBranch: true } },
       },
       orderBy: [{ hierarchyLevel: 'asc' }, { performedAt: 'desc' }],
     });
@@ -152,7 +152,7 @@ export class ActivityLogService {
    * Generate activity summary (резюме работы) for export
    */
   async generateActivitySummary(options: {
-    orgArbanId?: string;
+    orgArbadId?: string;
     userId?: string;
     startDate: Date;
     endDate: Date;
@@ -165,7 +165,7 @@ export class ActivityLogService {
       },
     };
 
-    if (options.orgArbanId) where.orgArbanId = options.orgArbanId;
+    if (options.orgArbadId) where.orgArbadId = options.orgArbadId;
     if (options.userId) where.performedByUserId = options.userId;
     if (options.powerBranch) where.powerBranch = options.powerBranch;
 

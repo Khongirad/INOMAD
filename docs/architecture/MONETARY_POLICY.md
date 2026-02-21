@@ -14,7 +14,7 @@ The **Central Bank of INOMAD KHURAL** is the sole institution with the authority
 - **Burn (сжигание)** ALTAN
 - Define and enforce **monetary policy** for the entire confederation
 
-No other institution, bank, arban, or individual may create or destroy ALTAN. The Central Bank operates independently and is accountable to the Khural (parliament) as a whole.
+No other institution, bank, arbad, or individual may create or destroy ALTAN. The Central Bank operates independently and is accountable to the Khural (parliament) as a whole.
 
 ```
 Central Bank
@@ -176,7 +176,7 @@ Citizen marries (ZAGS registration)
           │
           ├── Transfer P2P (citizens ↔ citizens)
           ├── Exchange (ALTAN ↔ external currencies)
-          └── Arban credit lines
+          └── Arbad credit lines
 ```
 
 ---

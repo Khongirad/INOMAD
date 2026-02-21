@@ -12,10 +12,10 @@ import {
   Divider,
 } from '@mui/material';
 import { AccountBalance, CalendarToday, TrendingUp } from '@mui/icons-material';
-import { arbanAPI } from '../../../lib/api/arban.api';
+import { arbadAPI } from '../../../lib/api/arbad.api';
 
 interface BorrowFormProps {
-  arbanId: number;
+  arbadId: number;
   type: 'family' | 'org';
   maxAvailable: number;
   onSuccess?: () => void;
@@ -23,7 +23,7 @@ interface BorrowFormProps {
 }
 
 export const BorrowForm: React.FC<BorrowFormProps> = ({
-  arbanId,
+  arbadId,
   type,
   maxAvailable,
   onSuccess,
@@ -44,7 +44,7 @@ export const BorrowForm: React.FC<BorrowFormProps> = ({
   const loadInterestRate = async () => {
     setLoadingRate(true);
     try {
-      const response = await arbanAPI.credit.admin.getInterestRate();
+      const response = await arbadAPI.credit.admin.getInterestRate();
       setInterestRateBps(response.data.rateBps);
     } catch (err) {
       console.error('Failed to load interest rate:', err);
@@ -83,7 +83,7 @@ export const BorrowForm: React.FC<BorrowFormProps> = ({
     setError(null);
 
     try {
-      await arbanAPI.credit[type].borrow(arbanId, amount, durationDays);
+      await arbadAPI.credit[type].borrow(arbadId, amount, durationDays);
       setSuccess(true);
       
       if (onSuccess) {

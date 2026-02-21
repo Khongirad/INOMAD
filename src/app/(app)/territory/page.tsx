@@ -10,10 +10,10 @@ import { useOrganizations } from '@/lib/api';
 import type { HierarchyNode, OrganizationType } from '@/lib/types/models';
 
 const TYPE_LABELS: Record<string, string> = {
-  ARBAN: 'Arban',
-  ZUN: 'Zuun',
-  MYANGAN: 'Myangan',
-  TUMEN: 'Tumen',
+  ARBAD: 'Arbad',
+  ZUN: 'Zuud',
+  MYANGAD: 'Myangad',
+  TUMED: 'Tumed',
   REPUBLIC: 'Republic',
   CONFEDERATION: 'Confederation',
   GUILD: 'Guild',
@@ -22,10 +22,10 @@ const TYPE_LABELS: Record<string, string> = {
 
 const getTypeColor = (type: string) => {
   switch (type) {
-    case 'ARBAN': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+    case 'ARBAD': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
     case 'ZUN': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-    case 'MYANGAN': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
-    case 'TUMEN': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+    case 'MYANGAD': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+    case 'TUMED': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
     case 'REPUBLIC': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
     case 'CONFEDERATION': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
     default: return 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20';
@@ -138,10 +138,10 @@ export default function TerritoryPage() {
               className="px-4 py-2 rounded-lg bg-zinc-900 border border-white/10 text-white"
             >
               <option value="all">All Types</option>
-              <option value="ARBAN">Arban</option>
-              <option value="ZUN">Zuun</option>
-              <option value="MYANGAN">Myangan</option>
-              <option value="TUMEN">Tumen</option>
+              <option value="ARBAD">Arbad</option>
+              <option value="ZUN">Zuud</option>
+              <option value="MYANGAD">Myangad</option>
+              <option value="TUMED">Tumed</option>
               <option value="REPUBLIC">Republic</option>
             </select>
           </div>
@@ -238,10 +238,10 @@ export default function TerritoryPage() {
             {Object.entries(TYPE_LABELS).slice(0, 6).map(([type, label]) => (
               <div key={type} className="flex items-center gap-2">
                 <div className={cn('w-3 h-3 rounded-full', {
-                  'bg-emerald-500': type === 'ARBAN',
+                  'bg-emerald-500': type === 'ARBAD',
                   'bg-blue-500': type === 'ZUN',
-                  'bg-purple-500': type === 'MYANGAN',
-                  'bg-amber-500': type === 'TUMEN',
+                  'bg-purple-500': type === 'MYANGAD',
+                  'bg-amber-500': type === 'TUMED',
                   'bg-rose-500': type === 'REPUBLIC',
                   'bg-cyan-500': type === 'CONFEDERATION',
                 })} />

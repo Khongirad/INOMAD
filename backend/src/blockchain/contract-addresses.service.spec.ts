@@ -17,7 +17,7 @@ jest.mock('fs', () => ({
         chainId: 31337,
         rpcUrl: 'http://localhost:8545',
         contracts: {
-          ArbanCompletion: '0xARBAN',
+          ArbadCompletion: '0xARBAD',
           ZunRegistry: '0xZUN',
           ElectionRegistry: '0xELECTION',
         },
@@ -63,7 +63,7 @@ describe('ContractAddressesService', () => {
       expect(service.getAddress('CoreLock')).toBe('0xCORE');
     });
     it('returns citizen address', () => {
-      expect(service.getAddress('ArbanCompletion')).toBe('0xARBAN');
+      expect(service.getAddress('ArbadCompletion')).toBe('0xARBAD');
     });
     it('returns banking address', () => {
       expect(service.getAddress('Altan')).toBe('0xALTAN');
@@ -121,7 +121,7 @@ describe('ContractAddressesService', () => {
   describe('getGuildContracts', () => {
     it('returns guild contracts', () => {
       const r = service.getGuildContracts();
-      expect(r.arbanCompletion).toBe('0xARBAN');
+      expect(r.arbadCompletion).toBe('0xARBAD');
       expect(r.zunRegistry).toBe('0xZUN');
     });
   });

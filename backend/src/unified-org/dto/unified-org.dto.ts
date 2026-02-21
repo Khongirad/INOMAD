@@ -9,7 +9,7 @@ export class CreateOrganizationDto {
   type: OrganizationType;
   branch?: BranchType;
   description?: string;
-  level?: number; // 1=Individual, 10=Arban, 100=Zun, etc.
+  level?: number; // 1=Individual, 10=Arbad, 100=Zun, etc.
   parentId?: string;
   republicId?: string;
   republic?: string;
@@ -54,13 +54,13 @@ export class RateOrganizationDto {
 // Hierarchy DTOs
 // ========================
 
-export class CreateMyanganDto {
+export class CreateMyangadDto {
   name: string;
   region: string;
   description?: string;
 }
 
-export class CreateTumenDto {
+export class CreateTumedDto {
   name: string;
   region: string;
   description?: string;

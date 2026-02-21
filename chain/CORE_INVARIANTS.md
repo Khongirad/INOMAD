@@ -10,7 +10,7 @@ SeatSBT is non-transferable
 All wallets are native to Altan and start LOCKED
 
 ## Activation & Verification
-Account activation always happens through Arban  
+Account activation always happens through Arbad  
 Only real humans can verify identities  
 Verifier identity is permanently recorded  
 Verifier carries responsibility for false verification  

@@ -160,15 +160,15 @@ export const transferLeadership = async (
 };
 
 /**
- * Get Arban network map
+ * Get Arbad network map
  */
 export const getNetworkMap = async (): Promise<any> => {
   return api.get<any>('/organizations/network/map');
 };
 
 /**
- * Get network connections for specific arban
+ * Get network connections for specific arbad
  */
-export const getNetworkConnections = async (arbanId: string): Promise<any> => {
-  return api.get<any>(`/organizations/network/${arbanId}`);
+export const getNetworkConnections = async (arbadId: string): Promise<any> => {
+  return api.get<any>(`/organizations/network/${arbadId}`);
 };

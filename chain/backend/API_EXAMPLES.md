@@ -15,15 +15,15 @@ Test credentials from seed data:
 
 ## 1. Khural (Governance) API
 
-### Create Arban Group
+### Create Arbad Group
 
 ```bash
 curl -X POST http://localhost:3001/api/khural \
   -H "Content-Type: application/json" \
   -H "x-seat-id: SEAT_001" \
   -d '{
-    "level": "ARBAN",
-    "name": "Northern Arban Unit"
+    "level": "ARBAD",
+    "name": "Northern Arbad Unit"
   }'
 ```
 
@@ -31,8 +31,8 @@ curl -X POST http://localhost:3001/api/khural \
 ```json
 {
   "id": "uuid",
-  "level": "ARBAN",
-  "name": "Northern Arban Unit",
+  "level": "ARBAD",
+  "name": "Northern Arbad Unit",
   "seats": [
     {
       "id": "uuid",
@@ -84,7 +84,7 @@ curl http://localhost:3001/api/khural \
   -H "x-seat-id: SEAT_001"
 
 # Filter by level
-curl "http://localhost:3001/api/khural?level=ARBAN" \
+curl "http://localhost:3001/api/khural?level=ARBAD" \
   -H "x-seat-id: SEAT_001"
 ```
 

@@ -56,7 +56,7 @@ type Params struct {
 - **All 37 Constitutional Articles**:
   - 📜 **PRINCIPLES** (1-7): Humanity, Democracy, Rule of Law, Transparency, Tech Neutrality, Movement Freedom, Property Rights
   - 🛡️ **RIGHTS** (8-15): Life, Speech, Education, Labor, Family, Conscience, Fair Trial, Data Protection
-  - 🏛️ **GOVERNANCE** (16-22): Arban/Zun system, Myangan/Tumen, Republican/Confederate Khurals, Subsidiarity, E-Voting
+  - 🏛️ **GOVERNANCE** (16-22): Arbad/Zun system, Myangad/Tumed, Republican/Confederate Khurals, Subsidiarity, E-Voting
   - 💰 **ECONOMY** (23-30): Economic Freedom, Competition, Central Bank, ALTAN currency, **Article 27 (Network Fee)**, Annual Tax, Budget Transparency, Credit System
   - 🌍 **LAND** (31-33): State Ownership, Lifetime Rights, Transfer Rights
   - ⚖️ **JUSTICE** (34-36): Judicial Independence, Court System, **Article 36 (FreezeLaw)**

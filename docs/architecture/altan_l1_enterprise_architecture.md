@@ -274,7 +274,7 @@ IBC Denom: ibc/{hash}/ualtan
 Per User State:
   - Account: ~200 bytes
   - Citizen record: ~500 bytes
-  - Arban membership: ~100 bytes
+  - Arbad membership: ~100 bytes
   - Bank account: ~300 bytes
   Total: ~1.1 KB per user
 

@@ -30,14 +30,14 @@ describe('BankHierarchyController', () => {
   it('should be defined', () => expect(controller).toBeDefined());
 
   it('registers employee', async () => {
-    const r = await controller.registerEmployee({ seatId: 1, wallet: '0xABC', bankArbanId: 1 });
+    const r = await controller.registerEmployee({ seatId: 1, wallet: '0xABC', bankArbadId: 1 });
     expect(r.success).toBe(true);
     expect(r.employeeId).toBe('emp-1');
   });
 
   it('handles registration error', async () => {
     service.registerEmployee.mockRejectedValue(new Error('duplicate'));
-    await expect(controller.registerEmployee({ seatId: 1, wallet: '0x', bankArbanId: 1 }))
+    await expect(controller.registerEmployee({ seatId: 1, wallet: '0x', bankArbadId: 1 }))
       .rejects.toThrow();
   });
 

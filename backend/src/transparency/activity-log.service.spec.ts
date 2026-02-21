@@ -11,7 +11,7 @@ describe('ActivityLogService', () => {
     actionParameters: {}, performedByUserId: 'user-1', powerBranch: 'EXECUTIVE',
     hierarchyLevel: 'LEVEL_1', durationMinutes: 15, performedAt: new Date('2026-02-15T10:00:00Z'),
     performedBy: { seatId: 'seat-1', username: 'User' },
-    orgArban: { name: 'OrgX', powerBranch: 'EXECUTIVE' },
+    orgArbad: { name: 'OrgX', powerBranch: 'EXECUTIVE' },
     template: { code: 'TPL-001', name: 'Org Template' },
   };
 

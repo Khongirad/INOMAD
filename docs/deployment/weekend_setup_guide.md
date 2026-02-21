@@ -592,7 +592,7 @@ altand query corelaw article [number]
 ## Next Steps
 
 - Week 1: Complete x/corelaw with all 37 articles
-- Week 2: Add x/citizen and x/arban modules
+- Week 2: Add x/citizen and x/arbad modules
 EOF
 ```
 

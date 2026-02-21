@@ -113,7 +113,7 @@ export function MigrationWizard({ onComplete, onCancel }: MigrationWizardProps) 
               </svg>
               <div>
                 <p className="font-medium text-gray-900">Social Recovery</p>
-                <p className="text-sm text-gray-600">Recover your wallet via Arban guardians</p>
+                <p className="text-sm text-gray-600">Recover your wallet via Arbad guardians</p>
               </div>
             </div>
 
@@ -340,7 +340,7 @@ export function MigrationWizard({ onComplete, onCancel }: MigrationWizardProps) 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <p className="font-medium text-blue-900 mb-2">🛡️ Next Step: Add Recovery Guardians</p>
             <p className="text-sm text-blue-800">
-              You can now add trusted Arban members as recovery guardians. They can help you recover your wallet if you lose access.
+              You can now add trusted Arbad members as recovery guardians. They can help you recover your wallet if you lose access.
             </p>
           </div>
 

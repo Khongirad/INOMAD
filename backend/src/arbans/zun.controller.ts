@@ -15,17 +15,17 @@ import {
 import { ZunService } from './zun.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ethers } from 'ethers';
-import { FormZunRequest } from './types/arban.types';
+import { FormZunRequest } from './types/arbad.types';
 
 @ApiTags('Hierarchy')
-@Controller('arbans/zun')
+@Controller('arbads/zun')
 @UseGuards(JwtAuthGuard)
 export class ZunController {
   constructor(private readonly zunService: ZunService) {}
 
   /**
    * Form Zun (Clan)
-   * POST /arbans/zun
+   * POST /arbads/zun
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -36,7 +36,7 @@ export class ZunController {
 
   /**
    * Set Zun elder
-   * PUT /arbans/zun/:zunId/elder
+   * PUT /arbads/zun/:zunId/elder
    */
   @Put(':zunId/elder')
   @HttpCode(HttpStatus.OK)
@@ -52,7 +52,7 @@ export class ZunController {
 
   /**
    * Get Zun by ID
-   * GET /arbans/zun/:zunId
+   * GET /arbads/zun/:zunId
    */
   @Get(':zunId')
   async getZun(@Param('zunId', ParseIntPipe) zunId: number) {
@@ -60,17 +60,17 @@ export class ZunController {
   }
 
   /**
-   * Get Zuns by Family Arban
-   * GET /arbans/zun/by-family/:arbanId
+   * Get Zuns by Family Arbad
+   * GET /arbads/zun/by-family/:arbadId
    */
-  @Get('by-family/:arbanId')
-  async getZunsByFamily(@Param('arbanId', ParseIntPipe) arbanId: number) {
-    return await this.zunService.getZunsByFamily(arbanId);
+  @Get('by-family/:arbadId')
+  async getZunsByFamily(@Param('arbadId', ParseIntPipe) arbadId: number) {
+    return await this.zunService.getZunsByFamily(arbadId);
   }
 
   /**
    * Sync Zun from blockchain
-   * POST /arbans/zun/:zunId/sync
+   * POST /arbads/zun/:zunId/sync
    */
   @Post(':zunId/sync')
   @HttpCode(HttpStatus.OK)

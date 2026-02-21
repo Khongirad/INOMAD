@@ -9,7 +9,7 @@ describe('TimelineService', () => {
   const mockEvent = {
     id: 'e1', type: 'QUEST_COMPLETED', scope: 'INDIVIDUAL',
     title: 'Quest Done', description: 'Desc', actorId: 'u1', targetId: 'u2',
-    location: null, timezone: 'UTC', familyId: null, clanId: null, arbanId: null,
+    location: null, timezone: 'UTC', familyId: null, clanId: null, arbadId: null,
     hordeId: null, nationId: null, isLegalContract: false, contractHash: null,
     witnessIds: [], metadata: null, ipAddress: null, userAgent: null, taskId: null,
     createdAt: new Date(), actor: { id: 'u1', username: 'actor' },
@@ -54,7 +54,7 @@ describe('TimelineService', () => {
         type: 'MARRIAGE_REGISTERED' as any, scope: 'FAMILY' as any,
         title: 'Marriage', description: 'Desc', actorId: 'u1', targetId: 'u2',
         location: 'City', timezone: 'Asia/Ulaanbaatar', familyId: 'f1',
-        clanId: 'c1', arbanId: 'a1', hordeId: 'h1', nationId: 'n1',
+        clanId: 'c1', arbadId: 'a1', hordeId: 'h1', nationId: 'n1',
         isLegalContract: true, contractHash: '0xabc', witnessIds: ['w1'],
         metadata: { key: 'val' }, ipAddress: '1.2.3.4', userAgent: 'test', taskId: 't1',
       });
@@ -121,8 +121,8 @@ describe('TimelineService', () => {
       await service.getHierarchicalTimeline('CLAN' as any, 'c1');
       expect(prisma.timelineEvent.findMany).toHaveBeenCalled();
     });
-    it('handles ARBAN scope', async () => {
-      await service.getHierarchicalTimeline('ARBAN' as any, 'a1');
+    it('handles ARBAD scope', async () => {
+      await service.getHierarchicalTimeline('ARBAD' as any, 'a1');
       expect(prisma.timelineEvent.findMany).toHaveBeenCalled();
     });
     it('handles HORDE scope', async () => {
@@ -140,7 +140,7 @@ describe('TimelineService', () => {
     it('applies type filter and date range', async () => {
       const from = new Date('2024-01-01');
       const to = new Date('2024-12-31');
-      await service.getHierarchicalTimeline('ARBAN' as any, 'a1', {
+      await service.getHierarchicalTimeline('ARBAD' as any, 'a1', {
         types: ['QUEST_COMPLETED' as any], from, to, limit: 5,
       });
       expect(prisma.timelineEvent.findMany).toHaveBeenCalledWith(
@@ -165,7 +165,7 @@ describe('TimelineService', () => {
     });
     it('passes scope override', async () => {
       await service.recordContract({
-        type: 'CONTRACT_SIGNED' as any, actorId: 'u1', scope: 'ARBAN' as any,
+        type: 'CONTRACT_SIGNED' as any, actorId: 'u1', scope: 'ARBAD' as any,
         title: 'Contract', contractHash: '0xabc', witnessIds: ['w1'],
       });
       expect(prisma.timelineEvent.create).toHaveBeenCalled();

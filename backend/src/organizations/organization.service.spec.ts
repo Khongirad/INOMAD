@@ -47,7 +47,7 @@ describe('OrganizationService', () => {
       organizationAchievement: {
         create: jest.fn().mockResolvedValue({}),
       },
-      arbanNetwork: {
+      arbadNetwork: {
         findUnique: jest.fn().mockResolvedValue(null),
         findMany: jest.fn().mockResolvedValue([]),
       },
@@ -239,9 +239,9 @@ describe('OrganizationService', () => {
     });
   });
 
-  describe('getArbanNetwork', () => {
+  describe('getArbadNetwork', () => {
     it('returns network', async () => {
-      const r = await service.getArbanNetwork('a1');
+      const r = await service.getArbadNetwork('a1');
       expect(r).toBeNull();
     });
   });
@@ -254,17 +254,17 @@ describe('OrganizationService', () => {
     });
 
     it('returns map with nodes and links', async () => {
-      prisma.arbanNetwork.findMany.mockResolvedValue([
+      prisma.arbadNetwork.findMany.mockResolvedValue([
         {
-          arbanId: 'a1',
-          arban: { name: 'Arban 1', type: 'FAMILY', overallRating: '8.5', leader: {} },
+          arbadId: 'a1',
+          arbad: { name: 'Arbad 1', type: 'FAMILY', overallRating: '8.5', leader: {} },
           layer: 1, positionX: 10, positionY: 20,
           clusterColor: '#FF0000', importance: 5,
           connectedTo: ['a2'],
         },
         {
-          arbanId: 'a2',
-          arban: { name: 'Arban 2', type: 'ORGANIZATIONAL', overallRating: '7.0', leader: {} },
+          arbadId: 'a2',
+          arbad: { name: 'Arbad 2', type: 'ORGANIZATIONAL', overallRating: '7.0', leader: {} },
           layer: 1, positionX: 30, positionY: 40,
           clusterColor: '#00FF00', importance: 3,
           connectedTo: [],

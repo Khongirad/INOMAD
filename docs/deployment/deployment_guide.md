@@ -46,10 +46,10 @@ forge script script/DeployLegislativeBranch.s.sol:DeployLegislativeBranch \
 This deploys:
 - ✅ StatisticsBureau
 - ✅ VotingCenter
-- ✅ ArbanKhural #1 (sample)
+- ✅ ArbadKhural #1 (sample)
 - ✅ ZunKhural #1 (sample)
-- ✅ MyangangKhural #1 (sample)
-- ✅ TumenKhural #1 (sample)
+- ✅ MyangadgKhural #1 (sample)
+- ✅ TumedKhural #1 (sample)
 
 ### 2. Verify Deployment
 
@@ -71,13 +71,13 @@ VOTING_CENTER_ADDRESS=0x...
 STATISTICS_BUREAU_ADDRESS=0x...
 ```
 
-### 4. Initialize First Arban
+### 4. Initialize First Arbad
 
-Add representatives to Arban #1:
+Add representatives to Arbad #1:
 
 ```solidity
 // In Foundry console or via script
-cast send $ARBAN_1_ADDRESS \
+cast send $ARBAD_1_ADDRESS \
   "addRepresentative(address,uint256)" \
   0xRepAddress1 1 \
   --private-key $ADMIN_KEY \
@@ -107,26 +107,26 @@ curl -X POST http://localhost:3000/legislative/voting/proposals \
 
 ## Deploy Additional Khurals
 
-### Deploy More Arbans
+### Deploy More Arbads
 
 ```bash
 forge script script/DeployLegislativeBranch.s.sol:DeployAdditionalKhurals \
-  --sig "deployArban(address,uint256,string,address)" \
+  --sig "deployArbad(address,uint256,string,address)" \
   $ADMIN_ADDRESS \
   2 \
-  "Second Arban" \
+  "Second Arbad" \
   $VOTING_CENTER_ADDRESS \
   --rpc-url $RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast
 ```
 
-### Deploy More Zuns/Myangans/Tumens
+### Deploy More Zuns/Myangads/Tumeds
 
 Same pattern with:
 - `deployZun(address,uint256,string,address)`
-- `deployMyangan(address,uint256,string,address)`
-- `deployTumen(address,uint256,string,address)`
+- `deployMyangad(address,uint256,string,address)`
+- `deployTumed(address,uint256,string,address)`
 
 ## Post-Deployment Configuration
 
@@ -171,13 +171,13 @@ cast call $VOTING_CENTER_ADDRESS "proposalCount()" --rpc-url $RPC_URL
 # Check StatisticsBureau
 cast call $STATISTICS_BUREAU_ADDRESS "getCensus()" --rpc-url $RPC_URL
 
-# Check Arban
-cast call $ARBAN_1_ADDRESS "getRepresentativeCount()" --rpc-url $RPC_URL
+# Check Arbad
+cast call $ARBAD_1_ADDRESS "getRepresentativeCount()" --rpc-url $RPC_URL
 ```
 
 ### Test Full Flow
 
-1. Add representative to Arban
+1. Add representative to Arbad
 2. Create proposal via API
 3. Vote on proposal
 4. Wait for voting period
@@ -255,10 +255,10 @@ Approximate gas costs:
 |----------|-------------|
 | StatisticsBureau | ~2,500,000 |
 | VotingCenter | ~3,000,000 |
-| ArbanKhural | ~1,800,000 |
+| ArbadKhural | ~1,800,000 |
 | ZunKhural | ~1,800,000 |
-| MyangangKhural | ~1,800,000 |
-| TumenKhural | ~1,900,000 |
+| MyangadgKhural | ~1,800,000 |
+| TumedKhural | ~1,900,000 |
 | **Total** | **~12,800,000** |
 
 At 50 gwei: ~0.64 ETH

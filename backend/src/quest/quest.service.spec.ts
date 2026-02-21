@@ -26,7 +26,7 @@ describe('QuestService', () => {
       aggregate: jest.fn(),
     },
     organizationMember: { findUnique: jest.fn() },
-    tumen: { findFirst: jest.fn() },
+    tumed: { findFirst: jest.fn() },
     $transaction: jest.fn((args) => Promise.all(args)),
   });
 
@@ -51,7 +51,7 @@ describe('QuestService', () => {
   // ─── createQuest ───────────────────────
   describe('createQuest', () => {
     it('should create quest with tax calculation', async () => {
-      prisma.tumen.findFirst.mockResolvedValue(null);
+      prisma.tumed.findFirst.mockResolvedValue(null);
       prisma.quest.create.mockResolvedValue({ ...mockQuest, taxAmount: 10, republicTaxAmount: 7, confederationTaxAmount: 3 });
       const result = await service.createQuest('giver-1', {
         title: 'Test', description: 'Desc', category: 'GENERAL' as any,
@@ -73,7 +73,7 @@ describe('QuestService', () => {
     });
     it('should allow org quest when member', async () => {
       prisma.organizationMember.findUnique.mockResolvedValue({ role: 'MEMBER' });
-      prisma.tumen.findFirst.mockResolvedValue(null);
+      prisma.tumed.findFirst.mockResolvedValue(null);
       prisma.quest.create.mockResolvedValue(mockQuest);
       const result = await service.createQuest('giver-1', {
         title: 'Test', description: 'D', category: 'GENERAL' as any,
@@ -181,7 +181,7 @@ describe('QuestService', () => {
         taker: { id: 'taker-1', username: 'taker' }, republic: { id: 'rep-1', name: 'Rep1' },
       });
       prisma.quest.update.mockResolvedValue({ ...mockQuest, status: 'COMPLETED' });
-      prisma.tumen.findFirst.mockResolvedValue(null);
+      prisma.tumed.findFirst.mockResolvedValue(null);
       const result = await service.approveQuest('q-1', 'giver-1', 5, 'Great');
       expect(result.status).toBe('COMPLETED');
     });
@@ -307,13 +307,13 @@ describe('QuestService', () => {
 
   // ─── detectRepublicId (private) ───────
   describe('detectRepublicId (private)', () => {
-    it('should return republicId when tumen found', async () => {
-      prisma.tumen.findFirst.mockResolvedValue({ republicId: 'rep-1' });
+    it('should return republicId when tumed found', async () => {
+      prisma.tumed.findFirst.mockResolvedValue({ republicId: 'rep-1' });
       const result = await (service as any).detectRepublicId('user-1');
       expect(result).toBe('rep-1');
     });
-    it('should return undefined when no tumen', async () => {
-      prisma.tumen.findFirst.mockResolvedValue(null);
+    it('should return undefined when no tumed', async () => {
+      prisma.tumed.findFirst.mockResolvedValue(null);
       const result = await (service as any).detectRepublicId('user-1');
       expect(result).toBeUndefined();
     });
@@ -403,10 +403,10 @@ describe('QuestService', () => {
     });
   });
 
-  // ─── createQuest with tumen-based republic ─
-  describe('createQuest with tumen republic', () => {
-    it('should auto-detect republicId from tumen', async () => {
-      prisma.tumen.findFirst.mockResolvedValue({ republicId: 'rep-1' });
+  // ─── createQuest with tumed-based republic ─
+  describe('createQuest with tumed republic', () => {
+    it('should auto-detect republicId from tumed', async () => {
+      prisma.tumed.findFirst.mockResolvedValue({ republicId: 'rep-1' });
       prisma.quest.create.mockResolvedValue({ ...mockQuest, republicId: 'rep-1' });
       const result = await service.createQuest('giver-1', {
         title: 'Test', description: 'D', category: 'GENERAL' as any,

@@ -17,7 +17,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { Group, Add, Remove, Info } from '@mui/icons-material';
-import { arbanAPI } from '../../../lib/api/arban.api';
+import { arbadAPI } from '../../../lib/api/arbad.api';
 
 interface ZunFormationProps {
   onSuccess?: (zunId: number) => void;
@@ -25,31 +25,31 @@ interface ZunFormationProps {
 
 export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
   const [zunName, setZunName] = useState('');
-  const [arbanIds, setArbanIds] = useState<number[]>([]);
-  const [newArbanId, setNewArbanId] = useState('');
+  const [arbadIds, setArbadIds] = useState<number[]>([]);
+  const [newArbadId, setNewArbadId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ zunId: number; txHash: string } | null>(null);
 
-  const handleAddArban = () => {
-    const id = Number(newArbanId);
+  const handleAddArbad = () => {
+    const id = Number(newArbadId);
     if (!id || id <= 0) {
-      setError('Please enter a valid Arban ID');
+      setError('Please enter a valid Arbad ID');
       return;
     }
 
-    if (arbanIds.includes(id)) {
-      setError('This Arban is already added');
+    if (arbadIds.includes(id)) {
+      setError('This Arbad is already added');
       return;
     }
 
-    setArbanIds([...arbanIds, id]);
-    setNewArbanId('');
+    setArbadIds([...arbadIds, id]);
+    setNewArbadId('');
     setError(null);
   };
 
-  const handleRemoveArban = (id: number) => {
-    setArbanIds(arbanIds.filter((arbanId) => arbanId !== id));
+  const handleRemoveArbad = (id: number) => {
+    setArbadIds(arbadIds.filter((arbadId) => arbadId !== id));
   };
 
   const handleSubmit = async () => {
@@ -58,8 +58,8 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
       return;
     }
 
-    if (arbanIds.length < 2) {
-      setError('At least 2 Family Arbans are required to form a Zun');
+    if (arbadIds.length < 2) {
+      setError('At least 2 Family Arbads are required to form a Zun');
       return;
     }
 
@@ -67,9 +67,9 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
     setError(null);
 
     try {
-      const response = await arbanAPI.zun.formZun({
+      const response = await arbadAPI.zun.formZun({
         zunName: zunName.trim(),
-        arbanIds,
+        arbadIds,
       });
 
       setSuccess(response.data);
@@ -103,7 +103,7 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
             </Typography>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Member Arbans: {arbanIds.join(', ')}
+            Member Arbads: {arbadIds.join(', ')}
           </Typography>
         </CardContent>
       </Card>
@@ -120,10 +120,10 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
               Form Zun (Clan)
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Unite multiple Family Arbans into a clan network
+              Unite multiple Family Arbads into a clan network
             </Typography>
           </Box>
-          <Tooltip title="A Zun is a clan formed by 2 or more Family Arbans. It represents kinship networks and family alliances.">
+          <Tooltip title="A Zun is a clan formed by 2 or more Family Arbads. It represents kinship networks and family alliances.">
             <IconButton size="small">
               <Info />
             </IconButton>
@@ -131,7 +131,7 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
         </Box>
 
         <Alert severity="info" sx={{ mb: 3 }}>
-          Minimum 2 Family Arbans required. All members must be active and not already in another
+          Minimum 2 Family Arbads required. All members must be active and not already in another
           Zun.
         </Alert>
 
@@ -152,28 +152,28 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
           sx={{ mb: 3 }}
         />
 
-        {/* Add Arban Section */}
+        {/* Add Arbad Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Add Family Arbans
+            Add Family Arbads
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <TextField
               fullWidth
-              label="Family Arban ID"
-              value={newArbanId}
-              onChange={(e) => setNewArbanId(e.target.value)}
+              label="Family Arbad ID"
+              value={newArbadId}
+              onChange={(e) => setNewArbadId(e.target.value)}
               type="number"
-              placeholder="Enter Arban ID"
+              placeholder="Enter Arbad ID"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
-                  handleAddArban();
+                  handleAddArbad();
                 }
               }}
             />
             <Button
               variant="outlined"
-              onClick={handleAddArban}
+              onClick={handleAddArbad}
               startIcon={<Add />}
               sx={{ minWidth: 120 }}
             >
@@ -182,21 +182,21 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
           </Box>
         </Box>
 
-        {/* Selected Arbans */}
+        {/* Selected Arbads */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Selected Family Arbans ({arbanIds.length})
+            Selected Family Arbads ({arbadIds.length})
           </Typography>
 
-          {arbanIds.length === 0 ? (
-            <Alert severity="warning">No Family Arbans added yet</Alert>
+          {arbadIds.length === 0 ? (
+            <Alert severity="warning">No Family Arbads added yet</Alert>
           ) : (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {arbanIds.map((id) => (
+              {arbadIds.map((id) => (
                 <Chip
                   key={id}
-                  label={`Arban #${id}`}
-                  onDelete={() => handleRemoveArban(id)}
+                  label={`Arbad #${id}`}
+                  onDelete={() => handleRemoveArbad(id)}
                   deleteIcon={<Remove />}
                   color="secondary"
                   variant="outlined"
@@ -205,9 +205,9 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
             </Box>
           )}
 
-          {arbanIds.length === 1 && (
+          {arbadIds.length === 1 && (
             <Alert severity="warning" sx={{ mt: 2 }}>
-              Add at least one more Family Arban to form a Zun
+              Add at least one more Family Arbad to form a Zun
             </Alert>
           )}
         </Box>
@@ -219,7 +219,7 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
           color="secondary"
           size="large"
           onClick={handleSubmit}
-          disabled={loading || !zunName.trim() || arbanIds.length < 2}
+          disabled={loading || !zunName.trim() || arbadIds.length < 2}
           startIcon={loading ? <CircularProgress size={20} /> : <Group />}
         >
           {loading ? 'Forming Zun...' : 'Form Zun'}
@@ -230,7 +230,7 @@ export const ZunFormation: React.FC<ZunFormationProps> = ({ onSuccess }) => {
           <Typography variant="body2" color="text.secondary">
             <strong>What is a Zun?</strong>
             <br />A Zun (Clan) represents kinship networks and family alliances. Members can support
-            each other, share resources, and coordinate at the clan level. The founder Arban can
+            each other, share resources, and coordinate at the clan level. The founder Arbad can
             appoint a Zun Elder to lead the clan.
           </Typography>
         </Box>

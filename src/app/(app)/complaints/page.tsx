@@ -19,15 +19,15 @@ import {
 } from '@/lib/api';
 import type { Complaint, ComplaintStatus, DisputeSourceType, ComplaintCategory } from '@/lib/types/models';
 
-const LEVEL_NAMES = ['', 'Arban', 'Zuun', 'Myangan', 'Tumen', 'Republic', 'Confederation', 'Court'];
+const LEVEL_NAMES = ['', 'Arbad', 'Zuud', 'Myangad', 'Tumed', 'Republic', 'Confederation', 'Court'];
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   FILED: { label: 'Submitted', color: 'text-blue-400' },
   UNDER_REVIEW: { label: 'Under Review', color: 'text-amber-400' },
   RESPONDED: { label: 'Response received', color: 'text-cyan-400' },
-  ESCALATED_L2: { label: 'Escalation → Zuun', color: 'text-pink-400' },
-  ESCALATED_L3: { label: 'Escalation → Myangan', color: 'text-pink-400' },
-  ESCALATED_L4: { label: 'Escalation → Tumen', color: 'text-purple-400' },
+  ESCALATED_L2: { label: 'Escalation → Zuud', color: 'text-pink-400' },
+  ESCALATED_L3: { label: 'Escalation → Myangad', color: 'text-pink-400' },
+  ESCALATED_L4: { label: 'Escalation → Tumed', color: 'text-purple-400' },
   ESCALATED_L5: { label: 'Escalation → Republic', color: 'text-purple-400' },
   ESCALATED_L6: { label: 'Escalation → Confederation', color: 'text-violet-400' },
   IN_COURT: { label: 'In Court', color: 'text-rose-400' },
@@ -130,7 +130,7 @@ export default function ComplaintsPage() {
             ))}
           </div>
           <p className="text-[10px] text-zinc-500 mt-2">
-            Arban → Zuun → Myangan → Tumen → Republic → Confederation → Court
+            Arbad → Zuud → Myangad → Tumed → Republic → Confederation → Court
           </p>
         </CardContent>
       </Card>

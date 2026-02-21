@@ -107,7 +107,7 @@ export default function DashboardPage() {
     getPendingAdmissions().then(a => setPendingAdmissions(a.length)).catch(() => {});
   }, []);
 
-  // Mock Arban members (preserved — CircularCouncil is a unique UX element)
+  // Mock Arbad members (preserved — CircularCouncil is a unique UX element)
   const mockMembers: Member[] = [
     { id: 1, name: "Temujin", isActive: true, hasSigned: true, isLeader: true },
     { id: 2, name: "Borte", isActive: true, hasSigned: true },
@@ -213,7 +213,7 @@ export default function DashboardPage() {
       {/* Circular Council */}
       <div className="flex justify-center">
         <CircularCouncil
-          level="ARBAN"
+          level="ARBAD"
           members={mockMembers}
           onMemberClick={(m) => console.log('Member:', m)}
           showLeaderPanel={mockMembers[0]?.isLeader}

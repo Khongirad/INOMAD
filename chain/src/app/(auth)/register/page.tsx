@@ -115,7 +115,7 @@ export default function RegistrationPage() {
                 <MapPin className="text-gold-primary" /> Select Your Land
               </h2>
               <p className="text-zinc-500 text-sm leading-relaxed">
-                Every citizen is bound to territory. Your registration assigns you to a **Tumen (10,000)** based on your birthplace.
+                Every citizen is bound to territory. Your registration assigns you to a **Tumed (10,000)** based on your birthplace.
               </p>
               
               <div className="grid grid-cols-2 gap-6">
@@ -146,7 +146,7 @@ export default function RegistrationPage() {
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
                 <Globe size={48} className="animate-pulse text-gold-primary/20" />
                 <p className="mt-2 text-[10px] tracking-widest uppercase text-zinc-700">Population allocation enabled</p>
-                <div className="absolute bottom-2 right-2 text-[10px] font-mono text-gold-secondary/40">TUMEN_ALLOCATION_MODE: ON</div>
+                <div className="absolute bottom-2 right-2 text-[10px] font-mono text-gold-secondary/40">TUMED_ALLOCATION_MODE: ON</div>
               </div>
             </div>
           )}

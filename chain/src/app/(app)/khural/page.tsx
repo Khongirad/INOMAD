@@ -10,7 +10,7 @@ import { ChevronUp, Users, Map as MapIcon, ZoomIn } from 'lucide-react';
 type SeatRole = 'member' | 'leader' | 'elder';
 type SeatStatus = 'empty' | 'occupied' | 'locked';
 
-const MOCK_ARBAN: Array<{ id: string; status: SeatStatus; member: { name: string }; role: SeatRole }> = Array(10).fill(null).map((_, i) => ({
+const MOCK_ARBAD: Array<{ id: string; status: SeatStatus; member: { name: string }; role: SeatRole }> = Array(10).fill(null).map((_, i) => ({
   id: `s-${i}`,
   status: 'occupied',
   member: { name: `Citizen ${i+1}` },
@@ -19,20 +19,20 @@ const MOCK_ARBAN: Array<{ id: string; status: SeatStatus; member: { name: string
 const MOCK_ZUUN_LEADERS: Array<{ id: string; status: SeatStatus; member: { name: string }; role: SeatRole }> = Array(10).fill(null).map((_, i) => ({
   id: `z-${i}`,
   status: 'occupied',
-  member: { name: `Arban Leader ${i+1}` },
+  member: { name: `Arbad Leader ${i+1}` },
   role: 'leader'
 }));
 
 export default function KhuralMapPage() {
-  const [level, setLevel] = useState<'TUMEN' | 'MYANGAN' | 'ZUUN' | 'ARBAN'>('TUMEN');
+  const [level, setLevel] = useState<'TUMED' | 'MYANGAD' | 'ZUUN' | 'ARBAD'>('TUMED');
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   const renderLevelInfo = () => {
     switch(level) {
-      case 'TUMEN': return { title: 'State (Tümèn)', count: '10,000', next: 'MYANGAN' };
-      case 'MYANGAN': return { title: 'District (Myangan)', count: '1,000', next: 'ZUUN' };
-      case 'ZUUN': return { title: 'Community (Zuun)', count: '100', next: 'ARBAN' };
-      case 'ARBAN': return { title: 'Family Unit (Arban)', count: '10', next: null };
+      case 'TUMED': return { title: 'State (Tümèn)', count: '10,000', next: 'MYANGAD' };
+      case 'MYANGAD': return { title: 'District (Myangad)', count: '1,000', next: 'ZUUN' };
+      case 'ZUUN': return { title: 'Community (Zuud)', count: '100', next: 'ARBAD' };
+      case 'ARBAD': return { title: 'Family Unit (Arbad)', count: '10', next: null };
     }
   };
 
@@ -43,9 +43,9 @@ export default function KhuralMapPage() {
   };
 
   const handleZoomOut = () => {
-    if (level === 'ARBAN') setLevel('ZUUN');
-    else if (level === 'ZUUN') setLevel('MYANGAN');
-    else if (level === 'MYANGAN') setLevel('TUMEN');
+    if (level === 'ARBAD') setLevel('ZUUN');
+    else if (level === 'ZUUN') setLevel('MYANGAD');
+    else if (level === 'MYANGAD') setLevel('TUMED');
   };
 
   return (
@@ -64,7 +64,7 @@ export default function KhuralMapPage() {
       <div className="absolute top-4 right-4 z-20 flex gap-2">
          <Button 
            variant="outline" 
-           disabled={level === 'TUMEN'}
+           disabled={level === 'TUMED'}
            onClick={handleZoomOut}
            className="bg-black/40 backdrop-blur border-zinc-700"
          >
@@ -90,7 +90,7 @@ export default function KhuralMapPage() {
                {/* The Circle */}
                <CircleLayout 
                  capacity={10} 
-                 members={level === 'ARBAN' ? MOCK_ARBAN : MOCK_ZUUN_LEADERS} // Show Leaders of sub-groups normally
+                 members={level === 'ARBAD' ? MOCK_ARBAD : MOCK_ZUUN_LEADERS} // Show Leaders of sub-groups normally
                  radius={200}
                  centerContent={
                    <div className="w-32 h-32 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center backdrop-blur-md group-hover:bg-amber-500/20 transition-all">

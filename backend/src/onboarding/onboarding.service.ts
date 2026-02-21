@@ -36,7 +36,7 @@ const ONBOARDING_STEPS = [
   },
   {
     index: 3,
-    key: 'arbanJoined',
+    key: 'arbadJoined',
     name: 'Вступить в Арбан',
     description: 'Присоединитесь к Арбану (ячейка из 10 граждан)',
     icon: '🐴',

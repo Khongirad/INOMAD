@@ -13,24 +13,24 @@ import { useKhuralGroups } from '@/lib/api';
 import type { KhuralGroup, KhuralLevel } from '@/lib/types/models';
 
 const LEVEL_COLORS: Record<string, string> = {
-  ARBAN: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  ARBAD: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
   ZUUN: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-  MYANGAN: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-  TUMEN: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+  MYANGAD: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+  TUMED: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
 };
 
 const LEVEL_LABELS: Record<string, string> = {
-  ARBAN: 'Arban (10)',
-  ZUUN: 'Zuun (100)',
-  MYANGAN: 'Myangan (1 000)',
-  TUMEN: 'Tumen (10 000)',
+  ARBAD: 'Arbad (10)',
+  ZUUN: 'Zuud (100)',
+  MYANGAD: 'Myangad (1 000)',
+  TUMED: 'Tumed (10 000)',
 };
 
 const LEVEL_SIZES: Record<string, number> = {
-  ARBAN: 10,
+  ARBAD: 10,
   ZUUN: 100,
-  MYANGAN: 1000,
-  TUMEN: 10000,
+  MYANGAD: 1000,
+  TUMED: 10000,
 };
 
 function GroupCard({ group }: { group: KhuralGroup }) {
@@ -140,10 +140,10 @@ export default function KhuralPage() {
 
   const stats = {
     total: groups.length,
-    arbans: groups.filter((g: KhuralGroup) => g.level === 'ARBAN').length,
-    zuuns: groups.filter((g: KhuralGroup) => g.level === 'ZUUN').length,
-    myangans: groups.filter((g: KhuralGroup) => g.level === 'MYANGAN').length,
-    tumens: groups.filter((g: KhuralGroup) => g.level === 'TUMEN').length,
+    arbads: groups.filter((g: KhuralGroup) => g.level === 'ARBAD').length,
+    zuuds: groups.filter((g: KhuralGroup) => g.level === 'ZUUN').length,
+    myangads: groups.filter((g: KhuralGroup) => g.level === 'MYANGAD').length,
+    tumeds: groups.filter((g: KhuralGroup) => g.level === 'TUMED').length,
     totalMembers: groups.reduce((sum: number, g: KhuralGroup) => sum + g.memberCount, 0),
   };
 
@@ -157,7 +157,7 @@ export default function KhuralPage() {
             Khural
           </h2>
           <p className="text-zinc-400 mt-1">
-            Hierarchical self-governance system: Arban → Zuun → Myangan → Tumen
+            Hierarchical self-governance system: Arbad → Zuud → Myangad → Tumed
           </p>
         </div>
       </div>
@@ -167,12 +167,12 @@ export default function KhuralPage() {
         <CardContent className="p-4">
           <p className="text-sm font-semibold text-zinc-200 mb-3">🏛️ Structure Khural</p>
           <div className="flex items-center justify-between">
-            {(['ARBAN', 'ZUUN', 'MYANGAN', 'TUMEN'] as const).map((level, i) => {
+            {(['ARBAD', 'ZUUN', 'MYANGAD', 'TUMED'] as const).map((level, i) => {
               const count =
-                level === 'ARBAN' ? stats.arbans :
-                level === 'ZUUN' ? stats.zuuns :
-                level === 'MYANGAN' ? stats.myangans :
-                stats.tumens;
+                level === 'ARBAD' ? stats.arbads :
+                level === 'ZUUN' ? stats.zuuds :
+                level === 'MYANGAD' ? stats.myangads :
+                stats.tumeds;
               return (
                 <React.Fragment key={level}>
                   {i > 0 && (
@@ -203,9 +203,9 @@ export default function KhuralPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Total groups', value: stats.total, cls: 'text-blue-400' },
-          { label: 'Arbans', value: stats.arbans, cls: 'text-emerald-400' },
-          { label: 'Zuuns', value: stats.zuuns, cls: 'text-blue-400' },
-          { label: 'Myangans / Tumens', value: stats.myangans + stats.tumens, cls: 'text-purple-400' },
+          { label: 'Arbads', value: stats.arbads, cls: 'text-emerald-400' },
+          { label: 'Zuuds', value: stats.zuuds, cls: 'text-blue-400' },
+          { label: 'Myangads / Tumeds', value: stats.myangads + stats.tumeds, cls: 'text-purple-400' },
         ].map((s) => (
           <Card key={s.label} className="bg-zinc-900/60 border-zinc-800">
             <CardContent className="p-3 flex justify-between items-center">
@@ -220,7 +220,7 @@ export default function KhuralPage() {
 
       {/* Filter */}
       <div className="flex gap-2">
-        {(['ALL', 'ARBAN', 'ZUUN', 'MYANGAN', 'TUMEN'] as const).map((level) => (
+        {(['ALL', 'ARBAD', 'ZUUN', 'MYANGAD', 'TUMED'] as const).map((level) => (
           <Button
             key={level}
             size="sm"
@@ -265,8 +265,8 @@ export default function KhuralPage() {
             <div>
               <h4 className="font-semibold text-amber-200 mb-1">About the Khural System</h4>
               <p className="text-sm text-amber-100/70">
-                Khural — the foundation of self-governance. 10 citizens form Arban, 10 Arbans — Zuun (100),
-                10 Zuuns — Myangan (1,000), 10 Myangans — Tumen (10,000). Each level
+                Khural — the foundation of self-governance. 10 citizens form Arbad, 10 Arbads — Zuud (100),
+                10 Zuuds — Myangad (1,000), 10 Myangads — Tumed (10,000). Each level
                 elects its leader-decurion.
               </p>
             </div>

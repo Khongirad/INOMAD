@@ -23,7 +23,7 @@ interface OrgDetail {
   description?: string;
   ownershipType: string;   // PRIVATE | PUBLIC | MIXED | COOPERATIVE
   powerBranch?: string;    // EXECUTIVE | LEGISLATIVE | JUDICIAL | BANKING
-  level: number;           // 1=Arban,10=Zun,100=Myangan,1000=Tumen
+  level: number;           // 1=Arbad,10=Zun,100=Myangad,1000=Tumed
   republic?: string;
   leader?: { id: string; username?: string; seatId: string; isVerified: boolean };
   members?: { id: string; userId: string; role: string; user: { username?: string; seatId: string } }[];

@@ -73,7 +73,7 @@
 
 *Every citizen has the right to:*
 - *Participate in the Khural — vote on key issues*
-- *Elect and be elected to Arban (management units)*
+- *Elect and be elected to Arbad (management units)*
 - *Create cooperatives and economic associations*
 - *Appeal to the Creator and Admins with proposals and complaints*
 
@@ -88,7 +88,7 @@
 *Every citizen has the right to:*
 - *Fair labor and just payment in ALTAN*
 - *Cooperative ownership of means of production*
-- *Access to credit lines through Arban Khural system*
+- *Access to credit lines through Arbad Khural system*
 - *Participation in INOMAD Sovereign Fund*
 
 ### 2.4 Социальные Права / Social Rights
@@ -178,10 +178,10 @@
 - **Тумен** (10000 человек) — высший совет
 
 *Khural — four-level governance system:*
-- *Arban (10 people) — basic unit*
-- *Zuun (100 people) — local assembly*
-- *Myangan (1000 people) — regional council*
-- *Tumen (10000 people) — supreme council*
+- *Arbad (10 people) — basic unit*
+- *Zuud (100 people) — local assembly*
+- *Myangad (1000 people) — regional council*
+- *Tumed (10000 people) — supreme council*
 
 ### 4.4 Лидеры / Leaders
 
@@ -190,9 +190,9 @@
 - Представления интересов в Зууне
 - Организации кооперативов
 
-*Leaders are elected in each Arban for:*
+*Leaders are elected in each Arbad for:*
 - *Group coordination*
-- *Representation in Zuun*
+- *Representation in Zuud*
 - *Cooperative organization*
 
 ---
@@ -222,8 +222,8 @@
 - **Окончательное решение** Создателя или Админов
 
 *Disputes are resolved through:*
-- *Mediation within Arban*
-- *Arbitration at Zuun/Myangan level*
+- *Mediation within Arbad*
+- *Arbitration at Zuud/Myangad level*
 - *Final decision by Creator or Admins*
 
 ### 5.3 Санкции / Sanctions
@@ -266,7 +266,7 @@
 
 *Economy is based on:*
 - *Cooperatives — joint enterprises*
-- *Mutual credit through Arban Khural*
+- *Mutual credit through Arbad Khural*
 - *Sovereign Fund for common needs*
 
 ---

@@ -13,10 +13,10 @@ import {
   StepLabel,
 } from '@mui/material';
 import { Favorite } from '@mui/icons-material';
-import { arbanAPI } from '../../lib/api/arban.api';
+import { arbadAPI } from '../../lib/api/arbad.api';
 
 interface MarriageRegistrationProps {
-  onSuccess?: (arbanId: number) => void;
+  onSuccess?: (arbadId: number) => void;
 }
 
 const steps = ['Enter Details', 'Verify', 'Submit'];
@@ -27,7 +27,7 @@ export const MarriageRegistration: React.FC<MarriageRegistrationProps> = ({ onSu
   const [wifeSeatId, setWifeSeatId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ arbanId: number; txHash: string } | null>(null);
+  const [success, setSuccess] = useState<{ arbadId: number; txHash: string } | null>(null);
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
@@ -42,7 +42,7 @@ export const MarriageRegistration: React.FC<MarriageRegistrationProps> = ({ onSu
     setError(null);
 
     try {
-      const response = await arbanAPI.family.registerMarriage({
+      const response = await arbadAPI.family.registerMarriage({
         husbandSeatId: Number(husbandSeatId),
         wifeSeatId: Number(wifeSeatId),
       });
@@ -51,7 +51,7 @@ export const MarriageRegistration: React.FC<MarriageRegistrationProps> = ({ onSu
       setActiveStep(3); // Success step
       
       if (onSuccess) {
-        onSuccess(response.data.arbanId);
+        onSuccess(response.data.arbadId);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to register marriage');
@@ -183,11 +183,11 @@ export const MarriageRegistration: React.FC<MarriageRegistrationProps> = ({ onSu
               Marriage registered successfully!
             </Alert>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Family Arban Created
+              Family Arbad Created
             </Typography>
             <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1, mb: 3 }}>
               <Typography variant="body1" sx={{ mb: 1 }}>
-                <strong>Arban ID:</strong> {success.arbanId}
+                <strong>Arbad ID:</strong> {success.arbadId}
               </Typography>
               <Typography
                 variant="body2"

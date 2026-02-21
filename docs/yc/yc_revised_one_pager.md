@@ -25,7 +25,7 @@ The Russian Federation imperial model is collapsing. **145 million citizens** (i
 
 **What We Built** (47,000 lines of production code):
 1. **ALTAN L1 Blockchain** - Sovereign cryptocurrency with 37 constitutional articles in genesis
-2. **Arban Governance** - Direct democracy (10-person households → Parliament)
+2. **Arbad Governance** - Direct democracy (10-person households → Parliament)
 3. **Dual Banking System** - AltanUSD (dollar-pegged bridge) + ALTAN (sovereign currency)
 4. **Digital Statehood** - Citizens register, vote, transact entirely on-chain
 

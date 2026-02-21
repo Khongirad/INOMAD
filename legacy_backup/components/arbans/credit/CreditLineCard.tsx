@@ -11,10 +11,10 @@ import {
   Alert,
 } from '@mui/material';
 import { AccountBalance, TrendingUp, Warning } from '@mui/icons-material';
-import { arbanAPI } from '../../../lib/api/arban.api';
+import { arbadAPI } from '../../../lib/api/arbad.api';
 
 interface CreditLine {
-  arbanId: number;
+  arbadId: number;
   creditType: number;
   creditRating: number;
   creditLimit: string;
@@ -29,14 +29,14 @@ interface CreditLine {
 }
 
 interface CreditLineCardProps {
-  arbanId: number;
+  arbadId: number;
   type: 'family' | 'org';
   onBorrow?: () => void;
   onViewDashboard?: () => void;
 }
 
 export const CreditLineCard: React.FC<CreditLineCardProps> = ({
-  arbanId,
+  arbadId,
   type,
   onBorrow,
   onViewDashboard,
@@ -47,14 +47,14 @@ export const CreditLineCard: React.FC<CreditLineCardProps> = ({
 
   useEffect(() => {
     loadCreditLine();
-  }, [arbanId, type]);
+  }, [arbadId, type]);
 
   const loadCreditLine = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await arbanAPI.credit[type].getCreditLine(arbanId);
+      const response = await arbadAPI.credit[type].getCreditLine(arbadId);
       setCreditLine(response.data);
     } catch (err: any) {
       if (err.response?.status === 404) {
@@ -119,7 +119,7 @@ export const CreditLineCard: React.FC<CreditLineCardProps> = ({
               {type === 'family' ? 'Family' : 'Organization'} Credit Line
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Arban #{arbanId}
+              Arbad #{arbadId}
             </Typography>
           </Box>
           {creditLine.isActive ? (

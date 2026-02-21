@@ -99,23 +99,23 @@ Comprehensive deployment plan for all ALTAN ecosystem smart contracts to blockch
 |----------|---------|--------|--------------|
 | StatisticsBureau | Census tracking | ❌ Need | None |
 | VotingCenter | Voting hub | ❌ Need | StatisticsBureau |
-| ArbanKhural | Level 1 council | ❌ Need | VotingCenter |
+| ArbadKhural | Level 1 council | ❌ Need | VotingCenter |
 | ZunKhural | Level 2 council | ❌ Need | VotingCenter |
-| MyangangKhural | Level 3 council | ❌ Need | VotingCenter |
-| TumenKhural | Level 4 council | ❌ Need | VotingCenter |
+| MyangadgKhural | Level 3 council | ❌ Need | VotingCenter |
+| TumedKhural | Level 4 council | ❌ Need | VotingCenter |
 
 **Gas Estimate:** ~12,800,000
 
 ---
 
-### Group 6: Arban System
-**Deployment Script:** `DeployArbanSystem.s.sol`
+### Group 6: Arbad System
+**Deployment Script:** `DeployArbadSystem.s.sol`
 
 | Contract | Purpose | Status | Dependencies |
 |----------|---------|--------|--------------|
-| ArbanCompletion | Arban management | ❌ Need | CitizenRegistry |
-| FamilyArban | Family units | ❌ Need | ArbanCompletion |
-| OrganizationalArban | Organizations | ❌ Need | ArbanCompletion |
+| ArbadCompletion | Arbad management | ❌ Need | CitizenRegistry |
+| FamilyArbad | Family units | ❌ Need | ArbadCompletion |
+| OrganizationalArbad | Organizations | ❌ Need | ArbadCompletion |
 
 ---
 
@@ -153,8 +153,8 @@ forge script script/DeployLegislativeBranch.s.sol \
   --rpc-url http://localhost:8545 \
   --broadcast
 
-# 5. Deploy Arban System
-forge script script/DeployArbanSystem.s.sol \
+# 5. Deploy Arbad System
+forge script script/DeployArbadSystem.s.sol \
   --rpc-url http://localhost:8545 \
   --broadcast
 

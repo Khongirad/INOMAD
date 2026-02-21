@@ -65,7 +65,7 @@ function PetitionProgress({ post }: { post: SquarePost }) {
 function CreatePostModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState({
     level: 'LEVEL_10' as HierarchyLevel,
-    scopeId: 'default-arban',
+    scopeId: 'default-arbad',
     scopeName: 'Мой Арбан',
     postType: 'DEBATE' as SquarePostType,
     title: '',

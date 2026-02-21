@@ -10,7 +10,7 @@ export * from './documents';
 export * from './quests';
 export * from './reputation';
 export * from './distribution';
-export * from './arban.api';
+export * from './arbad.api';
 export * from './verification';
 export * from './history';
 export * from './timeline';

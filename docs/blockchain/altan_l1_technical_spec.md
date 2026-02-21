@@ -13,10 +13,10 @@
 **Target Population**: 145 million citizens  
 
 **Unique Features**:
-- 5-level democratic governance (Arban → Zun → Myangan → Tumen → Confederation)
+- 5-level democratic governance (Arbad → Zun → Myangad → Tumed → Confederation)
 - Constitutional law encoded in blockchain
 - Dual banking system (citizen + institutional)
-- Arban social structure (family + organizational units)
+- Arbad social structure (family + organizational units)
 - Sovereign currency with central bank control
 
 ---
@@ -31,7 +31,7 @@
 ├─────────────────────────────────────────────────┤
 │              Custom SDK Modules                 │
 │  - Democratic Governance (x/khural)             │
-│  - Arban System (x/arban)                       │
+│  - Arbad System (x/arbad)                       │
 │  - Constitutional Law (x/corelaw)               │
 │  - Central Banking (x/centralbank)              │
 │  - Citizen Registry (x/citizen)                 │
@@ -138,10 +138,10 @@ message Khural {
 }
 
 enum KhuralLevel {
-  ARBAN = 0;     // 10 families
-  ZUN = 1;       // 10 arbans = 100 families
-  MYANGAN = 2;   // 10 zuns = 1,000 families
-  TUMEN = 3;     // 10 myangans = 10,000 families
+  ARBAD = 0;     // 10 families
+  ZUN = 1;       // 10 arbads = 100 families
+  MYANGAD = 2;   // 10 zuns = 1,000 families
+  TUMED = 3;     // 10 myangads = 10,000 families
 }
 
 message Proposal {
@@ -167,31 +167,31 @@ Proposal Deposit: 1,000,000 ALTAN (1M tokens with 6 decimals)
 ```
 
 **Voting Power Calculation**:
-- Arban level: 1 person = 1 vote
-- Zun level: Arban representatives vote (weighted by population)
-- Myangan level: Zun representatives vote
-- Tumen level: Myangan representatives vote
+- Arbad level: 1 person = 1 vote
+- Zun level: Arbad representatives vote (weighted by population)
+- Myangad level: Zun representatives vote
+- Tumed level: Myangad representatives vote
 
 ---
 
-### 2.3 Module: x/arban (Social Structure)
+### 2.3 Module: x/arbad (Social Structure)
 
-**Purpose**: Manage family and organizational arbans
+**Purpose**: Manage family and organizational arbads
 
 **State Structure**:
 ```go
-// proto/altan/arban/v1/state.proto
-message Arban {
+// proto/altan/arbad/v1/state.proto
+message Arbad {
   string id = 1;
-  ArbanType type = 2;
+  ArbadType type = 2;
   string name = 3;
   repeated Member members = 4;
   string khural_id = 5;
-  ArbanStatus status = 6;
+  ArbadStatus status = 6;
   google.protobuf.Timestamp created_at = 7;
 }
 
-enum ArbanType {
+enum ArbadType {
   FAMILY = 0;
   ORGANIZATIONAL = 1;
 }
@@ -204,10 +204,10 @@ message Member {
 ```
 
 **Functions**:
-- `CreateArban(type, name, members)` - Form new arban
-- `AddMember(arban_id, citizen_id)` - Add member
-- `PromoteToZun(arban_ids)` - Form Zun from 10 Arbans
-- `QueryArbanHierarchy(arban_id)` - Get full hierarchy
+- `CreateArbad(type, name, members)` - Form new arbad
+- `AddMember(arbad_id, citizen_id)` - Add member
+- `PromoteToZun(arbad_ids)` - Form Zun from 10 Arbads
+- `QueryArbadHierarchy(arbad_id)` - Get full hierarchy
 
 ---
 
@@ -262,7 +262,7 @@ message Citizen {
   string wallet_address = 2;
   CitizenStatus status = 3;
   PersonalInfo info = 4;
-  string arban_id = 5;
+  string arbad_id = 5;
   VerificationLevel verification = 6;
   google.protobuf.Timestamp registered_at = 7;
 }
@@ -275,7 +275,7 @@ enum CitizenStatus {
 
 message CensusData {
   uint64 total_citizens = 1;
-  uint64 total_arbans = 2;
+  uint64 total_arbads = 2;
   map<uint32, uint64> by_khural_level = 3; // level -> count
 }
 ```
@@ -747,7 +747,7 @@ import (
     // Custom ALTAN modules
     "github.com/altan/altan/x/corelaw"
     "github.com/altan/altan/x/khural"
-    "github.com/altan/altan/x/arban"
+    "github.com/altan/altan/x/arbad"
     "github.com/altan/altan/x/centralbank"
     "github.com/altan/altan/x/citizen"
     "github.com/altan/altan/x/banking"
@@ -765,7 +765,7 @@ type AltanApp struct {
     // Custom keepers
     CoreLawKeeper corelaw.Keeper
     KhuralKeeper khural.Keeper
-    ArbanKeeper arban.Keeper
+    ArbadKeeper arbad.Keeper
     CentralBankKeeper centralbank.Keeper
     CitizenKeeper citizen.Keeper
     BankingKeeper banking.Keeper
@@ -786,7 +786,7 @@ func NewAltanApp(...) *AltanApp {
     app.KhuralKeeper = khural.NewKeeper(
         app.keys[khural.StoreKey],
         app.CitizenKeeper, // Dependency injection
-        app.ArbanKeeper,
+        app.ArbadKeeper,
     )
     app.CentralBankKeeper = centralbank.NewKeeper(
         app.keys[centralbank.StoreKey],
@@ -802,7 +802,7 @@ func NewAltanApp(...) *AltanApp {
         
         corelaw.NewAppModule(app.CoreLawKeeper),
         khural.NewAppModule(app.KhuralKeeper),
-        arban.NewAppModule(app.ArbanKeeper),
+        arbad.NewAppModule(app.ArbadKeeper),
         centralbank.NewAppModule(app.CentralBankKeeper),
         citizen.NewAppModule(app.CitizenKeeper),
         banking.NewAppModule(app.BankingKeeper),
@@ -815,7 +815,7 @@ func NewAltanApp(...) *AltanApp {
         staking.ModuleName,
         corelaw.ModuleName, // Must be early (others depend on it)
         citizen.ModuleName,
-        arban.ModuleName,
+        arbad.ModuleName,
         khural.ModuleName,
         centralbank.ModuleName,
         banking.ModuleName,
@@ -880,7 +880,7 @@ func (k Keeper) FreezeLaw(ctx sdk.Context) error {
 - [ ] Set up Cosmos SDK project structure
 - [ ] Implement x/corelaw module
 - [ ] Implement x/citizen module
-- [ ] Implement x/arban module
+- [ ] Implement x/arbad module
 - [ ] Local devnet testing
 - [ ] Unit tests for all modules
 
@@ -994,7 +994,7 @@ TVL: $10M+ (month 6)
 4. Write first protobuf definitions
 
 ### Short-term (This Month)
-1. Implement core modules (corelaw, citizen, arban)
+1. Implement core modules (corelaw, citizen, arbad)
 2. Local devnet testing
 3. Write comprehensive tests
 4. Documentation
@@ -1032,7 +1032,7 @@ altand query corelaw network-fee
 altand tx khural create-proposal \
   --title="Increase emission limit" \
   --description="..." \
-  --level=tumen \
+  --level=tumed \
   --from=representative
 
 # Vote on proposal
@@ -1042,10 +1042,10 @@ altand tx khural vote 1 yes \
 # Query census
 altand query citizen census
 
-# Register arban
-altand tx arban create \
+# Register arbad
+altand tx arbad create \
   --type=family \
-  --name="Smith Family Arban" \
+  --name="Smith Family Arbad" \
   --members=addr1,addr2,addr3 \
   --from=my-key
 ```

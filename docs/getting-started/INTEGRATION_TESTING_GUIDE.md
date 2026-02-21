@@ -1,4 +1,4 @@
-# Arban System - Integration Testing Guide
+# Arbad System - Integration Testing Guide
 
 **Date**: January 30, 2026  
 **Backend**: http://localhost:3001  
@@ -34,14 +34,14 @@ curl -s http://localhost:3001/api/health | jq
 ### ✅ Blockchain Status
 - **Network**: Anvil (localhost:8545)
 - **Chain ID**: 31337
-- **ArbanCompletion**: `0x5fbdb2315678afecb367f032d93f642f64180aa3`
-- **ArbanCreditLine**: `0xe7f1725e7734ce288f8367e1bb143e90bb3f0512`
+- **ArbadCompletion**: `0x5fbdb2315678afecb367f032d93f642f64180aa3`
+- **ArbadCreditLine**: `0xe7f1725e7734ce288f8367e1bb143e90bb3f0512`
 
 ---
 
 ## Authentication Requirements
 
-### 🔐 All Arban endpoints require:
+### 🔐 All Arbad endpoints require:
 
 1. **JWT Authentication**
    - Header: `Authorization: Bearer <token>`
@@ -67,13 +67,13 @@ curl -s http://localhost:3001/api/health | jq
 
 ## Testing Endpoints
 
-### 1. Family Arban Endpoints (9)
+### 1. Family Arbad Endpoints (9)
 
 #### 1.1 Register Marriage
-Creates a new Family Arban.
+Creates a new Family Arbad.
 
 ```bash
-curl -X POST http://localhost:3001/api/arbans/family/marriage \
+curl -X POST http://localhost:3001/api/arbads/family/marriage \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -87,23 +87,23 @@ curl -X POST http://localhost:3001/api/arbans/family/marriage \
 **Expected**: `201 Created`
 ```json
 {
-  "arbanId": 1,
+  "arbadId": 1,
   "txHash": "0x..."
 }
 ```
 
-**Blockchain Event**: `MarriageRegistered(arbanId, husbandSeatId, wifeSeatId)`
+**Blockchain Event**: `MarriageRegistered(arbadId, husbandSeatId, wifeSeatId)`
 
 **Database Check**:
 ```sql
-SELECT * FROM "FamilyArban" WHERE "arbanId" = 1;
+SELECT * FROM "FamilyArbad" WHERE "arbadId" = 1;
 ```
 
 ---
 
 #### 1.2 Add Child
 ```bash
-curl -X POST http://localhost:3001/api/arbans/family/1/children \
+curl -X POST http://localhost:3001/api/arbads/family/1/children \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -125,7 +125,7 @@ curl -X POST http://localhost:3001/api/arbans/family/1/children \
 
 #### 1.3 Change Heir
 ```bash
-curl -X PUT http://localhost:3001/api/arbans/family/1/heir \
+curl -X PUT http://localhost:3001/api/arbads/family/1/heir \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -139,7 +139,7 @@ curl -X PUT http://localhost:3001/api/arbans/family/1/heir \
 
 #### 1.4 Set Khural Representative
 ```bash
-curl -X POST http://localhost:3001/api/arbans/family/1/khural-rep \
+curl -X POST http://localhost:3001/api/arbads/family/1/khural-rep \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -154,16 +154,16 @@ curl -X POST http://localhost:3001/api/arbans/family/1/khural-rep \
 
 #### 1.5 Get Khural Representatives (Public - No Auth)
 ```bash
-curl -X GET http://localhost:3001/api/arbans/family/khural-reps \
+curl -X GET http://localhost:3001/api/arbads/family/khural-reps \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
 
 ---
 
-#### 1.6 Get Family Arban
+#### 1.6 Get Family Arbad
 ```bash
-curl -X GET http://localhost:3001/api/arbans/family/1 \
+curl -X GET http://localhost:3001/api/arbads/family/1 \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -171,7 +171,7 @@ curl -X GET http://localhost:3001/api/arbans/family/1 \
 **Expected**:
 ```json
 {
-  "arbanId": 1,
+  "arbadId": 1,
   "husbandSeatId": 1,
   "wifeSeatId": 2,
   "childrenSeatIds": [3],
@@ -185,7 +185,7 @@ curl -X GET http://localhost:3001/api/arbans/family/1 \
 
 #### 1.7 Get Family by Seat ID
 ```bash
-curl -X GET http://localhost:3001/api/arbans/family/by-seat/1 \
+curl -X GET http://localhost:3001/api/arbads/family/by-seat/1 \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -194,7 +194,7 @@ curl -X GET http://localhost:3001/api/arbans/family/by-seat/1 \
 
 #### 1.8 Check Khural Eligibility
 ```bash
-curl -X GET http://localhost:3001/api/arbans/family/1/khural-eligible \
+curl -X GET http://localhost:3001/api/arbads/family/1/khural-eligible \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -202,7 +202,7 @@ curl -X GET http://localhost:3001/api/arbans/family/1/khural-eligible \
 **Expected**:
 ```json
 {
-  "arbanId": 1,
+  "arbadId": 1,
   "eligible": true
 }
 ```
@@ -211,7 +211,7 @@ curl -X GET http://localhost:3001/api/arbans/family/1/khural-eligible \
 
 #### 1.9 Sync from Blockchain
 ```bash
-curl -X POST http://localhost:3001/api/arbans/family/1/sync \
+curl -X POST http://localhost:3001/api/arbads/family/1/sync \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -221,15 +221,15 @@ curl -X POST http://localhost:3001/api/arbans/family/1/sync \
 ### 2. Zun Endpoints (5)
 
 #### 2.1 Form Zun
-Combine 10 family arbans into a Zun.
+Combine 10 family arbads into a Zun.
 
 ```bash
-curl -X POST http://localhost:3001/api/arbans/zun \
+curl -X POST http://localhost:3001/api/arbads/zun \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
   -d '{
-    "familyArbanIds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "familyArbadIds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     "privateKey": "0x..."
   }'
 ```
@@ -246,7 +246,7 @@ curl -X POST http://localhost:3001/api/arbans/zun \
 
 #### 2.2 Set Zun Elder
 ```bash
-curl -X PUT http://localhost:3001/api/arbans/zun/1/elder \
+curl -X PUT http://localhost:3001/api/arbads/zun/1/elder \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -260,16 +260,16 @@ curl -X PUT http://localhost:3001/api/arbans/zun/1/elder \
 
 #### 2.3 Get Zun
 ```bash
-curl -X GET http://localhost:3001/api/arbans/zun/1 \
+curl -X GET http://localhost:3001/api/arbads/zun/1 \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
 
 ---
 
-#### 2.4 Get Zun by Family Arban
+#### 2.4 Get Zun by Family Arbad
 ```bash
-curl -X GET http://localhost:3001/api/arbans/zun/by-family/1 \
+curl -X GET http://localhost:3001/api/arbads/zun/by-family/1 \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -278,18 +278,18 @@ curl -X GET http://localhost:3001/api/arbans/zun/by-family/1 \
 
 #### 2.5 Sync Zun from Blockchain
 ```bash
-curl -X POST http://localhost:3001/api/arbans/zun/1/sync \
+curl -X POST http://localhost:3001/api/arbads/zun/1/sync \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
 
 ---
 
-### 3. Organizational Arban Endpoints (6)
+### 3. Organizational Arbad Endpoints (6)
 
 #### 3.1 Create Organization
 ```bash
-curl -X POST http://localhost:3001/api/arbans/org \
+curl -X POST http://localhost:3001/api/arbads/org \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -315,7 +315,7 @@ curl -X POST http://localhost:3001/api/arbans/org \
 
 #### 3.2 Add Member to Organization
 ```bash
-curl -X POST http://localhost:3001/api/arbans/org/1/members \
+curl -X POST http://localhost:3001/api/arbads/org/1/members \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -329,7 +329,7 @@ curl -X POST http://localhost:3001/api/arbans/org/1/members \
 
 #### 3.3 Set Organization Leader
 ```bash
-curl -X PUT http://localhost:3001/api/arbans/org/1/leader \
+curl -X PUT http://localhost:3001/api/arbads/org/1/leader \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -343,7 +343,7 @@ curl -X PUT http://localhost:3001/api/arbans/org/1/leader \
 
 #### 3.4 Create Department
 ```bash
-curl -X POST http://localhost:3001/api/arbans/org/1/departments \
+curl -X POST http://localhost:3001/api/arbads/org/1/departments \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -357,7 +357,7 @@ curl -X POST http://localhost:3001/api/arbans/org/1/departments \
 
 #### 3.5 Get Organization
 ```bash
-curl -X GET http://localhost:3001/api/arbans/org/1 \
+curl -X GET http://localhost:3001/api/arbads/org/1 \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -366,7 +366,7 @@ curl -X GET http://localhost:3001/api/arbans/org/1 \
 
 #### 3.6 Get Organizations by Type
 ```bash
-curl -X GET 'http://localhost:3001/api/arbans/org?orgType=6' \
+curl -X GET 'http://localhost:3001/api/arbads/org?orgType=6' \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -377,7 +377,7 @@ curl -X GET 'http://localhost:3001/api/arbans/org?orgType=6' \
 
 #### 4.1 Open Family Credit Line
 ```bash
-curl -X POST http://localhost:3001/api/arbans/credit/family/1/open \
+curl -X POST http://localhost:3001/api/arbads/credit/family/1/open \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -399,7 +399,7 @@ curl -X POST http://localhost:3001/api/arbans/credit/family/1/open \
 
 #### 4.2 Borrow from Family Credit Line
 ```bash
-curl -X POST http://localhost:3001/api/arbans/credit/family/1/borrow \
+curl -X POST http://localhost:3001/api/arbads/credit/family/1/borrow \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -413,7 +413,7 @@ curl -X POST http://localhost:3001/api/arbans/credit/family/1/borrow \
 
 #### 4.3 Repay Family Loan
 ```bash
-curl -X POST http://localhost:3001/api/arbans/credit/family/1/repay \
+curl -X POST http://localhost:3001/api/arbads/credit/family/1/repay \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -428,7 +428,7 @@ curl -X POST http://localhost:3001/api/arbans/credit/family/1/repay \
 
 #### 4.4 Get Family Credit Line
 ```bash
-curl -X GET http://localhost:3001/api/arbans/credit/family/1 \
+curl -X GET http://localhost:3001/api/arbads/credit/family/1 \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -437,7 +437,7 @@ curl -X GET http://localhost:3001/api/arbans/credit/family/1 \
 
 #### 4.5 Get Family Loans
 ```bash
-curl -X GET http://localhost:3001/api/arbans/credit/family/1/loans \
+curl -X GET http://localhost:3001/api/arbads/credit/family/1/loans \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -446,7 +446,7 @@ curl -X GET http://localhost:3001/api/arbans/credit/family/1/loans \
 
 #### 4.6 Get Family Credit Dashboard
 ```bash
-curl -X GET http://localhost:3001/api/arbans/credit/family/1/dashboard \
+curl -X GET http://localhost:3001/api/arbads/credit/family/1/dashboard \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -460,7 +460,7 @@ Replace `/family/` with `/org/` in the above endpoints.
 
 #### 4.13 Set Interest Rate (Admin)
 ```bash
-curl -X PUT http://localhost:3001/api/arbans/credit/interest-rate \
+curl -X PUT http://localhost:3001/api/arbads/credit/interest-rate \
   -H "Authorization: Bearer <ADMIN_JWT>" \
   -H "x-seat-id: 1" \
   -H "Content-Type: application/json" \
@@ -474,7 +474,7 @@ curl -X PUT http://localhost:3001/api/arbans/credit/interest-rate \
 
 #### 4.14 Get Interest Rate
 ```bash
-curl -X GET http://localhost:3001/api/arbans/credit/interest-rate \
+curl -X GET http://localhost:3001/api/arbads/credit/interest-rate \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "x-seat-id: 1"
 ```
@@ -491,12 +491,12 @@ cd backend && npx prisma studio
 ```
 
 **Tables to check**:
-- `FamilyArban`
-- `FamilyArbanChild`
+- `FamilyArbad`
+- `FamilyArbadChild`
 - `Zun`
 - `ZunMember`
-- `OrganizationalArban`
-- `OrgArbanMember`
+- `OrganizationalArbad`
+- `OrgArbadMember`
 - `CreditLine`
 - `Loan`
 
@@ -506,12 +506,12 @@ cd backend && npx prisma studio
 
 Check Anvil terminal for event emissions:
 ```
-MarriageRegistered(arbanId, husbandId, wifeId)
-ChildAdded(arbanId, childSeatId)
-ZunFormed(zunId, familyArbanIds)
-OrgArbanCreated(arbanId, name, orgType, branch)
-CreditLineOpened(arbanId, isOrg, maxCredit)
-Borrowed(arbanId, isOrg, amount)
+MarriageRegistered(arbadId, husbandId, wifeId)
+ChildAdded(arbadId, childSeatId)
+ZunFormed(zunId, familyArbadIds)
+OrgArbadCreated(arbadId, name, orgType, branch)
+CreditLineOpened(arbadId, isOrg, maxCredit)
+Borrowed(arbadId, isOrg, amount)
 Repaid(loanId, amount)
 ```
 
@@ -521,9 +521,9 @@ Repaid(loanId, amount)
 
 Using `cast` (Foundry):
 ```bash
-# Get Family Arban from contract
+# Get Family Arbad from contract
 cast call 0x5fbdb2315678afecb367f032d93f642f64180aa3 \
-  "getFamilyArban(uint256)" 1
+  "getFamilyArbad(uint256)" 1
 
 # Get Credit Line status
 cast call 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512 \
@@ -546,11 +546,11 @@ cast call 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512 \
 ### Option 1: Get Real JWT Token
 1. Create test user via `/api/auth/register`
 2. Login via `/api/auth/login`
-3. Use returned token for Arban endpoints
+3. Use returned token for Arbad endpoints
 
 ### Option 2: Browser UI Testing
 1. Start frontend: `npm run dev`
-2. Navigate to `http://localhost:3000/arbans`
+2. Navigate to `http://localhost:3000/arbads`
 3. Test flows via UI
 
 ### Option 3: Mock Auth Middleware
@@ -564,7 +564,7 @@ Temporarily disable `JwtAuthGuard` for testing (development only)
 - [ ] Database connected (34 tables)
 - [ ] Contracts deployed and accessible
 - [ ] At least 1 successful marriage registration
-- [ ] Database shows Family Arban record
+- [ ] Database shows Family Arbad record
 - [ ] Blockchain event emitted
 - [ ] Credit line can be opened
 - [ ] No TypeScript compilation errors

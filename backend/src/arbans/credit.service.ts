@@ -1,8 +1,8 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ethers } from 'ethers';
-import { ArbanCreditLine_ABI, CreditType } from '../blockchain/abis/arbanCreditLine.abi';
-import { ArbanCreditLine__factory } from '../typechain-types/factories/ArbanCreditLine__factory';
+import { ArbadCreditLine_ABI, CreditType } from '../blockchain/abis/arbadCreditLine.abi';
+import { ArbadCreditLine__factory } from '../typechain-types/factories/ArbadCreditLine__factory';
 import {
   CreditLine,
   Loan,
@@ -11,22 +11,22 @@ import {
   BorrowRequest,
   BorrowResponse,
   RepayLoanRequest,
-} from './types/arban.types';
+} from './types/arbad.types';
 
 @Injectable()
 export class CreditService {
   private readonly logger = new Logger(CreditService.name);
-  private contract: ReturnType<typeof ArbanCreditLine__factory.connect>;
+  private contract: ReturnType<typeof ArbadCreditLine__factory.connect>;
 
   constructor(private readonly prisma: PrismaService) {
-    const contractAddress = process.env.ARBAN_CREDIT_LINE_ADDRESS || '';
+    const contractAddress = process.env.ARBAD_CREDIT_LINE_ADDRESS || '';
     
     if (contractAddress && contractAddress !== '') {
       const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
-      this.contract = ArbanCreditLine__factory.connect(contractAddress, provider);  
+      this.contract = ArbadCreditLine__factory.connect(contractAddress, provider);  
       this.logger.log(`✅ CreditService connected to contract`);
     } else {
-      this.logger.warn('⚠️  ARBAN_CREDIT_LINE_ADDRESS not configured - Credit line blockchain features disabled');
+      this.logger.warn('⚠️  ARBAD_CREDIT_LINE_ADDRESS not configured - Credit line blockchain features disabled');
       // @ts-ignore
       this.contract = null;
     }
@@ -38,43 +38,43 @@ export class CreditService {
    * Open Family credit line
    */
   async openFamilyCreditLine(
-    arbanId: number,
+    arbadId: number,
     signerWallet: ethers.Wallet,
   ): Promise<CreditLine> {
-    this.logger.log(`Opening Family credit line for arban ${arbanId}`);
+    this.logger.log(`Opening Family credit line for arbad ${arbadId}`);
 
     try {
       // Check if already exists
       const existing = await this.prisma.creditLine.findUnique({
-        where: { arbanId: BigInt(arbanId) },
+        where: { arbadId: BigInt(arbadId) },
       });
 
       if (existing) {
-        throw new BadRequestException('Credit line already exists for this arban');
+        throw new BadRequestException('Credit line already exists for this arbad');
       }
 
-      // Verify Family Arban exists and is married
-      const familyArban = await this.prisma.familyArban.findUnique({
-        where: { arbanId: BigInt(arbanId) },
+      // Verify Family Arbad exists and is married
+      const familyArbad = await this.prisma.familyArbad.findUnique({
+        where: { arbadId: BigInt(arbadId) },
       });
 
-      if (!familyArban || !familyArban.isActive) {
-        throw new BadRequestException('Family Arban not found or inactive');
+      if (!familyArbad || !familyArbad.isActive) {
+        throw new BadRequestException('Family Arbad not found or inactive');
       }
 
       // Call smart contract
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.openFamilyCreditLine(arbanId);
+      const tx = await contractWithSigner.openFamilyCreditLine(arbadId);
       await tx.wait();
 
       // Get credit line details from blockchain
-      const onchainCreditLine = await this.contract.getFamilyCreditLine(arbanId);
+      const onchainCreditLine = await this.contract.getFamilyCreditLine(arbadId);
       const [rating, limit, borrowed, available, isActive] = onchainCreditLine;
 
       // Store in database
       const creditLine = await this.prisma.creditLine.create({
         data: {
-          arbanId: BigInt(arbanId),
+          arbadId: BigInt(arbadId),
           creditType: 'FAMILY',
           creditRating: Number(rating),
           creditLimit: limit.toString(),
@@ -100,13 +100,13 @@ export class CreditService {
     signerWallet: ethers.Wallet,
   ): Promise<BorrowResponse> {
     this.logger.log(
-      `Borrowing ${request.amount} for Family arban ${request.arbanId}, ${request.durationDays} days`,
+      `Borrowing ${request.amount} for Family arbad ${request.arbadId}, ${request.durationDays} days`,
     );
 
     try {
       // Verify credit line exists
       const creditLine = await this.prisma.creditLine.findUnique({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbadId: BigInt(request.arbadId) },
       });
 
       if (!creditLine || creditLine.creditType !== 'FAMILY') {
@@ -117,7 +117,7 @@ export class CreditService {
       const contractWithSigner = this.contract.connect(signerWallet);
       const amount = ethers.parseUnits(request.amount, 6); // ALTAN has 6 decimals
       const tx = await contractWithSigner.borrowFamily(
-        request.arbanId,
+        request.arbadId,
         amount,
         request.durationDays,
       );
@@ -155,7 +155,7 @@ export class CreditService {
       await this.prisma.loan.create({
         data: {
           loanId: BigInt(loanId.toString()),
-          arbanId: BigInt(request.arbanId),
+          arbadId: BigInt(request.arbadId),
           creditType: 'FAMILY',
           principal: amount.toString(),
           interest: interest.toString(),
@@ -167,7 +167,7 @@ export class CreditService {
 
       // Update credit line
       await this.prisma.creditLine.update({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbadId: BigInt(request.arbadId) },
         data: {
           borrowed: { increment: amount.toString() },
           totalBorrowed: { increment: amount.toString() },
@@ -194,13 +194,13 @@ export class CreditService {
    * Repay Family loan
    */
   async repayFamily(request: RepayLoanRequest, signerWallet: ethers.Wallet): Promise<void> {
-    this.logger.log(`Repaying Family loan ${request.loanIdx} for arban ${request.arbanId}`);
+    this.logger.log(`Repaying Family loan ${request.loanIdx} for arbad ${request.arbadId}`);
 
     try {
       // Find loan
       const loans = await this.prisma.loan.findMany({
         where: {
-          arbanId: BigInt(request.arbanId),
+          arbadId: BigInt(request.arbadId),
           creditType: 'FAMILY',
           isActive: true,
         },
@@ -215,7 +215,7 @@ export class CreditService {
 
       // Call smart contract
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.repayFamily(request.arbanId, request.loanIdx);
+      const tx = await contractWithSigner.repayFamily(request.arbadId, request.loanIdx);
       const receipt = await tx.wait();
 
       // Check if on time
@@ -236,7 +236,7 @@ export class CreditService {
       // Update credit line
       const principal = BigInt(loan.principal.toString());
       await this.prisma.creditLine.update({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbadId: BigInt(request.arbadId) },
         data: {
           borrowed: { decrement: principal.toString() },
           totalRepaid: { increment: principal.toString() },
@@ -257,46 +257,46 @@ export class CreditService {
   /**
    * Open Org credit line
    */
-  async openOrgCreditLine(arbanId: number, signerWallet: ethers.Wallet): Promise<CreditLine> {
-    this.logger.log(`Opening Org credit line for arban ${arbanId}`);
+  async openOrgCreditLine(arbadId: number, signerWallet: ethers.Wallet): Promise<CreditLine> {
+    this.logger.log(`Opening Org credit line for arbad ${arbadId}`);
 
     try {
       // Check if already exists
       const existing = await this.prisma.creditLine.findUnique({
-        where: { arbanId: BigInt(arbanId) },
+        where: { arbadId: BigInt(arbadId) },
       });
 
       if (existing) {
-        throw new BadRequestException('Credit line already exists for this arban');
+        throw new BadRequestException('Credit line already exists for this arbad');
       }
 
-      // Verify Org Arban exists and has 10+ members
-      const orgArban = await this.prisma.organizationalArban.findUnique({
-        where: { arbanId: BigInt(arbanId) },
+      // Verify Org Arbad exists and has 10+ members
+      const orgArbad = await this.prisma.organizationalArbad.findUnique({
+        where: { arbadId: BigInt(arbadId) },
         include: { members: true },
       });
 
-      if (!orgArban || !orgArban.isActive) {
-        throw new BadRequestException('Organizational Arban not found or inactive');
+      if (!orgArbad || !orgArbad.isActive) {
+        throw new BadRequestException('Organizational Arbad not found or inactive');
       }
 
-      if (orgArban.members.length < 10) {
-        throw new BadRequestException('Organizational Arban must have at least 10 members');
+      if (orgArbad.members.length < 10) {
+        throw new BadRequestException('Organizational Arbad must have at least 10 members');
       }
 
       // Call smart contract
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.openOrgCreditLine(arbanId);
+      const tx = await contractWithSigner.openOrgCreditLine(arbadId);
       await tx.wait();
 
       // Get credit line details
-      const onchainCreditLine = await this.contract.getOrgCreditLine(arbanId);
+      const onchainCreditLine = await this.contract.getOrgCreditLine(arbadId);
       const [rating, limit, borrowed, available, isActive] = onchainCreditLine;
 
       // Store in database
       const creditLine = await this.prisma.creditLine.create({
         data: {
-          arbanId: BigInt(arbanId),
+          arbadId: BigInt(arbadId),
           creditType: 'ORG',
           creditRating: Number(rating),
           creditLimit: limit.toString(),
@@ -319,12 +319,12 @@ export class CreditService {
    */
   async borrowOrg(request: BorrowRequest, signerWallet: ethers.Wallet): Promise<BorrowResponse> {
     this.logger.log(
-      `Borrowing ${request.amount} for Org arban ${request.arbanId}, ${request.durationDays} days`,
+      `Borrowing ${request.amount} for Org arbad ${request.arbadId}, ${request.durationDays} days`,
     );
 
     try {
       const creditLine = await this.prisma.creditLine.findUnique({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbadId: BigInt(request.arbadId) },
       });
 
       if (!creditLine || creditLine.creditType !== 'ORG') {
@@ -333,7 +333,7 @@ export class CreditService {
 
       const contractWithSigner = this.contract.connect(signerWallet);
       const amount = ethers.parseUnits(request.amount, 6);
-      const tx = await contractWithSigner.borrowOrg(request.arbanId, amount, request.durationDays);
+      const tx = await contractWithSigner.borrowOrg(request.arbadId, amount, request.durationDays);
       const receipt = await tx.wait();
 
       const event = receipt.logs.find((log: any) => {
@@ -364,7 +364,7 @@ export class CreditService {
       await this.prisma.loan.create({
         data: {
           loanId: BigInt(loanId.toString()),
-          arbanId: BigInt(request.arbanId),
+          arbadId: BigInt(request.arbadId),
           creditType: 'ORG',
           principal: amount.toString(),
           interest: interest.toString(),
@@ -375,7 +375,7 @@ export class CreditService {
       });
 
       await this.prisma.creditLine.update({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbadId: BigInt(request.arbadId) },
         data: {
           borrowed: { increment: amount.toString() },
           totalBorrowed: { increment: amount.toString() },
@@ -402,12 +402,12 @@ export class CreditService {
    * Repay Org loan
    */
   async repayOrg(request: RepayLoanRequest, signerWallet: ethers.Wallet): Promise<void> {
-    this.logger.log(`Repaying Org loan ${request.loanIdx} for arban ${request.arbanId}`);
+    this.logger.log(`Repaying Org loan ${request.loanIdx} for arbad ${request.arbadId}`);
 
     try {
       const loans = await this.prisma.loan.findMany({
         where: {
-          arbanId: BigInt(request.arbanId),
+          arbadId: BigInt(request.arbadId),
           creditType: 'ORG',
           isActive: true,
         },
@@ -421,7 +421,7 @@ export class CreditService {
       const loan = loans[request.loanIdx];
 
       const contractWithSigner = this.contract.connect(signerWallet);
-      const tx = await contractWithSigner.repayOrg(request.arbanId, request.loanIdx);
+      const tx = await contractWithSigner.repayOrg(request.arbadId, request.loanIdx);
       const receipt = await tx.wait();
 
       const now = new Date();
@@ -439,7 +439,7 @@ export class CreditService {
 
       const principal = BigInt(loan.principal.toString());
       await this.prisma.creditLine.update({
-        where: { arbanId: BigInt(request.arbanId) },
+        where: { arbadId: BigInt(request.arbadId) },
         data: {
           borrowed: { decrement: principal.toString() },
           totalRepaid: { increment: principal.toString() },
@@ -460,13 +460,13 @@ export class CreditService {
   /**
    * Get credit line
    */
-  async getCreditLine(arbanId: number, type: 'FAMILY' | 'ORG'): Promise<CreditLine> {
+  async getCreditLine(arbadId: number, type: 'FAMILY' | 'ORG'): Promise<CreditLine> {
     const creditLine = await this.prisma.creditLine.findUnique({
-      where: { arbanId: BigInt(arbanId) },
+      where: { arbadId: BigInt(arbadId) },
     });
 
     if (!creditLine || creditLine.creditType !== type) {
-      throw new NotFoundException(`${type} credit line not found for arban ${arbanId}`);
+      throw new NotFoundException(`${type} credit line not found for arbad ${arbadId}`);
     }
 
     return this.mapCreditLine(creditLine);
@@ -475,10 +475,10 @@ export class CreditService {
   /**
    * Get loans
    */
-  async getLoans(arbanId: number, type: 'FAMILY' | 'ORG'): Promise<Loan[]> {
+  async getLoans(arbadId: number, type: 'FAMILY' | 'ORG'): Promise<Loan[]> {
     const loans = await this.prisma.loan.findMany({
       where: {
-        arbanId: BigInt(arbanId),
+        arbadId: BigInt(arbadId),
         creditType: type,
       },
       orderBy: { borrowedAt: 'desc' },
@@ -490,9 +490,9 @@ export class CreditService {
   /**
    * Get credit dashboard
    */
-  async getCreditDashboard(arbanId: number, type: 'FAMILY' | 'ORG'): Promise<CreditDashboard> {
-    const creditLine = await this.getCreditLine(arbanId, type);
-    const allLoans = await this.getLoans(arbanId, type);
+  async getCreditDashboard(arbadId: number, type: 'FAMILY' | 'ORG'): Promise<CreditDashboard> {
+    const creditLine = await this.getCreditLine(arbadId, type);
+    const allLoans = await this.getLoans(arbadId, type);
 
     const activeLoans = allLoans.filter((l) => l.isActive);
     const completedLoans = allLoans.filter((l) => !l.isActive);
@@ -561,7 +561,7 @@ export class CreditService {
     const available = limit - borrowed;
 
     return {
-      arbanId: Number(cl.arbanId),
+      arbadId: Number(cl.arbadId),
       creditType: cl.creditType === 'FAMILY' ? CreditType.FAMILY : CreditType.ORG,
       creditRating: cl.creditRating,
       creditLimit: cl.creditLimit.toString(),
@@ -583,7 +583,7 @@ export class CreditService {
     
     return {
       loanId: Number(loan.loanId),
-      arbanId: Number(loan.arbanId),
+      arbadId: Number(loan.arbadId),
       creditType: loan.creditType === 'FAMILY' ? CreditType.FAMILY : CreditType.ORG,
       principal: loan.principal.toString(),
       interest: loan.interest.toString(),

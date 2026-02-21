@@ -15,7 +15,7 @@ Cosmos SDK-based Layer 1 blockchain for the Siberian Confederation, implementing
 
 - **PRINCIPLES** (1-7): Humanity, Democracy, Rule of Law, Transparency
 - **RIGHTS** (8-15): Life, Speech, Education, Labor, Data Protection
-- **GOVERNANCE** (16-22): Arban/Zun system, Khurals, E-Voting
+- **GOVERNANCE** (16-22): Arbad/Zun system, Khurals, E-Voting
 - **ECONOMY** (23-30): Central Bank, **Network Fee**, Annual Tax, Credit System
 - **LAND** (31-33): State Ownership, Lifetime Rights, Transfer Rights
 - **JUSTICE** (34-36): Judicial Independence, Court System, **FreezeLaw**

@@ -75,10 +75,10 @@ async function main() {
   console.log('✅ Created professions');
 
   // Create Khural groups
-  const arban = await prisma.khuralGroup.create({
+  const arbad = await prisma.khuralGroup.create({
     data: {
-      level: 'ARBAN',
-      name: 'Test Arban Unit 1',
+      level: 'ARBAD',
+      name: 'Test Arbad Unit 1',
       seats: {
         create: Array.from({ length: 10 }, (_, i) => ({
           index: i,

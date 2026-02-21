@@ -11,7 +11,7 @@ describe('OrganizationController', () => {
       createOrganization: jest.fn().mockResolvedValue({ id: 'org1' }),
       getLeaderboard: jest.fn().mockResolvedValue([]),
       getFullNetworkMap: jest.fn().mockResolvedValue({ nodes: [], edges: [] }),
-      getArbanNetwork: jest.fn().mockResolvedValue({ nodes: [] }),
+      getArbadNetwork: jest.fn().mockResolvedValue({ nodes: [] }),
       getOrganization: jest.fn().mockResolvedValue({ id: 'org1', ratings: [{ score: 5 }] }),
       updateOrganization: jest.fn().mockResolvedValue({ id: 'org1' }),
       deleteOrganization: jest.fn().mockResolvedValue({ id: 'org1' }),
@@ -34,7 +34,7 @@ describe('OrganizationController', () => {
   it('gets leaderboard', async () => { await controller.getLeaderboard('COMPANY' as any, '10'); });
   it('gets leaderboard without filters', async () => { await controller.getLeaderboard(); });
   it('gets network map', async () => { await controller.getNetworkMap(); });
-  it('gets arban network', async () => { await controller.getArbanNetwork('a1'); });
+  it('gets arbad network', async () => { await controller.getArbadNetwork('a1'); });
   it('gets org by id', async () => { await controller.get('org1'); });
   it('updates org', async () => { await controller.update('org1', { name: 'New' }); });
   it('deletes org', async () => { await controller.delete('org1'); });

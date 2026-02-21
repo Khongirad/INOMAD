@@ -35,7 +35,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
   onFinalize,
 }) => {
   const { proposals, loading, error, fetchProposals } = useVotingCenter();
-  const [level, setLevel] = useState<KhuralLevel>(KhuralLevel.ARBAN);
+  const [level, setLevel] = useState<KhuralLevel>(KhuralLevel.ARBAD);
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -96,17 +96,17 @@ export const ProposalList: React.FC<ProposalListProps> = ({
           fullWidth
           size="large"
         >
-          <ToggleButton value={KhuralLevel.ARBAN}>
-            Arban (Local)
+          <ToggleButton value={KhuralLevel.ARBAD}>
+            Arbad (Local)
           </ToggleButton>
           <ToggleButton value={KhuralLevel.ZUN}>
             Zun (Regional)
           </ToggleButton>
-          <ToggleButton value={KhuralLevel.MYANGAN}>
-            Myangan (Provincial)
+          <ToggleButton value={KhuralLevel.MYANGAD}>
+            Myangad (Provincial)
           </ToggleButton>
-          <ToggleButton value={KhuralLevel.TUMEN}>
-            Tumen (National)
+          <ToggleButton value={KhuralLevel.TUMED}>
+            Tumed (National)
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>

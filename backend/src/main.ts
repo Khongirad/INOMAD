@@ -35,7 +35,7 @@ async function bootstrap() {
     .setTitle('INOMAD KHURAL API')
     .setDescription(
       'Operating System for Sovereign Governance — REST API.\n\n' +
-      '**Modules:** Identity & Verification, Banking (ALTAN), Arbans, Khural (Legislature), ' +
+      '**Modules:** Identity & Verification, Banking (ALTAN), Arbads, Khural (Legislature), ' +
       'Justice, Land Registry, Civil Registry (ZAGS), Migration Service, Education, ' +
       'Organizations, Marketplace, Tax, Elections, and 40+ more.\n\n' +
       '**Auth:** All endpoints require Bearer JWT token unless marked public.\n\n' +
@@ -52,10 +52,10 @@ async function bootstrap() {
     .addTag('Identity', 'Citizen identity, seats, verification')
     .addTag('Verification', 'Tiered verification & emission limits')
     .addTag('Banking', 'Bank accounts, transfers, central bank')
-    .addTag('Arbans', 'Family & organizational Arbans')
-    .addTag('Hierarchy', 'Zun → Myangan → Tumen hierarchy')
+    .addTag('Arbads', 'Family & organizational Arbads')
+    .addTag('Hierarchy', 'Zun → Myangad → Tumed hierarchy')
     .addTag('Khural', 'Legislative sessions, laws')
-    .addTag('Parliament', 'Tumen leader parliament')
+    .addTag('Parliament', 'Tumed leader parliament')
     .addTag('Elections', 'Leader elections')
     .addTag('Justice', 'Courts, cases, rulings')
     .addTag('Land', 'Land registry & property')

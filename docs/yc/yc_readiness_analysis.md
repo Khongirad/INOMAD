@@ -36,7 +36,7 @@
 
 ### 3. **Unique Innovation** (9/10)
 - ✅ **Constitutional blockchain** (first of its kind)
-- ✅ **Arban governance** (novel democratic model)
+- ✅ **Arbad governance** (novel democratic model)
 - ✅ **Dual banking system** (regulatory compliance + crypto)
 - ✅ **Parliamentary on-chain** (real government infrastructure)
 
@@ -216,7 +216,7 @@
 ### User Metrics
 - **Citizens Registered**: XXX
 - **Active Users (MAU)**: XXX
-- **Arbans Created**: XXX
+- **Arbads Created**: XXX
 - **Growth Rate**: XX% MoM
 
 ### Transaction Metrics
@@ -245,7 +245,7 @@ Citizens don't trust existing e-gov systems. Blockchain solutions are too comple
 
 ## Our Solution
 Turnkey constitutional blockchain for governments. Deploy a sovereign L1 in 1 week.
-- Pre-built governance (Arban → Zun → Parliament)
+- Pre-built governance (Arbad → Zun → Parliament)
 - Regulatory compliance (KYC, dual banking)
 - Revenue model (0.03% network fee)
 
@@ -395,7 +395,7 @@ Founder built entire stack solo in 6 months.
 ❌ **Oversell tech** - YC cares more about traction than 37 articles  
 ❌ **Ignore competition** - "No competitors" = red flag  
 ❌ **Hide weaknesses** - Be honest, show how you're solving them  
-❌ **Use jargon** - "Arban/Zun/Tumen" means nothing to YC reviewers  
+❌ **Use jargon** - "Arbad/Zun/Tumed" means nothing to YC reviewers  
 
 ---
 

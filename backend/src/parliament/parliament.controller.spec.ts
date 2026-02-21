@@ -27,8 +27,8 @@ describe('ParliamentController', () => {
   });
 
   it('should be defined', () => expect(controller).toBeDefined());
-  it('createSession', async () => { await controller.createSession(req, { level: 'ARBAN' }); expect(service.createSession).toHaveBeenCalledWith('u1', { level: 'ARBAN' }); });
-  it('listSessions', async () => { await controller.listSessions('ARBAN', 'e1', 'PLANNED'); expect(service.listSessions).toHaveBeenCalledWith('ARBAN', 'e1', 'PLANNED'); });
+  it('createSession', async () => { await controller.createSession(req, { level: 'ARBAD' }); expect(service.createSession).toHaveBeenCalledWith('u1', { level: 'ARBAD' }); });
+  it('listSessions', async () => { await controller.listSessions('ARBAD', 'e1', 'PLANNED'); expect(service.listSessions).toHaveBeenCalledWith('ARBAD', 'e1', 'PLANNED'); });
   it('getSession', async () => { await controller.getSession('s1'); expect(service.getSession).toHaveBeenCalledWith('s1'); });
   it('startSession', async () => { await controller.startSession('s1', req); expect(service.startSession).toHaveBeenCalledWith('s1', 'u1'); });
   it('completeSession', async () => { await controller.completeSession('s1', req, 'resolved'); expect(service.completeSession).toHaveBeenCalledWith('s1', 'u1', 'resolved'); });

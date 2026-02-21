@@ -71,15 +71,15 @@ export class OrgQuestService {
       completed: false,
     }));
 
-    // ── Auto-detect republicId from org leader's Tumen ──
+    // ── Auto-detect republicId from org leader's Tumed ──
     let republicId: string | undefined;
     if (org.leaderId) {
-      // Check if the org leader is also a Tumen leader
-      const tumen = await this.prisma.tumen.findFirst({
+      // Check if the org leader is also a Tumed leader
+      const tumed = await this.prisma.tumed.findFirst({
         where: { leaderUserId: org.leaderId },
         select: { republicId: true },
       });
-      if (tumen?.republicId) republicId = tumen.republicId;
+      if (tumed?.republicId) republicId = tumed.republicId;
     }
 
     const task = await this.prisma.orgQuest.create({

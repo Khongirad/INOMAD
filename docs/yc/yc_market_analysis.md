@@ -127,7 +127,7 @@ Year 5 (80% on-chain): $5.04 BILLION
 ### For Mongolia 🇲🇳
 - Reunification of Mongolic peoples (Buryats, Kalmyks)
 - Economic integration with resource-rich Siberia
-- Cultural revival of nomadic governance (Arban system)
+- Cultural revival of nomadic governance (Arbad system)
 
 ### For Turkey 🇹🇷 + Turkic Nations
 - Support for Turkic peoples (Sakha, Altai, Khakassia, Tuva)
@@ -165,7 +165,7 @@ Year 5 (80% on-chain): $5.04 BILLION
    - "Technology for freedom, not control"
 
 ✅ **Viral Moments**:
-   - First Arban elected on-chain (proof of concept)
+   - First Arbad elected on-chain (proof of concept)
    - First regional republic joins Siberian Confederation
    - International recognition moment
    - First ALTAN → USD conversion (economic legitimacy)

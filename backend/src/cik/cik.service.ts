@@ -21,11 +21,11 @@ import {
  * Constitutional bottom-up election ladder (per branch of power):
  *
  *   fromLevel  → toLevel        Who votes
- *   LEVEL_1    → LEVEL_10       Family members elect Arban leader
- *   LEVEL_10   → LEVEL_100      Arban leaders elect Zun leader
- *   LEVEL_100  → LEVEL_1000     Zun leaders elect Myangan leader
- *   LEVEL_1000 → LEVEL_10000    Myangan leaders elect Tumen leader
- *   LEVEL_10000→ REPUBLIC       Tumen leaders elect Republic leader
+ *   LEVEL_1    → LEVEL_10       Family members elect Arbad leader
+ *   LEVEL_10   → LEVEL_100      Arbad leaders elect Zun leader
+ *   LEVEL_100  → LEVEL_1000     Zun leaders elect Myangad leader
+ *   LEVEL_1000 → LEVEL_10000    Myangad leaders elect Tumed leader
+ *   LEVEL_10000→ REPUBLIC       Tumed leaders elect Republic leader
  *   REPUBLIC   → CONFEDERATION  Republic leaders elect Confederation(Khural) delegate
  *
  *   Branches run SEPARATE elections: EXECUTIVE | LEGISLATIVE | JUDICIAL | BANKING
@@ -204,10 +204,10 @@ export class CIKService {
    *
    * Organization.level is an Int:
    *   LEVEL_1  → 0 (family, no org equivalent, skip)
-   *   LEVEL_10 → 1 (Arban)
+   *   LEVEL_10 → 1 (Arbad)
    *   LEVEL_100 → 10 (Zun/Hundred)
-   *   LEVEL_1000 → 100 (Myangan/Thousand)
-   *   LEVEL_10000 → 1000 (Tumen)
+   *   LEVEL_1000 → 100 (Myangad/Thousand)
+   *   LEVEL_10000 → 1000 (Tumed)
    *   REPUBLIC / CONFEDERATION → filtered by type only
    */
   private async autoDiscoverCandidates(

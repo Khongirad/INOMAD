@@ -1,8 +1,8 @@
-jest.mock('../typechain-types/factories/ArbanCompletion__factory', () => ({
-  ArbanCompletion__factory: { connect: jest.fn() },
+jest.mock('../typechain-types/factories/ArbadCompletion__factory', () => ({
+  ArbadCompletion__factory: { connect: jest.fn() },
 }));
-jest.mock('../blockchain/abis/arbanCompletion.abi', () => ({
-  ArbanCompletion_ABI: [],
+jest.mock('../blockchain/abis/arbadCompletion.abi', () => ({
+  ArbadCompletion_ABI: [],
   OrganizationType: {
     NONE: 0, EXECUTIVE: 1, JUDICIAL: 2, BANKING: 3,
     PRIVATE_COMPANY: 4, STATE_COMPANY: 5, GUILD: 6,
@@ -17,43 +17,43 @@ jest.mock('ethers', () => ({
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrganizationalArbanController } from './organizational-arban.controller';
-import { OrganizationalArbanService } from './organizational-arban.service';
+import { OrganizationalArbadController } from './organizational-arbad.controller';
+import { OrganizationalArbadService } from './organizational-arbad.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-describe('OrganizationalArbanController', () => {
-  let controller: OrganizationalArbanController;
+describe('OrganizationalArbadController', () => {
+  let controller: OrganizationalArbadController;
   let service: any;
   const req = { user: { sub: 'u1', privateKey: '0xKEY' } };
 
   beforeEach(async () => {
     const mockService = {
-      createOrganizationalArban: jest.fn().mockResolvedValue({ arbanId: 10, txHash: '0x1' }),
+      createOrganizationalArbad: jest.fn().mockResolvedValue({ arbadId: 10, txHash: '0x1' }),
       addOrgMember: jest.fn().mockResolvedValue(undefined),
       setOrgLeader: jest.fn().mockResolvedValue(undefined),
       createDepartment: jest.fn().mockResolvedValue({ deptId: 2 }),
-      getOrgArban: jest.fn().mockResolvedValue({ arbanId: 10 }),
-      getOrgsByType: jest.fn().mockResolvedValue([{ arbanId: 10 }]),
+      getOrgArbad: jest.fn().mockResolvedValue({ arbadId: 10 }),
+      getOrgsByType: jest.fn().mockResolvedValue([{ arbadId: 10 }]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [OrganizationalArbanController],
-      providers: [{ provide: OrganizationalArbanService, useValue: mockService }],
+      controllers: [OrganizationalArbadController],
+      providers: [{ provide: OrganizationalArbadService, useValue: mockService }],
     })
       .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
       .compile();
 
-    controller = module.get(OrganizationalArbanController);
-    service = module.get(OrganizationalArbanService);
+    controller = module.get(OrganizationalArbadController);
+    service = module.get(OrganizationalArbadService);
   });
 
   it('should be defined', () => expect(controller).toBeDefined());
 
-  it('creates org arban', async () => {
-    const r = await controller.createOrgArban(
+  it('creates org arbad', async () => {
+    const r = await controller.createOrgArbad(
       { name: 'TestOrg', orgType: 1 as any }, req,
     );
-    expect(r.arbanId).toBe(10);
+    expect(r.arbadId).toBe(10);
   });
 
   it('adds org member', async () => {
@@ -71,9 +71,9 @@ describe('OrganizationalArbanController', () => {
     expect(r).toBeDefined();
   });
 
-  it('gets org arban by id', async () => {
-    const r = await controller.getOrgArban(10);
-    expect(r.arbanId).toBe(10);
+  it('gets org arbad by id', async () => {
+    const r = await controller.getOrgArbad(10);
+    expect(r.arbadId).toBe(10);
   });
 
   it('gets orgs by type', async () => {

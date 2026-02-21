@@ -20,14 +20,14 @@ export function createMockPrismaService(): jest.Mocked<PrismaService> {
   });
 
   return {
-    // Core models used in auth/bank/arban
+    // Core models used in auth/bank/arbad
     user: modelMethods(),
     session: modelMethods(),
     walletNonce: modelMethods(),
     bankAccount: modelMethods(),
     bankTransaction: modelMethods(),
-    arban: modelMethods(),
-    arbanMember: modelMethods(),
+    arbad: modelMethods(),
+    arbadMember: modelMethods(),
     citizenIdentity: modelMethods(),
     templeRecord: modelMethods(),
     marketplaceListing: modelMethods(),

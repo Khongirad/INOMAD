@@ -42,7 +42,7 @@ export const ECONOMIC_CONSTANTS = {
   
   // Tiered verification allocations
   LEVEL_1_ALLOCATION: 100, // Base verification
-  LEVEL_2_ALLOCATION: 5_000, // Arban membership
+  LEVEL_2_ALLOCATION: 5_000, // Arbad membership
   LEVEL_3_ALLOCATION: 9_383, // Zun formation (remaining: 14,483 - 100 - 5,000)
   
   // UBI parameters
@@ -122,7 +122,7 @@ export function formatALTAN(amount: number, decimals = 2): string {
  */
 export const TRANSACTION_REASONS = {
   LEVEL_1_VERIFICATION: 'Level 1 Verification Award - Initial Citizenship',
-  LEVEL_2_ARBAN: 'Level 2 Arban Membership Award',
+  LEVEL_2_ARBAD: 'Level 2 Arbad Membership Award',
   LEVEL_3_ZUN: 'Level 3 Zun Formation Award - Full Allocation',
   UBI_HOURLY: 'UBI Hourly Payment',
   UBI_WEEKLY: 'UBI Weekly Payment',

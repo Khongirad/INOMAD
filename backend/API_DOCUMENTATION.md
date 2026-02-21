@@ -1,22 +1,22 @@
-# API Endpoints Documentation: Two-Type Arban System
+# API Endpoints Documentation: Two-Type Arbad System
 
-Complete REST API documentation for the Arban system backend.
+Complete REST API documentation for the Arbad system backend.
 
 ---
 
 ## Base URL
 ```
-http://localhost:3000/arbans
+http://localhost:3000/arbads
 ```
 
 All endpoints require JWT authentication via `Authorization: Bearer <token>` header.
 
 ---
 
-## 1. Family Arban API
+## 1. Family Arbad API
 
-### POST `/arbans/family/marriage`
-Register marriage and create Family Arban.
+### POST `/arbads/family/marriage`
+Register marriage and create Family Arbad.
 
 **Request:**
 ```json
@@ -29,15 +29,15 @@ Register marriage and create Family Arban.
 **Response (201):**
 ```json
 {
-  "arbanId": 1,
+  "arbadId": 1,
   "txHash": "0x..."
 }
 ```
 
 ---
 
-### POST `/arbans/family/:arbanId/children`
-Add child to Family Arban.
+### POST `/arbads/family/:arbadId/children`
+Add child to Family Arbad.
 
 **Request:**
 ```json
@@ -56,7 +56,7 @@ Add child to Family Arban.
 
 ---
 
-### PUT `/arbans/family/:arbanId/heir`
+### PUT `/arbads/family/:arbadId/heir`
 Change heir to another child.
 
 **Request:**
@@ -76,7 +76,7 @@ Change heir to another child.
 
 ---
 
-### POST `/arbans/family/:arbanId/khural-rep`
+### POST `/arbads/family/:arbadId/khural-rep`
 Set Khural representative (husband or wife, under 60 years old).
 
 **Request:**
@@ -97,7 +97,7 @@ Set Khural representative (husband or wife, under 60 years old).
 
 ---
 
-### GET `/arbans/family/khural-reps`
+### GET `/arbads/family/khural-reps`
 Get all Khural representatives.
 
 **Response (200):**
@@ -105,7 +105,7 @@ Get all Khural representatives.
 [
   {
     "seatId": 123,
-    "arbanId": 1,
+    "arbadId": 1,
     "birthYear": 1985,
     "age": 41,
     "assignedAt": "2024-01-15T10:30:00Z"
@@ -115,13 +115,13 @@ Get all Khural representatives.
 
 ---
 
-### GET `/arbans/family/:arbanId`
-Get Family Arban by ID.
+### GET `/arbads/family/:arbadId`
+Get Family Arbad by ID.
 
 **Response (200):**
 ```json
 {
-  "arbanId": 1,
+  "arbadId": 1,
   "husbandSeatId": 123,
   "wifeSeatId": 456,
   "childrenSeatIds": [789, 790],
@@ -136,39 +136,39 @@ Get Family Arban by ID.
 
 ---
 
-### GET `/arbans/family/by-seat/:seatId`
-Get Family Arban by seat ID (husband, wife, or child).
+### GET `/arbads/family/by-seat/:seatId`
+Get Family Arbad by seat ID (husband, wife, or child).
 
 ---
 
-### GET `/arbans/family/:arbanId/khural-eligible`
-Check if Family Arban is Khural eligible.
+### GET `/arbads/family/:arbadId/khural-eligible`
+Check if Family Arbad is Khural eligible.
 
 **Response (200):**
 ```json
 {
-  "arbanId": 1,
+  "arbadId": 1,
   "eligible": true
 }
 ```
 
 ---
 
-### POST `/arbans/family/:arbanId/sync`
-Sync Family Arban from blockchain.
+### POST `/arbads/family/:arbadId/sync`
+Sync Family Arbad from blockchain.
 
 ---
 
 ## 2. Zun (Clan) API
 
-### POST `/arbans/zun`
-Form Zun (clan) from Family Arbans.
+### POST `/arbads/zun`
+Form Zun (clan) from Family Arbads.
 
 **Request:**
 ```json
 {
   "zunName": "Golden Horde",
-  "arbanIds": [1, 2, 3, 4, 5]
+  "arbadIds": [1, 2, 3, 4, 5]
 }
 ```
 
@@ -182,7 +182,7 @@ Form Zun (clan) from Family Arbans.
 
 ---
 
-### PUT `/arbans/zun/:zunId/elder`
+### PUT `/arbads/zun/:zunId/elder`
 Set Zun elder.
 
 **Request:**
@@ -194,7 +194,7 @@ Set Zun elder.
 
 ---
 
-### GET `/arbans/zun/:zunId`
+### GET `/arbads/zun/:zunId`
 Get Zun by ID.
 
 **Response (200):**
@@ -202,8 +202,8 @@ Get Zun by ID.
 {
   "zunId": 1,
   "name": "Golden Horde",
-  "founderArbanId": 1,
-  "memberArbanIds": [1, 2, 3, 4, 5],
+  "founderArbadId": 1,
+  "memberArbadIds": [1, 2, 3, 4, 5],
   "elderSeatId": 123,
   "isActive": true,
   "createdAt": "2024-01-15T10:30:00Z"
@@ -212,20 +212,20 @@ Get Zun by ID.
 
 ---
 
-### GET `/arbans/zun/by-family/:arbanId`
-Get Zuns by Family Arban ID.
+### GET `/arbads/zun/by-family/:arbadId`
+Get Zuns by Family Arbad ID.
 
 ---
 
-### POST `/arbans/zun/:zunId/sync`
+### POST `/arbads/zun/:zunId/sync`
 Sync Zun from blockchain.
 
 ---
 
-## 3. Organizational Arban API
+## 3. Organizational Arbad API
 
-### POST `/arbans/org`
-Create Organizational Arban.
+### POST `/arbads/org`
+Create Organizational Arbad.
 
 **Request:**
 ```json
@@ -249,14 +249,14 @@ Create Organizational Arban.
 **Response (201):**
 ```json
 {
-  "arbanId": 100,
+  "arbadId": 100,
   "txHash": "0x..."
 }
 ```
 
 ---
 
-### POST `/arbans/org/:arbanId/members`
+### POST `/arbads/org/:arbadId/members`
 Add member to organization.
 
 **Request:**
@@ -268,7 +268,7 @@ Add member to organization.
 
 ---
 
-### PUT `/arbans/org/:arbanId/leader`
+### PUT `/arbads/org/:arbadId/leader`
 Set organization leader.
 
 **Request:**
@@ -280,7 +280,7 @@ Set organization leader.
 
 ---
 
-### POST `/arbans/org/:parentOrgId/departments`
+### POST `/arbads/org/:parentOrgId/departments`
 Create department under parent organization.
 
 **Request:**
@@ -293,20 +293,20 @@ Create department under parent organization.
 **Response (201):**
 ```json
 {
-  "arbanId": 101,
+  "arbadId": 101,
   "txHash": "0x..."
 }
 ```
 
 ---
 
-### GET `/arbans/org/:arbanId`
-Get Organizational Arban by ID.
+### GET `/arbads/org/:arbadId`
+Get Organizational Arbad by ID.
 
 **Response (200):**
 ```json
 {
-  "arbanId": 100,
+  "arbadId": 100,
   "name": "Central Bank of Siberia",
   "memberSeatIds": [123, 456, 789],
   "leaderSeatId": 123,
@@ -320,7 +320,7 @@ Get Organizational Arban by ID.
 
 ---
 
-### GET `/arbans/org?type=BANKING`
+### GET `/arbads/org?type=BANKING`
 Get organizations by type.
 
 **Query Parameters:**
@@ -332,13 +332,13 @@ Get organizations by type.
 
 ### Family Credit
 
-#### POST `/arbans/credit/family/:arbanId/open`
+#### POST `/arbads/credit/family/:arbadId/open`
 Open Family credit line.
 
 **Response (201):**
 ```json
 {
-  "arbanId": 1,
+  "arbadId": 1,
   "creditType": 1,
   "creditRating": 500,
   "creditLimit": "25000",
@@ -355,7 +355,7 @@ Open Family credit line.
 
 ---
 
-#### POST `/arbans/credit/family/:arbanId/borrow`
+#### POST `/arbads/credit/family/:arbadId/borrow`
 Borrow from Family credit line.
 
 **Request:**
@@ -380,7 +380,7 @@ Borrow from Family credit line.
 
 ---
 
-#### POST `/arbans/credit/family/:arbanId/repay`
+#### POST `/arbads/credit/family/:arbadId/repay`
 Repay Family loan.
 
 **Request:**
@@ -392,12 +392,12 @@ Repay Family loan.
 
 ---
 
-#### GET `/arbans/credit/family/:arbanId`
+#### GET `/arbads/credit/family/:arbadId`
 Get Family credit line.
 
 ---
 
-#### GET `/arbans/credit/family/:arbanId/loans`
+#### GET `/arbads/credit/family/:arbadId/loans`
 Get all Family loans.
 
 **Response (200):**
@@ -405,7 +405,7 @@ Get all Family loans.
 [
   {
     "loanId": 1,
-    "arbanId": 1,
+    "arbadId": 1,
     "creditType": 1,
     "principal": "5000",
     "interest": "123.29",
@@ -421,7 +421,7 @@ Get all Family loans.
 
 ---
 
-#### GET `/arbans/credit/family/:arbanId/dashboard`
+#### GET `/arbads/credit/family/:arbadId/dashboard`
 Get Family credit dashboard with performance metrics.
 
 **Response (200):**
@@ -443,18 +443,18 @@ Get Family credit dashboard with performance metrics.
 ### Org Credit
 
 Same endpoints as Family Credit but with `/org/` prefix:
-- POST `/arbans/credit/org/:arbanId/open`
-- POST `/arbans/credit/org/:arbanId/borrow`
-- POST `/arbans/credit/org/:arbanId/repay`
-- GET `/arbans/credit/org/:arbanId`
-- GET `/arbans/credit/org/:arbanId/loans`
-- GET `/arbans/credit/org/:arbanId/dashboard`
+- POST `/arbads/credit/org/:arbadId/open`
+- POST `/arbads/credit/org/:arbadId/borrow`
+- POST `/arbads/credit/org/:arbadId/repay`
+- GET `/arbads/credit/org/:arbadId`
+- GET `/arbads/credit/org/:arbadId/loans`
+- GET `/arbads/credit/org/:arbadId/dashboard`
 
 ---
 
 ### Central Bank Admin
 
-#### PUT `/arbans/credit/interest-rate`
+#### PUT `/arbads/credit/interest-rate`
 Set interest rate (Central Bank Governing Council only).
 
 **Authentication:** Requires Central Bank role.
@@ -477,7 +477,7 @@ Set interest rate (Central Bank Governing Council only).
 
 ---
 
-#### GET `/arbans/credit/interest-rate`
+#### GET `/arbads/credit/interest-rate`
 Get current interest rate.
 
 **Response (200):**
@@ -499,9 +499,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ### Roles
-- **Citizen**: Can manage own Family Arbans, Zuns
+- **Citizen**: Can manage own Family Arbads, Zuns
 - **Central Bank**: Can set interest rates
-- **Org Leader**: Can manage organizational arbans
+- **Org Leader**: Can manage organizational arbads
 
 ---
 
@@ -537,7 +537,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```json
 {
   "statusCode": 404,
-  "message": "Family Arban 123 not found",
+  "message": "Family Arbad 123 not found",
   "error": "Not Found"
 }
 ```
@@ -575,23 +575,23 @@ Create new legislative proposal.
 ```
 
 **Proposal Types:**
-- `0` - ARBAN_BUDGET
-- `1` - ARBAN_LEADER
-- `2` - ARBAN_PROJECT
+- `0` - ARBAD_BUDGET
+- `1` - ARBAD_LEADER
+- `2` - ARBAD_PROJECT
 - `3` - ZUN_POLICY
 - `4` - ZUN_ELDER
 - `5` - ZUN_BUDGET
-- `6` - MYANGAN_LAW
-- `7` - MYANGAN_LEADER
-- `8` - TUMEN_NATIONAL
-- `9` - TUMEN_CHAIRMAN
+- `6` - MYANGAD_LAW
+- `7` - MYANGAD_LEADER
+- `8` - TUMED_NATIONAL
+- `9` - TUMED_CHAIRMAN
 - `10` - CONSTITUTIONAL
 
 **Khural Levels:**
-- `1` - ARBAN (Local, 60% quorum)
+- `1` - ARBAD (Local, 60% quorum)
 - `2` - ZUN (Regional, 60% quorum)
-- `3` - MYANGAN (Provincial, 70% quorum)
-- `4` - TUMEN (National, 80% quorum)
+- `3` - MYANGAD (Provincial, 70% quorum)
+- `4` - TUMED (National, 80% quorum)
 
 **Response (201):**
 ```json
@@ -649,7 +649,7 @@ Get proposal details.
 List proposals by level.
 
 **Query Parameters:**
-- `level` (required): 1-4 (ARBAN, ZUN, MYANGAN, TUMEN)
+- `level` (required): 1-4 (ARBAD, ZUN, MYANGAD, TUMED)
 
 **Response (200):**
 ```json

@@ -132,7 +132,7 @@ forge script script/DeployFounderBootstrap.s.sol \
 founderBootstrap.bootstrapFounder(
   founderAddress,
   nationId,
-  cohortArbanId,
+  cohortArbadId,
   ethicsHash
 );
 // Returns seatId = 1
@@ -145,7 +145,7 @@ founderBootstrap.bootstrapFounder(
 founderBootstrap.verifyNewCitizen(
   citizenAddress,
   nationId,
-  cohortArbanId,
+  cohortArbadId,
   ethicsHash
 );
 // Bypasses 3-citizen verification requirement

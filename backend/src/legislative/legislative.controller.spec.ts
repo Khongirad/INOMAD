@@ -31,8 +31,8 @@ describe('LegislativeController', () => {
   });
 
   it('should be defined', () => expect(controller).toBeDefined());
-  it('createProposal', async () => { const dto = { title: 'T', description: 'D', fullText: 'F', category: 'C', khuralLevel: 'ARBAN', entityId: 'e1' }; await controller.createProposal(req, dto); expect(service.createProposal).toHaveBeenCalledWith('u1', dto); });
-  it('listProposals', async () => { await controller.listProposals('DRAFT', 'ARBAN', undefined, undefined, '1', '10'); expect(service.listProposals).toHaveBeenCalled(); });
+  it('createProposal', async () => { const dto = { title: 'T', description: 'D', fullText: 'F', category: 'C', khuralLevel: 'ARBAD', entityId: 'e1' }; await controller.createProposal(req, dto); expect(service.createProposal).toHaveBeenCalledWith('u1', dto); });
+  it('listProposals', async () => { await controller.listProposals('DRAFT', 'ARBAD', undefined, undefined, '1', '10'); expect(service.listProposals).toHaveBeenCalled(); });
   it('getProposal', async () => { await controller.getProposal('p1'); expect(service.getProposal).toHaveBeenCalledWith('p1'); });
   it('submitProposal', async () => { await controller.submitProposal('p1', req); expect(service.submitProposal).toHaveBeenCalledWith('p1', 'u1'); });
   it('openDebate', async () => { await controller.openDebate('p1'); expect(service.openDebate).toHaveBeenCalledWith('p1'); });

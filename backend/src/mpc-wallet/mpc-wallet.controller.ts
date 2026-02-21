@@ -241,7 +241,7 @@ export class MPCWalletController {
   }
 
   /**
-   * Suggest guardians based on Arban
+   * Suggest guardians based on Arbad
    */
   @Get('guardians/suggest')
   async suggestGuardians(@Request() req) {

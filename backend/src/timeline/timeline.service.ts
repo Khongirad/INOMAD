@@ -20,7 +20,7 @@ export class TimelineService {
     timezone?: string;
     familyId?: string;
     clanId?: string;
-    arbanId?: string;
+    arbadId?: string;
     hordeId?: string;
     nationId?: string;
     isLegalContract?: boolean;
@@ -43,7 +43,7 @@ export class TimelineService {
         timezone: data.timezone || 'UTC',
         familyId: data.familyId,
         clanId: data.clanId,
-        arbanId: data.arbanId,
+        arbadId: data.arbadId,
         hordeId: data.hordeId,
         nationId: data.nationId,
         isLegalContract: data.isLegalContract || false,
@@ -130,7 +130,7 @@ export class TimelineService {
   }
 
   /**
-   * Get hierarchical timeline (family/clan/arban/etc)
+   * Get hierarchical timeline (family/clan/arbad/etc)
    */
   async getHierarchicalTimeline(
     scope: EventScope,
@@ -154,8 +154,8 @@ export class TimelineService {
       case EventScope.CLAN:
         where.clanId = scopeId;
         break;
-      case EventScope.ARBAN:
-        where.arbanId = scopeId;
+      case EventScope.ARBAD:
+        where.arbadId = scopeId;
         break;
       case EventScope.HORDE:
         where.hordeId = scopeId;

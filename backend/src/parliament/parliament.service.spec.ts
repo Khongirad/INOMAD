@@ -19,12 +19,12 @@ describe('ParliamentService', () => {
 
   const mockRepublic = {
     id: 'rep-1', chairmanUserId: 'chair-1',
-    memberTumens: [{ leaderUserId: 'leader-1' }, { leaderUserId: 'leader-2' }],
+    memberTumeds: [{ leaderUserId: 'leader-1' }, { leaderUserId: 'leader-2' }],
   };
 
-  const mockTumen = {
+  const mockTumed = {
     id: 't-1', leaderUserId: 'leader-1', isActive: true, republicId: 'rep-1',
-    name: 'Tumen-1', totalMembers: 100,
+    name: 'Tumed-1', totalMembers: 100,
   };
 
   const mockPrisma = () => ({
@@ -33,8 +33,8 @@ describe('ParliamentService', () => {
     khuralSession: {
       create: jest.fn(), findUnique: jest.fn(), findMany: jest.fn(), update: jest.fn(),
     },
-    tumen: { findFirst: jest.fn() },
-    familyArban: { findFirst: jest.fn() },
+    tumed: { findFirst: jest.fn() },
+    familyArbad: { findFirst: jest.fn() },
     khuralVote: { findUnique: jest.fn(), create: jest.fn() },
   });
 
@@ -65,7 +65,7 @@ describe('ParliamentService', () => {
       expect(result.id).toBe('s-1');
     });
 
-    it('should allow Tumen leader to create REPUBLICAN session', async () => {
+    it('should allow Tumed leader to create REPUBLICAN session', async () => {
       prisma.republicanKhural.findUnique.mockResolvedValue(mockRepublic);
       prisma.khuralSession.create.mockResolvedValue(mockSession);
       const result = await service.createSession('leader-1', sessionData);
@@ -181,9 +181,9 @@ describe('ParliamentService', () => {
       prisma.khuralSession.findUnique.mockResolvedValue(activeSession);
     });
 
-    it('should cast vote as legislative Tumen leader with family arban', async () => {
-      prisma.tumen.findFirst.mockResolvedValue(mockTumen);
-      prisma.familyArban.findFirst.mockResolvedValue({ husbandSeatId: 'leader-1' });
+    it('should cast vote as legislative Tumed leader with family arbad', async () => {
+      prisma.tumed.findFirst.mockResolvedValue(mockTumed);
+      prisma.familyArbad.findFirst.mockResolvedValue({ husbandSeatId: 'leader-1' });
       prisma.khuralVote.findUnique.mockResolvedValue(null);
       prisma.khuralVote.create.mockResolvedValue({ vote: 'FOR', sessionId: 's-1' });
       const result = await service.castVote('s-1', 'leader-1', { vote: 'FOR' });
@@ -200,38 +200,38 @@ describe('ParliamentService', () => {
       await expect(service.castVote('s-1', 'leader-1', { vote: 'FOR' })).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw ForbiddenException for non-Tumen leader', async () => {
-      prisma.tumen.findFirst.mockResolvedValue(null);
+    it('should throw ForbiddenException for non-Tumed leader', async () => {
+      prisma.tumed.findFirst.mockResolvedValue(null);
       await expect(service.castVote('s-1', 'nobody', { vote: 'FOR' })).rejects.toThrow(ForbiddenException);
     });
 
-    it('should throw ForbiddenException for non-legislative Tumen (no republicId)', async () => {
-      prisma.tumen.findFirst.mockResolvedValue({ ...mockTumen, republicId: null });
+    it('should throw ForbiddenException for non-legislative Tumed (no republicId)', async () => {
+      prisma.tumed.findFirst.mockResolvedValue({ ...mockTumed, republicId: null });
       await expect(service.castVote('s-1', 'leader-1', { vote: 'FOR' })).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw ForbiddenException for non-family representative', async () => {
-      prisma.tumen.findFirst.mockResolvedValue(mockTumen);
-      prisma.familyArban.findFirst.mockResolvedValue(null);
+      prisma.tumed.findFirst.mockResolvedValue(mockTumed);
+      prisma.familyArbad.findFirst.mockResolvedValue(null);
       await expect(service.castVote('s-1', 'leader-1', { vote: 'FOR' })).rejects.toThrow(ForbiddenException);
     });
 
-    it('should throw ForbiddenException for Tumen not in the same republic', async () => {
-      prisma.tumen.findFirst.mockResolvedValue({ ...mockTumen, republicId: 'rep-other' });
-      prisma.familyArban.findFirst.mockResolvedValue({ husbandSeatId: 'leader-1' });
+    it('should throw ForbiddenException for Tumed not in the same republic', async () => {
+      prisma.tumed.findFirst.mockResolvedValue({ ...mockTumed, republicId: 'rep-other' });
+      prisma.familyArbad.findFirst.mockResolvedValue({ husbandSeatId: 'leader-1' });
       await expect(service.castVote('s-1', 'leader-1', { vote: 'FOR' })).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw BadRequestException when already voted', async () => {
-      prisma.tumen.findFirst.mockResolvedValue(mockTumen);
-      prisma.familyArban.findFirst.mockResolvedValue({ husbandSeatId: 'leader-1' });
+      prisma.tumed.findFirst.mockResolvedValue(mockTumed);
+      prisma.familyArbad.findFirst.mockResolvedValue({ husbandSeatId: 'leader-1' });
       prisma.khuralVote.findUnique.mockResolvedValue({ id: 'existing' });
       await expect(service.castVote('s-1', 'leader-1', { vote: 'FOR' })).rejects.toThrow(BadRequestException);
     });
 
     it('should cast AGAINST vote with comment', async () => {
-      prisma.tumen.findFirst.mockResolvedValue(mockTumen);
-      prisma.familyArban.findFirst.mockResolvedValue({ husbandSeatId: 'leader-1' });
+      prisma.tumed.findFirst.mockResolvedValue(mockTumed);
+      prisma.familyArbad.findFirst.mockResolvedValue({ husbandSeatId: 'leader-1' });
       prisma.khuralVote.findUnique.mockResolvedValue(null);
       prisma.khuralVote.create.mockResolvedValue({ vote: 'AGAINST', comment: 'Too expensive' });
       const result = await service.castVote('s-1', 'leader-1', { vote: 'AGAINST', comment: 'Too expensive' });
@@ -245,10 +245,10 @@ describe('ParliamentService', () => {
       prisma.khuralSession.findUnique.mockResolvedValue({
         ...mockSession, status: 'COMPLETED', quorumMet: true,
         votes: [
-          { vote: 'FOR', voter: { id: 'v1' }, tumen: { id: 't1' } },
-          { vote: 'FOR', voter: { id: 'v2' }, tumen: { id: 't2' } },
-          { vote: 'AGAINST', voter: { id: 'v3' }, tumen: { id: 't3' } },
-          { vote: 'ABSTAIN', voter: { id: 'v4' }, tumen: { id: 't4' } },
+          { vote: 'FOR', voter: { id: 'v1' }, tumed: { id: 't1' } },
+          { vote: 'FOR', voter: { id: 'v2' }, tumed: { id: 't2' } },
+          { vote: 'AGAINST', voter: { id: 'v3' }, tumed: { id: 't3' } },
+          { vote: 'ABSTAIN', voter: { id: 'v4' }, tumed: { id: 't4' } },
         ],
       });
       const result = await service.getVoteResults('s-1');
@@ -263,9 +263,9 @@ describe('ParliamentService', () => {
       prisma.khuralSession.findUnique.mockResolvedValue({
         ...mockSession, quorumMet: true,
         votes: [
-          { vote: 'FOR', voter: { id: 'v1' }, tumen: { id: 't1' } },
-          { vote: 'AGAINST', voter: { id: 'v2' }, tumen: { id: 't2' } },
-          { vote: 'AGAINST', voter: { id: 'v3' }, tumen: { id: 't3' } },
+          { vote: 'FOR', voter: { id: 'v1' }, tumed: { id: 't1' } },
+          { vote: 'AGAINST', voter: { id: 'v2' }, tumed: { id: 't2' } },
+          { vote: 'AGAINST', voter: { id: 'v3' }, tumed: { id: 't3' } },
         ],
       });
       const result = await service.getVoteResults('s-1');
@@ -275,7 +275,7 @@ describe('ParliamentService', () => {
     it('should return passed=false when quorum not met', async () => {
       prisma.khuralSession.findUnique.mockResolvedValue({
         ...mockSession, quorumMet: false,
-        votes: [{ vote: 'FOR', voter: { id: 'v1' }, tumen: { id: 't1' } }],
+        votes: [{ vote: 'FOR', voter: { id: 'v1' }, tumed: { id: 't1' } }],
       });
       const result = await service.getVoteResults('s-1');
       expect(result.results.passed).toBe(false);

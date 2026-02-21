@@ -1,9 +1,9 @@
 // Must mock the typechain factory before anything imports it
-jest.mock('../typechain-types/factories/ArbanCreditLine__factory', () => ({
-  ArbanCreditLine__factory: { connect: jest.fn() },
+jest.mock('../typechain-types/factories/ArbadCreditLine__factory', () => ({
+  ArbadCreditLine__factory: { connect: jest.fn() },
 }));
-jest.mock('../blockchain/abis/arbanCreditLine.abi', () => ({
-  ArbanCreditLine_ABI: [],
+jest.mock('../blockchain/abis/arbadCreditLine.abi', () => ({
+  ArbadCreditLine_ABI: [],
   CreditType: { FAMILY: 0, ORGANIZATIONAL: 1 },
 }));
 jest.mock('ethers', () => ({

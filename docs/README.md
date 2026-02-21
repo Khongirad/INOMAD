@@ -14,7 +14,7 @@ Onboarding materials for new developers:
 ### [Architecture](architecture/)
 System design and technical architecture:
 - [Core Invariants](architecture/CORE_INVARIANTS.md) - Critical system rules  
-- [Arban System Guide](architecture/ARBAN_SYSTEM_GUIDE.md) - Governance model
+- [Arbad System Guide](architecture/ARBAD_SYSTEM_GUIDE.md) - Governance model
 - [Enterprise Architecture](architecture/altan_l1_enterprise_architecture.md) - Complete system design
 - [Legislative Architecture](architecture/legislative_architecture.md) - Parliamentary system
 - [Wallet/Bank Architecture](architecture/wallet_bank_architecture.md) - Financial systems

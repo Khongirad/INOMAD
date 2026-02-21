@@ -25,32 +25,32 @@ async function main() {
   // Actually, I'll just manually trigger the logic I wrote in the service by hitting the DB.
   
   // Create a minimal hierarchy if not exists
-  const tumen = await prisma.khuralGroup.upsert({
-    where: { id: 'bry-tumen-id' },
+  const tumed = await prisma.khuralGroup.upsert({
+    where: { id: 'bry-tumed-id' },
     update: {},
-    create: { id: 'bry-tumen-id', level: 'TUMEN', name: 'Buryatia' }
+    create: { id: 'bry-tumed-id', level: 'TUMED', name: 'Buryatia' }
   });
 
-  const myangan = await prisma.khuralGroup.upsert({
-    where: { id: 'bry-myangan-id' },
+  const myangad = await prisma.khuralGroup.upsert({
+    where: { id: 'bry-myangad-id' },
     update: {},
-    create: { id: 'bry-myangan-id', level: 'MYANGAN', name: 'Myangan 1', parentGroupId: tumen.id }
+    create: { id: 'bry-myangad-id', level: 'MYANGAD', name: 'Myangad 1', parentGroupId: tumed.id }
   });
 
-  const zuun = await prisma.khuralGroup.upsert({
-    where: { id: 'bry-zuun-id' },
+  const zuud = await prisma.khuralGroup.upsert({
+    where: { id: 'bry-zuud-id' },
     update: {},
-    create: { id: 'bry-zuun-id', level: 'ZUUN', name: 'Zuun 1', parentGroupId: myangan.id }
+    create: { id: 'bry-zuud-id', level: 'ZUUN', name: 'Zuud 1', parentGroupId: myangad.id }
   });
 
-  const arban = await prisma.khuralGroup.upsert({
-    where: { id: 'bry-arban-id' },
+  const arbad = await prisma.khuralGroup.upsert({
+    where: { id: 'bry-arbad-id' },
     update: {},
-    create: { id: 'bry-arban-id', level: 'ARBAN', name: 'Arban 1', parentGroupId: zuun.id }
+    create: { id: 'bry-arbad-id', level: 'ARBAD', name: 'Arbad 1', parentGroupId: zuud.id }
   });
 
   const seat = await prisma.khuralSeat.create({
-    data: { groupId: arban.id, index: 5 }
+    data: { groupId: arbad.id, index: 5 }
   });
 
   // Assign

@@ -30,13 +30,13 @@ export class BankHierarchyController {
   async registerEmployee(@Body() body: {
     seatId: number;
     wallet: string;
-    bankArbanId: number;
+    bankArbadId: number;
   }) {
     try {
       const employeeId = await this.hierarchyService.registerEmployee({
         seatId: body.seatId,
         wallet: body.wallet,
-        bankArbanId: body.bankArbanId,
+        bankArbadId: body.bankArbadId,
       });
 
       return {

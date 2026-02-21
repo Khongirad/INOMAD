@@ -23,7 +23,7 @@ import type {
   TypedContractMethod,
 } from "./common";
 
-export interface ArbanCreditLineInterface extends Interface {
+export interface ArbadCreditLineInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "FAMILY_BASE_LIMIT"
@@ -31,7 +31,7 @@ export interface ArbanCreditLineInterface extends Interface {
       | "MAX_RATING"
       | "NEUTRAL_RATING"
       | "ORG_BASE_LIMIT"
-      | "arbanCompletion"
+      | "arbadCompletion"
       | "borrowFamily"
       | "borrowOrg"
       | "familyCreditLines"
@@ -84,7 +84,7 @@ export interface ArbanCreditLineInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "arbanCompletion",
+    functionFragment: "arbadCompletion",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -179,7 +179,7 @@ export interface ArbanCreditLineInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "arbanCompletion",
+    functionFragment: "arbadCompletion",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -247,17 +247,17 @@ export interface ArbanCreditLineInterface extends Interface {
 
 export namespace CreditLineOpenedEvent {
   export type InputTuple = [
-    arbanId: BigNumberish,
+    arbadId: BigNumberish,
     creditType: BigNumberish,
     creditLimit: BigNumberish
   ];
   export type OutputTuple = [
-    arbanId: bigint,
+    arbadId: bigint,
     creditType: bigint,
     creditLimit: bigint
   ];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     creditType: bigint;
     creditLimit: bigint;
   }
@@ -283,19 +283,19 @@ export namespace InterestRateUpdatedEvent {
 export namespace LoanRepaidEvent {
   export type InputTuple = [
     loanId: BigNumberish,
-    arbanId: BigNumberish,
+    arbadId: BigNumberish,
     creditType: BigNumberish,
     onTime: boolean
   ];
   export type OutputTuple = [
     loanId: bigint,
-    arbanId: bigint,
+    arbadId: bigint,
     creditType: bigint,
     onTime: boolean
   ];
   export interface OutputObject {
     loanId: bigint;
-    arbanId: bigint;
+    arbadId: bigint;
     creditType: bigint;
     onTime: boolean;
   }
@@ -308,19 +308,19 @@ export namespace LoanRepaidEvent {
 export namespace LoanTakenEvent {
   export type InputTuple = [
     loanId: BigNumberish,
-    arbanId: BigNumberish,
+    arbadId: BigNumberish,
     creditType: BigNumberish,
     amount: BigNumberish
   ];
   export type OutputTuple = [
     loanId: bigint,
-    arbanId: bigint,
+    arbadId: bigint,
     creditType: bigint,
     amount: bigint
   ];
   export interface OutputObject {
     loanId: bigint;
-    arbanId: bigint;
+    arbadId: bigint;
     creditType: bigint;
     amount: bigint;
   }
@@ -345,17 +345,17 @@ export namespace OwnerChangedEvent {
 
 export namespace RatingUpdatedEvent {
   export type InputTuple = [
-    arbanId: BigNumberish,
+    arbadId: BigNumberish,
     creditType: BigNumberish,
     newRating: BigNumberish
   ];
   export type OutputTuple = [
-    arbanId: bigint,
+    arbadId: bigint,
     creditType: bigint,
     newRating: bigint
   ];
   export interface OutputObject {
-    arbanId: bigint;
+    arbadId: bigint;
     creditType: bigint;
     newRating: bigint;
   }
@@ -365,11 +365,11 @@ export namespace RatingUpdatedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export interface ArbanCreditLine extends BaseContract {
-  connect(runner?: ContractRunner | null): ArbanCreditLine;
+export interface ArbadCreditLine extends BaseContract {
+  connect(runner?: ContractRunner | null): ArbadCreditLine;
   waitForDeployment(): Promise<this>;
 
-  interface: ArbanCreditLineInterface;
+  interface: ArbadCreditLineInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -418,11 +418,11 @@ export interface ArbanCreditLine extends BaseContract {
 
   ORG_BASE_LIMIT: TypedContractMethod<[], [bigint], "view">;
 
-  arbanCompletion: TypedContractMethod<[], [string], "view">;
+  arbadCompletion: TypedContractMethod<[], [string], "view">;
 
   borrowFamily: TypedContractMethod<
     [
-      familyArbanId: BigNumberish,
+      familyArbadId: BigNumberish,
       amount: BigNumberish,
       durationDays: BigNumberish
     ],
@@ -432,7 +432,7 @@ export interface ArbanCreditLine extends BaseContract {
 
   borrowOrg: TypedContractMethod<
     [
-      orgArbanId: BigNumberish,
+      orgArbadId: BigNumberish,
       amount: BigNumberish,
       durationDays: BigNumberish
     ],
@@ -456,7 +456,7 @@ export interface ArbanCreditLine extends BaseContract {
         boolean,
         bigint
       ] & {
-        arbanId: bigint;
+        arbadId: bigint;
         creditType: bigint;
         creditRating: bigint;
         creditLimit: bigint;
@@ -488,7 +488,7 @@ export interface ArbanCreditLine extends BaseContract {
         boolean
       ] & {
         loanId: bigint;
-        arbanId: bigint;
+        arbadId: bigint;
         creditType: bigint;
         principal: bigint;
         interest: bigint;
@@ -503,7 +503,7 @@ export interface ArbanCreditLine extends BaseContract {
   >;
 
   getFamilyCreditLine: TypedContractMethod<
-    [arbanId: BigNumberish],
+    [arbadId: BigNumberish],
     [
       [bigint, bigint, bigint, bigint, boolean] & {
         rating: bigint;
@@ -517,7 +517,7 @@ export interface ArbanCreditLine extends BaseContract {
   >;
 
   getOrgCreditLine: TypedContractMethod<
-    [arbanId: BigNumberish],
+    [arbadId: BigNumberish],
     [
       [bigint, bigint, bigint, bigint, boolean] & {
         rating: bigint;
@@ -547,13 +547,13 @@ export interface ArbanCreditLine extends BaseContract {
   nextLoanId: TypedContractMethod<[], [bigint], "view">;
 
   openFamilyCreditLine: TypedContractMethod<
-    [familyArbanId: BigNumberish],
+    [familyArbadId: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   openOrgCreditLine: TypedContractMethod<
-    [orgArbanId: BigNumberish],
+    [orgArbadId: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -574,7 +574,7 @@ export interface ArbanCreditLine extends BaseContract {
         boolean,
         bigint
       ] & {
-        arbanId: bigint;
+        arbadId: bigint;
         creditType: bigint;
         creditRating: bigint;
         creditLimit: bigint;
@@ -606,7 +606,7 @@ export interface ArbanCreditLine extends BaseContract {
         boolean
       ] & {
         loanId: bigint;
-        arbanId: bigint;
+        arbadId: bigint;
         creditType: bigint;
         principal: bigint;
         interest: bigint;
@@ -623,13 +623,13 @@ export interface ArbanCreditLine extends BaseContract {
   owner: TypedContractMethod<[], [string], "view">;
 
   repayFamily: TypedContractMethod<
-    [familyArbanId: BigNumberish, loanIdx: BigNumberish],
+    [familyArbadId: BigNumberish, loanIdx: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   repayOrg: TypedContractMethod<
-    [orgArbanId: BigNumberish, loanIdx: BigNumberish],
+    [orgArbadId: BigNumberish, loanIdx: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -666,13 +666,13 @@ export interface ArbanCreditLine extends BaseContract {
     nameOrSignature: "ORG_BASE_LIMIT"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "arbanCompletion"
+    nameOrSignature: "arbadCompletion"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "borrowFamily"
   ): TypedContractMethod<
     [
-      familyArbanId: BigNumberish,
+      familyArbadId: BigNumberish,
       amount: BigNumberish,
       durationDays: BigNumberish
     ],
@@ -683,7 +683,7 @@ export interface ArbanCreditLine extends BaseContract {
     nameOrSignature: "borrowOrg"
   ): TypedContractMethod<
     [
-      orgArbanId: BigNumberish,
+      orgArbadId: BigNumberish,
       amount: BigNumberish,
       durationDays: BigNumberish
     ],
@@ -708,7 +708,7 @@ export interface ArbanCreditLine extends BaseContract {
         boolean,
         bigint
       ] & {
-        arbanId: bigint;
+        arbadId: bigint;
         creditType: bigint;
         creditRating: bigint;
         creditLimit: bigint;
@@ -741,7 +741,7 @@ export interface ArbanCreditLine extends BaseContract {
         boolean
       ] & {
         loanId: bigint;
-        arbanId: bigint;
+        arbadId: bigint;
         creditType: bigint;
         principal: bigint;
         interest: bigint;
@@ -757,7 +757,7 @@ export interface ArbanCreditLine extends BaseContract {
   getFunction(
     nameOrSignature: "getFamilyCreditLine"
   ): TypedContractMethod<
-    [arbanId: BigNumberish],
+    [arbadId: BigNumberish],
     [
       [bigint, bigint, bigint, bigint, boolean] & {
         rating: bigint;
@@ -772,7 +772,7 @@ export interface ArbanCreditLine extends BaseContract {
   getFunction(
     nameOrSignature: "getOrgCreditLine"
   ): TypedContractMethod<
-    [arbanId: BigNumberish],
+    [arbadId: BigNumberish],
     [
       [bigint, bigint, bigint, bigint, boolean] & {
         rating: bigint;
@@ -798,10 +798,10 @@ export interface ArbanCreditLine extends BaseContract {
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "openFamilyCreditLine"
-  ): TypedContractMethod<[familyArbanId: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<[familyArbadId: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "openOrgCreditLine"
-  ): TypedContractMethod<[orgArbanId: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<[orgArbadId: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "orgCreditLines"
   ): TypedContractMethod<
@@ -820,7 +820,7 @@ export interface ArbanCreditLine extends BaseContract {
         boolean,
         bigint
       ] & {
-        arbanId: bigint;
+        arbadId: bigint;
         creditType: bigint;
         creditRating: bigint;
         creditLimit: bigint;
@@ -853,7 +853,7 @@ export interface ArbanCreditLine extends BaseContract {
         boolean
       ] & {
         loanId: bigint;
-        arbanId: bigint;
+        arbadId: bigint;
         creditType: bigint;
         principal: bigint;
         interest: bigint;
@@ -872,14 +872,14 @@ export interface ArbanCreditLine extends BaseContract {
   getFunction(
     nameOrSignature: "repayFamily"
   ): TypedContractMethod<
-    [familyArbanId: BigNumberish, loanIdx: BigNumberish],
+    [familyArbadId: BigNumberish, loanIdx: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "repayOrg"
   ): TypedContractMethod<
-    [orgArbanId: BigNumberish, loanIdx: BigNumberish],
+    [orgArbadId: BigNumberish, loanIdx: BigNumberish],
     [void],
     "nonpayable"
   >;

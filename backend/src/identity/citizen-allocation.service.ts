@@ -16,7 +16,7 @@ import {
  *
  * Economic Model:
  * - Level 1: 100 ALTAN (base verification)
- * - Level 2: 5,000 ALTAN (Arban membership)
+ * - Level 2: 5,000 ALTAN (Arbad membership)
  * - Level 3: 9,383 ALTAN (Zun formation - full allocation)
  *
  * Fund Source: Siberian Pension Fund (special account in Bank of Siberia)
@@ -171,16 +171,16 @@ export class CitizenAllocationService {
   }
 
   /**
-   * Allocate Level 2 funds (5,000 ALTAN) when citizen joins/creates Arban
-   * Supports both FamilyArban and OrganizationalArban
+   * Allocate Level 2 funds (5,000 ALTAN) when citizen joins/creates Arbad
+   * Supports both FamilyArbad and OrganizationalArbad
    */
   async allocateLevel2Funds(
     userId: string,
-    arbanId: string,
+    arbadId: string,
   ): Promise<{
     allocated: boolean;
     amount: number;
-    arbanRef?: string;
+    arbadRef?: string;
   }> {
     try {
       const { LEVEL_2_ALLOCATION } = ECONOMIC_CONSTANTS;
@@ -207,11 +207,11 @@ export class CitizenAllocationService {
         throw new Error(`User ${userId} not found`);
       }
 
-      // Verify Arban membership (check both Family and Org Arbans)
-      const isMember = await this.verifyArbanMembership(userId, arbanId);
+      // Verify Arbad membership (check both Family and Org Arbads)
+      const isMember = await this.verifyArbadMembership(userId, arbadId);
       if (!isMember) {
         throw new Error(
-          `User ${userId} is not a member of Arban ${arbanId}`,
+          `User ${userId} is not a member of Arbad ${arbadId}`,
         );
       }
 
@@ -237,17 +237,17 @@ export class CitizenAllocationService {
         userId,
         LEVEL_2_ALLOCATION,
         'REWARD' as any,
-        TRANSACTION_REASONS.LEVEL_2_ARBAN,
+        TRANSACTION_REASONS.LEVEL_2_ARBAD,
       );
 
       this.logger.log(
-        `✅ Allocated ${LEVEL_2_ALLOCATION} ALTAN to citizen ${user.seatId} for Arban membership`,
+        `✅ Allocated ${LEVEL_2_ALLOCATION} ALTAN to citizen ${user.seatId} for Arbad membership`,
       );
 
       return {
         allocated: true,
         amount: LEVEL_2_ALLOCATION,
-        arbanRef: arbanId,
+        arbadRef: arbadId,
       };
     } catch (error) {
       this.logger.error(
@@ -265,7 +265,7 @@ export class CitizenAllocationService {
     const existing = await this.prisma.altanTransaction.findFirst({
       where: {
         toUserId: userId,
-        memo: TRANSACTION_REASONS.LEVEL_2_ARBAN,
+        memo: TRANSACTION_REASONS.LEVEL_2_ARBAD,
         status: 'COMPLETED',
       },
     });
@@ -273,11 +273,11 @@ export class CitizenAllocationService {
   }
 
   /**
-   * Verify user is member of given Arban (Family or Organizational)
+   * Verify user is member of given Arbad (Family or Organizational)
    */
-  private async verifyArbanMembership(
+  private async verifyArbadMembership(
     userId: string,
-    arbanId: string,
+    arbadId: string,
   ): Promise<boolean> {
     // Get user's seatId
     const user = await this.prisma.user.findUnique({
@@ -289,16 +289,16 @@ export class CitizenAllocationService {
       return false;
     }
 
-    // Check FamilyArban (husband, wife, or children)
-    const familyArban = await this.prisma.familyArban.findUnique({
-      where: { id: arbanId },
+    // Check FamilyArbad (husband, wife, or children)
+    const familyArbad = await this.prisma.familyArbad.findUnique({
+      where: { id: arbadId },
       include: { children: true },
     });
 
-    if (familyArban) {
-      const isHusband = familyArban.husbandSeatId === user.seatId;
-      const isWife = familyArban.wifeSeatId === user.seatId;
-      const isChild = familyArban.children.some(
+    if (familyArbad) {
+      const isHusband = familyArbad.husbandSeatId === user.seatId;
+      const isWife = familyArbad.wifeSeatId === user.seatId;
+      const isChild = familyArbad.children.some(
         (child) => child.childSeatId === user.seatId,
       );
 
@@ -307,10 +307,10 @@ export class CitizenAllocationService {
       }
     }
 
-    // Check OrganizationalArban
-    const orgMember = await this.prisma.orgArbanMember.findFirst({
+    // Check OrganizationalArbad
+    const orgMember = await this.prisma.orgArbadMember.findFirst({
       where: {
-        arbanId: BigInt(arbanId),
+        arbadId: BigInt(arbadId),
         seatId: user.seatId,
       },
     });
@@ -320,7 +320,7 @@ export class CitizenAllocationService {
 
   /**
    * Allocate Level 3 funds (9,383 ALTAN) when Zun is formed
-   * Distributed to all members of all Arbans in the Zun
+   * Distributed to all members of all Arbads in the Zun
    */
   async allocateLevel3Funds(
     userId: string,
@@ -355,7 +355,7 @@ export class CitizenAllocationService {
         throw new Error(`User ${userId} not found`);
       }
 
-      // Verify Zun membership (via Arban membership)
+      // Verify Zun membership (via Arbad membership)
       const isMember = await this.verifyZunMembership(userId, zunId);
       if (!isMember) {
         throw new Error(`User ${userId} is not a member of Zun ${zunId}`);
@@ -419,7 +419,7 @@ export class CitizenAllocationService {
   }
 
   /**
-   * Verify user is member of any Arban in the given Zun
+   * Verify user is member of any Arbad in the given Zun
    */
   private async verifyZunMembership(
     userId: string,
@@ -435,21 +435,21 @@ export class CitizenAllocationService {
       return false;
     }
 
-    // Get Zun with all member Arbans
+    // Get Zun with all member Arbads
     const zun = await this.prisma.zun.findUnique({
       where: { id: zunId },
-      include: { memberArbans: { include: { children: true } } },
+      include: { memberArbads: { include: { children: true } } },
     });
 
-    if (!zun || !zun.memberArbans || zun.memberArbans.length === 0) {
+    if (!zun || !zun.memberArbads || zun.memberArbads.length === 0) {
       return false;
     }
 
-    // Check if user is member of any Arban in this Zun
-    for (const arban of zun.memberArbans) {
-      const isHusband = arban.husbandSeatId === user.seatId;
-      const isWife = arban.wifeSeatId === user.seatId;
-      const isChild = arban.children.some(
+    // Check if user is member of any Arbad in this Zun
+    for (const arbad of zun.memberArbads) {
+      const isHusband = arbad.husbandSeatId === user.seatId;
+      const isWife = arbad.wifeSeatId === user.seatId;
+      const isChild = arbad.children.some(
         (child) => child.childSeatId === user.seatId,
       );
 

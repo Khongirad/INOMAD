@@ -222,7 +222,7 @@ export default function VerificationHallPage() {
                         <Fingerprint size={16} /> Verify a Peer
                     </h4>
                     <p className="text-[10px] text-zinc-400 mb-4 italic leading-relaxed">
-                        Enter the Seat ID of a resident in your local Zuun to sign their social proof bond.
+                        Enter the Seat ID of a resident in your local Zuud to sign their social proof bond.
                     </p>
                     <div className="flex gap-2">
                         <input 
@@ -254,7 +254,7 @@ export default function VerificationHallPage() {
                 <h4 className="text-xs font-bold uppercase mb-4 text-zinc-400">Founder Mandates</h4>
                 <div className="space-y-4">
                     <p className="text-[10px] text-zinc-500 leading-relaxed italic">
-                        Founder's Arban holders can bypass this protocol using **Super-Verification**.
+                        Founder's Arbad holders can bypass this protocol using **Super-Verification**.
                     </p>
                     {status?.isFounderMandateHolder && (
                          <Button 

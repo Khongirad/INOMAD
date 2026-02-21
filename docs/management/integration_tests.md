@@ -2,7 +2,7 @@
 
 ## Overview
 
-End-to-end integration tests verifying the complete Bank of Siberia architecture works together: ArbanCompletion → CitizenBank → BankArbanHierarchy → CitizenWalletGuard → JudicialMultiSig.
+End-to-end integration tests verifying the complete Bank of Siberia architecture works together: ArbadCompletion → CitizenBank → BankArbadHierarchy → CitizenWalletGuard → JudicialMultiSig.
 
 ---
 
@@ -12,25 +12,25 @@ End-to-end integration tests verifying the complete Bank of Siberia architecture
 
 ### Pre-conditions:
 - Citizen has SeatSBT (seatId: 123)
-- Citizen is married (Family Arban exists)
-- Bank hierarchy exists (Tumen → Myangan → Zun → Arban)
+- Citizen is married (Family Arbad exists)
+- Bank hierarchy exists (Tumed → Myangad → Zun → Arbad)
 
 ### Test Steps:
 
 ```bash
-# 1. Verify citizen is in ArbanCompletion
-curl -X GET http://localhost:3000/arban/family/seat/123 \
+# 1. Verify citizen is in ArbadCompletion
+curl -X GET http://localhost:3000/arbad/family/seat/123 \
   -H "Authorization: Bearer $JWT_TOKEN"
-# Expected: Returns Family Arban details
+# Expected: Returns Family Arbad details
 
-# 2. Register employee in BankArbanHierarchy
+# 2. Register employee in BankArbadHierarchy
 curl -X POST http://localhost:3000/bank/hierarchy/register \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "seatId": 123,
     "wallet": "0xEmployee123...",
-    "bankArbanId": 1
+    "bankArbadId": 1
   }'
 # Expected: employeeId returned, citizen verified
 
@@ -42,12 +42,12 @@ curl -X GET http://localhost:3000/bank/hierarchy/employee/1 \
 # 4. Verify hierarchy path on-chain
 cast call $BANK_HIERARCHY_ADDRESS \
   "getHierarchyPath(uint256)" 1
-# Expected: arbanId=1, zunId=1, myanganId=1, tumenId=1
+# Expected: arbadId=1, zunId=1, myangadId=1, tumedId=1
 ```
 
 ### Expected Results:
-- ✅ Citizen verified in ArbanCompletion
-- ✅ Employee registered on-chain (BankArbanHierarchy)
+- ✅ Citizen verified in ArbadCompletion
+- ✅ Employee registered on-chain (BankArbadHierarchy)
 - ✅ Employee saved in database
 - ✅ Hierarchy path correct
 
@@ -59,7 +59,7 @@ cast call $BANK_HIERARCHY_ADDRESS \
 
 ### Pre-conditions:
 - Employee registered (from Scenario 1)
-- Family Arban has children (eligible for Tier 2)
+- Family Arbad has children (eligible for Tier 2)
 - CitizenBank has funds in distribution pool
 
 ### Test Steps:
@@ -102,10 +102,10 @@ cast send $CITIZEN_BANK_ADDRESS \
 
 ### Pre-conditions:
 - Bank hierarchy fully populated:
-  - Tumen #1 (Chairman)
-  - Myangan #1 (10 Zuns)
-  - Zun #1 (10 Arbans)
-  - Arban #1 (10 Employees)
+  - Tumed #1 (Chairman)
+  - Myangad #1 (10 Zuns)
+  - Zun #1 (10 Arbads)
+  - Arbad #1 (10 Employees)
 
 ### Test Steps:
 
@@ -119,8 +119,8 @@ curl -X PUT http://localhost:3000/bank/hierarchy/performance/5 \
 curl -X PUT http://localhost:3000/bank/hierarchy/performance/8 \
   -d '{"score": 40}'
 
-# 3. Check Arban #1 average
-cast call $BANK_HIERARCHY_ADDRESS "getArban(uint256)" 1
+# 3. Check Arbad #1 average
+cast call $BANK_HIERARCHY_ADDRESS "getArbad(uint256)" 1
 # Expected: avgPerformance updated
 
 # 4. Check for CollectiveResponsibilityTriggered event
@@ -130,14 +130,14 @@ cast logs --from-block latest \
 
 # 5. Verify cascade to Zun
 cast call $BANK_HIERARCHY_ADDRESS "getZun(uint256)" 1
-# Expected: avgPerformance reflects Arban average
+# Expected: avgPerformance reflects Arbad average
 ```
 
 ### Expected Results:
 - ✅ Individual scores updated
-- ✅ Arban average calculated correctly
+- ✅ Arbad average calculated correctly
 - ✅ Collective responsibility event triggered (score < 50)
-- ✅ Performance cascades: Arban → Zun → Myangan → Tumen
+- ✅ Performance cascades: Arbad → Zun → Myangad → Tumed
 
 ---
 

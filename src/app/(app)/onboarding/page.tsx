@@ -23,7 +23,7 @@ const STEP_ICONS: Record<string, React.ElementType> = {
   setup_wallet: Wallet,
   verify_identity: Shield,
   join_guild: Users,
-  join_arban: Sword,
+  join_arbad: Sword,
   first_vote: Scroll,
   constitution: Lock,
 };
@@ -32,7 +32,7 @@ const STEP_COLORS: Record<string, { bg: string; text: string; border: string }> 
   setup_wallet: { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/30" },
   verify_identity: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/30" },
   join_guild: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/30" },
-  join_arban: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/30" },
+  join_arbad: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/30" },
   first_vote: { bg: "bg-purple-500/10", text: "text-purple-500", border: "border-purple-500/30" },
   constitution: { bg: "bg-cyan-500/10", text: "text-cyan-500", border: "border-cyan-500/30" },
 };
@@ -74,7 +74,7 @@ export default function OnboardingPage() {
         { key: "setup_wallet", title: "Set Up Wallet", description: "Create your MPC wallet for financial sovereignty", xpReward: 50, order: 0 },
         { key: "verify_identity", title: "Verify Identity", description: "Get verified by a fellow citizen", xpReward: 100, order: 1 },
         { key: "join_guild", title: "Join a Guild", description: "Find your professional guild and contribute", xpReward: 75, order: 2 },
-        { key: "join_arban", title: "Join an Arban", description: "Connect with your local community group", xpReward: 75, order: 3 },
+        { key: "join_arbad", title: "Join an Arbad", description: "Connect with your local community group", xpReward: 75, order: 3 },
         { key: "first_vote", title: "Cast First Vote", description: "Participate in governance for the first time", xpReward: 100, order: 4 },
         { key: "constitution", title: "Study Constitution", description: "Learn the founding principles of INOMAD KHURAL", xpReward: 50, order: 5 },
       ]);

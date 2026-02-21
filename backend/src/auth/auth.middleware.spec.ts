@@ -82,20 +82,20 @@ describe('AuthMiddleware', () => {
   // ======================== Protected endpoints ========================
 
   it('throws if missing x-seat-id header', async () => {
-    const req = createReq('/api/arbans', {});
+    const req = createReq('/api/arbads', {});
     await expect(middleware.use(req, {} as any, next)).rejects.toThrow(UnauthorizedException);
   });
 
   it('throws if user not found by seatId', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
-    const req = createReq('/api/arbans', { 'x-seat-id': 'bad-seat' });
+    const req = createReq('/api/arbads', { 'x-seat-id': 'bad-seat' });
     await expect(middleware.use(req, {} as any, next)).rejects.toThrow(UnauthorizedException);
   });
 
   it('attaches user to request on valid seatId', async () => {
     const user = { id: 'u1', seatId: 'seat1', role: 'CITIZEN' };
     prisma.user.findUnique.mockResolvedValue(user);
-    const req = createReq('/api/arbans', { 'x-seat-id': 'seat1' });
+    const req = createReq('/api/arbads', { 'x-seat-id': 'seat1' });
 
     await middleware.use(req, {} as any, next);
     expect(req.user).toEqual(user);

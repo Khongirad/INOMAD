@@ -19,7 +19,7 @@ Production-grade NestJS backend for the INOMAD sovereign digital platform.
 
 ### 2. **Khural Module** (Governance)
 - Circle-based governance system
-- Fixed 10-seat groups (Arban, Zuun, Myangan, Tumen)
+- Fixed 10-seat groups (Arbad, Zuud, Myangad, Tumed)
 - Seat application and assignment logic
 - Enforces unique seat occupancy
 
@@ -99,15 +99,15 @@ Server will run on `http://localhost:3001/api`
 # Create Khural group
 POST /api/khural
 {
-  "level": "ARBAN",
-  "name": "Test Arban 1"
+  "level": "ARBAD",
+  "name": "Test Arbad 1"
 }
 
 # Get group (circle-ready format)
 GET /api/khural/:id
 
 # List all groups
-GET /api/khural?level=ARBAN
+GET /api/khural?level=ARBAD
 
 # Apply for empty seat
 POST /api/khural/:id/apply-seat
@@ -228,7 +228,7 @@ Test seat IDs from seed data:
 ### Core Models
 
 - **User**: Citizen identity (linked to SeatSBT)
-- **KhuralGroup**: Governance circles (Arban/Zuun/Myangan/Tumen)
+- **KhuralGroup**: Governance circles (Arbad/Zuud/Myangad/Tumed)
 - **KhuralSeat**: Individual seats in circles (0-9 index)
 - **Guild**: Organizations (Clan/Profession/Organization/Government)
 - **GuildMember**: Guild membership with roles
@@ -239,13 +239,13 @@ Test seat IDs from seed data:
 ## 🧪 Testing with cURL
 
 ```bash
-# Create Arban group
+# Create Arbad group
 curl -X POST http://localhost:3001/api/khural \
   -H "Content-Type: application/json" \
   -H "x-seat-id: SEAT_001" \
   -d '{
-    "level": "ARBAN",
-    "name": "My Test Arban"
+    "level": "ARBAD",
+    "name": "My Test Arbad"
   }'
 
 # Get group (returns circle-ready format)

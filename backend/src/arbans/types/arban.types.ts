@@ -1,14 +1,14 @@
 /**
- * TypeScript types for Two-Type Arban System
+ * TypeScript types for Two-Type Arbad System
  */
 
-import { ArbanType, OrganizationType, PowerBranch } from '../../blockchain/abis/arbanCompletion.abi';
-import { CreditType } from '../../blockchain/abis/arbanCreditLine.abi';
+import { ArbadType, OrganizationType, PowerBranch } from '../../blockchain/abis/arbadCompletion.abi';
+import { CreditType } from '../../blockchain/abis/arbadCreditLine.abi';
 
-// ==================== FAMILY ARBAN ====================
+// ==================== FAMILY ARBAD ====================
 
-export interface FamilyArban {
-  arbanId: number;
+export interface FamilyArbad {
+  arbadId: number;
   husbandSeatId: string;
   wifeSeatId: string;
   childrenSeatIds: string[];
@@ -20,7 +20,7 @@ export interface FamilyArban {
   createdAt: Date;
 }
 
-export interface FamilyArbanWithNames extends FamilyArban {
+export interface FamilyArbadWithNames extends FamilyArbad {
   husbandName?: string;
   wifeName?: string;
   childrenNames?: string[];
@@ -29,7 +29,7 @@ export interface FamilyArbanWithNames extends FamilyArban {
 }
 
 export interface FamilyTree {
-  arban: FamilyArbanWithNames;
+  arbad: FamilyArbadWithNames;
   parents: {
     husband: CitizenInfo;
     wife: CitizenInfo;
@@ -45,30 +45,30 @@ export interface FamilyTree {
 export interface Zun {
   zunId: number;
   name: string;
-  founderArbanId: number;
-  memberArbanIds: number[];
+  founderArbadId: number;
+  memberArbadIds: number[];
   elderSeatId: string;
   isActive: boolean;
   createdAt: Date;
 }
 
 export interface ZunInfo extends Zun {
-  founderArban?: FamilyArbanWithNames;
-  memberArbans?: FamilyArbanWithNames[];
+  founderArbad?: FamilyArbadWithNames;
+  memberArbads?: FamilyArbadWithNames[];
   elder?: CitizenInfo;
 }
 
 export interface ClanTree {
   zun: ZunInfo;
-  founder: FamilyArbanWithNames;
-  members: FamilyArbanWithNames[];
+  founder: FamilyArbadWithNames;
+  members: FamilyArbadWithNames[];
   elder: CitizenInfo | null;
 }
 
-// ==================== ORGANIZATIONAL ARBAN ====================
+// ==================== ORGANIZATIONAL ARBAD ====================
 
-export interface OrganizationalArban {
-  arbanId: number;
+export interface OrganizationalArbad {
+  arbadId: number;
   name: string;
   memberSeatIds: string[];
   leaderSeatId: string;
@@ -79,24 +79,24 @@ export interface OrganizationalArban {
   createdAt: Date;
 }
 
-export interface OrganizationalArbanWithNames extends OrganizationalArban {
+export interface OrganizationalArbadWithNames extends OrganizationalArbad {
   leaderName?: string;
   memberNames?: string[];
   parentOrgName?: string;
 }
 
 export interface OrgChart {
-  org: OrganizationalArbanWithNames;
+  org: OrganizationalArbadWithNames;
   leader: CitizenInfo | null;
   members: CitizenInfo[];
-  departments: OrganizationalArbanWithNames[];
-  parent: OrganizationalArbanWithNames | null;
+  departments: OrganizationalArbadWithNames[];
+  parent: OrganizationalArbadWithNames | null;
 }
 
 // ==================== CREDIT ====================
 
 export interface CreditLine {
-  arbanId: number;
+  arbadId: number;
   creditType: CreditType;
   creditRating: number; // 0-1000
   creditLimit: string;  // Changed to string for JSON serialization
@@ -112,7 +112,7 @@ export interface CreditLine {
 
 export interface Loan {
   loanId: number;
-  arbanId: number;
+  arbadId: number;
   creditType: CreditType;
   principal: string;  // Changed to string for JSON serialization
   interest: string;
@@ -141,8 +141,8 @@ export interface TierDistribution {
   seatId: string;
   accountId: number;
   tier: 1 | 2 | 3;
-  arbanType: ArbanType;
-  arbanId: number;
+  arbadType: ArbadType;
+  arbadId: number;
   amount: bigint;
   requestedAt: Date;
   approved: boolean;
@@ -182,8 +182,8 @@ export interface CitizenInfo {
   name?: string;
   birthYear?: number;
   age?: number;
-  arbanType?: ArbanType;
-  arbanId?: number;
+  arbadType?: ArbadType;
+  arbadId?: number;
   isMarried: boolean;
   isKhuralRep: boolean;
 }
@@ -192,12 +192,12 @@ export interface CitizenInfo {
 
 export interface KhuralRepresentative {
   seatId: string;
-  arbanId: number;
+  arbadId: number;
   name?: string;
   birthYear: number;
   age: number;
   assignedAt: Date;
-  arban?: FamilyArbanWithNames;
+  arbad?: FamilyArbadWithNames;
 }
 
 export interface KhuralMembership {
@@ -232,24 +232,24 @@ export interface RegisterMarriageRequest {
 }
 
 export interface RegisterMarriageResponse {
-  arbanId: number;
+  arbadId: number;
   txHash: string;
 }
 
 // Child
 export interface AddChildRequest {
-  arbanId: number;
+  arbadId: number;
   childSeatId: string;
 }
 
 export interface ChangeHeirRequest {
-  arbanId: number;
+  arbadId: number;
   newHeirSeatId: string;
 }
 
 // Khural
 export interface SetKhuralRepRequest {
-  arbanId: number;
+  arbadId: number;
   repSeatId: string;
   birthYear: number;
 }
@@ -257,7 +257,7 @@ export interface SetKhuralRepRequest {
 // Zun
 export interface FormZunRequest {
   zunName: string;
-  arbanIds: number[];
+  arbadIds: number[];
   privateKey?: string;
 }
 
@@ -266,26 +266,26 @@ export interface FormZunResponse {
   txHash: string;
 }
 
-// Organizational Arban
-export interface CreateOrgArbanRequest {
+// Organizational Arbad
+export interface CreateOrgArbadRequest {
   name: string;
   orgType: OrganizationType | string;  // Accept both enum value and string name
   leaderSeatId?: string;
   privateKey?: string;
 }
 
-export interface CreateOrgArbanResponse {
-  arbanId: number;
+export interface CreateOrgArbadResponse {
+  arbadId: number;
   txHash: string;
 }
 
 export interface AddOrgMemberRequest {
-  arbanId: number;
+  arbadId: number;
   seatId: string;
 }
 
 export interface SetOrgLeaderRequest {
-  arbanId: number;
+  arbadId: number;
   leaderSeatId: string;
 }
 
@@ -296,12 +296,12 @@ export interface CreateDepartmentRequest {
 
 // Credit
 export interface OpenCreditLineRequest {
-  arbanId: number;
+  arbadId: number;
   creditType: 'FAMILY' | 'ORG';
 }
 
 export interface BorrowRequest {
-  arbanId: number;
+  arbadId: number;
   creditType: 'FAMILY' | 'ORG';
   amount: string; // bigint as string
   durationDays: number;
@@ -317,7 +317,7 @@ export interface BorrowResponse {
 }
 
 export interface RepayLoanRequest {
-  arbanId: number;
+  arbadId: number;
   creditType: 'FAMILY' | 'ORG';
   loanIdx: number;
 }

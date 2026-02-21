@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ArbanVerificationController } from './arban-verification.controller';
-import { ArbanVerificationService } from './arban-verification.service';
+import { ArbadVerificationController } from './arbad-verification.controller';
+import { ArbadVerificationService } from './arbad-verification.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-describe('ArbanVerificationController', () => {
-  let controller: ArbanVerificationController;
+describe('ArbadVerificationController', () => {
+  let controller: ArbadVerificationController;
   const mockService = {
     verifyMember: jest.fn().mockResolvedValue({ id: 'v1' }),
     getVerificationMatrix: jest.fn().mockResolvedValue({ matrix: [] }),
@@ -17,12 +17,12 @@ describe('ArbanVerificationController', () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      controllers: [ArbanVerificationController],
-      providers: [{ provide: ArbanVerificationService, useValue: mockService }],
+      controllers: [ArbadVerificationController],
+      providers: [{ provide: ArbadVerificationService, useValue: mockService }],
     })
       .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
       .compile();
-    controller = module.get(ArbanVerificationController);
+    controller = module.get(ArbadVerificationController);
   });
 
   const req = { user: { sub: 'u1' } };

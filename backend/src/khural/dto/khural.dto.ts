@@ -1,10 +1,10 @@
 import { IsEnum, IsString, IsOptional, IsInt, Min, Max } from 'class-validator';
 
 export enum KhuralLevel {
-  ARBAN = 'ARBAN',
+  ARBAD = 'ARBAD',
   ZUUN = 'ZUUN',
-  MYANGAN = 'MYANGAN',
-  TUMEN = 'TUMEN',
+  MYANGAD = 'MYANGAD',
+  TUMED = 'TUMED',
 }
 
 export class CreateKhuralGroupDto {

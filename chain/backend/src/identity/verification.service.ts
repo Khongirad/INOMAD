@@ -4,7 +4,7 @@ import { VerificationStatus } from '@prisma/client';
 
 @Injectable()
 export class VerificationService {
-  // Hardcoded Founder Mandate Seats (Seats in the first Arban of the first Tumen)
+  // Hardcoded Founder Mandate Seats (Seats in the first Arbad of the first Tumed)
   private readonly FOUNDER_MANDATES = [
     'FOUNDER-001', // Bair Ivanov
     'MANDATE-002', 
@@ -43,7 +43,7 @@ export class VerificationService {
 
     if (!target) throw new BadRequestException('Target user not found.');
 
-    // Local Responsibility Check: Must belong to the same Zuun (100) or Myangan (1000)
+    // Local Responsibility Check: Must belong to the same Zuud (100) or Myangad (1000)
     const verifierSeat = verifier.khuralSeats[0];
     const targetSeat = target.khuralSeats[0];
 
@@ -51,18 +51,18 @@ export class VerificationService {
         throw new BadRequestException('Territorial allocation missing for verifier or target.');
     }
 
-    const verifierArban = verifierSeat.group;
-    const targetArban = targetSeat.group;
+    const verifierArbad = verifierSeat.group;
+    const targetArbad = targetSeat.group;
     
-    const verifierZuunId = verifierArban.parentGroupId;
-    const targetZuunId = targetArban.parentGroupId;
+    const verifierZuudId = verifierArbad.parentGroupId;
+    const targetZuudId = targetArbad.parentGroupId;
 
-    if (!verifierZuunId || !targetZuunId) {
+    if (!verifierZuudId || !targetZuudId) {
          throw new BadRequestException('Territorial hierarchy data incomplete.');
     }
 
-    if (verifierZuunId !== targetZuunId) {
-        throw new ForbiddenException('Indigenous Responsibility: You can only verify residents within your own local Zuun (100-family circle).');
+    if (verifierZuudId !== targetZuudId) {
+        throw new ForbiddenException('Indigenous Responsibility: You can only verify residents within your own local Zuud (100-family circle).');
     }
 
     await this.prisma.verification.create({

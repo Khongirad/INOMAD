@@ -6,8 +6,8 @@ import { HierarchyLevel, PowerBranchType } from '@prisma/client';
  * Constitutional election ladder:
  *
  *   fromLevel  → toLevel       Electorate
- *   LEVEL_1    → LEVEL_10      Семья → Арбан (family members elect Arban leader)
- *   LEVEL_10   → LEVEL_100     Арбан-лидеры → Зун (Arban leaders elect Zun leader)
+ *   LEVEL_1    → LEVEL_10      Семья → Арбан (family members elect Arbad leader)
+ *   LEVEL_10   → LEVEL_100     Арбан-лидеры → Зун (Arbad leaders elect Zun leader)
  *   LEVEL_100  → LEVEL_1000    Зун-лидеры → Мьянган
  *   LEVEL_1000 → LEVEL_10000   Мьянган-лидеры → Тумэн
  *   LEVEL_10000→ REPUBLIC      Тумэн-лидеры → Республика
@@ -28,7 +28,7 @@ export class CreateKhuralElectionDto {
   @IsEnum(PowerBranchType)
   branch: PowerBranchType;
 
-  @ApiProperty({ description: 'Geographic scope ID (Arban/Zun/Myangan/Tumen/Republic/Confederation)' })
+  @ApiProperty({ description: 'Geographic scope ID (Arbad/Zun/Myangad/Tumed/Republic/Confederation)' })
   @IsString()
   scopeId: string;
 

@@ -5,8 +5,8 @@ jest.mock('ethers', () => ({
   },
 }));
 
-jest.mock('../typechain-types/factories/ArbanCompletion__factory', () => ({
-  ArbanCompletion__factory: { connect: jest.fn() },
+jest.mock('../typechain-types/factories/ArbadCompletion__factory', () => ({
+  ArbadCompletion__factory: { connect: jest.fn() },
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -38,7 +38,7 @@ describe('ZunController', () => {
 
   it('should be defined', () => expect(controller).toBeDefined());
   it('forms zun', async () => {
-    const r = await controller.formZun({ familyArbanIds: [1, 2], elderSeatId: 's1' } as any, req);
+    const r = await controller.formZun({ familyArbadIds: [1, 2], elderSeatId: 's1' } as any, req);
     expect(r.zunId).toBe(1);
   });
   it('sets zun elder', async () => {

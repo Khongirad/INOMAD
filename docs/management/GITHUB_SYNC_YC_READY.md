@@ -29,8 +29,8 @@
    - Demonstrates all major features
    
 3. ✅ **src/app/(app)/khural/page.tsx** - State Map page (347 lines)
-   - Hierarchical Arban visualization
-   - Expandable tree structure (Tumen→Myangan→Zuun→Arban)
+   - Hierarchical Arbad visualization
+   - Expandable tree structure (Tumed→Myangad→Zuud→Arbad)
    - Stats dashboard
    
 4. ✅ **src/app/(app)/territory/page.tsx** - Territory page (304 lines)
@@ -71,7 +71,7 @@ Every navigation link working, zero 404 errors:
 | Section | Page | Status | Description |
 |---------|------|--------|-------------|
 | **Identity** | My Seat | ✅ Live | Command center with citizen ID |
-| | My Family | ✅ Live | Family Arban management |
+| | My Family | ✅ Live | Family Arbad management |
 | **Legislative** | State Map | ✅ NEW | Hierarchical structure visualization |
 | | Territory | ✅ NEW | Territory claiming & management |
 | | Archives | ✅ Live | Blockchain-verified history |
@@ -170,7 +170,7 @@ Explore via Sidebar:
 
 ### Competitive Moat
 - Only platform combining constitutional blockchain + indigenous governance
-- 800+ year proven model (Mongolian Arban system)
+- 800+ year proven model (Mongolian Arbad system)
 - Complete digital nation stack (not just DAO or payments)
 
 ---

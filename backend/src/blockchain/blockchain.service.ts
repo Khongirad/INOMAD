@@ -274,7 +274,7 @@ export class BlockchainService implements OnModuleInit {
       const meta = await this.citizenRegistryContract.metaOf(seatId);
       return {
         nationId: meta[0],
-        arbanId: Number(meta[1]),
+        arbadId: Number(meta[1]),
         provinceId: Number(meta[2]),
         districtId: Number(meta[3]),
         cityId: Number(meta[4]),

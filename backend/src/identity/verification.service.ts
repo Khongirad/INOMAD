@@ -7,7 +7,7 @@ import { CitizenAllocationService } from './citizen-allocation.service';
 
 @Injectable()
 export class VerificationService {
-  // Hardcoded Founder Mandate Seats (Seats in the first Arban of the first Tumen)
+  // Hardcoded Founder Mandate Seats (Seats in the first Arbad of the first Tumed)
   private readonly FOUNDER_MANDATES = [
     'FOUNDER-001', // Bair Ivanov
     'MANDATE-002', 
@@ -30,7 +30,7 @@ export class VerificationService {
   ) {}
 
   /**
-   * Arban-Level Verification: Only members of an Arban can verify new users.
+   * Arbad-Level Verification: Only members of an Arbad can verify new users.
    *
    * Коллективная ответственность Арбана:
    *   - Только члены Арбана верифицируют новых пользователей
@@ -58,7 +58,7 @@ export class VerificationService {
 
     if (!target) throw new BadRequestException('Target user not found.');
 
-    // Arban Responsibility Check: Verifier must belong to the same Arban
+    // Arbad Responsibility Check: Verifier must belong to the same Arbad
     const verifierSeat = verifier.khuralSeats[0];
     const targetSeat = target.khuralSeats[0];
 
@@ -66,15 +66,15 @@ export class VerificationService {
         throw new BadRequestException('Territorial allocation missing for verifier or target.');
     }
 
-    const verifierArbanId = verifierSeat.group.id;
-    const targetArbanId = targetSeat.group.id;
+    const verifierArbadId = verifierSeat.group.id;
+    const targetArbadId = targetSeat.group.id;
 
-    if (!verifierArbanId || !targetArbanId) {
+    if (!verifierArbadId || !targetArbadId) {
          throw new BadRequestException('Territorial hierarchy data incomplete.');
     }
 
-    if (verifierArbanId !== targetArbanId) {
-        throw new ForbiddenException('Arban Responsibility: You can only verify members within your own Arban. Your Arban bears collective responsibility for verified users.');
+    if (verifierArbadId !== targetArbadId) {
+        throw new ForbiddenException('Arbad Responsibility: You can only verify members within your own Arbad. Your Arbad bears collective responsibility for verified users.');
     }
 
     await this.prisma.verification.create({

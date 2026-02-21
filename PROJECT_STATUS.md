@@ -75,7 +75,7 @@
 - Tax system with tax authority
 - Complaint system with hierarchical resolution
 - Dispute resolution
-- Parliament hierarchy (Arban → Zun → Myangan → Tumen → Confederate Khural)
+- Parliament hierarchy (Arbad → Zun → Myangad → Tumed → Confederate Khural)
 - Org banking with branch finance
 - News system
 - Census service (demographic aggregation)
@@ -83,7 +83,7 @@
 - Professions system
 
 ### ⚠️ Requires Blockchain
-- Arban credit lines (Family & Organizational)
+- Arbad credit lines (Family & Organizational)
 - Zun (Clan) formation
 - Banking hierarchy smart contracts
 - Digital seal services on-chain
@@ -119,7 +119,7 @@
 | News | `/api/news/*` | ✅ |
 | Notifications | `/api/notifications/*` | ✅ |
 | Onboarding | `/api/onboarding/*` | ✅ |
-| Arbans/Credit | `/api/arbans/*` | ⚠️ Requires blockchain |
+| Arbads/Credit | `/api/arbads/*` | ⚠️ Requires blockchain |
 
 ---
 
@@ -204,7 +204,7 @@
 | Feb 13 | 2 | Coverage batch 14 (8 services, 92–100% each) |
 | Feb 14 | 4 | Complete frontend translation, CI fix, coverage batch 16 (95.85%) |
 | Feb 15 | 3 | Land Code rewrite, 36 new + 78 enhanced specs, governance corrections |
-| Feb 16 | 11+ | Arban verification, Khural indigenous-only, citizen lifecycle E2E, **SECURITY: global AuthGuard**, Swagger (70/70 controllers), **ZAGS 18+ age validation**, **Spec compliance: Escrow, Cart, Census, Archive hashing, Full-text search, Seller reputation**, VotingCenter deploy script |
+| Feb 16 | 11+ | Arbad verification, Khural indigenous-only, citizen lifecycle E2E, **SECURITY: global AuthGuard**, Swagger (70/70 controllers), **ZAGS 18+ age validation**, **Spec compliance: Escrow, Cart, Census, Archive hashing, Full-text search, Seller reputation**, VotingCenter deploy script |
 | Feb 18 | — | **Full project audit**: all docs updated to verified metrics, SYSTEM_ARCHITECTURE.md rewritten |
 
 ---

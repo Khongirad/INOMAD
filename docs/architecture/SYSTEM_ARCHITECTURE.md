@@ -29,7 +29,7 @@ graph TB
         end
 
         subgraph Guild["⚔️ Guild & Governance"]
-            Arban["Arban System"]
+            Arbad["Arbad System"]
             Credit["Credit/Lending"]
             Seal["Digital Seal"]
             Edu["Education"]
@@ -71,7 +71,7 @@ graph TB
     end
 
     subgraph Chain["⛓️ BLOCKCHAIN LAYER"]
-        Contracts["Smart Contracts:<br/>133 Solidity files (39,855 LOC)<br/>ArbanKhural · BankOfSiberia<br/>DigitalSeal · Academy<br/>MarketplaceEscrow · VotingCenter"]
+        Contracts["Smart Contracts:<br/>133 Solidity files (39,855 LOC)<br/>ArbadKhural · BankOfSiberia<br/>DigitalSeal · Academy<br/>MarketplaceEscrow · VotingCenter"]
         L1["ALTAN L1 (Cosmos SDK)<br/>3,028 LOC Go<br/>x/corelaw (37 articles)"]
         Network["Base Sepolia<br/>Testnet"]
     end
@@ -140,7 +140,7 @@ graph TB
 | Module | Description |
 |--------|-------------|
 | `auth/` | JWT authentication, global AuthGuard, @Public() decorator, session management |
-| `identity/` | Citizen registry, KYC, verification chain (5-of-5 Arban matrix) |
+| `identity/` | Citizen registry, KYC, verification chain (5-of-5 Arbad matrix) |
 | `users/` | User CRUD, profile management |
 | `seat-binding/` | SeatSBT identity binding |
 | `mpc-wallet/` | Web3Auth MPC wallet, social recovery |
@@ -166,14 +166,14 @@ graph TB
 
 | Module | Description |
 |--------|-------------|
-| `arbans/` | Two-type Arbans (family + organizational), 5x5 verification matrix |
+| `arbads/` | Two-type Arbads (family + organizational), 5x5 verification matrix |
 | `guilds/` | Professional guilds, skill certification |
 | `professions/` | Profession registry |
 | `khural/` | Parliamentary governance, motions, voting |
 | `legislative/` | Voting center, bills, law process |
 | `elections/` | On-chain voting, candidate management |
-| `parliament/` | Khural sessions (Tumen leaders) |
-| `hierarchy/` | Zun→Myangan→Tumen hierarchy |
+| `parliament/` | Khural sessions (Tumed leaders) |
+| `hierarchy/` | Zun→Myangad→Tumed hierarchy |
 | `justice/` | Dispute resolution, arbitration |
 | `digital-seal/` | 2-of-2 multisig sealing |
 
@@ -269,7 +269,7 @@ graph TB
 
 | Contract Category | Key Contracts |
 |-------------------|--------------|
-| Governance | ArbanKhural.sol, Arban.sol, Zun.sol, ZunKhural.sol, Myangan.sol, Tumen.sol, TumenKhural.sol, ConfederativeKhural.sol |
+| Governance | ArbadKhural.sol, Arbad.sol, Zun.sol, ZunKhural.sol, Myangad.sol, Tumed.sol, TumedKhural.sol, ConfederativeKhural.sol |
 | Finance | Altan.sol, AltanCentralBank.sol, CitizenBank.sol, EscrowBank.sol, AltanSettlement.sol, SovereignWealthFund.sol, TaxAuthority.sol |
 | Legal | SupremeCourt.sol, CoreLaw.sol, JudicialReview.sol, NotaryHub.sol, ImmutableAxioms.sol, KhuralLawProcess.sol, DigitalSeal.sol |
 | Identity | CitizenRegistry.sol, SeatSBT.sol, SeatAccount.sol, CitizenVerification.sol, VotingCenter.sol |
@@ -380,7 +380,7 @@ graph TB
 2. Verification chain            → 5 verifiers approve identity
 3. MPC wallet created            → Web3Auth key shares
 4. Seat binding                  → SeatSBT minted
-5. Arban membership              → Joins 10-member household
+5. Arbad membership              → Joins 10-member household
 6. Banking activated             → ALTAN wallet created
 7. UBI distribution              → Weekly 400 ALTAN payment
 ```

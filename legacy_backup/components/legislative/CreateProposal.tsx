@@ -48,7 +48,7 @@ const VOTING_PERIODS = [
 export const CreateProposal: React.FC<CreateProposalProps> = ({
   open,
   onClose,
-  defaultLevel = KhuralLevel.ARBAN,
+  defaultLevel = KhuralLevel.ARBAD,
   defaultKhuralId = 1,
   privateKey,
 }) => {
@@ -56,7 +56,7 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
   const [activeStep, setActiveStep] = useState(0);
 
   // Form state
-  const [proposalType, setProposalType] = useState<ProposalType>(ProposalType.ARBAN_BUDGET);
+  const [proposalType, setProposalType] = useState<ProposalType>(ProposalType.ARBAD_BUDGET);
   const [khuralLevel, setKhuralLevel] = useState<KhuralLevel>(defaultLevel);
   const [khuralId, setKhuralId] = useState<number>(defaultKhuralId);
   const [title, setTitle] = useState('');
@@ -68,14 +68,14 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
   // Get proposal types for selected level
   const getProposalTypesForLevel = (level: KhuralLevel): ProposalType[] => {
     switch (level) {
-      case KhuralLevel.ARBAN:
-        return [ProposalType.ARBAN_BUDGET, ProposalType.ARBAN_LEADER, ProposalType.ARBAN_PROJECT];
+      case KhuralLevel.ARBAD:
+        return [ProposalType.ARBAD_BUDGET, ProposalType.ARBAD_LEADER, ProposalType.ARBAD_PROJECT];
       case KhuralLevel.ZUN:
         return [ProposalType.ZUN_POLICY, ProposalType.ZUN_ELDER, ProposalType.ZUN_BUDGET];
-      case KhuralLevel.MYANGAN:
-        return [ProposalType.MYANGAN_LAW, ProposalType.MYANGAN_LEADER];
-      case KhuralLevel.TUMEN:
-        return [ProposalType.TUMEN_NATIONAL, ProposalType.TUMEN_CHAIRMAN, ProposalType.CONSTITUTIONAL];
+      case KhuralLevel.MYANGAD:
+        return [ProposalType.MYANGAD_LAW, ProposalType.MYANGAD_LEADER];
+      case KhuralLevel.TUMED:
+        return [ProposalType.TUMED_NATIONAL, ProposalType.TUMED_CHAIRMAN, ProposalType.CONSTITUTIONAL];
       default:
         return [];
     }
@@ -168,10 +168,10 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
               fullWidth
               required
             >
-              <MenuItem value={KhuralLevel.ARBAN}>{getLevelLabel(KhuralLevel.ARBAN)}</MenuItem>
+              <MenuItem value={KhuralLevel.ARBAD}>{getLevelLabel(KhuralLevel.ARBAD)}</MenuItem>
               <MenuItem value={KhuralLevel.ZUN}>{getLevelLabel(KhuralLevel.ZUN)}</MenuItem>
-              <MenuItem value={KhuralLevel.MYANGAN}>{getLevelLabel(KhuralLevel.MYANGAN)}</MenuItem>
-              <MenuItem value={KhuralLevel.TUMEN}>{getLevelLabel(KhuralLevel.TUMEN)}</MenuItem>
+              <MenuItem value={KhuralLevel.MYANGAD}>{getLevelLabel(KhuralLevel.MYANGAD)}</MenuItem>
+              <MenuItem value={KhuralLevel.TUMED}>{getLevelLabel(KhuralLevel.TUMED)}</MenuItem>
             </TextField>
 
             <TextField
@@ -181,7 +181,7 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
               onChange={(e) => setKhuralId(Number(e.target.value))}
               fullWidth
               required
-              helperText="The specific Arban/Zun/Myangan/Tumen ID"
+              helperText="The specific Arbad/Zun/Myangad/Tumed ID"
             />
 
             <TextField

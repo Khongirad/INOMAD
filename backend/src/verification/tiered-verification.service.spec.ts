@@ -14,7 +14,7 @@ describe('TieredVerificationService', () => {
       user: {
         findUnique: jest.fn().mockResolvedValue({
           id: 'u1', verificationLevel: 'UNVERIFIED', role: 'CITIZEN',
-          totalEmitted: new Decimal(0), currentArbanId: null,
+          totalEmitted: new Decimal(0), currentArbadId: null,
         }),
         update: jest.fn().mockResolvedValue({}),
         findMany: jest.fn().mockResolvedValue([]),
@@ -24,7 +24,7 @@ describe('TieredVerificationService', () => {
         findUnique: jest.fn().mockResolvedValue({
           id: 'vr1', requesterId: 'u1', requestedLevel: 'ZUN_VERIFIED',
           status: 'PENDING', justification: 'test',
-          requester: { id: 'u1', verificationLevel: 'ARBAN_VERIFIED' },
+          requester: { id: 'u1', verificationLevel: 'ARBAD_VERIFIED' },
         }),
         findMany: jest.fn().mockResolvedValue([]),
         create: jest.fn().mockResolvedValue({ id: 'vr1' }),
@@ -53,8 +53,8 @@ describe('TieredVerificationService', () => {
     it('returns 100 for UNVERIFIED', () => {
       expect(service.getEmissionLimit('UNVERIFIED' as any)).toBe(100);
     });
-    it('returns 1000 for ARBAN_VERIFIED', () => {
-      expect(service.getEmissionLimit('ARBAN_VERIFIED' as any)).toBe(1000);
+    it('returns 1000 for ARBAD_VERIFIED', () => {
+      expect(service.getEmissionLimit('ARBAD_VERIFIED' as any)).toBe(1000);
     });
     it('returns MAX_SAFE_INTEGER for ZUN_VERIFIED (all remaining emission)', () => {
       expect(service.getEmissionLimit('ZUN_VERIFIED' as any)).toBe(Number.MAX_SAFE_INTEGER);
@@ -78,7 +78,7 @@ describe('TieredVerificationService', () => {
     it('returns false when over limit', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'u1', verificationLevel: 'UNVERIFIED', role: 'CITIZEN',
-        totalEmitted: new Decimal(90), currentArbanId: null,
+        totalEmitted: new Decimal(90), currentArbadId: null,
       });
       const result = await service.canEmit('u1', 20);
       expect(result).toBe(false);
@@ -86,7 +86,7 @@ describe('TieredVerificationService', () => {
     it('returns true for CREATOR', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'u1', verificationLevel: 'UNVERIFIED', role: 'CREATOR',
-        totalEmitted: new Decimal(999999), currentArbanId: null,
+        totalEmitted: new Decimal(999999), currentArbadId: null,
       });
       const result = await service.canEmit('u1', 100);
       expect(result).toBe(true);
@@ -95,10 +95,10 @@ describe('TieredVerificationService', () => {
       prisma.user.findUnique.mockResolvedValue(null);
       await expect(service.canEmit('bad', 100)).rejects.toThrow('not found');
     });
-    it('checks arban total for ARBAN_VERIFIED', async () => {
+    it('checks arbad total for ARBAD_VERIFIED', async () => {
       prisma.user.findUnique.mockResolvedValue({
-        id: 'u1', verificationLevel: 'ARBAN_VERIFIED', role: 'CITIZEN',
-        totalEmitted: new Decimal(100), currentArbanId: 'a1',
+        id: 'u1', verificationLevel: 'ARBAD_VERIFIED', role: 'CITIZEN',
+        totalEmitted: new Decimal(100), currentArbadId: 'a1',
       });
       prisma.user.findMany.mockResolvedValue([
         { totalEmitted: new Decimal(200) },
@@ -117,7 +117,7 @@ describe('TieredVerificationService', () => {
     it('throws when exceeds limit', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'u1', verificationLevel: 'UNVERIFIED', role: 'CITIZEN',
-        totalEmitted: new Decimal(90), currentArbanId: null,
+        totalEmitted: new Decimal(90), currentArbadId: null,
       });
       await expect(service.recordEmission('u1', 20)).rejects.toThrow('Emission limit exceeded');
     });
@@ -133,7 +133,7 @@ describe('TieredVerificationService', () => {
     it('returns unlimited for CREATOR', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'u1', verificationLevel: 'UNVERIFIED', role: 'CREATOR',
-        totalEmitted: new Decimal(0), currentArbanId: null,
+        totalEmitted: new Decimal(0), currentArbadId: null,
       });
       const result = await service.getEmissionStatus('u1');
       expect(result.isUnlimited).toBe(true);
@@ -141,7 +141,7 @@ describe('TieredVerificationService', () => {
     it('returns unlimited for FULLY_VERIFIED', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'u1', verificationLevel: 'FULLY_VERIFIED', role: 'CITIZEN',
-        totalEmitted: new Decimal(0), currentArbanId: null,
+        totalEmitted: new Decimal(0), currentArbadId: null,
       });
       const result = await service.getEmissionStatus('u1');
       expect(result.isUnlimited).toBe(true);
@@ -149,7 +149,7 @@ describe('TieredVerificationService', () => {
     it('returns unlimited for ZUN_VERIFIED', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'u1', verificationLevel: 'ZUN_VERIFIED', role: 'CITIZEN',
-        totalEmitted: new Decimal(0), currentArbanId: null,
+        totalEmitted: new Decimal(0), currentArbadId: null,
       });
       const result = await service.getEmissionStatus('u1');
       expect(result.isUnlimited).toBe(true);
@@ -163,23 +163,23 @@ describe('TieredVerificationService', () => {
   describe('requestVerificationUpgrade', () => {
     it('creates request for ZUN_VERIFIED', async () => {
       prisma.user.findUnique.mockResolvedValue({
-        id: 'u1', verificationLevel: 'ARBAN_VERIFIED',
+        id: 'u1', verificationLevel: 'ARBAD_VERIFIED',
       });
       const result = await service.requestVerificationUpgrade('u1', 'ZUN_VERIFIED' as any, 'Need it');
       expect(result.id).toBe('vr1');
     });
     it('throws for invalid level', async () => {
-      await expect(service.requestVerificationUpgrade('u1', 'ARBAN_VERIFIED' as any, 'test')).rejects.toThrow('Can only request');
+      await expect(service.requestVerificationUpgrade('u1', 'ARBAD_VERIFIED' as any, 'test')).rejects.toThrow('Can only request');
     });
-    it('throws when not ARBAN_VERIFIED for ZUN request', async () => {
+    it('throws when not ARBAD_VERIFIED for ZUN request', async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: 'u1', verificationLevel: 'UNVERIFIED',
       });
-      await expect(service.requestVerificationUpgrade('u1', 'ZUN_VERIFIED' as any, 'test')).rejects.toThrow('ARBAN_VERIFIED');
+      await expect(service.requestVerificationUpgrade('u1', 'ZUN_VERIFIED' as any, 'test')).rejects.toThrow('ARBAD_VERIFIED');
     });
     it('throws when not ZUN_VERIFIED for FULL request', async () => {
       prisma.user.findUnique.mockResolvedValue({
-        id: 'u1', verificationLevel: 'ARBAN_VERIFIED',
+        id: 'u1', verificationLevel: 'ARBAD_VERIFIED',
       });
       await expect(service.requestVerificationUpgrade('u1', 'FULLY_VERIFIED' as any, 'test')).rejects.toThrow('ZUN_VERIFIED');
     });
@@ -244,9 +244,9 @@ describe('TieredVerificationService', () => {
       await service.setVerificationLevel('u1', 'FULLY_VERIFIED' as any, 'admin1');
       expect(prisma.user.update).toHaveBeenCalled();
     });
-    it('sets ARBAN_VERIFIED', async () => {
+    it('sets ARBAD_VERIFIED', async () => {
       prisma.user.findUnique.mockResolvedValue({ id: 'admin1', role: 'CREATOR' });
-      await service.setVerificationLevel('u1', 'ARBAN_VERIFIED' as any, 'admin1');
+      await service.setVerificationLevel('u1', 'ARBAD_VERIFIED' as any, 'admin1');
       expect(prisma.user.update).toHaveBeenCalled();
     });
     it('throws when not CREATOR', async () => {

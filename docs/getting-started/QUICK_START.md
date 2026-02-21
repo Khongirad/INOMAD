@@ -36,11 +36,11 @@ docker ps | grep postgres-inomad
 ```bash
 cd /Users/inomadinc/inomad-client/backend
 
-# Run all migrations (including new Arban system)
+# Run all migrations (including new Arbad system)
 npx prisma migrate dev
 
 # You should see:
-# ✔ Migration applied: 20260130_add_two_type_arban_system
+# ✔ Migration applied: 20260130_add_two_type_arbad_system
 ```
 
 **Verify tables created**:
@@ -48,7 +48,7 @@ npx prisma migrate dev
 # Open Prisma Studio to view database
 npx prisma studio
 # Opens http://localhost:5555
-# Check: FamilyArban, OrganizationalArban, Zun, CreditLine tables exist
+# Check: FamilyArbad, OrganizationalArbad, Zun, CreditLine tables exist
 ```
 
 ---
@@ -110,35 +110,35 @@ anvil
 
 ## 🧪 Quick Integration Test (5 minutes)
 
-### Test 1: Create Family Arban
+### Test 1: Create Family Arbad
 
 ```bash
 # Get JWT token first (replace with your actual token)
 export JWT_TOKEN="your-jwt-token-here"
 
-# Create family arban
-curl -X POST http://localhost:3001/arbans/family \
+# Create family arbad
+curl -X POST http://localhost:3001/arbads/family \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -d '{
-    "arbanId": 1,
+    "arbadId": 1,
     "husbandSeatId": 1,
     "wifeSeatId": 2,
     "children": [3, 4]
   }'
 
 # Expected: 201 Created
-# Response: { "id": "uuid", "arbanId": 1, ... }
+# Response: { "id": "uuid", "arbadId": 1, ... }
 ```
 
 ### Test 2: Create Credit Line
 
 ```bash
-curl -X POST http://localhost:3001/arbans/credit/lines \
+curl -X POST http://localhost:3001/arbads/credit/lines \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -d '{
-    "arbanId": 1,
+    "arbadId": 1,
     "creditType": "FAMILY"
   }'
 
@@ -149,11 +149,11 @@ curl -X POST http://localhost:3001/arbans/credit/lines \
 ### Test 3: Borrow from Credit Line
 
 ```bash
-curl -X POST http://localhost:3001/arbans/credit/loans \
+curl -X POST http://localhost:3001/arbads/credit/loans \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -d '{
-    "arbanId": 1,
+    "arbadId": 1,
     "principal": 5000,
     "interest": 250,
     "dueDate": "2026-03-01T00:00:00Z"
@@ -168,14 +168,14 @@ curl -X POST http://localhost:3001/arbans/credit/loans \
 ## 📋 Full Test Checklist
 
 After basic tests pass, run comprehensive tests from:
-**`backend/ARBAN_TESTING_GUIDE.md`**
+**`backend/ARBAD_TESTING_GUIDE.md`**
 
 ### Critical Scenarios:
-- [x] Family Arban creation
+- [x] Family Arbad creation
 - [x] Credit Line allocation
 - [x] Loan borrowing
 - [ ] Loan repayment
-- [ ] Organizational Arban
+- [ ] Organizational Arbad
 - [ ] Zun formation
 - [ ] 3-tier distribution request
 - [ ] Banker approval workflow
@@ -222,10 +222,10 @@ npx prisma migrate dev
 2. Backend API running on port 3001
 3. Frontend running on port 3000
 4. Anvil blockchain on port 8545
-5. All 3 quick tests pass (Family Arban, Credit Line, Loan)
+5. All 3 quick tests pass (Family Arbad, Credit Line, Loan)
 
 ### 📊 Then Proceed To:
-- Full integration testing (ARBAN_TESTING_GUIDE.md)
+- Full integration testing (ARBAD_TESTING_GUIDE.md)
 - Browser UI walkthrough
 - FounderBootstrap test fixes
 - Performance testing
@@ -247,5 +247,5 @@ npx prisma migrate dev
 ---
 
 **Estimated Time**: 30 minutes to fully running system  
-**Next Document**: ARBAN_TESTING_GUIDE.md (comprehensive tests)  
+**Next Document**: ARBAD_TESTING_GUIDE.md (comprehensive tests)  
 **Help**: All docs in `/backend/` and root directory

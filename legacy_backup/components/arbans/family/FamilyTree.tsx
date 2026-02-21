@@ -19,10 +19,10 @@ import {
   EmojiEvents,
   HowToVote,
 } from '@mui/icons-material';
-import { arbanAPI } from '../../lib/api/arban.api';
+import { arbadAPI } from '../../lib/api/arbad.api';
 
-interface FamilyArban {
-  arbanId: number;
+interface FamilyArbad {
+  arbadId: number;
   husbandSeatId: number;
   wifeSeatId: number;
   childrenSeatIds: number[];
@@ -35,35 +35,35 @@ interface FamilyArban {
 }
 
 interface FamilyTreeProps {
-  arbanId: number;
+  arbadId: number;
   onAddChild?: () => void;
   onChangeHeir?: () => void;
   onSetKhuralRep?: () => void;
 }
 
 export const FamilyTree: React.FC<FamilyTreeProps> = ({
-  arbanId,
+  arbadId,
   onAddChild,
   onChangeHeir,
   onSetKhuralRep,
 }) => {
-  const [arban, setArban] = useState<FamilyArban | null>(null);
+  const [arbad, setArbad] = useState<FamilyArbad | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadArban();
-  }, [arbanId]);
+    loadArbad();
+  }, [arbadId]);
 
-  const loadArban = async () => {
+  const loadArbad = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await arbanAPI.family.getFamilyArban(arbanId);
-      setArban(response.data);
+      const response = await arbadAPI.family.getFamilyArbad(arbadId);
+      setArbad(response.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load family arban');
+      setError(err.response?.data?.message || 'Failed to load family arbad');
     } finally {
       setLoading(false);
     }
@@ -79,19 +79,19 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
     );
   }
 
-  if (error || !arban) {
+  if (error || !arbad) {
     return (
       <Card>
         <CardContent>
-          <Alert severity="error">{error || 'Family Arban not found'}</Alert>
+          <Alert severity="error">{error || 'Family Arbad not found'}</Alert>
         </CardContent>
       </Card>
     );
   }
 
   const currentYear = new Date().getFullYear();
-  const khuralRepAge = arban.khuralRepBirthYear
-    ? currentYear - arban.khuralRepBirthYear
+  const khuralRepAge = arbad.khuralRepBirthYear
+    ? currentYear - arbad.khuralRepBirthYear
     : null;
 
   return (
@@ -101,10 +101,10 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <People sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
           <Box>
-            <Typography variant="h5">Family Arban #{arban.arbanId}</Typography>
-            {arban.zunId > 0 && (
+            <Typography variant="h5">Family Arbad #{arbad.arbadId}</Typography>
+            {arbad.zunId > 0 && (
               <Chip
-                label={`Zun #${arban.zunId}`}
+                label={`Zun #${arbad.zunId}`}
                 size="small"
                 color="secondary"
                 sx={{ mt: 0.5 }}
@@ -131,8 +131,8 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
             <Tooltip title="Husband">
               <Box sx={{ flex: 1, textAlign: 'center' }}>
                 <Person sx={{ fontSize: 48, color: 'primary.main' }} />
-                <Typography variant="body1">Seat #{arban.husbandSeatId}</Typography>
-                {arban.khuralRepSeatId === arban.husbandSeatId && (
+                <Typography variant="body1">Seat #{arbad.husbandSeatId}</Typography>
+                {arbad.khuralRepSeatId === arbad.husbandSeatId && (
                   <Chip
                     icon={<HowToVote />}
                     label={`Khural (${khuralRepAge} yrs)`}
@@ -149,8 +149,8 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
             <Tooltip title="Wife">
               <Box sx={{ flex: 1, textAlign: 'center' }}>
                 <Person sx={{ fontSize: 48, color: 'secondary.main' }} />
-                <Typography variant="body1">Seat #{arban.wifeSeatId}</Typography>
-                {arban.khuralRepSeatId === arban.wifeSeatId && (
+                <Typography variant="body1">Seat #{arbad.wifeSeatId}</Typography>
+                {arbad.khuralRepSeatId === arbad.wifeSeatId && (
                   <Chip
                     icon={<HowToVote />}
                     label={`Khural (${khuralRepAge} yrs)`}
@@ -168,7 +168,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6">
-              Children ({arban.childrenSeatIds.length})
+              Children ({arbad.childrenSeatIds.length})
             </Typography>
             {onAddChild && (
               <Button
@@ -182,11 +182,11 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
             )}
           </Box>
 
-          {arban.childrenSeatIds.length === 0 ? (
+          {arbad.childrenSeatIds.length === 0 ? (
             <Alert severity="info">No children yet</Alert>
           ) : (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              {arban.childrenSeatIds.map((childSeatId) => (
+              {arbad.childrenSeatIds.map((childSeatId) => (
                 <Card
                   key={childSeatId}
                   variant="outlined"
@@ -195,12 +195,12 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
                     minWidth: 120,
                     textAlign: 'center',
                     bgcolor:
-                      childSeatId === arban.heirSeatId ? 'warning.light' : 'background.paper',
+                      childSeatId === arbad.heirSeatId ? 'warning.light' : 'background.paper',
                   }}
                 >
                   <Person sx={{ fontSize: 32 }} />
                   <Typography variant="body2">Seat #{childSeatId}</Typography>
-                  {childSeatId === arban.heirSeatId && (
+                  {childSeatId === arbad.heirSeatId && (
                     <Chip
                       icon={<EmojiEvents />}
                       label="Heir"
@@ -217,7 +217,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
 
         {/* Actions */}
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          {arban.childrenSeatIds.length > 1 && onChangeHeir && (
+          {arbad.childrenSeatIds.length > 1 && onChangeHeir && (
             <Button
               variant="outlined"
               startIcon={<SwapHoriz />}
@@ -227,7 +227,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
             </Button>
           )}
           
-          {!arban.khuralRepSeatId && onSetKhuralRep && (
+          {!arbad.khuralRepSeatId && onSetKhuralRep && (
             <Button
               variant="contained"
               startIcon={<HowToVote />}
@@ -242,9 +242,9 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({
         {/* Info */}
         <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            <strong>Created:</strong> {new Date(arban.createdAt).toLocaleDateString()}
+            <strong>Created:</strong> {new Date(arbad.createdAt).toLocaleDateString()}
           </Typography>
-          {arban.khuralRepSeatId > 0 && khuralRepAge && (
+          {arbad.khuralRepSeatId > 0 && khuralRepAge && (
             <Typography variant="body2" color="text.secondary">
               <strong>Khural Rep Age:</strong> {khuralRepAge} years
               {khuralRepAge >= 60 && ' ⚠️ Over 60 - must be replaced'}

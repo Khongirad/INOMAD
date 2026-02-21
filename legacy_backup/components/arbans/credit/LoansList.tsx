@@ -18,11 +18,11 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { CheckCircle, Error, Schedule, Payment } from '@mui/icons-material';
-import { arbanAPI } from '../../../lib/api/arban.api';
+import { arbadAPI } from '../../../lib/api/arbad.api';
 
 interface Loan {
   loanId: number;
-  arbanId: number;
+  arbadId: number;
   creditType: number;
   principal: string;
   interest: string;
@@ -35,12 +35,12 @@ interface Loan {
 }
 
 interface LoansListProps {
-  arbanId: number;
+  arbadId: number;
   type: 'family' | 'org';
   onRepay?: (loanIdx: number) => void;
 }
 
-export const LoansList: React.FC<LoansListProps> = ({ arbanId, type, onRepay }) => {
+export const LoansList: React.FC<LoansListProps> = ({ arbadId, type, onRepay }) => {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,14 +48,14 @@ export const LoansList: React.FC<LoansListProps> = ({ arbanId, type, onRepay }) 
 
   useEffect(() => {
     loadLoans();
-  }, [arbanId, type]);
+  }, [arbadId, type]);
 
   const loadLoans = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await arbanAPI.credit[type].getLoans(arbanId);
+      const response = await arbadAPI.credit[type].getLoans(arbadId);
       setLoans(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load loans');

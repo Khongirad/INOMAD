@@ -15,8 +15,8 @@ import { PrismaService } from '../prisma/prisma.service';
  *
  * BRANCH MEMBERSHIP RULES:
  * ─────────────────────────
- * LEGISLATIVE:  Only family representatives (one spouse from a FamilyArban).
- *               Only legislative-branch Tumens (with republicId) can vote.
+ * LEGISLATIVE:  Only family representatives (one spouse from a FamilyArbad).
+ *               Only legislative-branch Tumeds (with republicId) can vote.
  * EXECUTIVE:    One family member OR any single adult (18+).
  * JUDICIAL:     One family member OR any single adult (18+).
  * BANKING:      One family member OR any single adult (18+).
@@ -47,15 +47,15 @@ export class ParliamentService {
     if (data.level === 'REPUBLICAN') {
       const republic = await this.prisma.republicanKhural.findUnique({
         where: { id: data.entityId },
-        include: { memberTumens: true },
+        include: { memberTumeds: true },
       });
       if (!republic) throw new NotFoundException('Республика не найдена');
 
       // Only chairman can convene
       if (republic.chairmanUserId && republic.chairmanUserId !== userId) {
-        // Also allow Tumen leaders to convene
-        const isTumenLeader = republic.memberTumens.some(t => t.leaderUserId === userId);
-        if (!isTumenLeader) {
+        // Also allow Tumed leaders to convene
+        const isTumedLeader = republic.memberTumeds.some(t => t.leaderUserId === userId);
+        if (!isTumedLeader) {
           throw new ForbiddenException('Только председатель или лидер Тумэна может созвать сессию');
         }
       }
@@ -107,7 +107,7 @@ export class ParliamentService {
         votes: {
           include: {
             voter: { select: { id: true, username: true } },
-            tumen: { select: { id: true, name: true } },
+            tumed: { select: { id: true, name: true } },
           },
         },
       },
@@ -155,8 +155,8 @@ export class ParliamentService {
   }
 
   // ────────────────────────────────────
-  // VOTING — only Tumen leaders from LEGISLATIVE branch
-  // Rule 1: Only Tumens in the legislative hierarchy can vote in Khural
+  // VOTING — only Tumed leaders from LEGISLATIVE branch
+  // Rule 1: Only Tumeds in the legislative hierarchy can vote in Khural
   // Rule 2: Legislative branch = family representatives (one spouse per family)
   // ────────────────────────────────────
 
@@ -173,18 +173,18 @@ export class ParliamentService {
       throw new BadRequestException('Голосование доступно только во время сессии');
     }
 
-    // Find the Tumen this user leads
-    const tumen = await this.prisma.tumen.findFirst({
+    // Find the Tumed this user leads
+    const tumed = await this.prisma.tumed.findFirst({
       where: { leaderUserId: userId, isActive: true },
     });
-    if (!tumen) {
+    if (!tumed) {
       throw new ForbiddenException('Только лидеры Тумэнов имеют право голоса в Хурале');
     }
 
-    // ── RULE 1: Only LEGISLATIVE Tumens (part of a Republic) can vote ──
-    // The family hierarchy (FamilyArban→Zun→Myangan→Tumen→Republic) IS the
-    // legislative branch. A Tumen without republicId is NOT legislative.
-    if (!tumen.republicId) {
+    // ── RULE 1: Only LEGISLATIVE Tumeds (part of a Republic) can vote ──
+    // The family hierarchy (FamilyArbad→Zun→Myangad→Tumed→Republic) IS the
+    // legislative branch. A Tumed without republicId is NOT legislative.
+    if (!tumed.republicId) {
       throw new ForbiddenException(
         'Только Тумэны из Законодательной ветви (входящие в Республику) могут голосовать в Хурале',
       );
@@ -192,9 +192,9 @@ export class ParliamentService {
 
     // ── RULE 2: Voter must be a family representative (spouse) ──
     // In the Legislative branch, only family representatives participate.
-    // FamilyArban has husbandSeatId, wifeSeatId, khuralRepSeatId.
+    // FamilyArbad has husbandSeatId, wifeSeatId, khuralRepSeatId.
     // The voter must be one of the spouses or the designated Khural representative.
-    const familyArban = await this.prisma.familyArban.findFirst({
+    const familyArbad = await this.prisma.familyArbad.findFirst({
       where: {
         OR: [
           { husbandSeatId: userId },
@@ -203,15 +203,15 @@ export class ParliamentService {
         ],
       },
     });
-    if (!familyArban) {
+    if (!familyArbad) {
       throw new ForbiddenException(
         'В Законодательной ветви могут быть только представители Семьи (один из супругов)',
       );
     }
 
-    // For Republican level, verify this Tumen belongs to the republic
+    // For Republican level, verify this Tumed belongs to the republic
     if (session.level === 'REPUBLICAN') {
-      if (tumen.republicId !== session.entityId) {
+      if (tumed.republicId !== session.entityId) {
         throw new ForbiddenException('Ваш Тумэн не входит в эту Республику');
       }
     }
@@ -228,7 +228,7 @@ export class ParliamentService {
       data: {
         sessionId,
         voterUserId: userId,
-        tumenId: tumen.id,
+        tumedId: tumed.id,
         vote: data.vote,
         comment: data.comment,
       },
@@ -245,7 +245,7 @@ export class ParliamentService {
         votes: {
           include: {
             voter: { select: { id: true, username: true } },
-            tumen: { select: { id: true, name: true, totalMembers: true } },
+            tumed: { select: { id: true, name: true, totalMembers: true } },
           },
         },
       },

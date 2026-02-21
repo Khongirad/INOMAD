@@ -28,10 +28,10 @@ graph TB
         end
         
         subgraph ADMIN["10-100-1000-10000 Иерархия"]
-            ARBAN10[Арбан 10]
+            ARBAD10[Арбан 10]
             ZUN100[Зун 100]
-            MYANGAN1000[Мянган 1000]
-            TUMEN10000[Тумен 10000]
+            MYANGAD1000[Мянган 1000]
+            TUMED10000[Тумен 10000]
         end
     end
     
@@ -211,7 +211,7 @@ graph LR
 | `InstitutionalBank.sol` | Создать | P0 |
 | `CitizenWalletGuard.sol` | Создать | P0 |
 | `JudicialMultiSig.sol` | Создать | P1 |
-| `BankArbanHierarchy.sol` | Создать | P1 |
+| `BankArbadHierarchy.sol` | Создать | P1 |
 
 ### Backend Services
 
@@ -242,6 +242,6 @@ graph LR
 
 ### Phase 3: Иерархия (2 дня)
 
-- [ ] `BankArbanHierarchy.sol` — 10-100-1000-10000
+- [ ] `BankArbadHierarchy.sol` — 10-100-1000-10000
 - [ ] Role mapping через Арбаны
 - [ ] Круговая порука механизм

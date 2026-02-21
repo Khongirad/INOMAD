@@ -9,7 +9,7 @@ describe('LegislativeService', () => {
 
   const mockProposal = {
     id: 'prop-1', authorId: 'author-1', title: 'Tax Reform', description: 'Reform taxes',
-    fullText: 'Full text...', category: 'ECONOMIC', khuralLevel: 'ARBAN', entityId: 'entity-1',
+    fullText: 'Full text...', category: 'ECONOMIC', khuralLevel: 'ARBAD', entityId: 'entity-1',
     status: 'DRAFT', votesFor: 0, votesAgainst: 0, votesAbstain: 0,
   };
 
@@ -43,7 +43,7 @@ describe('LegislativeService', () => {
     it('should create a DRAFT proposal for eligible user', async () => {
       prisma.user.findUnique.mockResolvedValue(mockUser);
       prisma.legislativeProposal.create.mockResolvedValue({ ...mockProposal, status: 'DRAFT' });
-      const dto = { title: 'Tax Reform', description: 'Reform', fullText: 'Full', category: 'ECONOMIC', khuralLevel: 'ARBAN', entityId: 'e1' };
+      const dto = { title: 'Tax Reform', description: 'Reform', fullText: 'Full', category: 'ECONOMIC', khuralLevel: 'ARBAD', entityId: 'e1' };
       const result = await service.createProposal('author-1', dto);
       expect(result.status).toBe('DRAFT');
     });
@@ -91,7 +91,7 @@ describe('LegislativeService', () => {
       prisma.legislativeProposal.findMany.mockResolvedValue([]);
       prisma.legislativeProposal.count.mockResolvedValue(0);
       await service.listProposals({
-        status: 'VOTING', khuralLevel: 'TUMEN', entityId: 'e1', authorId: 'a1', category: 'ECONOMIC',
+        status: 'VOTING', khuralLevel: 'TUMED', entityId: 'e1', authorId: 'a1', category: 'ECONOMIC',
       });
       expect(prisma.legislativeProposal.findMany).toHaveBeenCalled();
     });

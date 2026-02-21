@@ -9,7 +9,7 @@ import { Decimal } from '@prisma/client/runtime/library';
  * Handles synchronization between DB AltanLedger and on-chain AltanCoreLedger
  * 
  * NOTE: Architecture note - Gas sponsorship in Altan
- * Physical verification by Arban members + registration ceremony provides
+ * Physical verification by Arbad members + registration ceremony provides
  * Sybil resistance, reducing need for gas-based attack prevention.
  */
 @Injectable()
