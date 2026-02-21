@@ -1,6 +1,9 @@
 # ============================================
-# INOMAD KHURAL — chain .gitignore
+# INOMAD KHURAL — .gitignore
 # ============================================
+
+# --- chain/ is a standalone git repo, ignore all its contents ---
+chain/
 
 # --- Foundry build artifacts ---
 artifacts/
