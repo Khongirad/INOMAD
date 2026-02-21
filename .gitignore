@@ -66,18 +66,17 @@ backend/storage/
 backend/prisma/*.bak*
 
 # --- Hardhat / Foundry / Solidity build ---
-chain/artifacts/
-chain/cache/
-chain/broadcast/
-chain/out/
-chain/build-info/
-chain/coverage/
-chain/coverage.json
-chain/typechain/
-chain/typechain-types/
-chain/foundry.lock
-chain/addresses.json
-chain/script/
+artifacts/
+cache/
+broadcast/
+out/
+build-info/
+coverage/
+coverage.json
+typechain/
+typechain-types/
+foundry.lock
+lib/
 
 # --- Local junk ---
 The
