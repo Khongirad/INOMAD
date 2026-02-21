@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+:root {
+  /* STATE-GRADE PALETTES */
+
+  /* Backgrounds: Deep Void & Obsidian */
+  --background: #09090b; /* Zinc-950 */
+  --surface: rgba(24, 24, 27, 0.6); /* Zinc-900/60 */
+  --surface-hover: rgba(39, 39, 42, 0.8); /* Zinc-800/80 */
+
+  /* Foreground: Soft White & Muted Metal */
+  --foreground: #f4f4f5; /* Zinc-100 */
+  --foreground-muted: #a1a1aa; /* Zinc-400 */
+
+  /* ACCENT: ALTAN (Gold) */
+  --gold-primary: #D4AF37;
+  --gold-secondary: #B8962E;
+  --gold-text: #F5D77A;
+  --gold-dim: rgba(212, 175, 55, 0.15);
+  --gold-glow: rgba(212, 175, 55, 0.15);
+  --gold-border: rgba(212, 175, 55, 0.3);
+  --gold-surface: rgba(212, 175, 55, 0.05);
+
+  /* ACCENT: KHURAL (Silver) */
+  --silver-primary: #C0C0C0;
+  --silver-border: rgba(192, 192, 192, 0.3);
+
+  /* STATUS */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Custom Colors */
+  --color-zinc-950: #09090b;
+  --color-zinc-900: #18181b;
+  --color-gold: var(--gold-primary);
+
+  /* Gold palette — Tailwind classes: text-gold-primary, bg-gold-dim, border-gold-border, etc. */
+  --color-gold-primary: #D4AF37;
+  --color-gold-secondary: #B8962E;
+  --color-gold-text: #F5D77A;
+  --color-gold-dim: rgba(212, 175, 55, 0.15);
+  --color-gold-border: rgba(212, 175, 55, 0.3);
+  --color-gold-surface: rgba(212, 175, 55, 0.05);
+  --color-gold-glow: rgba(212, 175, 55, 0.15);
+}
+
+body {
+  background: radial-gradient(circle at 50% -20%, #27272a 0%, var(--background) 50%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COMPONENT UTILITIES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Glass Panel (The base material) */
+.glass-panel {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Glass Card (Lighter variant for inner elements) */
+.glass-card {
+  background: rgba(9, 9, 11, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Input Field */
+.input-field {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(63, 63, 70, 0.6);
+  background: rgba(9, 9, 11, 0.5);
+  color: #f4f4f5;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field::placeholder {
+  color: #71717a;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--gold-border);
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+
+/* Metal Border (For active elements) */
+.metal-border {
+  border: 1px solid var(--gold-border);
+  box-shadow: 0 0 15px -3px var(--gold-glow);
+}
+
+/* Legacy Theme Support (for Khural page) */
+.theme-gold {
+  --text-color: var(--gold-primary);
+  border-color: var(--gold-border);
+  box-shadow: 0 0 15px -3px var(--gold-glow);
+}
+.theme-silver {
+  --text-color: var(--silver-primary);
+  border-color: var(--silver-border);
+  box-shadow: none;
+}
+.theme-bronze {
+  --text-color: #CD7F32;
+  border-color: rgba(205, 127, 50, 0.4);
+  box-shadow: none;
+}
+
+/* Typography Helpers */
+.text-gold { color: var(--gold-primary); }
+.text-muted { color: var(--foreground-muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.animate-in.fade-in {
+  animation: _fade-in var(--animation-duration, 0.3s) ease-out;
+}
+
+.animate-in.slide-in-from-bottom-4 {
+  animation: _fade-in var(--animation-duration, 0.7s) ease-out, _slide-in-from-bottom-4 var(--animation-duration, 0.7s) ease-out;
+}
+
+.animate-in.slide-in-from-bottom-8 {
+  animation: _fade-in var(--animation-duration, 1s) ease-out, _slide-in-from-bottom-8 var(--animation-duration, 1s) ease-out;
+}
+
+.animate-in.slide-in-from-right-4 {
+  animation: _fade-in var(--animation-duration, 0.7s) ease-out, _slide-in-from-right-4 var(--animation-duration, 0.7s) ease-out;
+}
+
+.animate-in.zoom-in-95 {
+  animation: _fade-in var(--animation-duration, 0.7s) ease-out, _zoom-in-95 var(--animation-duration, 0.7s) ease-out;
+}
+
+/* Duration utilities */
+.duration-500 { --animation-duration: 0.5s; }
+.duration-700 { --animation-duration: 0.7s; }
+.duration-1000 { --animation-duration: 1s; }
+
+@keyframes _fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes _slide-in-from-bottom-4 {
+  from { transform: translateY(1rem); }
+  to { transform: translateY(0); }
+}
+
+@keyframes _slide-in-from-bottom-8 {
+  from { transform: translateY(2rem); }
+  to { transform: translateY(0); }
+}
+
+@keyframes _slide-in-from-right-4 {
+  from { transform: translateX(1rem); }
+  to { transform: translateX(0); }
+}
+
+@keyframes _zoom-in-95 {
+  from { transform: scale(0.95); }
+  to { transform: scale(1); }
+}
+
+/* Legacy simple fade-in (still used by some components) */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Shadow utility for gold glow */
+.shadow-gold-glow\/20 {
+  box-shadow: 0 10px 15px -3px rgba(212, 175, 55, 0.2);
+}

@@ -1,0 +1,56 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { AuthSession } from "@/lib/auth/session";
+import { Toaster } from "sonner";
+import { QueryProvider } from "@/components/providers/query-provider";
+
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    // Allow access to /wallet if user has pending wallet setup from registration
+    const hasPendingWalletSetup = typeof window !== 'undefined' && 
+      window.localStorage.getItem('pending_wallet_pin') !== null;
+    
+    if (!AuthSession.isAuthenticated() && !hasPendingWalletSetup) {
+      router.replace('/login');
+    } else {
+      setChecked(true);
+    }
+  }, [router]);
+
+  if (!checked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <div className="animate-pulse text-zinc-500">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-gold-primary/30">
+      <Sidebar />
+      <main className="flex-1 ml-64 flex flex-col min-h-screen relative overflow-x-hidden">
+        <Header />
+        <QueryProvider>
+          <div className="flex-1 w-full max-w-[1920px] mx-auto">
+            {children}
+          </div>
+        </QueryProvider>
+      </main>
+      <Toaster 
+        position="top-right" 
+        richColors
+        closeButton
+        expand={false}
+        duration={4000}
+      />
+    </div>
+  );
+}

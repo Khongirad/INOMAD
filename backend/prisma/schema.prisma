@@ -1,0 +1,6049 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String  @id @default(uuid())
+  seatId        String  @unique
+  citizenNumber String? @unique // Sequential citizen ID: "0000000000001", "0000000000002", etc.
+
+  // Authentication (Gates of Khural)
+  username     String? @unique
+  passwordHash String?
+  email        String? @unique
+
+  // Legal Status
+  hasAcceptedTOS          Boolean   @default(false)
+  tosAcceptedAt           DateTime?
+  hasAcceptedConstitution Boolean   @default(false)
+  constitutionAcceptedAt  DateTime?
+  isLegalSubject          Boolean   @default(false) // True after constitution acceptance
+
+  role               UserRole           @default(CITIZEN)
+  walletStatus       WalletStatus       @default(LOCKED)
+  birthPlace         Json?
+  currentAddress     Json?
+  ethnicity          String[]
+  clan               String?
+  gender             String?   // MALE / FEMALE — required for exclusive right inheritance
+  language           String?   // Preferred/native language (Buryad, Mongolian, Russian, English, etc.)
+
+  // === GOVERNANCE: Коренной народ — источник власти ===
+  citizenType              CitizenType @default(RESIDENT)
+  hasExclusiveLandRight    Boolean     @default(false) // Only indigenous males, passed father→son
+  exclusiveRightGrantedAt  DateTime?
+  exclusiveRightGrantedBy  String?     // fatherId who passed the right
+  exclusiveRightRevokedAt  DateTime?   // Set when returned to Land Fund (no male heir)
+
+  // Family lineage (for inheritance)
+  fatherId                 String?
+  father                   User?       @relation("FatherChild", fields: [fatherId], references: [id])
+  children                 User[]      @relation("FatherChild")
+
+  // Khural representation: head of household can delegate to spouse
+  khuralRepresentativeId   String?     // If set, this user delegates Khural seat to spouse
+  khuralRepresentative     User?       @relation("KhuralDelegate2", fields: [khuralRepresentativeId], references: [id])
+  khuralDelegations        User[]      @relation("KhuralDelegate2") // Users who delegated to this person
+  verificationStatus VerificationStatus @default(DRAFT)
+  isSuperVerified    Boolean            @default(false)
+  superVerifiedBy    String?
+  isFrozen           Boolean            @default(false) // For Creator to freeze admin accounts
+  frozenAt           DateTime?
+  frozenBy           String? // Creator userId who froze this account
+
+  // Identity Information (Sprint 3 - Government Services Integration)
+  dateOfBirth        DateTime? // Required for ZAGS marriage eligibility (18+)
+  nationality        String?   @default("Siberian Confederation") // For Land Registry citizenship checks
+  passportNumber     String?   @unique // Links to Migration Service passport applications
+  passportIssueDate  DateTime? // Passport validity tracking
+  passportExpiryDate DateTime? // Passport expiry for renewals
+  passportSeries     String?   // Passport series (e.g. "АА", "AB")
+  passportIssuedBy   String?   // Issuing authority name
+
+  // Legal Name (for recovery & anti-duplicate)
+  fullName              String?  // Full legal name "Баир Иванов" — from passport
+  biometricIdentityHash String?  @unique // SHA-256(normalize(fullName)+DOB+birthCity) — one per person
+  fullNameLocked        Boolean  @default(false) // Once set via passport, cannot self-change
+
+  // Account Recovery — Secret Question (Path 2.1)
+  secretQuestion   String? // Predefined question selected by user
+  secretAnswerHash String? // bcrypt hash of the answer
+
+  // Verification Chain
+  isVerified            Boolean            @default(false)
+  verifiedAt            DateTime?
+  verificationsReceived UserVerification[] @relation("VerifiedUser")
+  verificationsGiven    UserVerification[] @relation("Verifier")
+  verificationCount     Int                @default(0)
+  maxVerifications      Int                @default(5)
+
+  // Tiered Verification System (NEW)
+  verificationLevel      VerificationLevel @default(UNVERIFIED)
+  verificationLevelSetAt DateTime?
+  verificationLevelSetBy String? // Admin userId who set the level
+  totalEmitted           Decimal           @default(0) @db.Decimal(18, 2)
+  arbanVerifiedAt        DateTime?
+  zunVerifiedAt          DateTime?
+  fullyVerifiedAt        DateTime?
+
+  // Timeline
+  eventsAsActor  TimelineEvent[] @relation("EventActor")
+  eventsAsTarget TimelineEvent[] @relation("EventTarget")
+
+  // Historical records
+  historicalRecords HistoricalRecord[] @relation("HistoricalAuthor")
+
+  // Hierarchical membership
+  familyId       String?
+  clanId         String?
+  currentArbanId String?
+  hordeId        String?
+  nationId       String?
+  organizationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  walletAddress  String?  @unique
+
+  // MPC Wallet (Phase 2)
+  walletMigrated Boolean    @default(false)
+  mpcWallet      MPCWallet?
+
+  altanLedger             AltanLedger?
+  sentTransactions        AltanTransaction[]   @relation("SentTransactions")
+  receivedTransactions    AltanTransaction[]   @relation("ReceivedTransactions")
+  auditLogs               AuditLog[]
+  sessions                AuthSession[]
+  bankLink                BankLink?
+  councilVotes            CouncilVote[]        @relation("CouncilVoter")
+  guildMemberships        GuildMember[]
+  proposedHistoryVersions KhuralEventVersion[] @relation("HistoryProposer")
+  khuralSeats             KhuralSeat[]
+  tasksAssigned           Task[]               @relation("TaskAssignee")
+  tasksCreated            Task[]               @relation("TaskCreator")
+  // Transparency: Activities performed by this user
+  activitiesPerformed     ActivityEntry[]      @relation("UserActivities")
+  approvalsGiven          UnlockApproval[]
+  unlockRequest           UnlockRequest?
+  ubiPayments             UbiPayment[]         // UBI payment history
+  organization            Guild?               @relation("OrganizationMembers", fields: [organizationId], references: [id])
+
+  // Legacy verification support
+  oldVerificationsReceived Verification[] @relation("TargetUser")
+  oldVerificationsIssued   Verification[] @relation("VerifierUser")
+
+  // Legislative Relations
+  proposalsCreated Proposal[]       @relation("ProposalCreator")
+  votesCast        Vote[]           @relation("VoteCaster")
+  khuralDelegates  KhuralDelegate[] @relation("KhuralDelegate")
+
+  // Chancellery & Archive Relations (NOTE: Old Document models removed)
+  // documentsCreated  Document[]          @relation("DocumentCreator") // REMOVED - see State Archive system
+  // documentsSigned   DocumentSignature[] @relation("DocumentSigner")  // REMOVED - see State Archive system
+  questsGiven       Quest[]            @relation("QuestGiver")
+  questsTaken       Quest[]            @relation("QuestTaker")
+  orgQuestsCreated  OrgQuest[]         @relation("OrgQuestCreator")
+  orgQuestsAssigned OrgQuest[]         @relation("OrgQuestAssignee")
+  reputationProfile ReputationProfile? @relation("UserReputation")
+  regionalReputations RegionalReputation[] @relation("UserRegionalReputation")
+  reputationActions   ReputationAction[]   @relation("UserReputationActions")
+
+  // Guild & Organization Relations
+  organizationsLed        Organization[]       @relation("OrganizationLeader")
+  organizationMemberships OrganizationMember[] @relation("OrganizationMemberships")
+  memberInvitations       OrganizationMember[] @relation("MemberInvitations")
+  organizationRatings     OrganizationRating[] @relation("OrganizationRatingsGiven")
+
+  // Legislative relations
+  proposalsAuthored LegislativeProposal[] @relation("ProposalAuthor")
+  proposalsSigned   LegislativeProposal[] @relation("ProposalSigner")
+  proposalVotes     ProposalVote[]        @relation("ProposalVoter")
+  proposalDebates   ProposalDebate[]      @relation("ProposalSpeaker")
+
+  // Gamification
+  citizenLevel       CitizenLevel?       @relation("CitizenLevel")
+  onboardingProgress OnboardingProgress? @relation("OnboardingProgress")
+
+  // Judicial relations
+  judgeNominations       JudgeNomination[] @relation("JudgeCandidate")
+  judgeNominationsGiven  JudgeNomination[] @relation("JudgeNominator")
+  judgeNominationsApproved JudgeNomination[] @relation("JudgeApprover")
+
+  // News & Media
+  newsArticles             NewsArticle[]     @relation("NewsAuthor")
+
+  // Education & Invitations
+  educationVerifications   EducationVerification[] @relation("EducationVerifications")
+  educationRecommendations EducationVerification[] @relation("EducationRecommendations")
+  invitationsSent          GuildInvitation[]       @relation("InvitationsSent")
+  invitationsReceived      GuildInvitation[]       @relation("InvitationsReceived")
+
+  // Elections
+  electionsWon        Election[]          @relation("ElectionsWon")
+  electionCandidacies ElectionCandidate[] @relation("ElectionCandidacies")
+
+  // Calendar
+  calendarEvents CalendarEvent[]
+  calendarNotes  CalendarNote[]
+
+  // Tiered Verification Relations
+  verificationRequests         VerificationRequest[]     @relation("Requester")
+  verificationRequestsReviewed VerificationRequest[]     @relation("Reviewer")
+  arbanVerificationsGiven      ArbanMutualVerification[] @relation("ArbanVerifier")
+  arbanVerificationsReceived   ArbanMutualVerification[] @relation("ArbanVerified")
+
+  // Initial ALTAN Distribution
+  distribution UserDistribution?
+
+  // State Archive & Document System
+  templatesCreated      DocumentTemplate[]     @relation("TemplateCreator")
+  documentsIssued       DocumentContract[]     @relation("DocumentIssuer")
+  documentsReceived     DocumentContract[]     @relation("DocumentRecipient")
+  documentsArchived     DocumentContract[]     @relation("DocumentArchivist")
+  documentsIntermediate DocumentContract[]     @relation("DocumentIntermediary") // Broker/intermediary role
+  documentStageChanges  DocumentStageHistory[] @relation("StageChanger")
+  documentSignatures    DocumentSignature[]    @relation("DocumentSigner")
+  notaryRecords         NotarizationRecord[]   @relation("NotaryRecords")
+  legalCertifications   LegalCertification[]   @relation("LegalCertifications")
+  documentAccess        DocumentAccessLog[]    @relation("DocumentAccess")
+
+  // Banking System
+  banksDirected Bank[] @relation("BankDirector")
+
+  // Migration Service (Passport Office)
+  passportApplications PassportApplication[] @relation("PassportApplicant")
+
+  // ZAGS (Civil Registry)
+  marriagesAsSpouse1 Marriage[]        @relation("Spouse1Marriages")
+  marriagesAsSpouse2 Marriage[]        @relation("Spouse2Marriages")
+  marriageConsents   MarriageConsent[] @relation("MarriageConsents")
+  divorcesInitiated  ZagsDivorce[]     @relation("DivorceInitiator")
+  deathRegistrations DeathRegistration[] @relation("DeathRegistrations")
+  deathReports       DeathRegistration[] @relation("DeathReporter")
+  nameChanges        NameChange[]        @relation("NameChanges")
+
+  // Land Registry
+  landPlotsRegistered LandPlot[]        @relation("LandRegistrar")
+  landOwnerships      LandOwnership[]   @relation("LandOwner")
+  landLeases          LandLease[]       @relation("LandLessee")
+  landSales           LandTransaction[] @relation("LandSeller")
+  landPurchases       LandTransaction[] @relation("LandBuyer")
+  landEncumbrances    LandEncumbrance[] @relation("EncumbranceHolder")
+  escrowsAsBuyer      EscrowTransaction[] @relation("EscrowBuyer")
+  escrowsAsSeller     EscrowTransaction[] @relation("EscrowSeller")
+  shoppingCart        ShoppingCart?        @relation("UserCart")
+
+  // Notifications
+  notifications Notification[] @relation("UserNotifications")
+
+  // Messaging
+  conversationParticipants ConversationParticipant[] @relation("UserConversations")
+  messagesSent             Message[]                 @relation("MessageSender")
+
+  // Complaints
+  complaintsFiled        Complaint[]         @relation("ComplaintFiler")
+  complaintsAgainst      Complaint[]         @relation("ComplaintTarget")
+  complaintsAssigned     Complaint[]         @relation("ComplaintAssignee")
+  complaintResponses     ComplaintResponse[]  @relation("ComplaintResponder")
+
+  // Work Acts
+  workActsAsContractor   WorkAct[]           @relation("WorkActContractor")
+  workActsAsClient       WorkAct[]           @relation("WorkActClient")
+
+  // Disputes
+  disputesAsPartyA       Dispute[]           @relation("DisputePartyA")
+  disputesAsPartyB       Dispute[]           @relation("DisputePartyB")
+
+  // Escalation Records
+  escalationsInitiated   EscalationRecord[]  @relation("EscalationInitiator")
+
+  // Khural Parliament
+  khuralSessionsConvened KhuralSession[]     @relation("KhuralConvener")
+  khuralVotesCast        KhuralVote[]        @relation("KhuralVoter")
+
+  // Shareholdings (for PRIVATE orgs)
+  shareholdings          OrgShareholder[]    @relation("Shareholdings")
+
+  // Tax Records (annual filings)
+  taxRecords             TaxRecord[]         @relation("UserTaxRecords")
+
+  // Creator Mode — temporary government management
+  creatorProvisionalRoles CreatorProvisionalRole[] @relation("CreatorProvisionalRoles")
+
+  // Public Square — народные дебаты
+  publicSquarePosts      PublicSquarePost[]   @relation("PublicSquarePosts")
+
+  // CIK — Electoral Commission (Sprint 4)
+  cikAppointments        CIK[]               @relation("CIKAppointments")
+  cikMemberships         CIKMember[]         @relation("CIKMemberships")
+  createdKhuralElections KhuralElection[]    @relation("CreatedKhuralElections")
+  khuralCandidacies      KhuralCandidate[]   @relation("KhuralCandidacies")
+  khuralBallotsCast      KhuralBallot[]      @relation("KhuralBallotsCast")
+
+  // Judicial system (Sprint 6)
+  plaintiffCases         JudicialCase[]      @relation("PlaintiffCases")
+  defendantCases         JudicialCase[]      @relation("DefendantCases")
+  judgeCases             JudicialCase[]      @relation("JudgeCases")
+  issuedVerdicts         JudicialVerdict[]   @relation("IssuedVerdicts")
+
+  @@index([seatId])
+  @@index([organizationId])
+  @@index([verificationStatus])
+  @@index([citizenType])
+  @@index([hasExclusiveLandRight])
+  @@index([fatherId])
+}
+
+
+model AuthNonce {
+  id        String   @id @default(uuid())
+  address   String
+  nonce     String   @unique
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([address])
+  @@index([expiresAt])
+}
+
+model AuthSession {
+  id           String   @id @default(uuid())
+  userId       String
+  jti          String   @unique
+  refreshToken String?  @unique
+  expiresAt    DateTime
+  lastUsedAt   DateTime @default(now())
+  ipAddress    String?
+  userAgent    String?
+  isRevoked    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([jti])
+}
+
+// ========================================
+// ACCOUNT RECOVERY SYSTEM
+// ========================================
+
+/// Recovery request — one of 3 paths to regain access
+model AccountRecoveryRequest {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Identity claim — must match existing User record
+  claimedUsername  String    // The username they lost access to
+  claimedFullName  String    // Full legal name (must match User.fullName)
+  claimedBirthDate DateTime  // Date of birth (must match User.dateOfBirth)
+  claimedBirthCity String?   // City of birth (used for biometric match)
+
+  // Passport data (optional but strengthens claim)
+  claimedPassportNumber  String?
+  claimedPassportSeries  String?
+  claimedPassportIssuedBy String?
+
+  // Recovery path chosen
+  recoveryMethod   AccountRecoveryMethod
+
+  // --- Path 2.1: Secret Question ---
+  secretAnswer     String?   @db.Text // Plaintext on submission, compared then cleared
+
+  // --- Path A: Guarantor ---
+  guarantorSeatId        String?
+  guarantorConfirmed     Boolean   @default(false)
+  guarantorConfirmedAt   DateTime?
+  guarantorConfirmedById String?   // guarantor's userId
+
+  // --- Path 2.2: Official Organs ---
+  officialServiceType  String?   // "MIGRATION_SERVICE" | "COUNCIL"
+  officialReferenceId  String?   // External case/reference number
+  officialApprovedAt   DateTime?
+  officialApprovedById String?   // Admin userId who processed
+
+  // Status
+  status     AccountRecoveryStatus @default(PENDING)
+  resolvedAt DateTime?
+  resolvedNote String?      @db.Text
+
+  // One-time recovery token (issued on approval)
+  recoveryToken     String?  @unique
+  recoveryTokenAt   DateTime? // When token was issued
+  recoveryTokenUsed Boolean  @default(false)
+  recoveryTokenExpires DateTime? // 1 hour from issue
+
+  @@index([claimedUsername])
+  @@index([status])
+  @@index([recoveryMethod])
+  @@index([guarantorSeatId])
+}
+
+enum AccountRecoveryMethod {
+  GUARANTOR        // Path A — original guarantor confirms identity
+  SECRET_QUESTION  // Path 2.1 — answer a pre-set secret question
+  OFFICIAL_ORGANS  // Path 2.2 — Migration Service or Council verifies
+}
+
+enum AccountRecoveryStatus {
+  PENDING              // Submitted, not yet processed
+  AWAITING_GUARANTOR   // Notification sent to guarantor, waiting
+  AWAITING_OFFICIAL    // Sent to official organ, pending review
+  APPROVED             // Recovery approved, recovery token issued
+  REJECTED             // Request denied
+  COMPLETED            // Password successfully reset
+  EXPIRED              // Token expired or request timed out
+}
+
+// ─── Emission Multi-Sig Models ────────────────────────────────────────────────
+
+enum EmissionProposalType {
+  MINT
+  BURN
+}
+
+enum EmissionProposalStatus {
+  PROPOSED                  // Created by Governor, awaiting Board approvals
+  APPROVED_PENDING_TIMELOCK // Quorum reached, 24h timelock running
+  EXECUTABLE                // Timelock expired, ready to execute
+  EXECUTED                  // On-chain tx confirmed, txHash recorded
+  REJECTED                  // Governor or Council rejected
+  EXPIRED                   // Proposal expired without reaching quorum
+}
+
+model EmissionProposal {
+  id               String                @id @default(uuid())
+  proposalType     EmissionProposalType
+  amount           Decimal               @db.Decimal(18, 6)
+  corrAccountId    String?
+  recipientAddress String?               // on-chain wallet address
+  reason           String
+  legalBasis       String?
+
+  // Multi-sig state
+  status           EmissionProposalStatus @default(PROPOSED)
+  proposedById     String                // User.id of CB Governor
+  approvals        EmissionApproval[]
+  approvalsCount   Int                   @default(0)
+  quorumRequired   Int                   @default(3)
+
+  // Timelock
+  quorumReachedAt  DateTime?
+  executableAfter  DateTime?             // quorumReachedAt + 24h
+
+  // On-chain result
+  txHash           String?               // blockchain tx hash after execution
+  blockNumber      BigInt?
+  executedAt       DateTime?
+  executedById     String?               // User.id who triggered execute
+
+  // Rejection
+  rejectedById     String?
+  rejectionReason  String?
+
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([status])
+  @@index([proposedById])
+  @@index([createdAt])
+}
+
+model EmissionApproval {
+  id           String           @id @default(uuid())
+  proposalId   String
+  approverId   String           // User.id of approving Board member
+  approverNote String?
+  approvedAt   DateTime         @default(now())
+
+  proposal     EmissionProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@unique([proposalId, approverId])  // One vote per member per proposal
+  @@index([proposalId])
+  @@index([approverId])
+}
+
+model BankLink {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  userId    String   @unique
+  bankCode  String
+  bankRef   String
+  status    String   @default("ACTIVE")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([bankCode])
+}
+
+// Legacy verification (keeping for backwards compatibility)
+model Verification {
+  id             String   @id @default(uuid())
+  targetUserId   String
+  verifierUserId String
+  createdAt      DateTime @default(now())
+  targetUser     User     @relation("TargetUser", fields: [targetUserId], references: [id])
+  verifierUser   User     @relation("VerifierUser", fields: [verifierUserId], references: [id])
+
+  @@unique([targetUserId, verifierUserId])
+}
+
+// Enhanced verification with chain tracking
+model UserVerification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Who was verified
+  verifiedUserId String
+  verifiedUser   User   @relation("VerifiedUser", fields: [verifiedUserId], references: [id])
+
+  // Who performed the verification
+  verifierId String
+  verifier   User   @relation("Verifier", fields: [verifierId], references: [id])
+
+  // Verification details
+  verificationMethod String // "ADMIN", "USER_REFERRAL"
+  notes              String?
+
+  // Audit trail
+  ipAddress String?
+  userAgent String?
+  location  String? // Geographic location
+
+  // Link to timeline event
+  timelineEventId String?        @unique
+  timelineEvent   TimelineEvent? @relation(fields: [timelineEventId], references: [id])
+
+  // On-chain proof (SeatSBT mint)
+  txHash      String?  // blockchain transaction hash after on-chain verification
+  blockNumber BigInt?  // block number of the verification transaction
+  seatTokenId BigInt?  // SeatSBT tokenId minted for this citizen
+
+  // ── VERIFICATION CHAIN INTEGRITY (cascade revocation) ──────────────────────
+  // isActive=false means the verifier's own chain was broken after this verification.
+  // This does NOT delete the verification (history is preserved), but flags it as
+  // needing re-verification. "You can verify your ancestors' records but cannot rewrite them."
+  isActive         Boolean   @default(true)
+  suspendedAt      DateTime?
+  suspendedReason  String?   // "Verifier chain broken: verifierId was revoked"
+
+  @@unique([verifiedUserId, verifierId])
+  @@index([verifierId])
+  @@index([verifiedUserId])
+  @@index([createdAt])
+}
+
+// Verification Request for Zun/Full upgrades
+model VerificationRequest {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Requester
+  requesterId String
+  requester   User   @relation("Requester", fields: [requesterId], references: [id])
+
+  // Request details
+  requestedLevel      VerificationLevel
+  justification       String            @db.Text
+  supportingDocuments Json? // Array of document URLs/references
+
+  // Status
+  status       String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedById String?
+  reviewedBy   User?     @relation("Reviewer", fields: [reviewedById], references: [id])
+  reviewNotes  String?   @db.Text
+  reviewedAt   DateTime?
+
+  @@index([requesterId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Arban Mutual Verification (each member verifies others)
+model ArbanMutualVerification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Arban context
+  arbanId String
+  arban   Guild  @relation("ArbanVerifications", fields: [arbanId], references: [id])
+
+  // Verifier (member doing the verification)
+  verifierId String
+  verifier   User   @relation("ArbanVerifier", fields: [verifierId], references: [id])
+
+  // Verified (member being verified)
+  verifiedId String
+  verified   User   @relation("ArbanVerified", fields: [verifiedId], references: [id])
+
+  // Verification details
+  isVerified Boolean  @default(true)
+  notes      String?  @db.Text
+  verifiedAt DateTime @default(now())
+
+  @@unique([arbanId, verifierId, verifiedId])
+  @@index([arbanId])
+  @@index([verifierId])
+  @@index([verifiedId])
+}
+
+// ============================
+// INITIAL ALTAN DISTRIBUTION SYSTEM
+// ============================
+
+/// Distribution Pool for tracking the 2.1 trillion ALTAN initial emission
+/// This pool is created once when Central Bank performs the initial emission
+/// and tracks how the ALTAN is allocated across different purposes
+model DistributionPool {
+  id String @id @default(uuid())
+
+  // Total amounts from initial emission
+  totalEmission Decimal @db.Decimal(20, 2) // 2.1 trillion ALTAN
+  citizenPool   Decimal @db.Decimal(20, 2) // e.g., 60% for citizens
+  stateTreasury Decimal @db.Decimal(20, 2) // e.g., 30% for state
+  peoplesFund   Decimal @db.Decimal(20, 2) // e.g., 10% for people's fund
+
+  // Tracking
+  totalDistributed Decimal @default(0) @db.Decimal(20, 2) // Total distributed so far
+  totalCitizens    Int     @default(0) // Number of registered citizens
+  perCitizenShare  Decimal @db.Decimal(18, 2) // Calculated: citizenPool / estimatedCitizens
+
+  // Status
+  status         String   @default("ACTIVE") // ACTIVE, DEPLETED, SUSPENDED
+  emissionDate   DateTime // When CB performed the emission
+  emissionTxHash String? // Blockchain transaction hash (if applicable)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+/// Per-user distribution tracking
+/// Tracks how much of their allocation each citizen has received
+/// based on their verification level progression
+model UserDistribution {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Citizen's total allocation from pool
+  totalAllocation Decimal @db.Decimal(18, 2) // Their full share (~8,690 ALTAN example)
+
+  // Received amounts by verification level
+  unverifiedReceived    Decimal @default(0) @db.Decimal(18, 2) // 100 ALTAN on registration
+  arbanVerifiedReceived Decimal @default(0) @db.Decimal(18, 2) // 900 more (total 1,000)
+  zunReceived           Decimal @default(0) @db.Decimal(18, 2) // 9,000 more (total 10,000)
+  fullyReceived         Decimal @default(0) @db.Decimal(18, 2) // Remaining allocation
+
+  // Totals
+  totalReceived    Decimal @db.Decimal(18, 2) // Sum of all received
+  remainingBalance Decimal @db.Decimal(18, 2) // totalAllocation - totalReceived
+
+  // Distribution events
+  firstDistributionAt DateTime? // When they first received ALTAN
+  lastDistributionAt  DateTime? // Most recent distribution
+  fullyDistributedAt  DateTime? // When they received full allocation
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([fullyDistributedAt])
+}
+
+// ============================
+// STATE ARCHIVE & DOCUMENT SYSTEM
+// ============================
+
+/// Document templates managed by State Archive
+/// Universal constructor for all official documents
+model DocumentTemplate {
+  id String @id @default(uuid())
+
+  // Template identification
+  code     String  @unique // "BANKING_LICENSE_001", "EMISSION_PROTOCOL_001"
+  name     String // "Banking License"
+  nameRu   String? // "Лицензия на банковскую деятельность"
+  category String // "Banking", "Emission", "Legal"
+  version  String  @default("1.0")
+
+  // Template structure (JSON schema)
+  templateSchema  Json // Field definitions with types
+  requiredFields  String[] // ["bank_name", "address", "tax_id"]
+  optionalFields  String[]
+  validationRules Json? // Custom validation logic
+
+  // Template content (English)
+  contentTemplate String  @db.Text // Mustache/Handlebars template
+  headerTemplate  String? @db.Text
+  footerTemplate  String? @db.Text
+
+  // Workflow configuration
+  requiredSignatures String[] // ["CB_GOVERNOR", "NOTARY", "LAWYER"]
+  stagesRequired     String[] // ["DRAFT", "SIGNED", "NOTARIZED", "CERTIFIED", "ARCHIVED"]
+
+  // Blockchain config
+  blockchainEnabled Boolean @default(true)
+  contractTemplate  String? @db.Text // Smart contract code template
+
+  // Archive management
+  status      String   @default("ACTIVE") // ACTIVE, DEPRECATED, ARCHIVED
+  createdById String
+  createdBy   User     @relation("TemplateCreator", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Generated documents
+  documents DocumentContract[]
+
+  @@index([category, status])
+  @@index([code])
+}
+
+/// Document smart contracts - each official document is a blockchain contract
+/// Tracks document stages in real-time
+model DocumentContract {
+  id String @id @default(uuid())
+
+  // Document identification
+  documentNumber String  @unique // "BL-001/2026", "EP-001/2026"
+  registryNumber String? @unique // State registry number
+  archiveNumber  String? @unique // Archive catalog number
+
+  // Template reference
+  templateId String
+  template   DocumentTemplate @relation(fields: [templateId], references: [id])
+
+  // Document data
+  title            String
+  titleRu          String?
+  variables        Json // Template variables filled in
+  generatedContent String  @db.Text // Final rendered document (English)
+  attachments      Json? // Additional files/images
+
+  // Parties involved
+  issuerId    String // CB Governor, etc.
+  issuer      User    @relation("DocumentIssuer", fields: [issuerId], references: [id])
+  recipientId String? // Bank, etc.
+  recipient   User?   @relation("DocumentRecipient", fields: [recipientId], references: [id])
+
+  // Intermediary/Broker (optional)
+  intermediaryId         String? // Broker facilitating the agreement
+  intermediary           User?    @relation("DocumentIntermediary", fields: [intermediaryId], references: [id])
+  intermediaryCommission Decimal? @db.Decimal(5, 4) // Commission percentage (0.0001 to 0.0100 = 0.01% to 1%)
+  transactionAmount      Decimal? @db.Decimal(18, 6) // Deal amount (if monetary transaction)
+
+  // Current state
+  currentStage DocumentStage  @default(DRAFT)
+  status       DocumentStatus @default(ACTIVE)
+
+  // Stage history
+  stages DocumentStageHistory[]
+
+  // Signatures (multi-sig)
+  signatures DocumentSignature[]
+
+  // Notarization
+  notarization NotarizationRecord?
+
+  // Legal certification
+  legalCert LegalCertification?
+
+  // Blockchain smart contract
+  blockchainTxHash String? // Contract deployment TX
+  contractAddress  String? // Smart contract address
+  blockchainData   Json? // Additional blockchain metadata
+
+  // Integrity verification
+  documentHash  String // SHA-256 of content
+  hashTimestamp DateTime @default(now())
+
+  // Archiving
+  archivedAt   DateTime?
+  archivedById String?
+  archivedBy   User?     @relation("DocumentArchivist", fields: [archivedById], references: [id])
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Access control
+  accessLog DocumentAccessLog[]
+
+  // Banking reverse relations
+  bankLicense              Bank? @relation("BankLicense")
+  bankCorrespondentAccount Bank? @relation("CorrespondentAgreement")
+
+  @@index([currentStage, status])
+  @@index([documentNumber])
+  @@index([templateId])
+}
+
+/// Document stages - real-time tracking
+/// Each stage change creates a new history record
+model DocumentStageHistory {
+  id String @id @default(uuid())
+
+  documentId String
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  fromStage DocumentStage?
+  toStage   DocumentStage
+
+  triggeredById String
+  triggeredBy   User   @relation("StageChanger", fields: [triggeredById], references: [id])
+
+  notes     String?  @db.Text
+  timestamp DateTime @default(now())
+
+  // Blockchain event
+  blockchainTx String? // TX hash for stage change
+
+  @@index([documentId, timestamp])
+}
+
+/// Digital signatures on documents
+/// GOST-compliant ECDSA signatures
+model DocumentSignature {
+  id String @id @default(uuid())
+
+  documentId String
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  signerId   String
+  signer     User       @relation("DocumentSigner", fields: [signerId], references: [id])
+  signerRole SignerRole
+
+  // Digital signature data
+  signature String // ECDSA signature (hex)
+  publicKey String // Signer's public key
+  algorithm String @default("ECDSA-secp256k1")
+
+  // Verification
+  verified   Boolean   @default(false)
+  verifiedAt DateTime?
+
+  // Context
+  signedAt  DateTime @default(now())
+  ipAddress String
+  userAgent String?
+
+  @@index([documentId])
+  @@index([signerId])
+}
+
+/// Notarization records - managed by State Archive notaries
+model NotarizationRecord {
+  id String @id @default(uuid())
+
+  documentId String           @unique
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  notaryId String
+  notary   User   @relation("NotaryRecords", fields: [notaryId], references: [id])
+
+  // Notarial data
+  registryNumber String  @unique // Notarial registry number
+  notes          String? @db.Text
+  sealImage      String? // Digital seal/stamp
+
+  // Signature
+  signature String
+  publicKey String
+
+  notarizedAt DateTime @default(now())
+
+  @@index([notaryId])
+}
+
+/// Legal certification - managed by State Archive lawyers
+model LegalCertification {
+  id String @id @default(uuid())
+
+  documentId String           @unique
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  lawyerId String
+  lawyer   User   @relation("LegalCertifications", fields: [lawyerId], references: [id])
+
+  // Legal opinion
+  opinion   String  @db.Text // Legal analysis (English)
+  opinionRu String? @db.Text // Russian version if needed
+  compliant Boolean // Meets legal requirements
+  notes     String? @db.Text
+
+  // Signature
+  signature String
+  publicKey String
+
+  certifiedAt DateTime @default(now())
+
+  @@index([lawyerId])
+}
+
+/// Document access log - audit trail
+model DocumentAccessLog {
+  id String @id @default(uuid())
+
+  documentId String
+  document   DocumentContract @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("DocumentAccess", fields: [userId], references: [id])
+
+  action AccessAction // VIEW, DOWNLOAD, PRINT, MODIFY
+  reason String? // Why accessed
+
+  timestamp DateTime @default(now())
+  ipAddress String
+  userAgent String?
+
+  @@index([documentId, timestamp])
+  @@index([userId])
+}
+
+// Enums for document system
+enum DocumentStage {
+  DRAFT // Being prepared
+  PENDING_REVIEW // Submitted for review
+  SIGNED // Signed by issuer
+  PENDING_NOTARIZATION
+  NOTARIZED // Notary approved
+  PENDING_LEGAL
+  CERTIFIED // Lawyer certified
+  ARCHIVED // In State Archive
+  PUBLISHED // Public access
+}
+
+enum DocumentStatus {
+  ACTIVE
+  SUSPENDED
+  REVOKED
+  EXPIRED
+  ARCHIVED
+}
+
+enum SignerRole {
+  CREATOR
+  PARTY_A // First party in bilateral agreement
+  PARTY_B // Second party in bilateral agreement
+  CB_GOVERNOR
+  NOTARY
+  STATE_LAWYER
+  BANK_DIRECTOR
+  WITNESS
+  OFFICER
+  INTERMEDIARY // Broker/intermediary with commission (0.1-1%)
+}
+
+enum AccessAction {
+  VIEW
+  DOWNLOAD
+  PRINT
+  MODIFY
+  SIGN
+  ARCHIVE
+}
+
+// =====================================
+// BANKING SYSTEM
+// =====================================
+
+model Bank {
+  id String @id @default(cuid())
+
+  // Basic Information
+  name         String
+  nameRu       String?
+  legalAddress String
+  taxId        String  @unique
+
+  // Banking License
+  licenseNumber     String?           @unique // e.g., "BL-001/2026"
+  licenseDocumentId String?           @unique
+  licenseDocument   DocumentContract? @relation("BankLicense", fields: [licenseDocumentId], references: [id])
+  licenseStatus     BankLicenseStatus @default(PENDING)
+  licenseIssuedAt   DateTime?
+
+  // Correspondent Account (with Central Bank)
+  correspondentAccountNumber String?           @unique
+  correspondentAgreementId   String?           @unique
+  correspondentAgreement     DocumentContract? @relation("CorrespondentAgreement", fields: [correspondentAgreementId], references: [id])
+
+  // Leadership
+  directorId String?
+  director   User?   @relation("BankDirector", fields: [directorId], references: [id])
+
+  // Operational Status
+  operationalStatus BankStatus @default(PENDING_LICENSE)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([licenseStatus])
+  @@index([operationalStatus])
+  @@index([taxId])
+}
+
+enum BankLicenseStatus {
+  PENDING // Application submitted
+  APPROVED // Approved by CB
+  ISSUED // License issued
+  SUSPENDED // Operations suspended
+  REVOKED // License revoked
+}
+
+enum BankStatus {
+  PENDING_LICENSE // Awaiting banking license
+  LICENSED // License issued
+  OPERATIONAL // Fully operational with correspondent account
+  SUSPENDED // Operations suspended
+  DISSOLVED // Bank dissolved
+}
+
+// Timeline Event System
+model TimelineEvent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Event details
+  type        EventType
+  scope       EventScope @default(INDIVIDUAL)
+  title       String
+  description String?
+
+  // Actor (who performed the action)
+  actorId String?
+  actor   User?   @relation("EventActor", fields: [actorId], references: [id])
+
+  // Target (who/what was affected)
+  targetId String?
+  target   User?   @relation("EventTarget", fields: [targetId], references: [id])
+
+  // Location & Time
+  location String?
+  timezone String? @default("UTC")
+
+  // Hierarchical context
+  familyId String?
+  clanId   String?
+  arbanId  String?
+  hordeId  String?
+  nationId String?
+
+  // Legal significance
+  isLegalContract Boolean  @default(false)
+  contractHash    String?
+  witnessIds      String[]
+
+  // Metadata
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+
+  // Relations
+  verification UserVerification?
+  taskId       String?
+  // Document     Document?  // REMOVED - old Chancellery model removed
+
+  @@index([actorId, createdAt])
+  @@index([targetId, createdAt])
+  @@index([type, scope])
+  @@index([createdAt])
+  @@index([arbanId])
+  @@index([clanId])
+}
+
+// Historical Records (written by specialists)
+model HistoricalRecord {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Scope of history
+  scope   EventScope
+  scopeId String
+
+  // Time period
+  periodStart DateTime
+  periodEnd   DateTime?
+
+  // Content
+  title     String
+  narrative String // Markdown text
+
+  // Authorship
+  authorId String
+  author   User   @relation("HistoricalAuthor", fields: [authorId], references: [id])
+
+  // Review status
+  isPublished Boolean   @default(false)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+
+  // Related events
+  eventIds String[]
+
+  @@index([scope, scopeId])
+  @@index([createdAt])
+  @@index([isPublished])
+}
+
+// ============== CALENDAR SYSTEM ==============
+
+model CalendarEvent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Event details
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean   @default(false)
+
+  // Location
+  location String?
+
+  // Owner
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Visibility
+  isPublic Boolean @default(false)
+
+  // Categories/Tags
+  category String? // "WORK", "PERSONAL", "KHURAL", "MEETING", etc.
+  tags     String[]
+
+  // Reminders
+  reminderMinutes Int? // Minutes before event to remind
+
+  // Link to timeline (optional)
+  timelineEventId String?
+
+  // Color coding
+  color String? @default("#3B82F6")
+
+  @@index([userId, startDate])
+  @@index([startDate])
+  @@index([userId])
+}
+
+model CalendarNote {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Note details
+  title   String?
+  content String // Markdown supported
+  date    DateTime // Date this note is attached to
+
+  // Owner
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Tags
+  tags String[]
+
+  // Color
+  color String? @default("#F59E0B")
+
+  @@index([userId, date])
+  @@index([userId])
+}
+
+// ============== CHANCELLERY & ARCHIVE SYSTEM ==============
+// NOTE: Old Document models removed - replaced by State Archive DocumentContract system
+// (See "STATE ARCHIVE & DOCUMENT SYSTEM" section above)
+
+// ══════════════════════════════════════════════════════════════
+//  UNIVERSAL WORK SYSTEM
+//  All economic activity is structured as Quests/Tasks.
+//  Citizens, residents, and organizations create work.
+//  Payment in ALTAN is mandatory. Tax → citizenship republic.
+// ══════════════════════════════════════════════════════════════
+
+enum QuestCategory {
+  REPAIR          // Ремонт
+  CONSTRUCTION    // Строительство
+  IT              // IT / Программирование
+  EDUCATION       // Образование / Репетиторство
+  DELIVERY        // Доставка
+  LEGAL           // Юридические услуги
+  FINANCE         // Финансы / Бухгалтерия
+  HEALTHCARE      // Здравоохранение
+  AGRICULTURE     // Сельское хозяйство
+  MANUFACTURING   // Производство
+  TRADE           // Торговля
+  DESIGN          // Дизайн
+  CONSULTING      // Консалтинг
+  ADMINISTRATION  // Администрирование
+  SECURITY        // Безопасность
+  CLEANING        // Уборка / Клининг
+  TRANSPORT       // Транспорт
+  OTHER           // Другое
+}
+
+/// Quest — Universal unit of work in the ALTAN economy.
+/// Any citizen, resident, or organization can create a quest.
+/// Payment in ALTAN is mandatory. Tax flows to citizenship republic → district.
+model Quest {
+  id String @id @default(uuid())
+
+  // ── Parties ──
+  giverId String
+  giver   User    @relation("QuestGiver", fields: [giverId], references: [id])
+  takerId String?
+  taker   User?   @relation("QuestTaker", fields: [takerId], references: [id])
+
+  // ── Organization (if posted by a company) ──
+  organizationId String?
+  organization   Organization? @relation("OrgWorkQuests", fields: [organizationId], references: [id])
+
+  // ── Territory binding ──
+  // Auto-detected from giver's Tumen → Republic. Reputation earned here.
+  republicId String?
+  republic   RepublicanKhural? @relation("RepublicQuests", fields: [republicId], references: [id])
+
+  // ── Work details ──
+  title       String
+  description String        @db.Text
+  objectives  Json[]        // [{description, completed, evidence?}]
+  category    QuestCategory @default(OTHER)
+
+  // ── Requirements ──
+  requirements  Json? // {skills: [], minReputation: 50}
+  minReputation Int?
+
+  // ── Payment (MANDATORY) ──
+  rewardAltan    Decimal  @db.Decimal(18, 4) // Payment in ALTAN (required!)
+  rewardItems    Json?    // Additional: NFTs, badges, certificates
+  reputationGain Int      @default(50) // Reputation points for taker
+
+  // ── Tax (10% total: 7% republic + 3% confederation) ──
+  taxRate              Decimal @default(0.10) @db.Decimal(5, 4)  // 10% total
+  republicTaxRate      Decimal @default(0.07) @db.Decimal(5, 4)  // 7% → republic
+  confederationTaxRate Decimal @default(0.03) @db.Decimal(5, 4)  // 3% → confederation
+  taxAmount            Decimal @default(0) @db.Decimal(18, 4)    // Total tax (10%)
+  republicTaxAmount    Decimal @default(0) @db.Decimal(18, 4)    // 7% portion
+  confederationTaxAmount Decimal @default(0) @db.Decimal(18, 4)  // 3% portion
+  taxRepublicId        String? // Where republic tax goes (taker's citizenship)
+  taxPaid              Boolean @default(false)
+
+  // ── Timing ──
+  deadline          DateTime?
+  estimatedDuration Int? // minutes
+
+  // ── Progress ──
+  status   QuestStatus @default(OPEN)
+  progress Int         @default(0) // 0-100%
+
+  // ── Evidence / submissions ──
+  submissions Json[] // [{url, description, timestamp}]
+
+  // ── Ratings (after completion) ──
+  giverRating   Int? // 1-5
+  takerRating   Int?
+  giverFeedback String?
+  takerFeedback String?
+
+  // ── Payment tracking ──
+  paymentTxHash String? // ALTAN transfer transaction hash
+  taxTxHash     String? // Tax payment transaction hash
+
+  // ── Lifecycle timestamps ──
+  acceptedAt  DateTime?
+  startedAt   DateTime?
+  submittedAt DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([giverId])
+  @@index([takerId])
+  @@index([organizationId])
+  @@index([republicId])
+  @@index([status])
+  @@index([category])
+  @@index([deadline])
+}
+
+/// OrgQuest — Organization-bound task/quest.
+/// Like WoW quests or Eve Online missions: every org has a task board.
+/// Tasks are specialized per org type and can link to smart contracts.
+enum QuestVisibility {
+  ORG_ONLY  // Only org members can see/accept
+  BRANCH    // All orgs in same power branch can see
+  PUBLIC    // Anyone can see and accept
+}
+
+model OrgQuest {
+  id String @id @default(uuid())
+
+  // Which organization posted this task
+  organizationId String
+  organization   Organization @relation("OrgQuests", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Territory — reputation is awarded in this republic upon completion
+  republicId String?
+  republic   RepublicanKhural? @relation("RepublicOrgQuests", fields: [republicId], references: [id])
+
+  // Who created the task (must be org member with canCreateTasks)
+  creatorId String
+  creator   User @relation("OrgQuestCreator", fields: [creatorId], references: [id])
+
+  // Who accepted the task
+  assigneeId String?
+  assignee   User? @relation("OrgQuestAssignee", fields: [assigneeId], references: [id])
+
+  // Task details
+  title       String
+  description String @db.Text
+  objectives  Json[] // [{description: string, completed: boolean, evidence?: string}]
+  category    String // Specialization: "CHEMISTRY", "LAW", "ADMINISTRATION", "FINANCE", etc.
+
+  // Visibility & access
+  visibility QuestVisibility @default(ORG_ONLY)
+
+  // Requirements
+  requiredRole    String? // Minimum role needed (MEMBER, OFFICER, etc.)
+  requiredSkills  Json?   // {skills: ["react", "solidity"]}
+  minReputation   Int?
+
+  // Rewards
+  rewardAltan     Decimal? @db.Decimal(18, 4)
+  rewardItems     Json?    // NFTs, badges, certificates
+  reputationGain  Int?
+
+  // Timing
+  deadline          DateTime?
+  estimatedDuration Int?     // minutes
+
+  // Progress
+  status   QuestStatus @default(OPEN)
+  progress Int         @default(0) // 0-100%
+
+  // Evidence / submissions
+  submissions Json[] // [{url, description, timestamp}]
+
+  // Ratings
+  creatorRating   Int?    // 1-5
+  assigneeRating  Int?
+  creatorFeedback String?
+  assigneeFeedback String?
+
+  // Smart contract link (task executed via contract)
+  contractId String? // Links to OrgContract
+  contractAddress String? // On-chain smart contract
+  txHash          String? // Transaction hash
+
+  // Lifecycle timestamps
+  acceptedAt  DateTime?
+  startedAt   DateTime?
+  submittedAt DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([creatorId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([category])
+  @@index([visibility])
+  @@index([deadline])
+}
+
+// Reputation & Trust System
+model ReputationProfile {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation("UserReputation", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Deal statistics
+  totalDeals      Int     @default(0)
+  successfulDeals Int     @default(0)
+  successRate     Decimal @default(0) @db.Decimal(5, 2) // Percentage
+
+  // Rating statistics  
+  averageRating   Decimal @default(0) @db.Decimal(3, 2) // 1-5 scale
+  ratingsReceived Int     @default(0)
+
+  // Quest statistics
+  questsCompleted  Int     @default(0)
+  questsPosted     Int     @default(0)
+  questSuccessRate Decimal @default(0) @db.Decimal(5, 2)
+
+  // Contract statistics
+  contractsSigned Int @default(0)
+  activeContracts Int @default(0)
+
+  // Achievements
+  badges Json[] // [{id, name, earnedAt}]
+
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// =============================================================================
+// GAMIFICATION — Citizen progression system
+// =============================================================================
+
+/// CitizenLevel — Tracks a citizen's progression through 32 levels.
+/// XP is earned through completing quests, voting, paying taxes, joining orgs, etc.
+model CitizenLevel {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation("CitizenLevel", fields: [userId], references: [id], onDelete: Cascade)
+
+  level       Int    @default(1)  // 1-32
+  currentXP   Int    @default(0)  // XP within current level
+  totalXP     Int    @default(0)  // Lifetime XP earned
+  title       String @default("Человек") // Localized title based on level
+
+  // Streak tracking
+  dailyStreak  Int @default(0) // Consecutive days active
+  longestStreak Int @default(0)
+  lastActiveAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  xpTransactions XPTransaction[]
+  achievements   Achievement[]
+
+  @@index([level])
+  @@index([totalXP])
+}
+
+/// Achievement — Formal achievements earned by citizens.
+/// Each achievement is unlocked once and persists forever.
+model Achievement {
+  id String @id @default(uuid())
+
+  citizenLevelId String
+  citizenLevel   CitizenLevel @relation(fields: [citizenLevelId], references: [id], onDelete: Cascade)
+
+  key         String  // Unique key, e.g. "first_quest", "100_votes"
+  name        String  // Display name
+  description String  // Description of how to earn
+  category    String  // GOVERNANCE, ECONOMIC, SOCIAL, MILITARY, CULTURAL
+  icon        String? // Emoji or icon name
+  xpReward    Int     @default(0) // XP bonus upon earning
+
+  earnedAt DateTime @default(now())
+
+  @@unique([citizenLevelId, key])
+  @@index([citizenLevelId])
+  @@index([category])
+}
+
+/// XPTransaction — Immutable audit trail of XP changes.
+model XPTransaction {
+  id String @id @default(uuid())
+
+  citizenLevelId String
+  citizenLevel   CitizenLevel @relation(fields: [citizenLevelId], references: [id], onDelete: Cascade)
+
+  amount    Int    // XP amount (positive or negative)
+  reason    String // Human-readable reason
+  action    String // Action type: QUEST_COMPLETED, VOTE_CAST, TAX_PAID, etc.
+  sourceId  String? // Reference to the source entity (questId, voteId, etc.)
+
+  createdAt DateTime @default(now())
+
+  @@index([citizenLevelId, createdAt])
+  @@index([action])
+}
+
+/// OnboardingProgress — Tracks a citizen's guided tutorial "Путь Гражданина".
+/// Steps: CONSTITUTION → WALLET → FIRST_TRANSFER → JOIN_ARBAN → COMPLETE_QUEST → CAST_VOTE
+model OnboardingProgress {
+  id String @id @default(uuid())
+
+  userId String @unique
+  user   User   @relation("OnboardingProgress", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Step completion flags
+  constitutionRead  Boolean @default(false)
+  walletCreated     Boolean @default(false)
+  firstTransfer     Boolean @default(false)
+  arbanJoined       Boolean @default(false)
+  questCompleted    Boolean @default(false)
+  voteCast          Boolean @default(false)
+
+  // Overall progress
+  currentStep     Int     @default(0) // 0-6
+  totalSteps      Int     @default(6)
+  isComplete      Boolean @default(false)
+  completedAt     DateTime?
+
+  // XP bonus awarded
+  xpBonusClaimed  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Enum: types of actions that affect regional reputation
+enum ReputationActionType {
+  QUEST_COMPLETED      // Completed a quest for an org in this region
+  TAX_PAID             // Paid taxes in this region
+  CONTRACT_FULFILLED   // Fulfilled a contract in this region
+  ORGANIZATION_JOINED  // Joined an org in this region
+  VOTE_CAST            // Voted in Khural session in this region
+  COMMUNITY_SERVICE    // Community service / volunteer work
+}
+
+/// RegionalReputation — Per-user reputation in a specific republic/territory.
+/// Working in Buryad-Mongolia grows reputation in Buryad-Mongolia only.
+model RegionalReputation {
+  id String @id @default(uuid())
+
+  userId     String
+  user       User             @relation("UserRegionalReputation", fields: [userId], references: [id], onDelete: Cascade)
+
+  republicId String
+  republic   RepublicanKhural @relation("RepublicReputation", fields: [republicId], references: [id], onDelete: Cascade)
+
+  // ── Point categories ──
+  questPoints    Int @default(0)  // From completing quests in this region
+  taxPoints      Int @default(0)  // From paying taxes here
+  contractPoints Int @default(0)  // From fulfilling contracts here
+  socialPoints   Int @default(0)  // Voting, community service, joining orgs
+  totalPoints    Int @default(0)  // Sum of all categories
+
+  // ── Level system (1-100) ──
+  level Int    @default(1)
+  title String @default("Новичок") // e.g. Новичок → Резидент → Гражданин → Заслуженный → Почётный
+
+  // ── Stats ──
+  questsCompleted    Int @default(0)
+  taxesPaid          Int @default(0)
+  contractsFulfilled Int @default(0)
+  votesCast          Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Actions log
+  actions ReputationAction[] @relation("RegionalReputationActions")
+
+  @@unique([userId, republicId])
+  @@index([userId])
+  @@index([republicId])
+  @@index([totalPoints])
+  @@index([level])
+}
+
+/// ReputationAction — Log of every action that changed reputation.
+/// Immutable audit trail.
+model ReputationAction {
+  id String @id @default(uuid())
+
+  userId     String
+  user       User             @relation("UserReputationActions", fields: [userId], references: [id], onDelete: Cascade)
+
+  republicId String
+  republic   RepublicanKhural @relation("RepublicReputationActions", fields: [republicId], references: [id], onDelete: Cascade)
+
+  regionalReputationId String
+  regionalReputation   RegionalReputation @relation("RegionalReputationActions", fields: [regionalReputationId], references: [id], onDelete: Cascade)
+
+  // ── Action details ──
+  actionType  ReputationActionType
+  points      Int      // Can be negative for penalties
+  description String   // Human-readable, e.g. "Квест «Анализ почвы» выполнен"
+
+  // ── Source links (optional, for tracing) ──
+  questId    String?  // If triggered by quest completion
+  contractId String?  // If triggered by contract fulfillment
+  orgId      String?  // Related organization
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([republicId])
+  @@index([actionType])
+  @@index([createdAt])
+}
+
+model KhuralGroup {
+  id            String        @id @default(uuid())
+  level         KhuralLevel
+  name          String
+  parentGroupId String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  parentGroup   KhuralGroup?  @relation("GroupHierarchy", fields: [parentGroupId], references: [id])
+  childGroups   KhuralGroup[] @relation("GroupHierarchy")
+  seats         KhuralSeat[]
+
+  @@index([level])
+  @@index([parentGroupId])
+}
+
+model KhuralSeat {
+  id             String      @id @default(uuid())
+  index          Int
+  groupId        String
+  occupantUserId String?
+  isLeaderSeat   Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  group          KhuralGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  occupant       User?       @relation(fields: [occupantUserId], references: [id])
+
+  @@unique([groupId, index])
+  @@index([groupId])
+  @@index([occupantUserId])
+}
+
+model Guild {
+  id                  String                    @id @default(uuid())
+  type                GuildType
+  name                String
+  description         String?
+  professionId        String?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  profession          Profession?               @relation(fields: [professionId], references: [id])
+  members             GuildMember[]
+  tasks               Task[]
+  organizationMembers User[]                    @relation("OrganizationMembers")
+  arbanVerifications  ArbanMutualVerification[] @relation("ArbanVerifications")
+
+  @@index([type])
+  @@index([professionId])
+}
+
+model GuildMember {
+  id             String     @id @default(uuid())
+  guildId        String
+  userId         String
+  role           MemberRole @default(MEMBER)
+  professionRank Int?
+  level          Int        @default(1)
+  xp             Int        @default(0)
+  joinedAt       DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  guild          Guild      @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+  @@index([guildId])
+  @@index([userId])
+}
+
+model Profession {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  guilds      Guild[]
+  tasks       Task[]
+
+  @@index([name])
+}
+
+model Task {
+  id              String      @id @default(uuid())
+  title           String
+  description     String
+  professionId    String?
+  rewardAltan     Decimal     @db.Decimal(18, 6)
+  status          TaskStatus  @default(OPEN)
+  assignedUserId  String?
+  createdByUserId String
+  postedByGuildId String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  completedAt     DateTime?
+  assignedUser    User?       @relation("TaskAssignee", fields: [assignedUserId], references: [id])
+  createdBy       User        @relation("TaskCreator", fields: [createdByUserId], references: [id])
+  postedByGuild   Guild?      @relation(fields: [postedByGuildId], references: [id])
+  profession      Profession? @relation(fields: [professionId], references: [id])
+
+  @@index([status])
+  @@index([professionId])
+  @@index([assignedUserId])
+  @@index([postedByGuildId])
+}
+
+model AltanLedger {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  balance         Decimal   @default(0) @db.Decimal(18, 6)
+  lastSyncedBlock BigInt?
+  lastSyncedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AltanTransaction {
+  id          String            @id @default(uuid())
+  fromUserId  String?
+  toUserId    String?
+  amount      Decimal           @db.Decimal(18, 6)
+  type        TransactionType
+  status      TransactionStatus @default(COMPLETED)
+  txHash      String?
+  blockNumber BigInt?
+  createdAt   DateTime          @default(now())
+  fromBankRef String?
+  toBankRef   String?
+  memo        String?
+  fromUser    User?             @relation("SentTransactions", fields: [fromUserId], references: [id])
+  toUser      User?             @relation("ReceivedTransactions", fields: [toUserId], references: [id])
+  ubiPayments UbiPayment[]      // Link to UBI payment records
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([fromBankRef])
+  @@index([toBankRef])
+  @@index([type])
+}
+
+model UbiPayment {
+  id              String           @id @default(uuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  
+  weekStartDate   DateTime         // Monday of the week (e.g., 2026-02-03 00:00:00)
+  weekEndDate     DateTime         // Sunday of the week (e.g., 2026-02-09 23:59:59)
+  amount          Int              @default(400)
+  
+  transactionId   String?          @unique
+  transaction     AltanTransaction? @relation(fields: [transactionId], references: [id])
+  
+  status          UbiPaymentStatus @default(PENDING)
+  failureReason   String?
+  
+  createdAt       DateTime         @default(now())
+  processedAt     DateTime?
+  
+  @@unique([userId, weekStartDate]) // Prevent duplicate payments for same week
+  @@index([weekStartDate])
+  @@index([status])
+  @@index([userId])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  userId       String?
+  action       String
+  resourceType String?
+  resourceId   String?
+  metadata     Json?
+  ipAddress    String?
+  userAgent    String?
+  hash         String?
+  user         User?    @relation(fields: [userId], references: [id])
+}
+
+model KhuralEvent {
+  id                String               @id @default(uuid())
+  date              DateTime             @default(now())
+  title             String
+  description       String
+  type              KhuralEventType
+  isVerified        Boolean              @default(false)
+  relatedProposalId String?
+  versions          KhuralEventVersion[]
+}
+
+model KhuralEventVersion {
+  id               String        @id @default(uuid())
+  eventId          String
+  title            String
+  description      String
+  proposedByUserId String
+  isApproved       Boolean       @default(false)
+  approvedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  votes            CouncilVote[]
+  event            KhuralEvent   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  proposedByUser   User          @relation("HistoryProposer", fields: [proposedByUserId], references: [id])
+
+  @@index([eventId])
+}
+
+model CouncilVote {
+  id          String             @id @default(uuid())
+  versionId   String
+  voterUserId String
+  vote        Boolean
+  createdAt   DateTime           @default(now())
+  version     KhuralEventVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  voterUser   User               @relation("CouncilVoter", fields: [voterUserId], references: [id])
+
+  @@unique([versionId, voterUserId])
+}
+
+model UnlockRequest {
+  id        String           @id @default(uuid())
+  userId    String           @unique
+  status    WalletStatus     @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  approvals UnlockApproval[]
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UnlockApproval {
+  id             String        @id @default(uuid())
+  requestId      String
+  approverUserId String
+  createdAt      DateTime      @default(now())
+  approver       User          @relation(fields: [approverUserId], references: [id])
+  request        UnlockRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, approverUserId])
+}
+
+model CentralBankOfficer {
+  id             String                 @id @default(uuid())
+  walletAddress  String                 @unique
+  role           CentralBankRole
+  name           String?
+  appointedAt    DateTime               @default(now())
+  revokedAt      DateTime?
+  isActive       Boolean                @default(true)
+  licenseActions CentralBankLicense[]   @relation("LicenseIssuer")
+  emissions      EmissionRecord[]
+  policyChanges  MonetaryPolicyChange[]
+
+  @@index([walletAddress])
+  @@index([role])
+}
+
+model CentralBankLicense {
+  id           String              @id @default(uuid())
+  bankAddress  String              @unique
+  bankCode     String              @unique
+  bankName     String
+  status       LicenseStatus       @default(ACTIVE)
+  issuedAt     DateTime            @default(now())
+  revokedAt    DateTime?
+  revokeReason String?
+  txHash       String?
+  issuedById   String?
+  issuedBy     CentralBankOfficer? @relation("LicenseIssuer", fields: [issuedById], references: [id])
+  corrAccount  CorrAccount?
+
+  @@index([bankCode])
+  @@index([status])
+}
+
+model CorrAccount {
+  id         String             @id @default(uuid())
+  licenseId  String             @unique
+  accountRef String             @unique
+  balance    Decimal            @default(0) @db.Decimal(18, 6)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  license    CentralBankLicense @relation(fields: [licenseId], references: [id])
+  emissions  EmissionRecord[]
+
+  @@index([accountRef])
+}
+
+model EmissionRecord {
+  id             String              @id @default(uuid())
+  type           EmissionType
+  amount         Decimal             @db.Decimal(18, 6)
+  reason         String
+  memo           String?
+  corrAccountId  String?
+  authorizedById String?
+  txHash         String?
+  blockNumber    BigInt?
+  status         TransactionStatus   @default(COMPLETED)
+  createdAt      DateTime            @default(now())
+  authorizedBy   CentralBankOfficer? @relation(fields: [authorizedById], references: [id])
+  corrAccount    CorrAccount?        @relation(fields: [corrAccountId], references: [id])
+
+  @@index([type])
+  @@index([corrAccountId])
+  @@index([createdAt])
+}
+
+model MonetaryPolicy {
+  id                 String   @id @default(uuid())
+  officialRate       Decimal  @db.Decimal(10, 4)
+  reserveRequirement Decimal  @db.Decimal(10, 4)
+  dailyEmissionLimit Decimal  @db.Decimal(18, 6)
+  isActive           Boolean  @default(true)
+  effectiveFrom      DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model MonetaryPolicyChange {
+  id             String              @id @default(uuid())
+  parameter      String
+  previousValue  String
+  newValue       String
+  reason         String?
+  authorizedById String?
+  txHash         String?
+  effectiveAt    DateTime            @default(now())
+  createdAt      DateTime            @default(now())
+  authorizedBy   CentralBankOfficer? @relation(fields: [authorizedById], references: [id])
+
+  @@index([parameter])
+  @@index([effectiveAt])
+}
+
+model FamilyArban {
+  id                 String             @id @default(uuid())
+  arbanId            BigInt             @unique
+  husbandSeatId      String // Changed from BigInt to String
+  wifeSeatId         String // Changed from BigInt to String
+  heirSeatId         String? // Changed from BigInt to String
+  zunId              BigInt?
+  khuralRepSeatId    String? // Changed from BigInt to String
+  khuralRepBirthYear Int?
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  zun                Zun?               @relation(fields: [zunId], references: [zunId])
+  children           FamilyArbanChild[]
+
+  @@index([husbandSeatId])
+  @@index([wifeSeatId])
+  @@index([zunId])
+  @@index([khuralRepSeatId])
+}
+
+model FamilyArbanChild {
+  id          String      @id @default(uuid())
+  arbanId     BigInt
+  childSeatId String // Changed from BigInt to String
+  addedAt     DateTime    @default(now())
+  familyArban FamilyArban @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
+
+  @@unique([arbanId, childSeatId])
+  @@index([arbanId])
+  @@index([childSeatId])
+}
+
+model Zun {
+  id             String        @id @default(uuid())
+  zunId          BigInt        @unique
+  name           String
+  founderArbanId BigInt
+  elderSeatId    String? // Changed from BigInt to String
+  myanganId      String? // Parent Myangan
+  myangan        Myangan?      @relation("MyanganZuns", fields: [myanganId], references: [id])
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  memberArbans   FamilyArban[]
+
+  @@index([founderArbanId])
+  @@index([elderSeatId])
+  @@index([myanganId])
+}
+
+model OrganizationalArban {
+  id           String                @id @default(uuid())
+  arbanId      BigInt                @unique
+  name         String
+  orgType      OrgArbanType
+  powerBranch  PowerBranchType
+  parentOrgId  BigInt?
+  leaderSeatId String? // Changed from BigInt to String
+  isActive     Boolean               @default(true)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  members      OrgArbanMember[]
+  parent       OrganizationalArban?  @relation("OrgHierarchy", fields: [parentOrgId], references: [arbanId])
+  departments  OrganizationalArban[] @relation("OrgHierarchy")
+
+  // Transparency: Activity and Report tracking
+  activities      ActivityEntry[]        @relation("OrgActivities")
+  activityReports BranchActivityReport[] @relation("OrgReports")
+
+  @@index([orgType])
+  @@index([powerBranch])
+  @@index([parentOrgId])
+  @@index([leaderSeatId])
+}
+
+model OrgArbanMember {
+  id       String              @id @default(uuid())
+  arbanId  BigInt
+  seatId   String // Changed from BigInt to String
+  joinedAt DateTime            @default(now())
+  org      OrganizationalArban @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
+
+  @@unique([arbanId, seatId])
+  @@index([arbanId])
+  @@index([seatId])
+}
+
+model CreditLine {
+  id            String         @id @default(uuid())
+  arbanId       BigInt         @unique
+  creditType    CreditLineType
+  creditRating  Int            @default(500)
+  creditLimit   Decimal        @db.Decimal(18, 6)
+  borrowed      Decimal        @default(0) @db.Decimal(18, 6)
+  totalBorrowed Decimal        @default(0) @db.Decimal(18, 6)
+  totalRepaid   Decimal        @default(0) @db.Decimal(18, 6)
+  defaultCount  Int            @default(0)
+  onTimeCount   Int            @default(0)
+  isActive      Boolean        @default(true)
+  openedAt      DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  loans         Loan[]
+
+  @@index([arbanId])
+  @@index([creditType])
+  @@index([creditRating])
+}
+
+model Loan {
+  id           String         @id @default(uuid())
+  loanId       BigInt         @unique
+  arbanId      BigInt
+  creditType   CreditLineType
+  principal    Decimal        @db.Decimal(18, 6)
+  interest     Decimal        @db.Decimal(18, 6)
+  dueDate      DateTime
+  borrowedAt   DateTime       @default(now())
+  repaidAt     DateTime?
+  isActive     Boolean        @default(true)
+  isDefaulted  Boolean        @default(false)
+  txHashBorrow String?
+  txHashRepay  String?
+  creditLine   CreditLine     @relation(fields: [arbanId], references: [arbanId], onDelete: Cascade)
+
+  @@index([arbanId])
+  @@index([creditType])
+  @@index([isActive])
+  @@index([dueDate])
+}
+
+model TierDistribution {
+  id              String        @id @default(uuid())
+  seatId          String // Changed from BigInt to String
+  accountId       BigInt
+  tier            Int
+  arbanType       TierArbanType
+  arbanId         BigInt
+  amount          Decimal       @db.Decimal(18, 6)
+  requestedAt     DateTime      @default(now())
+  approved        Boolean       @default(false)
+  rejected        Boolean       @default(false)
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+  txHash          String?
+
+  @@index([seatId])
+  @@index([tier])
+  @@index([arbanType])
+  @@index([arbanId])
+  @@index([approved])
+  @@index([rejected])
+}
+
+model TierReceived {
+  id         String   @id @default(uuid())
+  seatId     String // Changed from BigInt to String
+  tier       Int
+  receivedAt DateTime @default(now())
+  amount     Decimal  @db.Decimal(18, 6)
+  txHash     String?
+
+  @@unique([seatId, tier])
+  @@index([seatId])
+}
+
+enum UserRole {
+  CITIZEN
+  LEADER
+  ADMIN
+  CREATOR // Supreme admin - can manage all admins and users
+  NOTARY // State Archive notary
+  STATE_LAWYER // State Archive legal officer
+  CB_GOVERNOR // Central Bank Governor
+}
+
+// Гражданский тип — определяет объём прав в системе управления
+enum CitizenType {
+  RESIDENT   // Житель (зарегистрирован, ещё не принят гражданами)
+  CITIZEN    // Полноценный гражданин (принят коренными, голосует, владеет имуществом)
+  INDIGENOUS // Коренной сибиряк (обладает исключительным земельным правом)
+  FOREIGNER  // Иностранец (только аренда через Земельный Фонд)
+}
+
+enum WalletStatus {
+  LOCKED
+  PENDING
+  UNLOCKED
+}
+
+enum VerificationStatus {
+  DRAFT
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum VerificationLevel {
+  UNVERIFIED // Default: new users, 100 ALTAN limit
+  ARBAN_VERIFIED // Arban member with mutual verification, 1000 ALTAN shared
+  ZUN_VERIFIED // Admin approved, 10,000 ALTAN limit
+  FULLY_VERIFIED // Citizen status, unlimited, can own land
+}
+
+enum KhuralLevel {
+  ARBAN
+  ZUUN
+  MYANGAN
+  TUMEN
+}
+
+enum GuildType {
+  CLAN
+  PROFESSION
+  ORGANIZATION
+  GOVERNMENT
+}
+
+enum MemberRole {
+  APPRENTICE // Стажёр/Ученик
+  MEMBER // Рядовой участник
+  SECRETARY // Секретарь (ведёт протоколы)
+  TREASURER // Казначей
+  OFFICER // Должностное лицо
+  DEPUTY // Заместитель главы
+  LEADER // Глава организации (избираемый)
+}
+
+enum TaskStatus {
+  OPEN
+  TAKEN
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  TRANSFER
+  MINT
+  BURN
+  REWARD
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum UbiPaymentStatus {
+  PENDING    // Scheduled but not yet processed
+  COMPLETED  // Successfully transferred
+  FAILED     // Transfer failed
+  SKIPPED    // User not eligible
+}
+
+enum KhuralEventType {
+  SESSION_START
+  DECREE_SIGNED
+  APPOINTMENT
+  AMENDMENT
+  EMERGENCY
+}
+
+enum CentralBankRole {
+  GOVERNOR
+  BOARD_MEMBER
+}
+
+enum LicenseStatus {
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum EmissionType {
+  MINT
+  BURN
+}
+
+enum OrgArbanType {
+  NONE
+  EXECUTIVE
+  JUDICIAL
+  BANKING
+  PRIVATE_COMPANY
+  STATE_COMPANY
+  GUILD
+  SCIENTIFIC_COUNCIL
+  EKHE_KHURAL
+  // Security forces — constitutional chain of command:
+  MILITARY        // Army / Navy / Air Force → reports to KHURAL (народ) only
+  POLICE          // Police / Special Services → reports to PRESIDENT (Executive)
+  INTELLIGENCE    // Special Services → reports to PRESIDENT (Executive)
+}
+
+enum PowerBranchType {
+  NONE
+  LEGISLATIVE
+  EXECUTIVE
+  JUDICIAL
+  BANKING
+}
+
+enum CreditLineType {
+  NONE
+  FAMILY
+  ORG
+}
+
+enum TierArbanType {
+  NONE
+  FAMILY
+  ORG
+}
+
+model DigitalSeal {
+  id              String    @id @default(uuid())
+  contractAddress String    @unique
+  signer1SeatId   String
+  signer2SeatId   String
+  documentHash    String?
+  title           String?
+  description     String?
+  approvalCount   Int       @default(0)
+  signer1Approved Boolean   @default(false)
+  signer2Approved Boolean   @default(false)
+  executed        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  executedAt      DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@index([signer1SeatId])
+  @@index([signer2SeatId])
+  @@index([executed])
+}
+
+model TempleRecord {
+  id                 String     @id @default(uuid())
+  contractAddress    String // Temple contract address
+  documentHash       String     @unique
+  recordType         RecordType
+  submitterSeatId    String
+  scientificVerified Boolean    @default(false)
+  ethicalVerified    Boolean    @default(false)
+  scientificVerifier String?
+  ethicalVerifier    String?
+  metadata           String? // IPFS CID or description
+  createdAt          DateTime   @default(now())
+  verifiedAt         DateTime?
+
+  @@index([submitterSeatId])
+  @@index([recordType])
+}
+
+model ScientistCouncilMember {
+  id                 String    @id @default(uuid())
+  seatId             String    @unique
+  degreeHash         String
+  nominatedByArbanId String
+  field              String // e.g. "Physics", "Biology"
+  approvals          Int       @default(0)
+  approved           Boolean   @default(false)
+  walletAddress      String
+  createdAt          DateTime  @default(now())
+  approvedAt         DateTime?
+
+  @@index([seatId])
+  @@index([approved])
+}
+
+model WisdomCouncilMember {
+  id                 String    @id @default(uuid())
+  seatId             String    @unique
+  nominatedByArbanId String
+  virtues            String // e.g. "kind, honest, compassionate, wise"
+  approvals          Int       @default(0)
+  approved           Boolean   @default(false)
+  walletAddress      String
+  joinedAt           DateTime  @default(now())
+  approvedAt         DateTime?
+
+  @@index([seatId])
+  @@index([approved])
+}
+
+enum RecordType {
+  LIBRARY
+  ARCHIVE
+  CADASTRE
+}
+
+model Patent {
+  id              String       @id @default(uuid())
+  patentId        Int          @unique
+  submitterSeatId String
+  patentHash      String
+  title           String
+  field           String
+  status          PatentStatus @default(PENDING)
+  submittedAt     DateTime     @default(now())
+  reviewedAt      DateTime?
+  reviewer        String?
+  reviewNotes     String?
+
+  @@index([submitterSeatId])
+  @@index([status])
+}
+
+model Discovery {
+  id              String   @id @default(uuid())
+  discoveryId     Int      @unique
+  scientistSeatId String
+  discoveryHash   String
+  title           String
+  description     String
+  peerReviews     Int      @default(0)
+  archived        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([scientistSeatId])
+  @@index([archived])
+}
+
+model ResearchGrant {
+  id              String      @id @default(uuid())
+  grantId         Int         @unique
+  scientistSeatId String
+  projectTitle    String
+  description     String
+  requestedAmount BigInt
+  approvedAmount  BigInt      @default(0)
+  status          GrantStatus @default(REQUESTED)
+  requestedAt     DateTime    @default(now())
+  approvedAt      DateTime?
+  disbursedAt     DateTime?
+
+  @@index([scientistSeatId])
+  @@index([status])
+}
+
+// Bank Hierarchy Employee Model
+model BankEmployee {
+  id            String       @id @default(uuid())
+  seatId        String       @unique
+  wallet        String       @unique
+  employeeId    BigInt       @unique // On-chain employee ID
+  bankArbanId   BigInt // Arban (10) this employee belongs to
+  bankZunId     BigInt? // Zun (100) parent
+  bankMyanganId BigInt? // Myangan (1000) parent
+  bankTumenId   BigInt? // Tumen (10000) parent
+  performance   Int          @default(75)
+  position      BankPosition @default(EMPLOYEE)
+  isActive      Boolean      @default(true)
+  joinedAt      DateTime     @default(now())
+  lastActiveAt  DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([seatId])
+  @@index([wallet])
+  @@index([bankArbanId])
+}
+
+enum BankPosition {
+  EMPLOYEE
+  TELLER
+  OFFICER
+  BANKER
+  CHAIRMAN
+}
+
+model CouncilOfJusticeMember {
+  id                 String    @id @default(uuid())
+  memberId           Int       @unique
+  seatId             String    @unique
+  legalEducationHash String
+  nominatedByArbanId String
+  specialization     String
+  approvals          Int       @default(0)
+  approved           Boolean   @default(false)
+  walletAddress      String
+  casesHandled       Int       @default(0)
+  createdAt          DateTime  @default(now())
+  approvedAt         DateTime?
+
+  @@index([seatId])
+  @@index([approved])
+}
+
+enum JudicialCaseStatus {
+  FILED
+  ACCEPTED
+  HEARING
+  VERDICT_ISSUED
+  CLOSED
+  APPEALED
+}
+
+enum JudicialVerdictType {
+  GUILTY
+  NOT_GUILTY
+  DISMISSED
+  SETTLED
+}
+
+/// JudicialCase — Sprint 6 Judicial System
+/// FILED → ACCEPTED (judge assigned) → HEARING → VERDICT_ISSUED → CLOSED
+/// Appeal: VERDICT_ISSUED → APPEALED → HEARING at a higher level
+model JudicialCase {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plaintiffId String
+  plaintiff   User   @relation("PlaintiffCases", fields: [plaintiffId], references: [id])
+
+  defendantId      String?
+  defendant        User?   @relation("DefendantCases", fields: [defendantId], references: [id])
+  defendantOrgId   String?
+  defendantOrgName String?
+
+  judgeId String?
+  judge   User?  @relation("JudgeCases", fields: [judgeId], references: [id])
+
+  title       String
+  description String
+  evidence    String?
+
+  level   HierarchyLevel
+  scopeId String?
+
+  status JudicialCaseStatus @default(FILED)
+
+  filedAt    DateTime  @default(now())
+  acceptedAt DateTime?
+  closedAt   DateTime?
+
+  verdicts JudicialVerdict[]
+  hearings JudicialHearing[]
+
+  @@index([status])
+  @@index([plaintiffId])
+  @@index([defendantId])
+  @@index([judgeId])
+  @@index([level])
+}
+
+model JudicialHearing {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  caseId String
+  case   JudicialCase @relation(fields: [caseId], references: [id])
+
+  scheduledAt DateTime
+  notes       String?
+  outcome     String?
+
+  @@index([caseId])
+}
+
+model JudicialVerdict {
+  id       String   @id @default(uuid())
+  issuedAt DateTime @default(now())
+
+  caseId String
+  case   JudicialCase @relation(fields: [caseId], references: [id])
+
+  judgeId String
+  judge   User   @relation("IssuedVerdicts", fields: [judgeId], references: [id])
+
+  verdict     JudicialVerdictType
+  reasoning   String
+  penalty     String?
+  verdictHash String
+
+  @@index([caseId])
+  @@index([judgeId])
+}
+
+model LegalPrecedent {
+  id             String   @id @default(uuid())
+  precedentId    Int      @unique
+  sourceCaseId   Int
+  precedentHash  String
+  summary        String
+  legalPrinciple String
+  judge          String
+  archived       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([sourceCaseId])
+}
+
+enum PatentStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum GrantStatus {
+  REQUESTED
+  APPROVED
+  DISBURSED
+  COMPLETED
+}
+
+enum CaseStatus {
+  PENDING
+  ASSIGNED
+  UNDER_REVIEW
+  RULED
+  APPEALED
+  CLOSED
+}
+
+enum RulingType {
+  CIVIL
+  CRIMINAL
+  ADMINISTRATIVE
+}
+
+// ==================== MPC WALLET SYSTEM ====================
+// Multi-Party Computation wallet for Altan Native Wallet
+
+model MPCWallet {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  // MPC Address
+  address String @unique // Public wallet address
+  chainId Int    @default(31337)
+
+  // Key Share Metadata (NOT actual keys!)
+  deviceShareId  String? // Reference to device share in browser
+  serverShareEnc String? // Encrypted server share (AES-256-GCM)
+  recoveryMethod RecoveryMethod @default(SOCIAL)
+
+  // Status
+  status     MPCWalletStatus @default(PENDING_SETUP)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  lastUsedAt DateTime?
+
+  // Relations
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keyShares    KeyShare[]
+  guardians    RecoveryGuardian[]
+  smartAccount SmartAccount?
+
+  @@index([address])
+  @@index([status])
+}
+
+model KeyShare {
+  id       String @id @default(uuid())
+  walletId String
+
+  // Share metadata (NOT the actual share!)
+  shareType  ShareType // DEVICE, SERVER, RECOVERY
+  shareIndex Int // 0, 1, or 2
+  publicKey  String // Public component only
+
+  // Device info (for device shares)
+  deviceId   String?
+  deviceName String?
+  userAgent  String?
+  lastUsedAt DateTime?
+
+  // Status
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  revokedAt    DateTime?
+  revokeReason String?
+
+  wallet MPCWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@unique([walletId, shareType, shareIndex])
+  @@index([walletId])
+  @@index([deviceId])
+}
+
+model RecoveryGuardian {
+  id       String @id @default(uuid())
+  walletId String
+
+  // Guardian info
+  guardianType   GuardianType // FRIEND, FAMILY, EMAIL, PHONE
+  guardianUserId String? // If another Altan user
+  guardianRef    String // Email, phone, or user ID
+  guardianName   String?
+
+  // Status
+  isConfirmed Boolean   @default(false)
+  confirmedAt DateTime?
+
+  // Recovery state
+  recoveryApproved Boolean   @default(false)
+  approvedAt       DateTime?
+
+  wallet MPCWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@unique([walletId, guardianRef])
+  @@index([walletId])
+  @@index([guardianUserId])
+}
+
+model RecoverySession {
+  id       String @id @default(uuid())
+  walletId String
+
+  // Session state
+  status RecoverySessionStatus @default(PENDING)
+  method RecoveryMethod
+
+  // Verification
+  verificationCode   String?
+  verificationSentTo String?
+  codeExpiresAt      DateTime?
+
+  // Approval tracking (for SOCIAL recovery)
+  requiredApprovals Int @default(2)
+  currentApprovals  Int @default(0)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  completedAt DateTime?
+
+  @@index([walletId])
+  @@index([status])
+}
+
+// ==================== ACCOUNT ABSTRACTION (ERC-4337) ====================
+
+model SmartAccount {
+  id       String @id @default(uuid())
+  walletId String @unique
+
+  // ERC-4337 Smart Account
+  accountAddress String @unique // Smart wallet address (counterfactual)
+  factoryAddress String // Factory that deploys it
+
+  // State
+  nonce        BigInt    @default(0)
+  isDeployed   Boolean   @default(false)
+  deployedAt   DateTime?
+  deployTxHash String?
+
+  // Gas sponsorship tracking
+  totalGasSponsored BigInt   @default(0)
+  dailyGasUsed      BigInt   @default(0)
+  lastGasResetAt    DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  wallet  MPCWallet       @relation(fields: [walletId], references: [id])
+  userOps UserOperation[]
+
+  @@index([accountAddress])
+}
+
+model UserOperation {
+  id        String @id @default(uuid())
+  accountId String
+
+  // ERC-4337 UserOp data
+  userOpHash String  @unique
+  sender     String
+  nonce      BigInt
+  initCode   String? @db.Text
+  callData   String  @db.Text
+
+  // Gas parameters
+  callGasLimit         BigInt
+  verificationGasLimit BigInt
+  preVerificationGas   BigInt
+  maxFeePerGas         BigInt
+  maxPriorityFeePerGas BigInt
+
+  // Paymaster data
+  paymasterAndData String? @db.Text
+
+  // Signature
+  signature String @db.Text
+
+  // Status tracking
+  status      UserOpStatus @default(PENDING)
+  txHash      String?
+  blockNumber BigInt?
+  gasUsed     BigInt?
+
+  // Sponsorship
+  isSponsored     Boolean @default(true)
+  sponsorId       String? // Paymaster ID
+  sponsoredAmount BigInt?
+
+  // Error handling
+  errorMessage String?
+  revertReason String?
+
+  createdAt   DateTime  @default(now())
+  submittedAt DateTime?
+  executedAt  DateTime?
+
+  account SmartAccount @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+  @@index([status])
+  @@index([userOpHash])
+  @@index([sender])
+}
+
+// ==================== MPC ENUMS ====================
+
+enum MPCWalletStatus {
+  PENDING_SETUP // Wallet created, MPC ceremony not complete
+  ACTIVE // Fully functional
+  RECOVERY_MODE // User lost access, recovery in progress
+  FROZEN // Admin frozen
+  MIGRATING // Migrating from old wallet
+}
+
+enum ShareType {
+  DEVICE // Stored in browser/mobile (IndexedDB)
+  SERVER // Stored on backend (encrypted)
+  RECOVERY // Stored with guardians or cloud backup
+}
+
+enum RecoveryMethod {
+  SOCIAL // Friends/family approve recovery
+  EMAIL // Email verification
+  PHONE // SMS verification
+  HARDWARE // Hardware key backup
+  ARBAN // Arban-based recovery (spouse + rep)
+  NONE // No recovery (dangerous)
+}
+
+enum GuardianType {
+  SPOUSE // Spouse from FamilyArban
+  FAMILY // Other family member
+  KHURAL_REP // Khural representative
+  FRIEND // Another Altan user
+  EMAIL // Email recovery
+  PHONE // Phone recovery
+}
+
+enum RecoverySessionStatus {
+  PENDING // Session created, waiting for verification
+  VERIFYING // Code sent, waiting for input
+  APPROVING // Waiting for guardian approvals
+  APPROVED // Ready to restore
+  COMPLETED // Recovery complete
+  EXPIRED // Session timed out
+  CANCELLED // User cancelled
+  FAILED // Recovery failed
+}
+
+enum UserOpStatus {
+  PENDING // Waiting to be signed
+  SIGNED // Signed, waiting for bundler
+  SUBMITTED // Sent to bundler
+  MEMPOOL // In bundler mempool
+  INCLUDED // Included in block
+  CONFIRMED // Confirmed (N blocks)
+  FAILED // Execution failed
+  REVERTED // Transaction reverted
+  DROPPED // Dropped from mempool
+}
+
+// ============================================================================
+// LEGISLATIVE BRANCH (Khural) - Phase 3 Backend Integration
+// ============================================================================
+
+enum ProposalType {
+  ARBAN_BUDGET
+  ARBAN_LEADER
+  ARBAN_PROJECT
+  ZUN_POLICY
+  ZUN_ELDER
+  ZUN_BUDGET
+  MYANGAN_LAW
+  MYANGAN_LEADER
+  TUMEN_NATIONAL
+  TUMEN_CHAIRMAN
+  CONSTITUTIONAL
+}
+
+enum ProposalStatus {
+  ACTIVE
+  PASSED
+  REJECTED
+  EXECUTED
+  CANCELLED
+}
+
+model Proposal {
+  id           String       @id @default(uuid())
+  proposalId   Int          @unique // On-chain proposal ID
+  proposalType ProposalType
+  khuralLevel  KhuralLevel
+  khuralId     Int // Specific Arban/Zun/Myangan/Tumen ID
+
+  title         String
+  description   String
+  executionData String? // Hex encoded calldata
+
+  proposer       String // Wallet address
+  proposerSeatId String? // Link to User
+
+  status       ProposalStatus @default(ACTIVE)
+  votingPeriod Int // Duration in seconds
+  startTime    DateTime       @default(now())
+  endTime      DateTime
+
+  votesFor       Int @default(0)
+  votesAgainst   Int @default(0)
+  quorumRequired Int // Number of votes needed
+
+  finalized   Boolean   @default(false)
+  finalizedAt DateTime?
+  executed    Boolean   @default(false)
+  executedAt  DateTime?
+
+  txHash      String? // Transaction hash
+  blockNumber Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  votes        Vote[]
+  proposerUser User?  @relation("ProposalCreator", fields: [proposerSeatId], references: [seatId])
+
+  @@index([proposalId])
+  @@index([khuralLevel, khuralId])
+  @@index([status])
+  @@index([proposer])
+}
+
+model Vote {
+  id         String   @id @default(uuid())
+  proposalId String
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  voter       String // Wallet address
+  voterSeatId String? // Link to User
+  support     Boolean // true = for, false = against
+  reason      String?
+
+  khuralLevel KhuralLevel
+  votingPower Int         @default(1) // Usually 1, but can be weighted
+
+  txHash      String?
+  blockNumber Int?
+
+  createdAt DateTime @default(now())
+
+  voterUser User? @relation("VoteCaster", fields: [voterSeatId], references: [seatId])
+
+  @@unique([proposalId, voter])
+  @@index([voter])
+  @@index([proposalId])
+}
+
+model KhuralDelegate {
+  id String @id @default(uuid())
+
+  walletAddress String
+  seatId        String? // Link to User
+
+  khuralLevel KhuralLevel
+  khuralId    Int // Specific Arban/Zun/Myangan/Tumen ID
+
+  // Source information
+  sourceLevel KhuralLevel? // Where they were elected from
+  sourceId    Int? // Source Arban/Zun/Myangan ID
+
+  role String // REPRESENTATIVE, DELEGATE, ELDER, LEADER, CHAIRMAN
+
+  electedAt DateTime  @default(now())
+  termEnds  DateTime?
+  active    Boolean   @default(true)
+
+  // Stats
+  proposalsCreated Int @default(0)
+  votescast        Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  delegateUser User? @relation("KhuralDelegate", fields: [seatId], references: [seatId])
+
+  @@unique([walletAddress, khuralLevel, khuralId])
+  @@index([seatId])
+  @@index([khuralLevel, khuralId])
+  @@index([active])
+}
+
+model VotingStatistics {
+  id String @id @default(uuid())
+
+  khuralLevel KhuralLevel
+  period      String // e.g., "2026-01", "2026-Q1"
+
+  totalProposals    Int @default(0)
+  passedProposals   Int @default(0)
+  rejectedProposals Int @default(0)
+  totalVotes        Int @default(0)
+
+  participationRate Float? // Percentage
+  averageQuorum     Float?
+
+  generatedAt DateTime @default(now())
+
+  @@unique([khuralLevel, period])
+  @@index([khuralLevel])
+}
+
+// ============== MARKETPLACE ==============
+
+model MarketplaceListing {
+  id String @id @default(uuid())
+
+  sellerId   String
+  categoryId Int
+
+  listingType MarketplaceListingType
+  status      MarketplaceListingStatus @default(ACTIVE)
+
+  title       String
+  description String
+  images      String[] // Array of image URLs (IPFS or uploaded)
+
+  price String // ALTAN amount as string
+  stock Int    @default(0) // 0 = unlimited for services
+  sold  Int    @default(0)
+
+  // Ratings
+  totalRating Int @default(0)
+  reviewCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchases MarketplacePurchase[]
+  cartItems CartItem[]
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([listingType])
+}
+
+model MarketplacePurchase {
+  id String @id @default(uuid())
+
+  listingId String
+  buyerId   String
+
+  quantity   Int
+  totalPrice String // ALTAN amount
+
+  status          MarketplacePurchaseStatus @default(PENDING)
+  shippingAddress String?
+  trackingInfo    String?
+  txHash          String? // Blockchain transaction hash
+  escrowId        String? // EscrowBank ID
+
+  rating Int? // 1-5 stars
+  review String?
+
+  createdAt   DateTime  @default(now())
+  paidAt      DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  completedAt DateTime?
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id])
+  escrow  EscrowTransaction?
+
+  @@index([listingId])
+  @@index([buyerId])
+  @@index([status])
+}
+
+model Job {
+  id String @id @default(uuid())
+
+  employerId String
+  categoryId Int
+
+  title        String
+  description  String
+  requirements String?
+
+  salary   String // ALTAN amount
+  duration String? // e.g., "3 months", "ongoing"
+  location String?
+  remote   Boolean @default(false)
+
+  status JobPostingStatus @default(OPEN)
+
+  deadline  DateTime? // Application deadline
+  startDate DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  applications JobApplication[]
+
+  @@index([employerId])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model JobApplication {
+  id String @id @default(uuid())
+
+  jobId       String
+  applicantId String
+
+  coverLetter    String
+  resumeUrl      String?
+  expectedSalary String? // If negotiable
+
+  status JobApplicationStatus @default(PENDING)
+
+  appliedAt   DateTime  @default(now())
+  respondedAt DateTime?
+
+  employerNotes String?
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, applicantId]) // One application per job per applicant
+  @@index([jobId])
+  @@index([applicantId])
+  @@index([status])
+}
+
+// ============== ENUMS ==============
+
+enum MarketplaceListingType {
+  PHYSICAL_GOOD
+  DIGITAL_GOOD
+  SERVICE
+  WORK
+}
+
+enum MarketplaceListingStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  SOLD_OUT
+  ARCHIVED
+}
+
+enum MarketplacePurchaseStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+  REFUNDED
+}
+
+enum EscrowStatus {
+  CREATED
+  FUNDED
+  RELEASED
+  REFUNDED
+  DISPUTED
+  RESOLVED
+}
+
+model EscrowTransaction {
+  id String @id @default(uuid())
+
+  // Link to purchase
+  purchaseId String @unique
+  purchase   MarketplacePurchase @relation(fields: [purchaseId], references: [id])
+
+  // Parties
+  buyerId  String
+  buyer    User @relation("EscrowBuyer", fields: [buyerId], references: [id])
+  sellerId String
+  seller   User @relation("EscrowSeller", fields: [sellerId], references: [id])
+
+  // Amounts
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @default("ALTAN")
+
+  // Status
+  status EscrowStatus @default(CREATED)
+
+  // Blockchain
+  contractAddress String?  // Smart contract address (if deployed)
+  lockTxHash      String?  // Transaction hash for locking funds
+  releaseTxHash   String?  // Transaction hash for releasing funds
+
+  // Dispute
+  disputeReason String?
+  disputedAt    DateTime?
+  resolvedAt    DateTime?
+  resolvedBy    String?   // Reviewer/arbitrator
+
+  // Timestamps
+  fundedAt   DateTime?
+  releasedAt DateTime?
+  refundedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+}
+
+model ShoppingCart {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation("UserCart", fields: [userId], references: [id])
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id     String @id @default(uuid())
+  cartId String
+  cart   ShoppingCart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  listingId String
+  listing   MarketplaceListing @relation(fields: [listingId], references: [id])
+
+  quantity Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, listingId])
+  @@index([cartId])
+  @@index([listingId])
+}
+
+enum JobPostingStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  CLOSED
+}
+
+enum JobApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+// Timeline Event Types
+enum EventType {
+  // Identity & Verification
+  ACCOUNT_CREATED
+  IDENTITY_VERIFIED
+  CITIZENSHIP_GRANTED
+
+  // Contracts & Agreements
+  CONTRACT_SIGNED
+  CONTRACT_COMPLETED
+  CONTRACT_CANCELLED
+
+  // Tasks & Work
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  TASK_REVIEWED
+
+  // Banking & Finance
+  LOAN_REQUESTED
+  LOAN_APPROVED
+  LOAN_REPAID
+  PAYMENT_MADE
+
+  // Governance
+  VOTE_CAST
+  PROPOSAL_SUBMITTED
+  LAW_ENACTED
+
+  // Education & Skills
+  COURSE_COMPLETED
+  CERTIFICATION_EARNED
+
+  // Justice
+  CASE_FILED
+  JUDGMENT_RENDERED
+
+  // Quests (NEW)
+  QUEST_CREATED
+  QUEST_ACCEPTED
+  QUEST_SUBMITTED
+  QUEST_COMPLETED
+  QUEST_REJECTED
+
+  // Documents (NEW)
+  DOCUMENT_CREATED
+  DOCUMENT_SIGNED
+  DOCUMENT_FINALIZED
+
+  // Custom
+  CUSTOM_EVENT
+}
+
+// Event Scope (hierarchical levels)
+enum EventScope {
+  INDIVIDUAL
+  FAMILY
+  CLAN
+  ARBAN
+  HORDE
+  NATION
+  CONFEDERATION
+}
+
+// Guild & Organization Rating System
+enum OrganizationType {
+  // Universal (any branch)
+  COMMITTEE        // Temporary working groups
+  AGENCY           // Standing agencies
+  COMMISSION       // Regulatory commissions
+  SERVICE          // Public services
+
+  // Hierarchy levels
+  ARBAN            // 10-person unit
+  HUNDRED          // 100-person unit
+  THOUSAND         // 1000-person unit
+  REPUBLIC         // Republic-level
+  CONFEDERATION    // Confederation-level
+
+  // Executive branch
+  GOVERNMENT       // Administration
+  MINISTRY         // Ministry
+  GUILD            // Professional guild
+  PRIVATE_COMPANY  // Private company
+  CORPORATION      // Corporation
+  MUNICIPAL        // Municipal organization
+
+  // Judicial branch
+  COURT            // Court
+  JUSTICE_MINISTRY // Ministry of Justice
+  ATTORNEY_OFFICE  // Attorney / Prosecutor office
+  LAW_AGENCY       // Law firm / Legal agency
+  NOTARY_AGENCY    // Notary agency
+  BAR_ASSOCIATION  // Bar association
+  ARBITRATION      // Arbitration body
+
+  // Banking branch
+  BANK             // Bank
+  CREDIT_UNION     // Credit union / cooperative
+  PENSION_FUND     // Pension fund
+  INSURANCE_FUND   // Insurance fund
+}
+
+enum BranchType {
+  LEGISLATIVE
+  EXECUTIVE
+  JUSTICE
+  BANKING
+  CIVIL_SERVICE
+}
+
+enum RatingCategory {
+  TRUST
+  QUALITY
+  FINANCIAL
+  LEADERSHIP
+  INNOVATION
+}
+
+// ============== CHANCELLERY & ARCHIVE SYSTEM ==============
+
+enum DocumentType {
+  EMPLOYMENT_CONTRACT
+  SERVICE_CONTRACT
+  PURCHASE_AGREEMENT
+  LEASE_AGREEMENT
+  LOAN_AGREEMENT
+  PARTNERSHIP_AGREEMENT
+  QUEST_ASSIGNMENT
+  WORK_ACCEPTANCE
+  COMPLETION_REPORT
+  PETITION
+  CERTIFICATE
+  ORDER
+  CUSTOM
+}
+
+// NOTE: Old DocumentStatus enum removed - see State Archive system DocumentStatus (line ~615)
+
+enum SignatureRole {
+  CREATOR
+  RECIPIENT
+  WITNESS
+  AUTHORITY
+}
+
+enum QuestStatus {
+  OPEN
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  COMPLETED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+// ============== GUILD & ORGANIZATION RATING SYSTEM ==============
+
+model Organization {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Basic info
+  name        String
+  type        OrganizationType
+  branch      BranchType?
+  powerBranch PowerBranchType? // LEGISLATIVE, EXECUTIVE, JUDICIAL, BANKING
+  description String?
+
+  // Ownership type (affects voting rules)
+  ownershipType OwnershipType @default(PUBLIC)
+
+  // Hierarchical structure
+  parentId String?
+  parent   Organization?  @relation("SubOrganizations", fields: [parentId], references: [id])
+  children Organization[] @relation("SubOrganizations")
+  level    Int // 1=Arban(10), 10=Hundred(100), 100=Thousand(1000), 1000=Tumen(10000)
+
+  // Geographic/ethnic scope
+  republicId String?
+  republic   String? // "Russian", "Buryad-Mongol", etc.
+
+  // Guild-specific education requirements
+  requiresEducation Boolean @default(false)
+  fieldOfStudy      String? // "Engineering", "Medicine", etc.
+
+  // Leadership
+  leaderId String
+  leader   User   @relation("OrganizationLeader", fields: [leaderId], references: [id])
+
+  // Members
+  members    OrganizationMember[]
+  minMembers Int                  @default(10)
+  maxMembers Int                  @default(10)
+
+  // Financial
+  treasury    Decimal @default(0)
+  totalEarned Decimal @default(0)
+
+  // Ratings (1-10 scale)
+  trustScore     Decimal @default(5.0)
+  qualityScore   Decimal @default(5.0)
+  financialScore Decimal @default(5.0)
+  overallRating  Decimal @default(5.0) // Weighted average
+
+  // Statistics
+  contractsCompleted Int     @default(0)
+  contractsActive    Int     @default(0)
+  totalRevenue       Decimal @default(0)
+
+  // Rankings
+  currentRank  Int?
+  previousRank Int?
+
+  // Relations
+  ratings      OrganizationRating[]
+  achievements OrganizationAchievement[]
+  networkNodes ArbanNetwork[]
+  invitations  GuildInvitation[]         @relation("GuildInvitations")
+  elections    Election[]                @relation("Elections")
+  shareholders OrgShareholder[]          @relation("OrgShareholders")
+
+  // Banking — org accounts, wallets, shared vaults
+  bankAccounts OrgBankAccount[]
+
+  // Smart contracts created by this organization
+  orgContracts OrgContract[]
+
+  // Quests/Tasks posted by this organization
+  quests OrgQuest[] @relation("OrgQuests")
+
+  // Work quests — universal work system (citizen + company)
+  workQuests Quest[] @relation("OrgWorkQuests")
+
+  // Tax records for org members
+  taxRecords TaxRecord[] @relation("OrgTaxRecords")
+
+  @@index([type, overallRating])
+  @@index([republicId])
+  @@index([currentRank])
+  @@index([powerBranch])
+}
+
+model OrganizationMember {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  userId String
+  user   User   @relation("OrganizationMemberships", fields: [userId], references: [id])
+
+  // WHO INVITED THIS MEMBER (for trust chain)
+  invitedBy String?
+  inviter   User?   @relation("MemberInvitations", fields: [invitedBy], references: [id])
+
+  role     MemberRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
+  leftAt   DateTime?
+
+  // Performance
+  contributionScore Decimal @default(0)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model OrganizationRating {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  raterId String
+  rater   User   @relation("OrganizationRatingsGiven", fields: [raterId], references: [id])
+
+  category RatingCategory
+  score    Int // 1-10
+  comment  String?
+
+  // Context
+  contractId String? // If rating based on contract
+
+  @@index([organizationId, category])
+  @@index([raterId])
+}
+
+model OrganizationAchievement {
+  id        String   @id @default(uuid())
+  awardedAt DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  title       String
+  description String
+  category    String // "Top 10", "Top 100", "Innovation", etc.
+  rank        Int?
+
+  // Rewards
+  rewardAltan Decimal?
+  badge       String?
+
+  @@index([organizationId])
+}
+
+model ArbanNetwork {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  arbanId String       @unique
+  arban   Organization @relation(fields: [arbanId], references: [id])
+
+  // Network position (for interactive map)
+  positionX Float
+  positionY Float
+  layer     Int // Hierarchical layer
+
+  // Connections
+  connectedTo String[] // Array of connected Arban IDs
+
+  // Visual metadata
+  clusterColor String? // Gold for center, white for outer
+  importance   Int     @default(0)
+
+  @@index([layer])
+}
+
+// Guild & Organization Extension Enums
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ElectionStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum EducationType {
+  DIPLOMA
+  CERTIFICATE
+  RECOMMENDATION
+}
+
+// ============== EDUCATION VERIFICATION ==============
+
+model EducationVerification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation("EducationVerifications", fields: [userId], references: [id])
+
+  // Document details
+  type           EducationType
+  institution    String // University/school name
+  fieldOfStudy   String // "Engineering", "Medicine", etc.
+  graduationYear Int?
+
+  // Verification
+  documentHash String? // Hash of uploaded document
+  documentUrl  String? // IPFS or storage URL
+
+  // Recommendation (if type = RECOMMENDATION)
+  recommenderId String?
+  recommender   User?   @relation("EducationRecommendations", fields: [recommenderId], references: [id])
+
+  // Status
+  isVerified Boolean   @default(false)
+  verifiedBy String? // Admin who verified
+  verifiedAt DateTime?
+
+  // Guilds this qualification allows
+  validForGuilds String[] // Array of guild IDs or categories
+
+  @@index([userId])
+  @@index([isVerified])
+  @@index([fieldOfStudy])
+}
+
+// ============== GUILD INVITATIONS ==============
+
+model GuildInvitation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  guildId String
+  guild   Organization @relation("GuildInvitations", fields: [guildId], references: [id])
+
+  inviterId String
+  inviter   User   @relation("InvitationsSent", fields: [inviterId], references: [id])
+
+  inviteeId String
+  invitee   User   @relation("InvitationsReceived", fields: [inviteeId], references: [id])
+
+  status InvitationStatus @default(PENDING)
+
+  // Responsibility chain
+  message String? // Why inviting this person
+
+  acceptedAt DateTime?
+  rejectedAt DateTime?
+  expiredAt  DateTime?
+
+  @@unique([guildId, inviteeId])
+  @@index([inviterId])
+  @@index([inviteeId])
+  @@index([guildId, status])
+}
+
+// ============== ELECTION SYSTEM ==============
+
+model Election {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation("Elections", fields: [organizationId], references: [id])
+
+  // Election details
+  startDate  DateTime
+  endDate    DateTime
+  status     ElectionStatus @default(UPCOMING)
+  termMonths Int            @default(12) // Term length (visible to voters)
+  isAnonymous Boolean       @default(true) // Secret ballot
+
+  // Candidates (leaders of child organizations)
+  candidates ElectionCandidate[]
+
+  // Winner
+  winnerId    String?
+  winner      User?   @relation("ElectionsWon", fields: [winnerId], references: [id])
+  winnerVotes Int?
+
+  totalVotes  Int      @default(0)
+  turnoutRate Decimal? // Percentage
+
+  // ── CRYPTOGRAPHIC RESULT CERTIFICATION ("The vote was counted correctly") ──
+  // resultHash is computed atomically when the winner is declared.
+  // Any post-hoc change to winnerId, winnerVotes or totalVotes breaks this hash.
+  // sha256(electionId + winnerId + winnerVotes + totalVotes + turnoutRate + certifiedAt.toISO())
+  resultHash   String?   // Certificate of election result integrity
+  certifiedAt  DateTime? // When result was certified (== completedAt)
+  certTxHash   String?   // Optional on-chain anchor (published to StateAnchor contract)
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([startDate])
+}
+
+model ElectionCandidate {
+  id String @id @default(uuid())
+
+  electionId String
+  election   Election @relation(fields: [electionId], references: [id])
+
+  candidateId String
+  candidate   User   @relation("ElectionCandidacies", fields: [candidateId], references: [id])
+
+  // Campaign
+  platform String? // Candidate's platform/promises
+  votes    Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([electionId, candidateId])
+  @@index([electionId])
+  @@index([candidateId])
+}
+
+// ============== UPDATE ORGANIZATION MEMBER ==============
+// Add invitedBy field tracking (will update in separate step)
+
+// ============== TRANSPARENCY & ACCOUNTABILITY SYSTEM ==============
+// GOST-standardized activity logging with minute-level precision
+
+// Universal Activity Entry - logged at minute precision for all 4 branches
+model ActivityEntry {
+  id String @id @default(uuid())
+
+  // GOST Standard Fields (Стандарт ГОСТ от Канцелярии)
+  actionName        String // Название действия
+  actionDescription String @db.Text // Описание
+  actionParameters  Json // Параметры (flexible structure)
+
+  // Timing (down to the minute)
+  performedAt     DateTime @default(now()) @db.Timestamptz(0) // Minute precision
+  durationMinutes Int? // How long action took
+
+  // Actor
+  performedByUserId String
+  performedBy       User   @relation("UserActivities", fields: [performedByUserId], references: [id], onDelete: Cascade)
+
+  // Organizational Context
+  orgArbanId     String?
+  orgArban       OrganizationalArban? @relation("OrgActivities", fields: [orgArbanId], references: [id], onDelete: SetNull)
+  hierarchyLevel HierarchyLevel? // 1, 10, 100, 1000, 10000, REPUBLIC, CONFEDERATION
+
+  // Power Branch
+  powerBranch PowerBranchType // LEGISLATIVE, EXECUTIVE, JUDICIAL, BANKING
+
+  // Template reference
+  templateId String?
+  template   ActivityTemplate? @relation("TemplateActivities", fields: [templateId], references: [id], onDelete: SetNull)
+
+  // Blockchain integration
+  txHash          String?
+  blockNumber     BigInt?
+  contractAddress String?
+
+  // Aggregation
+  reportId String?
+  report   BranchActivityReport? @relation("ReportActivities", fields: [reportId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([performedAt])
+  @@index([powerBranch])
+  @@index([hierarchyLevel])
+  @@index([orgArbanId])
+  @@index([performedByUserId])
+  @@index([templateId])
+  @@index([reportId])
+}
+
+// GOST-standardized templates (from Chancellery)
+model ActivityTemplate {
+  id          String          @id @default(uuid())
+  code        String          @unique // e.g., "GOST-ORG-001", "GOST-LEG-002"
+  name        String // Template name
+  description String          @db.Text
+  powerBranch PowerBranchType
+
+  // Template parameters schema (JSON Schema)
+  parametersSchema Json // Defines required/optional fields
+
+  // Template content
+  actionNameTemplate  String // Template for action name
+  descriptionTemplate String @db.Text // Template for description
+
+  // Hierarchy applicability
+  applicableLevels HierarchyLevel[] // Which levels can use this template
+
+  // Versioning
+  version  String  @default("1.0")
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activities ActivityEntry[] @relation("TemplateActivities")
+
+  @@index([code])
+  @@index([powerBranch])
+  @@index([isActive])
+}
+
+// Aggregated reports (hourly, daily, weekly summaries)
+model BranchActivityReport {
+  id             String          @id @default(uuid())
+  powerBranch    PowerBranchType
+  hierarchyLevel HierarchyLevel?
+
+  // Time period
+  periodStart DateTime         @db.Timestamptz(0)
+  periodEnd   DateTime         @db.Timestamptz(0)
+  periodType  ReportPeriodType // REALTIME, HOURLY, DAILY, WEEKLY, MONTHLY
+
+  // Summary
+  title           String
+  summary         String @db.Text // Auto-generated summary
+  totalActivities Int    @default(0)
+
+  // Organizational context
+  orgArbanId String?
+  orgArban   OrganizationalArban? @relation("OrgReports", fields: [orgArbanId], references: [id], onDelete: SetNull)
+
+  // Linked activities
+  activities ActivityEntry[] @relation("ReportActivities")
+
+  // Metadata
+  metadata Json?
+  isPublic Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([powerBranch])
+  @@index([hierarchyLevel])
+  @@index([periodStart])
+  @@index([periodType])
+  @@index([orgArbanId])
+  @@index([isPublic])
+}
+
+// Hierarchy levels in organizational system
+enum HierarchyLevel {
+  LEVEL_1 // Individual/Family
+  LEVEL_10 // Arban
+  LEVEL_100 // Zun
+  LEVEL_1000 // Myangan
+  LEVEL_10000 // Tumen
+  REPUBLIC // Republican Khural
+  CONFEDERATION // Confederative Khural
+}
+
+// Report period types for aggregation
+enum ReportPeriodType {
+  REALTIME // Live activity feed
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+// ============== MIGRATION SERVICE (Passport Office) ==============
+
+enum PassportType {
+  STANDARD
+  DIPLOMATIC
+  SERVICE
+}
+
+enum PassportApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ISSUED
+}
+
+enum PassportDocumentType {
+  PHOTO
+  SIGNATURE
+  BIRTH_CERTIFICATE
+  OTHER
+}
+
+model PassportApplication {
+  id String @id @default(uuid())
+
+  applicantId String
+  applicant   User   @relation("PassportApplicant", fields: [applicantId], references: [id])
+
+  // Personal data
+  fullName     String
+  dateOfBirth  DateTime
+  placeOfBirth String
+  nationality  String
+  sex          String
+  height       Int?
+  eyeColor     String?
+
+  // Parents
+  fatherName String?
+  motherName String?
+
+  // Address
+  address    String
+  city       String
+  region     String
+  postalCode String?
+
+  // Passport
+  passportType           PassportType @default(STANDARD)
+  previousPassportNumber String?
+
+  // Status
+  status     PassportApplicationStatus @default(DRAFT)
+  submittedAt DateTime?
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  reviewNotes String?
+
+  // Issued passport
+  issuedPassportNumber String? @unique
+  issuedAt             DateTime?
+  expiresAt            DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  documents PassportDocument[]
+
+  @@index([applicantId])
+  @@index([status])
+  @@index([issuedPassportNumber])
+}
+
+model PassportDocument {
+  id String @id @default(uuid())
+
+  applicationId String
+  application   PassportApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  type        PassportDocumentType
+  filename    String
+  mimeType    String
+  size        Int
+  storagePath String
+  isEncrypted Boolean @default(false)
+
+  uploadedAt DateTime @default(now())
+
+  @@index([applicationId])
+}
+
+// ============== ZAGS (Civil Registry Office) ==============
+
+enum CivilStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum MarriageAppStatus {
+  PENDING_CONSENT
+  PENDING_REVIEW
+  APPROVED
+  REGISTERED
+  DIVORCED
+  REJECTED
+  CANCELLED
+}
+
+enum ConsentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DivorceStatus {
+  FILED
+  UNDER_REVIEW
+  FINALIZED
+  REJECTED
+}
+
+enum CeremonyType {
+  CIVIL
+  RELIGIOUS
+  TRADITIONAL
+}
+
+enum PropertyRegime {
+  SEPARATE
+  JOINT
+  CUSTOM
+}
+
+model Marriage {
+  id                String @id @default(uuid())
+  certificateNumber String @unique @default(uuid())
+
+  // Spouses
+  spouse1Id        String
+  spouse1          User   @relation("Spouse1Marriages", fields: [spouse1Id], references: [id])
+  spouse2Id        String
+  spouse2          User   @relation("Spouse2Marriages", fields: [spouse2Id], references: [id])
+  spouse1FullName  String
+  spouse2FullName  String
+  spouse1DateOfBirth DateTime
+  spouse2DateOfBirth DateTime
+
+  // Union type
+  unionType        String   @default("MARRIAGE") // MARRIAGE | CIVIL_UNION
+
+  // Marriage details
+  marriageDate     DateTime
+  ceremonyLocation String?
+  ceremonyType     CeremonyType?
+
+  // Witnesses
+  witness1Name String?
+  witness2Name String?
+  witness1Id   String?
+  witness2Id   String?
+
+  // Property regime
+  propertyRegime         PropertyRegime?
+  propertyAgreement      String?   @db.Text // Pre-nuptial / pre-union contract
+  jointPropertyStartDate DateTime? // Start date for joint property (set on registration)
+
+  // Family bank account (shared finances)
+  familyAccountId String? // Link to OrgBankAccount or BankLink for shared family finances
+
+  // Consent tracking
+  spouse1ConsentGranted Boolean @default(false)
+  spouse2ConsentGranted Boolean @default(false)
+  spouse1ConsentedAt    DateTime?
+  spouse2ConsentedAt    DateTime?
+
+  // Status
+  status MarriageAppStatus @default(PENDING_CONSENT)
+
+  // Registration
+  registeredBy String?
+  registeredAt DateTime?
+
+  isPublic Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  consents MarriageConsent[]
+  divorces ZagsDivorce[]
+  gifts    WeddingGift[]
+
+  @@index([spouse1Id])
+  @@index([spouse2Id])
+  @@index([status])
+  @@index([unionType])
+  @@index([certificateNumber])
+}
+
+/// WeddingGift — record of gifts given at a wedding/civil union ceremony.
+/// Tracks who gave what to whom for transparency and property division.
+model WeddingGift {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  marriageId  String
+  marriage    Marriage @relation(fields: [marriageId], references: [id], onDelete: Cascade)
+
+  giverId     String   // Who gave the gift (userId or external name)
+  giverName   String   // Display name of the giver
+  recipientId String   // Which spouse received (spouse1Id or spouse2Id)
+
+  description    String
+  estimatedValue Decimal? @db.Decimal(18, 6) // Value in ALTAN
+  category       String?  // MONEY, JEWELRY, HOUSEHOLD, REAL_ESTATE, OTHER
+
+  @@index([marriageId])
+  @@index([recipientId])
+}
+
+model MarriageConsent {
+  id String @id @default(uuid())
+
+  marriageId String
+  marriage   Marriage @relation(fields: [marriageId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("MarriageConsents", fields: [userId], references: [id])
+
+  status      ConsentStatus @default(PENDING)
+  consentedAt DateTime?
+  signature   String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([marriageId, userId])
+  @@index([userId])
+}
+
+model ZagsDivorce {
+  id String @id @default(uuid())
+
+  marriageId               String
+  marriage                 Marriage @relation(fields: [marriageId], references: [id])
+  divorceCertificateNumber String   @unique @default(uuid())
+
+  initiatedById String
+  initiatedBy   User   @relation("DivorceInitiator", fields: [initiatedById], references: [id])
+
+  reason           String
+  status           DivorceStatus @default(FILED)
+  propertyDivision String?
+
+  finalizedDate DateTime?
+  finalizedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([marriageId])
+  @@index([initiatedById])
+  @@index([status])
+}
+
+// ============== DEATH REGISTRATION ==============
+
+enum DeathRegistrationStatus {
+  PENDING
+  REGISTERED
+  REJECTED
+}
+
+model DeathRegistration {
+  id                String   @id @default(uuid())
+  certificateNumber String   @unique @default(uuid())
+
+  deceasedId        String
+  deceased          User     @relation("DeathRegistrations", fields: [deceasedId], references: [id])
+  deceasedFullName  String
+  dateOfBirth       DateTime
+  dateOfDeath       DateTime
+  placeOfDeath      String
+  causeOfDeath      String
+
+  // Reporting
+  reportedById      String
+  reportedBy        User     @relation("DeathReporter", fields: [reportedById], references: [id])
+  reportedByName    String
+  relationship      String   // SPOUSE, CHILD, PARENT, SIBLING, DOCTOR, OTHER
+
+  // Medical
+  medicalCertificateNumber String?
+  doctorName               String?
+  hospitalName             String?
+
+  // Burial
+  burialLocation    String?
+  burialDate        DateTime?
+
+  // Status & registration
+  status            DeathRegistrationStatus @default(PENDING)
+  registeredById    String?
+  registeredAt      DateTime?
+  notes             String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([deceasedId])
+  @@index([reportedById])
+  @@index([status])
+}
+
+// ============== NAME CHANGE ==============
+
+enum NameChangeStatus {
+  PENDING
+  APPROVED
+  REGISTERED
+  REJECTED
+}
+
+model NameChange {
+  id                String   @id @default(uuid())
+  certificateNumber String   @unique @default(uuid())
+
+  userId            String
+  user              User     @relation("NameChanges", fields: [userId], references: [id])
+
+  previousName      String
+  newName           String
+  reason            String   // MARRIAGE, DIVORCE, PERSONAL, ADOPTION, OTHER
+
+  // Supporting documents
+  supportingDocumentIds String[]
+
+  // Status & registration
+  status            NameChangeStatus @default(PENDING)
+  approvedById      String?
+  approvedAt        DateTime?
+  effectiveDate     DateTime?
+  notes             String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ============== LAND REGISTRY ==============
+
+enum EncumbranceType {
+  MORTGAGE
+  LIEN
+  EASEMENT
+  RESTRICTION
+  SOVEREIGN  // Only indigenous have right to create sovereign encumbrance
+}
+
+enum EncumbranceStatus {
+  ACTIVE
+  RELEASED
+  EXPIRED
+  FORECLOSED
+}
+
+enum LandType {
+  AGRICULTURAL
+  RESIDENTIAL
+  COMMERCIAL
+  INDUSTRIAL
+  FOREST
+  OTHER_LAND
+}
+
+enum LandPropertyType {
+  RESIDENTIAL_PROP
+  COMMERCIAL_PROP
+  INDUSTRIAL_PROP
+  AGRICULTURAL_PROP
+  MIXED
+  OTHER_PROP
+}
+
+enum LandOwnershipType {
+  FULL
+  SHARED
+}
+
+enum LeaseType {
+  RESIDENTIAL_LEASE
+  COMMERCIAL_LEASE
+  AGRICULTURAL_LEASE
+  INDUSTRIAL_LEASE
+}
+
+enum LandTransactionType {
+  SALE
+  TRANSFER
+  INHERITANCE
+  GIFT
+  MORTGAGE
+  LEASE_TX
+  COURT_ORDER
+  EXPROPRIATION
+  OTHER_TX
+}
+
+enum LandTransactionStatus {
+  INITIATED
+  PAYMENT_PENDING
+  PAYMENT_CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model LandPlot {
+  id              String @id @default(uuid())
+  cadastralNumber String @unique
+
+  // Location
+  region   String
+  district String
+  locality String?
+  address  String?
+
+  // Geographic data
+  latitude   Float
+  longitude  Float
+  boundaries Json?  // GeoJSON polygon
+  area       Float  // square meters
+
+  // Land details
+  landType    LandType
+  soilQuality String?
+  irrigated   Boolean @default(false)
+
+  // Registration
+  registeredById String
+  registeredBy   User     @relation("LandRegistrar", fields: [registeredById], references: [id])
+  registeredAt   DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  properties    LandProperty[]
+  ownerships    LandOwnership[]
+  leases        LandLease[]
+  transactions  LandTransaction[] @relation("LandPlotTransactions")
+  encumbrances  LandEncumbrance[] @relation("PlotEncumbrances")
+
+  @@index([region, district])
+  @@index([landType])
+  @@index([cadastralNumber])
+}
+
+model LandProperty {
+  id String @id @default(uuid())
+
+  landPlotId String
+  landPlot   LandPlot @relation(fields: [landPlotId], references: [id], onDelete: Cascade)
+
+  // Property details
+  propertyType LandPropertyType
+  buildingArea Float?
+  floors       Int?
+  rooms        Int?
+  yearBuilt    Int?
+
+  // Utilities
+  hasElectricity Boolean @default(false)
+  hasWater       Boolean @default(false)
+  hasGas         Boolean @default(false)
+  hasSewage      Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownerships    LandOwnership[]
+  leases        LandLease[]
+  transactions  LandTransaction[] @relation("PropertyTransactions")
+  encumbrances  LandEncumbrance[] @relation("PropertyEncumbrances")
+
+  @@index([landPlotId])
+  @@index([propertyType])
+}
+
+model LandOwnership {
+  id String @id @default(uuid())
+
+  landPlotId String?
+  landPlot   LandPlot? @relation(fields: [landPlotId], references: [id])
+
+  propertyId String?
+  property   LandProperty? @relation(fields: [propertyId], references: [id])
+
+  // Owner
+  ownerId          String
+  owner            User            @relation("LandOwner", fields: [ownerId], references: [id])
+  ownershipType    LandOwnershipType
+  sharePercentage  Int             @default(100) // 0-100
+
+  // Citizenship verification
+  isCitizenVerified Boolean @default(false)
+
+  // Certificate
+  certificateNumber String   @unique @default(uuid())
+  issuedAt          DateTime @default(now())
+  isActive          Boolean  @default(true)
+
+  // Co-owners (if shared)
+  coOwners String[] // userIds
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([landPlotId])
+  @@index([propertyId])
+  @@index([isActive])
+}
+
+model LandLease {
+  id String @id @default(uuid())
+
+  // Target: land plot OR property (at least one required)
+  landPlotId String?
+  landPlot   LandPlot? @relation(fields: [landPlotId], references: [id])
+
+  propertyId String?
+  property   LandProperty? @relation(fields: [propertyId], references: [id])
+
+  // Lessee (must be FOREIGNER — citizens own, not lease)
+  lesseeId          String
+  lessee            User   @relation("LandLessee", fields: [lesseeId], references: [id])
+  lesseeName        String
+  lesseeNationality String
+
+  // Lease terms
+  leaseType  LeaseType
+  startDate  DateTime
+  endDate    DateTime
+  monthlyRent Decimal  @db.Decimal(18, 2)
+  currency    String   @default("ALTAN")
+
+  // Status
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([landPlotId])
+  @@index([propertyId])
+  @@index([lesseeId])
+  @@index([isActive])
+}
+
+model LandTransaction {
+  id String @id @default(uuid())
+
+  type LandTransactionType
+
+  // Property
+  landPlotId String?
+  landPlot   LandPlot? @relation("LandPlotTransactions", fields: [landPlotId], references: [id])
+
+  propertyId String?
+  property   LandProperty? @relation("PropertyTransactions", fields: [propertyId], references: [id])
+
+  // Parties
+  sellerId   String
+  seller     User   @relation("LandSeller", fields: [sellerId], references: [id])
+  buyerId    String
+  buyer      User   @relation("LandBuyer", fields: [buyerId], references: [id])
+  sellerName String
+  buyerName  String
+
+  // Transaction details
+  salePrice Decimal             @db.Decimal(18, 2)
+  currency  String              @default("ALTAN")
+  status    LandTransactionStatus @default(INITIATED)
+
+  // Payment
+  paymentTxHash String?   // blockchain transaction
+  paidAt        DateTime?
+
+  // Completion
+  completedById    String?
+  completedAt      DateTime?
+  blockchainTxHash String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sellerId])
+  @@index([buyerId])
+  @@index([landPlotId])
+  @@index([propertyId])
+  @@index([status])
+}
+
+// Encumbrance (mortgage, lien, easement) — tracks financial obligations on land
+model LandEncumbrance {
+  id String @id @default(uuid())
+
+  // Target: land plot and/or property
+  landPlotId String?
+  landPlot   LandPlot? @relation("PlotEncumbrances", fields: [landPlotId], references: [id])
+
+  propertyId String?
+  property   LandProperty? @relation("PropertyEncumbrances", fields: [propertyId], references: [id])
+
+  // Encumbrance details
+  type        EncumbranceType
+  status      EncumbranceStatus @default(ACTIVE)
+  description String
+
+  // Financial terms (for MORTGAGE/LIEN)
+  amount      Decimal?  @db.Decimal(18, 2)
+  currency    String    @default("ALTAN")
+  interestRate Float?    // annual percentage
+
+  // Holder (lender, institution, or indigenous sovereign)
+  holderId   String
+  holder     User   @relation("EncumbranceHolder", fields: [holderId], references: [id])
+  holderName String
+
+  // Indigenous sovereign rights:
+  // Only INDIGENOUS citizens can create SOVEREIGN type encumbrances
+  // which restrict alienation of ancestral land
+  isIndigenousSovereign Boolean @default(false)
+
+  // Dates
+  startDate DateTime
+  endDate   DateTime?
+  releasedAt DateTime?
+  releasedBy String?
+
+  // Documents
+  documentNumber String? @unique
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([landPlotId])
+  @@index([propertyId])
+  @@index([holderId])
+  @@index([status])
+  @@index([type])
+}
+
+// ==============================================================================
+// HIERARCHICAL GOVERNANCE — Myangan (1000) → Tumen (10000) → Republic → Confederation
+// ==============================================================================
+
+/// Myangan (Тысяча) — 10 Zuns form a Myangan
+/// Military: Battalion | Governance: District council
+model Myangan {
+  id           String  @id @default(uuid())
+  name         String
+  region       String // Geographic region
+  description  String?
+
+  // Leadership
+  leaderSeatId String? // Elected leader's seat
+  leaderUserId String? // Elected leader
+
+  // Parent Tumen
+  tumenId String?
+  tumen   Tumen?  @relation("TumenMyangans", fields: [tumenId], references: [id])
+
+  // Member Zuns (should be 10)
+  memberZuns Zun[] @relation("MyanganZuns")
+
+  // Statistics
+  totalMembers Int @default(0) // Cached count of all members across Zuns
+  totalArbans  Int @default(0) // Cached count of all Arbans
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([region])
+  @@index([tumenId])
+  @@index([leaderSeatId])
+  @@index([isActive])
+}
+
+/// Tumen (Десять тысяч) — 10 Myangans form a Tumen
+/// Military: Division | Governance: Regional parliament
+model Tumen {
+  id           String  @id @default(uuid())
+  name         String
+  region       String // Geographic region
+  description  String?
+
+  // Leadership
+  leaderSeatId String? // Elected chairman's seat
+  leaderUserId String? // Elected chairman
+
+  // Parent Republic
+  republicId String?
+  republic   RepublicanKhural? @relation("RepublicTumens", fields: [republicId], references: [id])
+
+  // Member Myangans (should be 10)
+  memberMyangans Myangan[] @relation("TumenMyangans")
+
+  // Cooperations (Tumens cooperate, never merge)
+  cooperationsAsA TumenCooperation[] @relation("TumenCoopA")
+  cooperationsAsB TumenCooperation[] @relation("TumenCoopB")
+
+  // Parliament votes by this Tumen's leader
+  khuralVotes KhuralVote[] @relation("TumenVotes")
+
+  // Statistics
+  totalMembers Int @default(0)
+  totalArbans  Int @default(0)
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([region])
+  @@index([republicId])
+  @@index([leaderSeatId])
+  @@index([isActive])
+}
+
+/// Republican Khural — Regional parliament (one per republic)
+/// Example: Buryad Republic Khural, Russian Republic Khural, etc.
+model RepublicanKhural {
+  id          String  @id @default(uuid())
+  name        String // "Buryad-Mongol Republican Khural"
+  republicKey String  @unique // "buryad", "russian", "tuvan", etc.
+  description String?
+
+  // Leadership
+  chairmanSeatId String? // Elected chairman
+  chairmanUserId String?
+
+  // Parent Confederation
+  confederationId String?
+  confederation   ConfederativeKhural? @relation("ConfederationRepublics", fields: [confederationId], references: [id])
+
+  // Member Tumens
+  memberTumens Tumen[] @relation("RepublicTumens")
+
+  // Statistics
+  totalMembers Int @default(0)
+  totalTumens  Int @default(0)
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Regional Reputation
+  reputations       RegionalReputation[] @relation("RepublicReputation")
+  reputationActions ReputationAction[]   @relation("RepublicReputationActions")
+  orgQuests         OrgQuest[]           @relation("RepublicOrgQuests")
+  quests            Quest[]              @relation("RepublicQuests")
+  taxRecords        TaxRecord[]          @relation("RepublicTaxRecords")
+
+  @@index([republicKey])
+  @@index([confederationId])
+  @@index([isActive])
+}
+
+/// Confederative Khural — Supreme federal parliament
+/// The highest governing body of the Siberian Confederation
+model ConfederativeKhural {
+  id          String  @id @default(uuid())
+  name        String  @default("Confederative Khural of the Siberian Confederation")
+  description String?
+
+  // Leadership
+  speakerSeatId String? // Elected speaker
+  speakerUserId String?
+
+  // Member Republics
+  memberRepublics RepublicanKhural[] @relation("ConfederationRepublics")
+
+  // Statistics
+  totalMembers   Int @default(0)
+  totalRepublics Int @default(0)
+
+  // Status
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==============================================================================
+// ORGANIZATION PERMISSIONS — Role-based access within any organization
+// ==============================================================================
+
+/// Defines what each MemberRole can do within an organization
+/// Each organization can customize permissions for its roles
+model OrgPermission {
+  id String @id @default(uuid())
+
+  organizationId String // Links to Organization.id
+  role           MemberRole
+
+  // Permissions (each is a boolean flag)
+  canInviteMembers  Boolean @default(false)
+  canRemoveMembers  Boolean @default(false)
+  canCreateTasks    Boolean @default(false)
+  canAssignTasks    Boolean @default(false)
+  canVote           Boolean @default(true) // All members vote by default
+  canCreateProposal Boolean @default(false)
+  canManageTreasury Boolean @default(false)
+  canSignDocuments  Boolean @default(false)
+  canCallElection   Boolean @default(false)
+  canEditOrgInfo    Boolean @default(false)
+  canViewReports    Boolean @default(true) // Transparency by default
+  canCreateReports  Boolean @default(false)
+  canManageRoles    Boolean @default(false)
+  canArchive        Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, role])
+  @@index([organizationId])
+  @@index([role])
+}
+
+// ==============================================================================
+// NOTIFICATION SYSTEM
+// ==============================================================================
+
+enum NotificationType {
+  // Organization
+  ORG_INVITATION
+  ORG_ROLE_CHANGED
+  ORG_MEMBER_JOINED
+  ORG_MEMBER_LEFT
+  ORG_ELECTION_STARTED
+  ORG_ELECTION_RESULT
+
+  // Tasks & Quests
+  TASK_ASSIGNED
+  TASK_COMPLETED
+  QUEST_AVAILABLE
+  QUEST_COMPLETED
+
+  // Governance
+  PROPOSAL_CREATED
+  VOTE_REQUIRED
+  PROPOSAL_PASSED
+  PROPOSAL_REJECTED
+  LAW_ENACTED
+
+  // Justice
+  CASE_FILED
+  CASE_ASSIGNED
+  CASE_RULING
+
+  // Finance
+  PAYMENT_RECEIVED
+  UBI_DISTRIBUTED
+  LOAN_DUE
+  CREDIT_APPROVED
+
+  // Documents
+  DOCUMENT_REQUIRES_SIGNATURE
+  DOCUMENT_SIGNED
+  DOCUMENT_NOTARIZED
+
+  // System
+  VERIFICATION_APPROVED
+  VERIFICATION_REJECTED
+  SYSTEM_ANNOUNCEMENT
+
+  // Messaging
+  NEW_MESSAGE
+  CONVERSATION_INVITE
+
+  // Complaints
+  COMPLAINT_FILED
+  COMPLAINT_RESPONSE
+  COMPLAINT_ESCALATED
+  COMPLAINT_RESOLVED
+
+  // Work Acts
+  WORK_ACT_CREATED
+  WORK_ACT_SIGNED
+  WORK_ACT_COMPLETED
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  // Recipient
+  userId String
+  user   User   @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Content
+  type    NotificationType
+  title   String
+  body    String
+  icon    String? // Emoji or icon identifier
+  linkUrl String? // Deep link to relevant page
+
+  // Context
+  sourceOrgId  String? // Organization that generated this
+  sourceUserId String? // User who triggered this
+  resourceId   String? // ID of related resource (quest, proposal, etc.)
+  resourceType String? // "Quest", "Proposal", "Document", etc.
+
+  // Status
+  isRead       Boolean   @default(false)
+  readAt       DateTime?
+  isDismissed  Boolean   @default(false)
+  dismissedAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@index([sourceOrgId])
+}
+
+// ============================================================
+// UNIVERSAL PRIMITIVES — Cross-Branch Foundation
+// ============================================================
+
+/// ConversationType — what kind of conversation
+enum ConversationType {
+  DIRECT_MESSAGE    // 1:1 between two users
+  GROUP_CHAT        // Multiple participants
+  ORG_CHANNEL       // Bound to an organization
+  CASE_THREAD       // Bound to a court case
+  QUEST_THREAD      // Bound to a quest
+  CONTRACT_THREAD   // Bound to a document contract
+}
+
+/// Conversation — a thread of messages (universal across all branches)
+model Conversation {
+  id   String @id @default(uuid())
+  name String? // Display name (optional for DMs)
+
+  type ConversationType @default(DIRECT_MESSAGE)
+
+  // Optional binding to context (one of these links the chat to something)
+  organizationId String? // Org channel
+  questId        String? // Quest thread
+  contractId     String? // Contract thread
+  caseId         String? // Court case thread
+
+  // Metadata
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([organizationId])
+  @@index([questId])
+  @@index([contractId])
+  @@index([caseId])
+  @@index([type])
+}
+
+/// ConversationParticipant — who is in the conversation
+model ConversationParticipant {
+  id String @id @default(uuid())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("UserConversations", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Participant state
+  role       String   @default("MEMBER") // ADMIN, MEMBER, OBSERVER
+  joinedAt   DateTime @default(now())
+  lastReadAt DateTime? // For unread tracking
+  isMuted    Boolean  @default(false)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+/// Message — a single message in a conversation
+model Message {
+  id String @id @default(uuid())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Content
+  body        String    // Message text (supports markdown)
+  replyToId   String?   // Reply to another message
+  attachments String[]  // URLs to attached files/images
+
+  // Status
+  isEdited  Boolean   @default(false)
+  editedAt  DateTime?
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+// ============================================================
+// COMPLAINTS — Universal Grievance System
+// ============================================================
+
+/// ComplaintStatus — lifecycle of a complaint
+enum ComplaintStatus {
+  FILED          // Submitted by citizen
+  UNDER_REVIEW   // Being reviewed by assigned officer
+  RESPONDED      // Organization/person responded
+  ESCALATED_L2   // Escalated to Zun level
+  ESCALATED_L3   // Escalated to Myangan level
+  ESCALATED_L4   // Escalated to Tumen level
+  ESCALATED_L5   // Escalated to Republic level
+  ESCALATED_L6   // Escalated to Confederation level
+  IN_COURT       // Sent to CouncilOfJustice
+  RESOLVED       // Settled satisfactorily
+  DISMISSED      // Dismissed with reason
+}
+
+/// ComplaintCategory — what the complaint is about
+enum ComplaintCategory {
+  SERVICE_QUALITY     // Bad service from an org
+  CORRUPTION          // Corruption allegation
+  RIGHTS_VIOLATION    // Violation of citizen rights
+  FINANCIAL_DISPUTE   // Money-related dispute
+  WORKPLACE           // Workplace issue within an org
+  GOVERNANCE          // Governance/decision-making dispute
+  OTHER               // Catch-all
+}
+
+/// Complaint — a formal grievance filed by any citizen
+/// MUST be bound to a source document (contract, quest, or work-act)
+model Complaint {
+  id String @id @default(uuid())
+
+  // Who filed it
+  filerId String
+  filer   User   @relation("ComplaintFiler", fields: [filerId], references: [id])
+
+  // Against whom (org or person, or both)
+  targetUserId String?
+  targetUser   User?   @relation("ComplaintTarget", fields: [targetUserId], references: [id])
+  targetOrgId  String? // Organization ID
+
+  // Assigned reviewer (leader at current hierarchy level)
+  assigneeId String?
+  assignee   User?   @relation("ComplaintAssignee", fields: [assigneeId], references: [id])
+
+  // SOURCE BINDING — what this complaint is about (mandatory)
+  sourceType DisputeSourceType          // CONTRACT | QUEST | WORK_ACT
+  sourceId   String                     // ID of the document/quest/work-act
+  disputeId  String?                    // Originating dispute (if came from Dispute)
+  dispute    Dispute? @relation("DisputeComplaints", fields: [disputeId], references: [id])
+
+  // Content
+  category    ComplaintCategory
+  title       String
+  description String             // Detailed description of grievance
+  evidence    String[]           // URLs to evidence files
+
+  // HIERARCHY LEVEL — where this complaint currently sits
+  currentLevel  Int       @default(1) // 1=Arban, 2=Zun, 3=Myangan, 4=Tumen, 5=Republic, 6=Confederation, 7=Court
+  levelEntityId String?             // ID of hierarchy entity at current level
+  deadline      DateTime?           // Auto-escalate if no response by deadline
+
+  // Resolution
+  status       ComplaintStatus @default(FILED)
+  resolution   String?         // Resolution text when resolved
+  escalatedCaseId String?      // Links to CouncilOfJustice case if escalated to court
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+
+  // Relations
+  responses          ComplaintResponse[]
+  escalationHistory  EscalationRecord[]
+
+  @@index([filerId])
+  @@index([targetUserId])
+  @@index([targetOrgId])
+  @@index([sourceType, sourceId])
+  @@index([disputeId])
+  @@index([currentLevel])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+  @@index([deadline])
+}
+
+/// ComplaintResponse — a response to a complaint (by assignee, target, or filer)
+model ComplaintResponse {
+  id String @id @default(uuid())
+
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  responderId String
+  responder   User   @relation("ComplaintResponder", fields: [responderId], references: [id])
+
+  body        String    // Response text
+  attachments String[]  // Supporting documents
+  isOfficial  Boolean   @default(false) // Official response from org
+
+  createdAt DateTime @default(now())
+
+  @@index([complaintId, createdAt])
+  @@index([responderId])
+}
+
+// ============================================================
+// WORK ACTS — Universal Completion Certificate
+// ============================================================
+
+/// WorkActStatus — lifecycle of a work act
+enum WorkActStatus {
+  DRAFTED                 // Created, not yet submitted
+  SUBMITTED               // Submitted for review
+  REVIEWED                // Client reviewed
+  SIGNED_BY_CONTRACTOR    // Contractor signed
+  SIGNED_BY_CLIENT        // Client signed (both parties agreed)
+  COMPLETED               // Payment released, work accepted
+  DISPUTED                // One party disputes
+  CANCELLED               // Cancelled
+}
+
+/// WorkAct — universal act of completed work
+/// Links to Quest, DocumentContract, or standalone.
+/// Payment is released only after both parties sign.
+model WorkAct {
+  id String @id @default(uuid())
+
+  // Parties
+  contractorId String
+  contractor   User   @relation("WorkActContractor", fields: [contractorId], references: [id])
+  clientId     String
+  client       User   @relation("WorkActClient", fields: [clientId], references: [id])
+
+  // Context (optional links to existing systems)
+  questId        String? // Linked quest
+  contractId     String? // Linked document contract
+  organizationId String? // Organization context
+
+  // Content
+  title           String
+  description     String      // What work was done
+  deliverables    String[]    // List of delivered items/results
+  amount          Float       // Payment amount (ALTN)
+  currency        String      @default("ALTN")
+
+  // Signatures
+  contractorSignature String?    // Digital signature
+  contractorSignedAt  DateTime?
+  clientSignature     String?    // Digital signature
+  clientSignedAt      DateTime?
+
+  // Status
+  status     WorkActStatus @default(DRAFTED)
+  disputeReason String?    // If disputed, why
+
+  // Payment
+  paymentTxHash String?    // Blockchain transaction hash when paid
+  paidAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contractorId])
+  @@index([clientId])
+  @@index([questId])
+  @@index([contractId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================================
+// DISPUTES — Pre-complaint negotiation between parties
+// ============================================================
+
+/// DisputeSourceType — what the dispute is about
+enum DisputeSourceType {
+  CONTRACT   // Linked to a DocumentContract
+  QUEST      // Linked to a Quest
+  WORK_ACT   // Linked to a WorkAct
+}
+
+/// DisputeStatus — lifecycle of a dispute (before complaint)
+enum DisputeStatus {
+  OPENED          // Dispute opened, parties notified
+  NEGOTIATING     // Parties actively discussing
+  SETTLED         // Resolved between parties
+  COMPLAINT_FILED // Escalated to formal complaint
+  COURT_FILED     // Escalated directly to court
+}
+
+/// Dispute — pre-complaint negotiation stage
+/// Always bound to a source document. Auto-creates a Conversation for parties.
+model Dispute {
+  id String @id @default(uuid())
+
+  // Parties
+  partyAId String
+  partyA   User   @relation("DisputePartyA", fields: [partyAId], references: [id])
+  partyBId String
+  partyB   User   @relation("DisputePartyB", fields: [partyBId], references: [id])
+
+  // Source binding (mandatory — no disputes from thin air)
+  sourceType DisputeSourceType
+  sourceId   String             // ID of the contract/quest/work-act
+
+  // Content
+  title       String
+  description String
+
+  // Negotiation chat (auto-created)
+  conversationId String?        // Links to Conversation for discussion
+
+  // Status
+  status     DisputeStatus @default(OPENED)
+  resolution String?       // How it was resolved (if settled)
+
+  // Escalation result
+  complaintId    String?   // If escalated to complaint
+  courtCaseId    String?   // If escalated directly to court
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  complaints Complaint[] @relation("DisputeComplaints")
+
+  @@index([partyAId])
+  @@index([partyBId])
+  @@index([sourceType, sourceId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================================
+// ESCALATION RECORDS — audit trail for complaint hierarchy
+// ============================================================
+
+/// EscalationRecord — log of each escalation step
+model EscalationRecord {
+  id String @id @default(uuid())
+
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  // Escalation details
+  fromLevel    Int        // Level before escalation (1-7)
+  toLevel      Int        // Level after escalation (2-7)
+  fromEntityId String?    // ID of entity at previous level
+  toEntityId   String?    // ID of entity at new level
+  reason       String     // Why it was escalated
+
+  // Who triggered it
+  escalatedById String?
+  escalatedBy   User?  @relation("EscalationInitiator", fields: [escalatedById], references: [id])
+  isAutomatic   Boolean @default(false) // True if auto-escalated due to deadline
+
+  createdAt DateTime @default(now())
+
+  @@index([complaintId, createdAt])
+  @@index([escalatedById])
+}
+
+// ============================================================
+// TUMEN COOPERATION — Tumens cooperate, never merge
+// ============================================================
+
+enum CooperationStatus {
+  PROPOSED
+  ACTIVE
+  DISSOLVED
+}
+
+/// TumenCooperation — treaty between two Tumens
+/// Tumens are sovereign entities — they COOPERATE, never merge.
+model TumenCooperation {
+  id String @id @default(uuid())
+
+  tumenAId String
+  tumenA   Tumen @relation("TumenCoopA", fields: [tumenAId], references: [id])
+
+  tumenBId String
+  tumenB   Tumen @relation("TumenCoopB", fields: [tumenBId], references: [id])
+
+  title       String  // Treaty title
+  description String? @db.Text // Full treaty text
+  treaty      String? @db.Text // Formal agreement document
+
+  status   CooperationStatus @default(PROPOSED)
+  signedAt DateTime?
+
+  proposedById String // Who proposed it (Tumen leader)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tumenAId, tumenBId]) // Only one active cooperation per pair
+  @@index([tumenAId])
+  @@index([tumenBId])
+  @@index([status])
+}
+
+// ============================================================
+// KHURAL PARLIAMENT — Sessions and Voting
+// ============================================================
+
+enum ParliamentLevel {
+  REPUBLICAN
+  CONFEDERATIVE
+}
+
+enum KhuralSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum VoteChoice {
+  FOR
+  AGAINST
+  ABSTAIN
+}
+
+/// KhuralSession — a parliament session at Republic or Confederation level
+/// Only Tumen leaders participate and vote.
+model KhuralSession {
+  id String @id @default(uuid())
+
+  level       ParliamentLevel    // REPUBLICAN or CONFEDERATIVE
+  entityId    String             // republicId or confederationId
+  title       String
+  description String?  @db.Text
+  agenda      String?  @db.Text  // Session agenda
+
+  sessionDate DateTime
+  status      KhuralSessionStatus @default(SCHEDULED)
+
+  // Quorum
+  quorumRequired Int @default(0) // Minimum Tumen leaders needed
+  quorumMet      Boolean @default(false)
+
+  // Results
+  resolution String? @db.Text // Final resolution text
+
+  // Who convened the session
+  convenedById String?
+  convenedBy   User? @relation("KhuralConvener", fields: [convenedById], references: [id])
+
+  votes KhuralVote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([level, entityId])
+  @@index([status])
+  @@index([sessionDate])
+  @@index([convenedById])
+}
+
+/// KhuralVote — vote cast by a Tumen leader in a Khural session
+model KhuralVote {
+  id String @id @default(uuid())
+
+  sessionId String
+  session   KhuralSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  voterUserId String
+  voter       User @relation("KhuralVoter", fields: [voterUserId], references: [id])
+
+  tumenId String // Which Tumen they represent
+  tumen   Tumen @relation("TumenVotes", fields: [tumenId], references: [id])
+
+  vote    VoteChoice
+  comment String? // Optional reasoning
+
+  castedAt DateTime @default(now())
+
+  @@unique([sessionId, voterUserId]) // One vote per session per leader
+  @@index([sessionId])
+  @@index([voterUserId])
+  @@index([tumenId])
+}
+
+// ============== ORGANIZATION BANKING ==============
+
+enum OrgAccountType {
+  OPERATING     // Day-to-day operating account
+  TREASURY      // Treasury / reserve
+  SHARED_VAULT  // Shared vault (multi-sig)
+  FAMILY        // Family bank account (joint finances)
+}
+
+enum BankApprovalLevel {
+  MANAGER         // Regular transactions
+  SENIOR_MANAGER  // Large transactions
+  CHAIRMAN        // Critical / large transfers
+}
+
+enum OrgBankTxType {
+  OUTGOING
+  INCOMING
+  INTERNAL
+  TAX_PAYMENT
+}
+
+enum OrgBankTxStatus {
+  PENDING           // Awaiting client signatures
+  CLIENT_APPROVED   // Client signed, awaiting bank approval
+  BANK_APPROVED     // Bank approved, executing
+  COMPLETED         // Executed on-chain
+  REJECTED          // Bank rejected
+  CANCELLED         // Client cancelled
+}
+
+enum OwnershipType {
+  PUBLIC      // All members vote equally
+  MUNICIPAL   // All citizens of republic vote
+  PRIVATE     // Owner decides, or shareholders by ownership %
+}
+
+enum TaxRecordStatus {
+  DRAFT       // Being calculated
+  FILED       // Submitted
+  PAID        // Paid in full
+  OVERDUE     // Past deadline
+  DISPUTED    // Under review
+}
+
+model OrgBankAccount {
+  id String @id @default(uuid())
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  accountName   String  // "Operating Account", "Reserve Fund", etc.
+  accountNumber String  @unique // Generated account number
+  accountType   OrgAccountType @default(OPERATING)
+
+  balance  Decimal @default(0) @db.Decimal(18, 6)
+  currency String  @default("ALTAN")
+
+  // Blockchain wallet
+  walletAddress String? // On-chain wallet for this account
+  walletType    String? // "MPC", "MULTISIG", etc.
+
+  // Client-side authorization control (chosen by org)
+  clientSignaturesRequired Int @default(1) // 1 = single-sig, 2+ = multi-sig
+
+  // Bank-side authorization level required
+  bankApprovalLevel BankApprovalLevel @default(MANAGER)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  transactions OrgBankTransaction[] @relation("AccountTransactions")
+  dailyReports BankDailyReport[]    @relation("AccountDailyReports")
+
+  @@index([organizationId])
+  @@index([accountType])
+  @@index([isActive])
+}
+
+/// OrgBankTransaction — every org account transaction with dual authorization trail.
+/// US banking practice: client initiates + signs → bank officer approves → execute.
+model OrgBankTransaction {
+  id String @id @default(uuid())
+
+  // Account
+  accountId String
+  account   OrgBankAccount @relation("AccountTransactions", fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Transaction details
+  type              OrgBankTxType
+  amount            Decimal @db.Decimal(18, 6)
+  currency          String @default("ALTAN")
+  description       String
+  recipientAccount  String? // Recipient account number (for outgoing)
+
+  // Client authorization (multi-sig)
+  initiatorId       String // Who started the transaction
+  clientSignatures  Json[] // [{userId, signedAt, signature}]
+  clientApproved    Boolean @default(false)
+
+  // Bank authorization (dual control — US practice)
+  bankApproverId    String? // Manager / Senior Manager / Chairman
+  bankApprovalLevel BankApprovalLevel? // What level approved
+  bankApproved      Boolean @default(false)
+  bankApprovalNote  String? // Officer's note
+
+  // Status & execution
+  status      OrgBankTxStatus @default(PENDING)
+  txHash      String?  // Blockchain transaction hash
+
+  // Daily report grouping
+  reportDate  DateTime // Business date for daily batch
+  reportedAt  DateTime? // When included in daily report
+  reportId    String?
+  report      BankDailyReport? @relation("ReportTransactions", fields: [reportId], references: [id])
+
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([accountId])
+  @@index([status])
+  @@index([reportDate])
+  @@index([initiatorId])
+}
+
+/// BankDailyReport — auto-generated daily summary per account.
+/// Banks must send this report every business day.
+model BankDailyReport {
+  id String @id @default(uuid())
+
+  // Account
+  accountId String
+  account   OrgBankAccount @relation("AccountDailyReports", fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Report period
+  reportDate DateTime // The business day
+
+  // Totals
+  openingBalance Decimal @db.Decimal(18, 6)
+  closingBalance Decimal @db.Decimal(18, 6)
+  totalIncoming  Decimal @default(0) @db.Decimal(18, 6)
+  totalOutgoing  Decimal @default(0) @db.Decimal(18, 6)
+  txCount        Int @default(0)
+  pendingCount   Int @default(0)
+
+  // Transactions for this day
+  transactions OrgBankTransaction[] @relation("ReportTransactions")
+
+  // Delivery
+  generatedAt    DateTime @default(now())
+  deliveredAt    DateTime?
+  deliveryMethod String @default("SYSTEM") // SYSTEM, EMAIL, etc.
+
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, reportDate]) // One report per account per day
+  @@index([accountId])
+  @@index([reportDate])
+}
+
+/// OrgShareholder — for PRIVATE ownership orgs.
+/// Vote weight = ownershipPct during elections.
+model OrgShareholder {
+  id String @id @default(uuid())
+
+  organizationId String
+  organization   Organization @relation("OrgShareholders", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User @relation("Shareholdings", fields: [userId], references: [id])
+
+  ownershipPct Decimal @db.Decimal(5, 2) // 0.01 — 100.00
+  voteWeight   Decimal @db.Decimal(10, 4) // Proportional to ownership
+
+  joinedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+/// TaxRecord — annual tax filing.
+/// Tax is paid ONCE A YEAR during tax period, not per transaction.
+model TaxRecord {
+  id String @id @default(uuid())
+
+  // Taxpayer
+  userId String
+  user   User @relation("UserTaxRecords", fields: [userId], references: [id])
+
+  // Territory
+  republicId String
+  republic   RepublicanKhural @relation("RepublicTaxRecords", fields: [republicId], references: [id])
+
+  // Organization context (optional)
+  organizationId String?
+  organization   Organization? @relation("OrgTaxRecords", fields: [organizationId], references: [id])
+
+  // Tax period
+  taxYear        Int      // e.g. 2026
+  taxPeriodStart DateTime
+  taxPeriodEnd   DateTime
+
+  // Income summary
+  totalIncome          Decimal @default(0) @db.Decimal(18, 4)
+  totalQuestsCompleted Int @default(0)
+
+  // Tax calculation (annual: 7% republic + 3% confederation)
+  taxRate              Decimal @default(0.10) @db.Decimal(5, 4)
+  republicTaxRate      Decimal @default(0.07) @db.Decimal(5, 4)
+  confederationTaxRate Decimal @default(0.03) @db.Decimal(5, 4)
+  totalTaxDue          Decimal @default(0) @db.Decimal(18, 4)
+  republicTaxDue       Decimal @default(0) @db.Decimal(18, 4)
+  confederationTaxDue  Decimal @default(0) @db.Decimal(18, 4)
+
+  // Payment
+  totalTaxPaid  Decimal @default(0) @db.Decimal(18, 4)
+  isPaid        Boolean @default(false)
+  paidAt        DateTime?
+  paymentTxHash String?
+
+  status TaxRecordStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, taxYear, republicId]) // One record per user per year per republic
+  @@index([userId])
+  @@index([republicId])
+  @@index([taxYear])
+  @@index([status])
+}
+
+// ============== ORGANIZATION CONTRACTS ==============
+
+model OrgContract {
+  id String @id @default(uuid())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Link to the DocumentContract system
+  documentContractId String?
+  // Not a direct relation to avoid circular deps — resolved via query
+
+  // Contract metadata at org level
+  title       String
+  description String? @db.Text
+  powerBranch PowerBranchType // Which branch context
+
+  // Smart contract on-chain
+  contractAddress String? // Deployed smart contract address
+  txHash          String? // Deployment TX
+  contractABI     Json?   // ABI for calling the contract
+
+  // Parties
+  counterpartyOrgId String? // Other organization (if inter-org contract)
+
+  // Status
+  status    String @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CANCELLED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([powerBranch])
+  @@index([status])
+  @@index([counterpartyOrgId])
+}
+
+// =============================================================================
+// LEGISLATIVE SYSTEM — Proposal lifecycle (DB-based, complements on-chain VotingCenter)
+// =============================================================================
+
+/// LegislativeProposal — full lifecycle of a law proposal.
+/// DRAFT → SUBMITTED → DEBATE → VOTING → PASSED → SIGNED → ARCHIVED | REJECTED
+model LegislativeProposal {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Author
+  authorId String
+  author   User   @relation("ProposalAuthor", fields: [authorId], references: [id])
+
+  // Khural scope
+  khuralLevel String  // ARBAN, ZUN, MYANGAN, TUMEN, REPUBLICAN, CONFEDERATIVE
+  entityId    String  // ID of the KhuralGroup / session entity
+
+  // Content
+  title       String
+  description String   @db.Text
+  fullText    String   @db.Text   // Full law text
+  category    String   // ECONOMIC, SOCIAL, GOVERNANCE, JUDICIAL, MILITARY, CULTURAL
+
+  // Lifecycle
+  status      String   @default("DRAFT")
+  // DRAFT → SUBMITTED → DEBATE → VOTING → PASSED → SIGNED → ARCHIVED | REJECTED
+
+  // Voting results (cached from votes relation)
+  votesFor     Int @default(0)
+  votesAgainst Int @default(0)
+  votesAbstain Int @default(0)
+  quorumMet    Boolean @default(false)
+
+  // Signing
+  signedAt     DateTime?
+  signedById   String?
+  signedBy     User?    @relation("ProposalSigner", fields: [signedById], references: [id])
+  documentId   String?  // Link to DocumentContract in Archive
+
+  // ── CRYPTOGRAPHIC CONTENT LOCK ("History cannot be rewritten") ──
+  // contentHash is computed at signLaw() and NEVER changes after that.
+  // If fullText or title is modified after signing → hash mismatch detected automatically.
+  contentHash      String?   // sha256(title + "\n" + fullText) — locked on signing
+  contentLockedAt  DateTime? // When the hash was locked (== signedAt)
+
+  // Blockchain (optional — links to on-chain VotingCenter proposal)
+  blockchainProposalId Int?
+  blockchainTxHash     String?
+
+  // Relations
+  votes   ProposalVote[]
+  debates ProposalDebate[]
+
+  @@index([status, khuralLevel])
+  @@index([authorId])
+  @@index([entityId])
+}
+
+/// ProposalVote — individual vote on a legislative proposal.
+/// 
+/// DETERMINISM: Each vote is cryptographically unique.
+/// nullifier = sha256(seatId | proposalId | "vote") — proves voter voted WITHOUT revealing their choice.
+/// commitmentHash = sha256(seatId | proposalId | vote | timestamp) — immutable proof of the vote itself.
+/// If the same voter votes again → nullifier collision → BadRequestException.
+model ProposalVote {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  proposalId String
+  proposal   LegislativeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  voterId String
+  voter   User   @relation("ProposalVoter", fields: [voterId], references: [id])
+
+  vote    String  // FOR, AGAINST, ABSTAIN
+  comment String?
+
+  // ── CRYPTOGRAPHIC INTEGRITY (History cannot be rewritten) ──
+  // nullifier: sha256(seatId + proposalId) — unique proof a citizen voted, cannot vote twice
+  nullifier      String  @unique  // Collision = attempted double-vote
+  // commitmentHash: sha256(seatId + proposalId + vote + createdAt.toISO()) — immutable vote record
+  commitmentHash String           // Tamper detection — if vote changes, hash breaks
+
+  @@unique([proposalId, voterId])
+  @@index([proposalId])
+  @@index([nullifier])
+}
+
+/// ProposalDebate — debate entry (speech) on a legislative proposal. Supports threads.
+model ProposalDebate {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  proposalId String
+  proposal   LegislativeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  speakerId String
+  speaker   User   @relation("ProposalSpeaker", fields: [speakerId], references: [id])
+
+  content   String @db.Text
+  replyToId String? // Thread replies to another debate entry
+
+  @@index([proposalId, createdAt])
+}
+
+// =============================================================================
+// JUDICIAL SYSTEM — Judge election / nomination
+// =============================================================================
+
+/// JudgeNomination — tracks judge election from Ministry of Justice leaders,
+/// with Khural approval.
+model JudgeNomination {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // The candidate
+  candidateId String
+  candidate   User   @relation("JudgeCandidate", fields: [candidateId], references: [id])
+
+  // The nominator (Ministry of Justice leader)
+  nominatorId String
+  nominator   User   @relation("JudgeNominator", fields: [nominatorId], references: [id])
+
+  // Khural level and entity for approval
+  khuralLevel String  // REPUBLICAN, CONFEDERATIVE
+  entityId    String  // KhuralGroup / session ID
+
+  // Status: NOMINATED → UNDER_REVIEW → APPROVED | REJECTED
+  status String @default("NOMINATED")
+
+  // Details
+  specialization String?  // Criminal, Civil, Constitutional, etc.
+  qualifications String?  @db.Text
+  notes          String?  @db.Text
+
+  // Approval
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?    @relation("JudgeApprover", fields: [approvedById], references: [id])
+
+  @@index([candidateId])
+  @@index([status, khuralLevel])
+}
+
+// ============ News & Media ============
+
+model NewsArticle {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime @default(now())
+
+  // Author
+  authorId String
+  author   User   @relation("NewsAuthor", fields: [authorId], references: [id])
+
+  // Content
+  title    String
+  content  String @db.Text
+  summary  String @db.Text
+  category String // Politics, Economy, Culture, Sports, Judicial, ZAGS
+  tags     String[]
+  imageUrl String?
+
+  // Metadata
+  status    String  @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  isOfficial Boolean @default(false) // Official state announcement
+  isPinned  Boolean @default(false)
+  viewCount Int     @default(0)
+
+  @@index([authorId])
+  @@index([category, status])
+  @@index([isOfficial, status])
+  @@index([publishedAt])
+}
+
+// ============ Governance: State Land Fund ============
+// Земельный фонд — все земли принадлежат коренному народу.
+// Прибыль с аренды поступает в фонд. Голосуют только коренные.
+
+model StateLandFund {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String   @default("Государственный Земельный Фонд")
+  totalLand   Int      @default(0) // Total land plots in the fund
+  totalIncome Decimal  @default(0) @db.Decimal(18, 2) // Accumulated rent income
+  currency    String   @default("ALTAN")
+
+  // Fund charter rules (JSON for flexibility)
+  charter     Json?    // Distribution rules, voting quorum, etc.
+
+  fundTransactions StateLandFundTransaction[]
+}
+
+model StateLandFundTransaction {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  fundId    String
+  fund      StateLandFund @relation(fields: [fundId], references: [id])
+
+  type      String   // RENT_INCOME, DISTRIBUTION, REVERSION (land returned)
+  amount    Decimal  @db.Decimal(18, 2)
+  landPlotId String? // Related land plot if applicable
+  note      String?
+
+  @@index([fundId])
+  @@index([type])
+}
+
+// ============ Exclusive Right Transfers (Audit Trail) ============
+// Журнал передачи исключительного земельного права.
+// Право передаётся от отца к сыну. Если нет сына — возврат в фонд.
+
+model ExclusiveRightTransfer {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+
+  fromUserId String?  // null if granted by system/fund
+  toUserId   String?  // null if reverted to fund
+  type       String   // INHERITANCE (father→son), INITIAL_GRANT, REVERSION_TO_FUND, REVOCATION
+  reason     String?  // "No male heir", "Death of last male holder", etc.
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([type])
+}
+
+// ============ Citizenship Admission ============
+// Процедура принятия граждан: коренные голосуют за принятие некоренных.
+
+model CitizenshipAdmission {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applicantId String // User applying for citizenship
+  status      String @default("PENDING") // PENDING, APPROVED, REJECTED
+  votesFor    Int    @default(0)
+  votesAgainst Int   @default(0)
+  quorum      Int    @default(5) // Minimum votes needed
+  decidedAt   DateTime?
+
+  admissionVotes CitizenshipAdmissionVote[]
+
+  @@index([applicantId])
+  @@index([status])
+}
+
+model CitizenshipAdmissionVote {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  admissionId String
+  admission   CitizenshipAdmission @relation(fields: [admissionId], references: [id])
+  voterId     String // Must be INDIGENOUS citizen
+  vote        String // FOR, AGAINST
+  comment     String?
+
+  @@unique([admissionId, voterId])
+  @@index([admissionId])
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CREATOR MODE — Временное управление ветвями власти
+// ═══════════════════════════════════════════════════════════════════
+
+/// Tracks which government roles the Creator temporarily holds.
+/// Every action taken while in a provisional role is logged in CreatorAuditLog.
+/// When a citizen is appointed, the Creator formally vacates via transferAct.
+model CreatorProvisionalRole {
+  id              String          @id @default(uuid())
+  creatorId       String
+  creator         User            @relation("CreatorProvisionalRoles", fields: [creatorId], references: [id])
+
+  branch          PowerBranchType // Which branch of government
+  roleName        String          // e.g. "PRESIDENT", "SPEAKER", "CHIEF_JUSTICE", "CB_CHAIR"
+  roleDisplayName String?         // Human name set by Creator, e.g. "Министр иностранных дел"
+  orgId           String?         // Specific org being managed (null = entire branch)
+
+  status          ProvisionalStatus @default(ACTIVE)
+  startedAt       DateTime          @default(now())
+  endedAt         DateTime?
+
+  // Transfer of Power ceremony
+  transferredToId String?          // userId of the appointed citizen
+  transferAct     String?          // sha256 hash of signed Transfer Act (Digital Seal)
+  transferNote    String?          // Public statement from Creator on vacating
+
+  auditLogs       CreatorAuditLog[]
+
+  @@index([creatorId, status])
+  @@index([branch, status])
+}
+
+/// Every action the Creator takes while in a provisional role.
+/// These records are IMMUTABLE — never deleted.
+model CreatorAuditLog {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+
+  provisionalRoleId String
+  provisionalRole   CreatorProvisionalRole @relation(fields: [provisionalRoleId], references: [id])
+
+  action        String   // e.g. "APPROVED_MARRIAGE", "SIGNED_LAW", "OPENED_BANK"
+  targetId      String?  // id of the resource acted upon
+  targetType    String?  // "Marriage", "LegislativeProposal", etc.
+  metadata      Json?    // any extra context
+
+  @@index([provisionalRoleId])
+  @@index([createdAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ПУБЛИЧНАЯ ПЛОЩАДЬ — Народные дебаты на каждом уровне иерархии
+// ═══════════════════════════════════════════════════════════════════
+
+/// A debate/petition/proposal in the Public Square at one hierarchy level.
+model PublicSquarePost {
+  id          String          @id @default(uuid())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  authorId    String
+  author      User            @relation("PublicSquarePosts", fields: [authorId], references: [id])
+
+  level       HierarchyLevel  // LEVEL_10=Arban | LEVEL_100=Zun | LEVEL_1000=Myangan | LEVEL_10000=Tumen | REPUBLIC | CONFEDERATION
+  scopeId     String          // id of the specific Arban/Zun/etc.
+  scopeName   String          // denormalized for display
+
+  title       String
+  content     String          @db.Text
+  postType    SquarePostType  // DEBATE | PETITION | PROPOSAL | ANNOUNCEMENT
+
+  status      SquareStatus    @default(OPEN)
+  supportCount Int            @default(0)
+  requiredSupport Int         @default(0) // threshold to escalate
+
+  escalatedTo String?         // id of the parent-level post if escalated
+  escalatedAt DateTime?
+
+  khuralProposalId String?    // if turned into a legislative proposal
+
+  votes       PublicSquareVote[]
+
+  @@index([level, scopeId, status])
+  @@index([authorId])
+}
+
+model PublicSquareVote {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  postId    String
+  post      PublicSquarePost @relation(fields: [postId], references: [id])
+  voterId   String
+  support   Boolean  // true = support, false = oppose
+
+  @@unique([postId, voterId])
+}
+
+enum ProvisionalStatus {
+  ACTIVE       // Creator currently holds this role
+  TRANSFERRED  // Power formally handed to a citizen (Transfer Act signed)
+  DISSOLVED    // Role was abolished
+}
+
+// HierarchyLevel enum already defined at line 3715 — using that one
+
+enum SquarePostType {
+  DEBATE       // Open discussion
+  PETITION     // Requires signatures to escalate
+  PROPOSAL     // Ready-to-submit legislative proposal
+  ANNOUNCEMENT // Read-only from authorities
+}
+
+enum SquareStatus {
+  OPEN        // Accepting votes/comments
+  VOTING      // Formal vote in progress
+  ESCALATED   // Moved to higher level
+  LEGISLATIVE // Submitted to Khural
+  CLOSED      // No longer active
+}
+
+// ==============================================================================
+// CIK — CENTRAL ELECTORAL COMMISSION (Sprint 4)
+// ==============================================================================
+
+/// CIK lifecycle:
+/// 1. PROVISIONAL: Creator-appointed to run the first Khural election
+/// 2. PERMANENT:   Khural-appointed after first seating
+/// Provisional CIK self-destructs (DISSOLVED) once Khural convenes.
+
+model CIK {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  type        String   // "PROVISIONAL" | "PERMANENT"
+  status      String   @default("ACTIVE") // "ACTIVE" | "DISSOLVED"
+
+  appointedById String
+  appointedBy   User     @relation("CIKAppointments", fields: [appointedById], references: [id])
+
+  mandate     String?  // Public mandate statement
+  dissolvedAt DateTime?
+
+  members     CIKMember[]
+  elections   KhuralElection[]
+
+  @@index([type, status])
+}
+
+model CIKMember {
+  id     String @id @default(uuid())
+  cikId  String
+  cik    CIK    @relation(fields: [cikId], references: [id])
+
+  userId String
+  user   User   @relation("CIKMemberships", fields: [userId], references: [id])
+
+  role   String @default("MEMBER") // "CHAIR" | "MEMBER"
+  joinedAt DateTime @default(now())
+
+  @@unique([cikId, userId])
+  @@index([userId])
+}
+
+/// KhuralElection — Khural-specific election managed by CIK
+///
+/// Status flow:
+///   NOMINATION → VOTING → CERTIFIED (or CANCELLED)
+///
+/// Result integrity:
+///   resultHash = sha256(electionId | winner1Id:votes | ... | totalVotes | certifiedAt)
+/// KhuralElection — bottom-up hierarchical election by branch of power
+///
+/// Constitutional mechanic:
+///   Citizens at level N elect from the leaders of level N orgs.
+///   Winners become governing leaders at level N+1.
+///
+///   Ladder:  1 → 10 → 100 → 1000 → 10000 → REPUBLIC → CONFEDERATION
+///   Branches: EXECUTIVE | LEGISLATIVE | JUDICIAL | BANKING (each separate)
+///
+///   Example:
+///     fromLevel=LEVEL_10 toLevel=LEVEL_100 branch=EXECUTIVE scopeId=<zun-id>
+///     → Arban EXECUTIVE leaders run; winner governs Zun EXECUTIVE branch
+///
+/// Status: NOMINATION → VOTING → CERTIFIED (or CANCELLED)
+///
+/// Result integrity:
+///   resultHash = sha256(electionId | winner1Id:votes | ... | totalVotes | certifiedAt)
+model KhuralElection {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  createdById String
+  createdBy   User    @relation("CreatedKhuralElections", fields: [createdById], references: [id])
+
+  cikId       String?
+  cik         CIK?    @relation(fields: [cikId], references: [id])
+
+  // ── Constitutional election hierarchy ─────────────────────────────────
+  // fromLevel: candidates come from leaders elected at this level
+  // toLevel:   winners will govern/represent at this level
+  // branch:    EXECUTIVE | LEGISLATIVE | JUDICIAL | BANKING (separate election per branch)
+  fromLevel   HierarchyLevel  // e.g. LEVEL_10 (Arban leaders are candidates)
+  toLevel     HierarchyLevel  // e.g. LEVEL_100 (winner governs/represents Zun)
+  branch      PowerBranchType // Which branch of government this election fills
+
+  // Geographic scope — the territory this election covers
+  scopeId     String  // ID of the Arban/Zun/Myangan/Tumen/Republic/Confederation entity
+  scopeName   String  // Human-readable: "Зун №7", "Бурят-Монгольская Республика", etc.
+
+  title       String
+  description String?
+
+  seatsCount  Int      @default(1) // How many leaders to elect (usually 1 per branch)
+  status      String   @default("NOMINATION") // NOMINATION | VOTING | CERTIFIED | CANCELLED
+
+  nominationDeadline DateTime
+  votingStart        DateTime
+  votingEnd          DateTime
+
+  totalVotes   Int      @default(0)
+  certifiedAt  DateTime?
+  resultHash   String?  // Cryptographic certification of outcome
+  winnerId     String?  // userId of first-place winner (becomes toLevel branch leader)
+
+  candidates  KhuralCandidate[]
+  ballots     KhuralBallot[]
+
+  @@index([status])
+  @@index([fromLevel, toLevel])
+  @@index([branch])
+  @@index([scopeId])
+  @@index([votingStart])
+}
+
+model KhuralCandidate {
+  id         String @id @default(uuid())
+  createdAt  DateTime @default(now())
+
+  electionId String
+  election   KhuralElection @relation(fields: [electionId], references: [id])
+
+  candidateId String
+  candidate   User   @relation("KhuralCandidacies", fields: [candidateId], references: [id])
+
+  platform   String? // Manifesto / programme
+  voteCount  Int     @default(0)
+
+  @@unique([electionId, candidateId])
+  @@index([electionId])
+  @@index([candidateId])
+}
+
+/// KhuralBallot — one citizen, one vote per election.
+/// merkleLeaf = sha256(electionId | voterId | candidateId | castedAt.toISO())
+/// Ballot counts are verifiable against the election resultHash.
+model KhuralBallot {
+  id         String @id @default(uuid())
+  castedAt   DateTime @default(now())
+
+  electionId  String
+  election    KhuralElection @relation(fields: [electionId], references: [id])
+
+  voterId     String
+  voter       User   @relation("KhuralBallotsCast", fields: [voterId], references: [id])
+
+  candidateId String // userId of chosen candidate
+
+  merkleLeaf  String // sha256 proof
+
+  @@unique([electionId, voterId]) // One vote per citizen per election
+  @@index([electionId])
+  @@index([voterId])
+}
+
