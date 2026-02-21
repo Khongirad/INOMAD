@@ -1,354 +1,303 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import Link from 'next/link';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  ChevronRight,
-  ChevronDown,
-  Users,
-  Shield,
-  Crown,
-  Handshake,
-  ArrowRightLeft,
-  Plus,
-  TreePine,
-  Loader2,
+  Users, Crown, Building2, Vote, Scale, FileText,
+  Megaphone, Zap, Briefcase, ArrowRightLeft, Globe,
+  ChevronRight, Loader2, Activity, Gavel, Shield,
+  TreePine, Star, BarChart3, MapPin,
 } from 'lucide-react';
+import { api } from '@/lib/api/client';
 
-// Level colors
-const LEVEL_COLORS: Record<string, string> = {
-  confederation: 'bg-yellow-500',
-  republic: 'bg-blue-500',
-  tumen: 'bg-purple-500',
-  myangan: 'bg-green-500',
-  zun: 'bg-orange-500',
-  arban: 'bg-red-500',
+// ── Level configuration ───────────────────────────────────────────────────
+
+const LEVELS = [
+  {
+    key: 'arban',  int: 1,    label: 'Арбан',    sub: '10 граждан',      color: 'amber',
+    icon: <Users className="h-5 w-5" />,
+    description: 'Базовая ячейка. Семьи, соседи, малый бизнес. Вы избираете лидера Арбана.',
+  },
+  {
+    key: 'zun',    int: 10,   label: 'Зун',      sub: '100 граждан',     color: 'orange',
+    icon: <Building2 className="h-5 w-5" />,
+    description: 'Округ. 10 Арбанов. Лидеры Арбанов избирают главу Зуна по 4 ветвям.',
+  },
+  {
+    key: 'myangan', int: 100, label: 'Мьянган',  sub: '1 000 граждан',   color: 'blue',
+    icon: <Shield className="h-5 w-5" />,
+    description: 'Район. 10 Зунов. Главы Зунов избирают главу Мьянгана.',
+  },
+  {
+    key: 'tumen',  int: 1000, label: 'Тумэн',    sub: '10 000 граждан',  color: 'purple',
+    icon: <Globe className="h-5 w-5" />,
+    description: 'Город / провинция. 10 Мьянганов. Управляет территориальной автономией.',
+  },
+  {
+    key: 'republic', int: 10000, label: 'Республика', sub: '∞ граждан', color: 'emerald',
+    icon: <Crown className="h-5 w-5" />,
+    description: 'Суверенная республика в составе Конфедерации. Полное самоуправление.',
+  },
+];
+
+const COLOR: Record<string, { accent: string; ring: string; bg: string; badge: string }> = {
+  amber:   { accent: 'text-amber-400',   ring: 'border-amber-500/40',   bg: 'bg-amber-500/10',   badge: 'border-amber-500/30 text-amber-400 bg-amber-500/10'   },
+  orange:  { accent: 'text-orange-400',  ring: 'border-orange-500/40',  bg: 'bg-orange-500/10',  badge: 'border-orange-500/30 text-orange-400 bg-orange-500/10' },
+  blue:    { accent: 'text-blue-400',    ring: 'border-blue-500/40',    bg: 'bg-blue-500/10',    badge: 'border-blue-500/30 text-blue-400 bg-blue-500/10'        },
+  purple:  { accent: 'text-purple-400',  ring: 'border-purple-500/40',  bg: 'bg-purple-500/10',  badge: 'border-purple-500/30 text-purple-400 bg-purple-500/10' },
+  emerald: { accent: 'text-emerald-400', ring: 'border-emerald-500/40', bg: 'bg-emerald-500/10', badge: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' },
 };
 
-const LEVEL_BORDER_COLORS: Record<string, string> = {
-  confederation: 'border-yellow-500',
-  republic: 'border-blue-500',
-  tumen: 'border-purple-500',
-  myangan: 'border-green-500',
-  zun: 'border-orange-500',
-  arban: 'border-red-500',
+// ── Powers per level ──────────────────────────────────────────────────────
+
+const POWERS: Record<string, {
+  governance: { label: string; desc: string; href: string; icon: React.ReactNode }[];
+  market:     { label: string; desc: string; href: string; icon: React.ReactNode }[];
+  judicial:   { label: string; desc: string; href: string; icon: React.ReactNode }[];
+  forum:      { label: string; desc: string; href: string; icon: React.ReactNode }[];
+}> = {
+  arban: {
+    governance: [
+      { label: 'Выборы Арбана',  desc: 'Избрать лидера по каждой ветви власти', href: '/elections/khural', icon: <Vote className="h-4 w-4" /> },
+      { label: 'Дашборд',       desc: 'Состояние государства на уровне Арбана',  href: '/governance',       icon: <Activity className="h-4 w-4" /> },
+    ],
+    market: [
+      { label: 'Задачи',        desc: 'Квесты доступные для гражданина Арбана',  href: '/quests',           icon: <Briefcase className="h-4 w-4" /> },
+      { label: 'Контракты',     desc: 'Заключить договор с соседями',             href: '/chancellery',      icon: <FileText className="h-4 w-4" /> },
+      { label: 'Кооперативы',   desc: 'Создать или вступить в кооператив',       href: '/cooperatives',     icon: <Users className="h-4 w-4" /> },
+    ],
+    judicial: [
+      { label: 'Подать иск',    desc: 'Открыть дело в суде Арбана',              href: '/judicial',         icon: <Gavel className="h-4 w-4" /> },
+      { label: 'Жалобы',        desc: 'Жалоба на нарушения прав',               href: '/complaints',        icon: <Scale className="h-4 w-4" /> },
+    ],
+    forum: [
+      { label: 'Народная Площадь', desc: 'Петиции и дебаты Арбана',             href: '/square',            icon: <Megaphone className="h-4 w-4" /> },
+    ],
+  },
+  zun: {
+    governance: [
+      { label: 'Выборы Зуна',   desc: 'Лидеры Арбанов избирают власть Зуна',    href: '/elections/khural',  icon: <Vote className="h-4 w-4" /> },
+      { label: 'Дашборд',       desc: 'Состояние государства на уровне Зуна',    href: '/governance',        icon: <Activity className="h-4 w-4" /> },
+      { label: 'Парламент',     desc: 'Законопроекты на уровне Зуна',            href: '/parliament',        icon: <FileText className="h-4 w-4" /> },
+    ],
+    market: [
+      { label: 'Биржа',         desc: 'Торговля ALTAN между Арбанами',           href: '/exchange',          icon: <ArrowRightLeft className="h-4 w-4" /> },
+      { label: 'Задачи',        desc: 'Размещение задач для Арбанов',            href: '/quests',            icon: <Briefcase className="h-4 w-4" /> },
+      { label: 'Банкинг',       desc: 'Счёт организации Зуна',                   href: '/org-banking',       icon: <Zap className="h-4 w-4" /> },
+    ],
+    judicial: [
+      { label: 'Суд Зуна',      desc: 'Дела уровня округа',                     href: '/judicial',          icon: <Gavel className="h-4 w-4" /> },
+      { label: 'Споры',         desc: 'Коммерческие и трудовые споры',           href: '/disputes',          icon: <Scale className="h-4 w-4" /> },
+    ],
+    forum: [
+      { label: 'Площадь Зуна',  desc: 'Петиции и дебаты на уровне Зуна',        href: '/square',            icon: <Megaphone className="h-4 w-4" /> },
+    ],
+  },
+  myangan: {
+    governance: [
+      { label: 'Выборы Мьянгана', desc: 'Главы Зунов избирают власть района',   href: '/elections/khural',  icon: <Vote className="h-4 w-4" /> },
+      { label: 'Государство',    desc: 'Полный статус государственного аппарата', href: '/governance',        icon: <Activity className="h-4 w-4" /> },
+      { label: 'Парламент',      desc: 'Законодательные инициативы',              href: '/parliament',        icon: <FileText className="h-4 w-4" /> },
+      { label: 'Территория',     desc: 'Карта и структура Мьянгана',             href: '/territory',         icon: <Globe className="h-4 w-4" /> },
+    ],
+    market: [
+      { label: 'Биржа',          desc: 'ALTAN торговля в масштабе Мьянгана',     href: '/exchange',          icon: <ArrowRightLeft className="h-4 w-4" /> },
+      { label: 'Гос. корпорации', desc: 'Государственные предприятия Мьянгана', href: '/cooperatives',      icon: <Building2 className="h-4 w-4" /> },
+      { label: 'Налоги',         desc: 'Налоговые декларации организаций',        href: '/tax',               icon: <BarChart3 className="h-4 w-4" /> },
+      { label: 'Казначейство',   desc: 'Бюджет и суверенный фонд',               href: '/treasury',          icon: <Zap className="h-4 w-4" /> },
+    ],
+    judicial: [
+      { label: 'Суд Мьянгана',   desc: 'Уголовные и административные дела',      href: '/judicial',          icon: <Gavel className="h-4 w-4" /> },
+      { label: 'Канцелярия',     desc: 'Реестр нотариусов и юристов',            href: '/chancellery',        icon: <FileText className="h-4 w-4" /> },
+    ],
+    forum: [
+      { label: 'Площадь',        desc: 'Петиции и законодательные инициативы',   href: '/square',            icon: <Megaphone className="h-4 w-4" /> },
+      { label: 'Архив',          desc: 'История решений Мьянгана',               href: '/registries/history', icon: <FileText className="h-4 w-4" /> },
+    ],
+  },
+  tumen: {
+    governance: [
+      { label: 'Выборы Тумэна',  desc: 'Главы Мьянганов избирают власть Тумэна', href: '/elections/khural', icon: <Vote className="h-4 w-4" /> },
+      { label: 'Дашборд',        desc: 'Полный государственный дашборд Тумэна',   href: '/governance',        icon: <Activity className="h-4 w-4" /> },
+      { label: 'Государственная карта', desc: 'Структура власти Тумэна',         href: '/state',              icon: <Globe className="h-4 w-4" /> },
+      { label: 'Хурал',          desc: 'Парламент и комитеты Тумэна',            href: '/khural',             icon: <Crown className="h-4 w-4" /> },
+    ],
+    market: [
+      { label: 'Фонд',           desc: 'Суверенный фонд Тумэна',                 href: '/fund',              icon: <Star className="h-4 w-4" /> },
+      { label: 'Казначейство',   desc: 'Бюджет и расходы',                       href: '/treasury',          icon: <Zap className="h-4 w-4" /> },
+      { label: 'Биржа',          desc: 'Торговля ALTAN',                          href: '/exchange',          icon: <ArrowRightLeft className="h-4 w-4" /> },
+      { label: 'Сотрудничество', desc: 'Соглашения между Тумэнами',              href: '/hierarchy',         icon: <Users className="h-4 w-4" /> },
+    ],
+    judicial: [
+      { label: 'Верховный суд',  desc: 'Апелляции и дела Тумэна',               href: '/judicial',          icon: <Gavel className="h-4 w-4" /> },
+      { label: 'Жалобы',         desc: 'Жалобы на уровне Тумэна',               href: '/complaints',         icon: <Scale className="h-4 w-4" /> },
+    ],
+    forum: [
+      { label: 'Народная Площадь', desc: 'Стратегические петиции Тумэна',       href: '/square',            icon: <Megaphone className="h-4 w-4" /> },
+      { label: 'Хроника',        desc: 'История решений и архивы',               href: '/history',           icon: <FileText className="h-4 w-4" /> },
+    ],
+  },
+  republic: {
+    governance: [
+      { label: 'Выборы Республики', desc: 'Главы Тумэнов избирают власть Республики', href: '/elections/khural', icon: <Vote className="h-4 w-4" /> },
+      { label: 'Конституция',    desc: 'Конституционные принципы и ЦИК',         href: '/governance',        icon: <Activity className="h-4 w-4" /> },
+      { label: 'Хурал (верхний)', desc: 'Верховная палата Республики',           href: '/parliament',        icon: <Crown className="h-4 w-4" /> },
+      { label: 'ЦИК',           desc: 'Комиссия по выборам',                     href: '/elections/khural',  icon: <Shield className="h-4 w-4" /> },
+    ],
+    market: [
+      { label: 'Национальный Банк', desc: 'Центральный банк, эмиссия ALTAN',    href: '/org-banking',       icon: <Zap className="h-4 w-4" /> },
+      { label: 'Суверенный Фонд', desc: 'Государственные инвестиции',            href: '/fund',              icon: <Star className="h-4 w-4" /> },
+      { label: 'Казначейство',   desc: 'Государственный бюджет',                 href: '/treasury',          icon: <BarChart3 className="h-4 w-4" /> },
+      { label: 'Гражданство',    desc: 'Реестр граждан Республики',              href: '/citizenship',       icon: <MapPin className="h-4 w-4" /> },
+    ],
+    judicial: [
+      { label: 'Верховный суд',  desc: 'Конституционный суд Республики',         href: '/judicial',          icon: <Gavel className="h-4 w-4" /> },
+      { label: 'Канцелярия',     desc: 'Государственный реестр',                 href: '/chancellery',       icon: <FileText className="h-4 w-4" /> },
+    ],
+    forum: [
+      { label: 'Народная Площадь', desc: 'Конституционные петиции',              href: '/square',            icon: <Megaphone className="h-4 w-4" /> },
+      { label: 'Архив Республики', desc: 'История законодательства',             href: '/history',           icon: <FileText className="h-4 w-4" /> },
+    ],
+  },
 };
 
-const LEVEL_TEXT_COLORS: Record<string, string> = {
-  confederation: 'text-yellow-500',
-  republic: 'text-blue-500',
-  tumen: 'text-purple-500',
-  myangan: 'text-green-500',
-  zun: 'text-orange-500',
-  arban: 'text-red-500',
-};
+// ── Action row ────────────────────────────────────────────────────────────
 
-const LEVEL_LABELS: Record<string, string> = {
-  confederation: 'Confederation',
-  republic: 'Republic',
-  tumen: 'Tumen (10 000)',
-  myangan: 'Myangan (1 000)',
-  zun: 'Zuun (100)',
-  arban: 'Arban (10)',
-};
-
-// Collapsible tree node
-function TreeNode({ level, name, children: childNodes, count, leader, extra }: {
-  level: string;
-  name: string;
-  children?: React.ReactNode;
-  count?: number;
-  leader?: string;
-  extra?: React.ReactNode;
+function ActionRow({ item, color }: {
+  item: { label: string; desc: string; href: string; icon: React.ReactNode };
+  color: { accent: string; bg: string };
 }) {
-  const [open, setOpen] = useState(level === 'confederation' || level === 'republic');
-  const hasChildren = !!childNodes;
+  return (
+    <Link href={item.href}
+      className="flex items-center gap-3 p-3 rounded-xl border border-slate-700/30 hover:border-slate-600/50 bg-slate-800/10 hover:bg-slate-800/30 transition-all group"
+    >
+      <div className={`h-8 w-8 rounded-lg ${color.bg} flex items-center justify-center flex-shrink-0 ${color.accent}`}>
+        {item.icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-white leading-none">{item.label}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+      </div>
+      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-slate-400 flex-shrink-0" />
+    </Link>
+  );
+}
+
+// ── Level panel ───────────────────────────────────────────────────────────
+
+function LevelPanel({ lvl }: { lvl: typeof LEVELS[0] }) {
+  const c  = COLOR[lvl.color];
+  const pw = POWERS[lvl.key];
+
+  const sections = [
+    { title: '🗳 Управление & Выборы', items: pw.governance },
+    { title: '📈 Рынок & Экономика',   items: pw.market     },
+    { title: '⚖ Судебная защита',      items: pw.judicial   },
+    { title: '📣 Народная Площадь',    items: pw.forum      },
+  ];
 
   return (
-    <div className={level === 'confederation' ? '' : 'ml-4'}>
-      <div
-        className={`flex items-center gap-2 p-2 rounded-md ${hasChildren ? 'cursor-pointer' : ''} hover:bg-white/5 border-l-[3px] ${LEVEL_BORDER_COLORS[level] || 'border-gray-500'}`}
-        onClick={() => { if (hasChildren) setOpen(!open); }}
-      >
-        {hasChildren ? (
-          open ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />
-        ) : (
-          <div className="w-4" />
-        )}
-
-        <Badge className={`${LEVEL_COLORS[level] || 'bg-gray-500'} text-black text-[10px] font-bold h-5`}>
-          {LEVEL_LABELS[level] || level}
-        </Badge>
-
-        <span className="text-sm font-semibold flex-1">{name}</span>
-
-        {count !== undefined && (
-          <Badge variant="outline" className="text-[10px] h-5">{count} members</Badge>
-        )}
-
-        {leader && (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Crown className="h-3 w-3 text-yellow-500" />
-            {leader}
-          </span>
-        )}
-
-        {extra}
+    <div className="space-y-6">
+      {/* Level hero */}
+      <div className={`rounded-2xl border ${c.ring} ${c.bg} p-5`}>
+        <div className="flex items-center gap-3">
+          <div className={`h-10 w-10 rounded-xl ${c.bg} flex items-center justify-center ${c.accent} border ${c.ring}`}>
+            {lvl.icon}
+          </div>
+          <div>
+            <h2 className={`text-lg font-bold ${c.accent}`}>{lvl.label}</h2>
+            <p className="text-xs text-slate-400">{lvl.sub}</p>
+          </div>
+        </div>
+        <p className="text-sm text-slate-400 mt-3 leading-relaxed">{lvl.description}</p>
       </div>
 
-      {hasChildren && open && (
-        <div className="ml-2">
-          {childNodes}
+      {/* Sections */}
+      {sections.map(s => (
+        <div key={s.title}>
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">{s.title}</h3>
+          <div className="space-y-2">
+            {s.items.map(item => (
+              <ActionRow key={item.label} item={item} color={c} />
+            ))}
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 
-// Stats card
-function StatCard({ label, value, colorClass }: { label: string; value: number | string; colorClass: string }) {
-  return (
-    <Card className="flex-1 min-w-[140px]">
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
+// ── Main ──────────────────────────────────────────────────────────────────
 
 export default function HierarchyPage() {
-  const [tree, setTree] = useState<any>(null);
-  const [tumens, setTumens] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [coopDialog, setCoopDialog] = useState(false);
-  const [coopForm, setCoopForm] = useState({ targetTumenId: '', title: '', description: '' });
+  const [activeLvl, setActiveLvl] = useState('arban');
+  const [stats, setStats] = useState<{ citizens?: number; orgs?: number; elections?: number } | null>(null);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    api.get<any>('/governance/summary')
+      .then(d => setStats({
+        citizens:  d?.citizenCount,
+        orgs:      d?.orgCount,
+        elections: d?.electionLadder?.length,
+      }))
+      .catch(() => null);
+  }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const [treeRes, tumensRes] = await Promise.all([
-        fetch('/api/hierarchy/tree', { headers }),
-        fetch('/api/hierarchy/tumens', { headers }),
-      ]);
-      if (treeRes.ok) setTree(await treeRes.json());
-      if (tumensRes.ok) setTumens(await tumensRes.json());
-    } catch (err) {
-      console.error('Failed to load hierarchy', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const totalRepublics = tree?.republics?.length || 0;
-  const totalTumens = tumens.length;
-  const totalMyangans = tumens.reduce((a: number, t: any) => a + (t.memberMyangans?.length || 0), 0);
-  const totalCoops = tumens.reduce((a: number, t: any) =>
-    a + (t.cooperationsAsA?.length || 0) + (t.cooperationsAsB?.length || 0), 0
-  ) / 2;
+  const lvl = LEVELS.find(l => l.key === activeLvl) ?? LEVELS[0];
+  const c   = COLOR[lvl.color];
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <TreePine className="h-7 w-7 text-yellow-500" />
-        <div>
-          <h1 className="text-2xl font-bold">Hierarchy / Hierarchy</h1>
-          <p className="text-sm text-muted-foreground">
-            Arban(10) → Zuun(100) → Myangan(1000) → Tumen(10 000) → Republic → Confederation
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+      <div className="max-w-3xl mx-auto px-4 py-8">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <TreePine className="h-6 w-6 text-amber-400" />
+          <div>
+            <h1 className="text-xl font-bold">Панель гражданина по уровням</h1>
+            <p className="text-xs text-slate-400">Арбан → Зун → Мьянган → Тумэн → Республика</p>
+          </div>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="flex gap-3 flex-wrap mb-6">
-        <StatCard label="Republics" value={totalRepublics} colorClass="text-blue-500" />
-        <StatCard label="Tumens" value={totalTumens} colorClass="text-purple-500" />
-        <StatCard label="Myangans" value={totalMyangans} colorClass="text-green-500" />
-        <StatCard label="Cooperations" value={Math.floor(totalCoops)} colorClass="text-orange-500" />
-      </div>
-
-      {loading && (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      )}
-
-      {/* Tabs */}
-      <Tabs defaultValue="tree">
-        <TabsList className="mb-4">
-          <TabsTrigger value="tree">🌳 Hierarchy Tree</TabsTrigger>
-          <TabsTrigger value="cooperation">🤝 Tumen Cooperation</TabsTrigger>
-        </TabsList>
-
-        {/* Tab: Tree */}
-        <TabsContent value="tree">
-          <Card className="p-4">
-            {tree?.confederation && (
-              <TreeNode
-                level="confederation"
-                name={tree.confederation.name || 'Confederation Khural'}
-                count={tree.confederation.totalMembers}
-              >
-                {tree.republics?.map((republic: any) => (
-                  <TreeNode key={republic.id} level="republic" name={republic.name} count={republic.totalMembers}>
-                    {republic.memberTumens?.map((tumen: any) => (
-                      <TreeNode
-                        key={tumen.id}
-                        level="tumen"
-                        name={tumen.name}
-                        count={tumen.totalMembers}
-                        extra={
-                          (tumen.cooperationsAsA?.length > 0 || tumen.cooperationsAsB?.length > 0) && (
-                            <span className="relative inline-flex">
-                              <Handshake className="h-3.5 w-3.5 text-orange-500" />
-                              <span className="absolute -top-1.5 -right-2 bg-orange-500 text-black text-[9px] rounded-full h-3.5 min-w-[14px] flex items-center justify-center font-bold">
-                                {(tumen.cooperationsAsA?.length || 0) + (tumen.cooperationsAsB?.length || 0)}
-                              </span>
-                            </span>
-                          )
-                        }
-                      >
-                        {tumen.memberMyangans?.map((myangan: any) => (
-                          <TreeNode key={myangan.id} level="myangan" name={myangan.name} count={myangan.totalMembers}>
-                            {myangan.memberZuns?.map((zun: any) => (
-                              <TreeNode key={zun.id} level="zun" name={zun.name} count={zun.memberArbans?.length ? zun.memberArbans.length * 10 : 0}>
-                                {zun.memberArbans?.map((arban: any) => (
-                                  <TreeNode key={arban.id} level="arban" name={`Arban #${arban.arbanId}`} count={10} />
-                                ))}
-                              </TreeNode>
-                            ))}
-                          </TreeNode>
-                        ))}
-                      </TreeNode>
-                    ))}
-                  </TreeNode>
-                ))}
-              </TreeNode>
-            )}
-
-            {!tree?.confederation && !loading && (
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-                ℹ️ Hierarchy not yet created. Start by creating Arbans and Zuuns.
+        {/* Nation state stats */}
+        {stats && (
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {[
+              { label: 'Граждан', value: stats.citizens ?? '—' },
+              { label: 'Организаций', value: stats.orgs ?? '—' },
+              { label: 'Активных выборов', value: stats.elections ?? '—' },
+            ].map(s => (
+              <div key={s.label} className="rounded-2xl border border-slate-700/40 bg-slate-800/20 p-4 text-center">
+                <p className="text-xl font-bold text-white">{s.value}</p>
+                <p className="text-[11px] text-slate-500">{s.label}</p>
               </div>
-            )}
-          </Card>
-        </TabsContent>
-
-        {/* Tab: Cooperation */}
-        <TabsContent value="cooperation">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">🤝 Tumen Cooperation</h2>
-            <Button onClick={() => setCoopDialog(true)} className="gap-2 bg-purple-600 hover:bg-purple-700">
-              <Plus className="h-4 w-4" />
-              Propose
-            </Button>
+            ))}
           </div>
+        )}
 
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm mb-4">
-            <strong>Tumens do not merge</strong> — they can only cooperate.
-            Each Tumen remains a sovereign unit with its own leader and governance.
-          </div>
-
-          {tumens.map((tumen: any) => {
-            const allCoops = [
-              ...(tumen.cooperationsAsA || []).map((c: any) => ({ ...c, partner: c.tumenB, direction: 'outgoing' })),
-              ...(tumen.cooperationsAsB || []).map((c: any) => ({ ...c, partner: c.tumenA, direction: 'incoming' })),
-            ];
-            if (allCoops.length === 0) return null;
-
+        {/* Level selector */}
+        <div className="flex gap-1 overflow-x-auto mb-6 pb-1">
+          {LEVELS.map(l => {
+            const lc = COLOR[l.color];
+            const active = activeLvl === l.key;
             return (
-              <Card key={tumen.id} className="mb-3">
-                <CardContent className="pt-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Shield className="h-4 w-4 text-purple-500" />
-                    <span className="font-semibold">{tumen.name}</span>
-                    <Badge variant="outline" className="text-[10px] h-5">{tumen.region}</Badge>
-                  </div>
-
-                  <div className="border-t border-border my-2" />
-
-                  {allCoops.map((coop: any) => (
-                    <div key={coop.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 mb-1">
-                      <ArrowRightLeft className="h-3.5 w-3.5 text-orange-500 shrink-0" />
-                      <span className="text-sm flex-1">↔ {coop.partner?.name || 'Unknown'}</span>
-                      <Badge variant="outline" className="text-[10px] h-[18px]">{coop.title}</Badge>
-                      <Badge className={`text-[10px] h-[18px] ${
-                        coop.status === 'ACTIVE' ? 'bg-green-600' : coop.status === 'PROPOSED' ? 'bg-yellow-600' : 'bg-gray-600'
-                      }`}>{coop.status}</Badge>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+              <button key={l.key} onClick={() => setActiveLvl(l.key)}
+                className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                  active
+                    ? `${lc.badge} border-opacity-100`
+                    : 'text-slate-400 border-transparent hover:border-slate-700/40 hover:text-white'
+                }`}
+              >
+                {l.label}
+              </button>
             );
           })}
+        </div>
 
-          {tumens.every((t: any) => (t.cooperationsAsA?.length || 0) + (t.cooperationsAsB?.length || 0) === 0) && (
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm">
-              ℹ️ No active cooperations between Tumens yet.
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Cooperation Dialog */}
-      <Dialog open={coopDialog} onOpenChange={setCoopDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Propose cooperation</DialogTitle>
-            <DialogDescription>
-              Cooperation is an agreement between two Tumens. Tumens remain independent.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Target Tumen ID</Label>
-              <Input
-                value={coopForm.targetTumenId}
-                onChange={e => setCoopForm({ ...coopForm, targetTumenId: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Agreement Title</Label>
-              <Input
-                value={coopForm.title}
-                onChange={e => setCoopForm({ ...coopForm, title: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <textarea
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[80px]"
-                value={coopForm.description}
-                onChange={e => setCoopForm({ ...coopForm, description: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCoopDialog(false)}>Cancel</Button>
-            <Button className="bg-purple-600 hover:bg-purple-700">Propose</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Active level panel */}
+        <LevelPanel lvl={lvl} />
+      </div>
     </div>
   );
 }
