@@ -64,6 +64,7 @@ import { OrgBankingModule } from './org-banking/org-banking.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { NewsModule } from './news/news.module';
 import { CitizenshipModule } from './citizenship/citizenship.module';
+import { PublicSquareModule } from './public-square/public-square.module';
 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
@@ -137,7 +138,9 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     RealtimeModule,
     NewsModule,
     CitizenshipModule,
+    PublicSquareModule, // Народная площадь — debates & petitions at every hierarchy level
   ],
+
   providers: [
     {
       provide: APP_GUARD,
