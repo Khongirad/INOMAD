@@ -103,7 +103,7 @@ export class QuestService {
           select: { verificationLevel: true },
         });
         
-        const levelOrder = ['UNVERIFIED', 'ARBAD_VERIFIED', 'ZUN_VERIFIED', 'FULLY_VERIFIED'];
+        const levelOrder = ['UNVERIFIED', 'ARBAN_VERIFIED', 'ZUN_VERIFIED', 'FULLY_VERIFIED'];
         const requiredIndex = levelOrder.indexOf(requirements.verificationLevel);
         const currentIndex = levelOrder.indexOf(user?.verificationLevel || 'UNVERIFIED');
         

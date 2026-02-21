@@ -153,7 +153,7 @@ export class DistributionService {
         updateData.firstDistributionAt = new Date();
         break;
 
-      case 'ARBAD_VERIFIED':
+      case 'ARBAN_VERIFIED':
         // Total should be 1,000 ALTAN (give 900 more)
         const targetArbad = 1000;
         amount = targetArbad - Number(distribution.totalReceived);

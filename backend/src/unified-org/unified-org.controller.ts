@@ -183,7 +183,7 @@ export class UnifiedOrgController {
 
   @Post('hierarchy/myangad/:myangadId/assign-zun')
   async assignZunToMyangad(
-    @Param('myangadId') myangadId: string,
+    @Param('myangadId') myanganId: string,
     @Body('zunId') zunId: string,
   ) {
     return this.orgService.assignZunToMyangad(zunId, myangadId);
@@ -197,7 +197,7 @@ export class UnifiedOrgController {
   @Post('hierarchy/tumed/:tumedId/assign-myangad')
   async assignMyangadToTumed(
     @Param('tumedId') tumedId: string,
-    @Body('myangadId') myangadId: string,
+    @Body('myangadId') myanganId: string,
   ) {
     return this.orgService.assignMyangadToTumed(myangadId, tumedId);
   }

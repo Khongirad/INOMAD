@@ -591,7 +591,7 @@ export class UnifiedOrgService {
   /**
    * Assign a Zun to a Myangad
    */
-  async assignZunToMyangad(zunId: string, myangadId: string) {
+  async assignZunToMyangad(zunId: string, myanganId: string) {
     // Check max 10 Zuns per Myangad
     const count = await this.prisma.zun.count({ where: { myangadId } });
     if (count >= 10) {
@@ -621,7 +621,7 @@ export class UnifiedOrgService {
   /**
    * Assign a Myangad to a Tumed
    */
-  async assignMyangadToTumed(myangadId: string, tumedId: string) {
+  async assignMyangadToTumed(myanganId: string, tumedId: string) {
     const count = await this.prisma.myangad.count({ where: { tumedId } });
     if (count >= 10) {
       throw new BadRequestException('Tumed already has 10 Myangads (maximum reached)');
@@ -689,7 +689,7 @@ export class UnifiedOrgService {
       where: { tumedId: null },
     });
     const standaloneZuns = await this.prisma.zun.findMany({
-      where: { myangadId: null },
+      where: { myanganId: null },
     });
 
     return {
