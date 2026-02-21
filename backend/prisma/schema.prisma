@@ -5866,6 +5866,23 @@ model CIKMember {
 ///
 /// Result integrity:
 ///   resultHash = sha256(electionId | winner1Id:votes | ... | totalVotes | certifiedAt)
+/// KhuralElection — bottom-up hierarchical election by branch of power
+///
+/// Constitutional mechanic:
+///   Citizens at level N elect from the leaders of level N orgs.
+///   Winners become governing leaders at level N+1.
+///
+///   Ladder:  1 → 10 → 100 → 1000 → 10000 → REPUBLIC → CONFEDERATION
+///   Branches: EXECUTIVE | LEGISLATIVE | JUDICIAL | BANKING (each separate)
+///
+///   Example:
+///     fromLevel=LEVEL_10 toLevel=LEVEL_100 branch=EXECUTIVE scopeId=<zun-id>
+///     → Arban EXECUTIVE leaders run; winner governs Zun EXECUTIVE branch
+///
+/// Status: NOMINATION → VOTING → CERTIFIED (or CANCELLED)
+///
+/// Result integrity:
+///   resultHash = sha256(electionId | winner1Id:votes | ... | totalVotes | certifiedAt)
 model KhuralElection {
   id          String   @id @default(uuid())
   createdAt   DateTime @default(now())
@@ -5876,13 +5893,22 @@ model KhuralElection {
   cikId       String?
   cik         CIK?    @relation(fields: [cikId], references: [id])
 
-  electionType String // "CONFEDERATION" | "REPUBLICAN" | "TUMEN"
-  scopeId      String  // confederationId / republicId / tumenId
+  // ── Constitutional election hierarchy ─────────────────────────────────
+  // fromLevel: candidates come from leaders elected at this level
+  // toLevel:   winners will govern/represent at this level
+  // branch:    EXECUTIVE | LEGISLATIVE | JUDICIAL | BANKING (separate election per branch)
+  fromLevel   HierarchyLevel  // e.g. LEVEL_10 (Arban leaders are candidates)
+  toLevel     HierarchyLevel  // e.g. LEVEL_100 (winner governs/represents Zun)
+  branch      PowerBranchType // Which branch of government this election fills
+
+  // Geographic scope — the territory this election covers
+  scopeId     String  // ID of the Arban/Zun/Myangan/Tumen/Republic/Confederation entity
+  scopeName   String  // Human-readable: "Зун №7", "Бурят-Монгольская Республика", etc.
 
   title       String
   description String?
 
-  seatsCount  Int      @default(1)
+  seatsCount  Int      @default(1) // How many leaders to elect (usually 1 per branch)
   status      String   @default("NOMINATION") // NOMINATION | VOTING | CERTIFIED | CANCELLED
 
   nominationDeadline DateTime
@@ -5892,13 +5918,15 @@ model KhuralElection {
   totalVotes   Int      @default(0)
   certifiedAt  DateTime?
   resultHash   String?  // Cryptographic certification of outcome
-  winnerId     String?  // First-place candidateId (userId)
+  winnerId     String?  // userId of first-place winner (becomes toLevel branch leader)
 
   candidates  KhuralCandidate[]
   ballots     KhuralBallot[]
 
   @@index([status])
-  @@index([electionType])
+  @@index([fromLevel, toLevel])
+  @@index([branch])
+  @@index([scopeId])
   @@index([votingStart])
 }
 
