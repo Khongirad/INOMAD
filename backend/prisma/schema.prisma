@@ -240,6 +240,10 @@ model User {
   // Notifications
   notifications Notification[] @relation("UserNotifications")
 
+  // Khural Leadership — term-tracked legislative positions
+  chairmanTermHistory  KhuralChairmanTerm[]  @relation("ChairmanTerms")
+  secretaryTermHistory KhuralSecretaryTerm[] @relation("SecretaryTerms")
+
   // Messaging
   conversationParticipants ConversationParticipant[] @relation("UserConversations")
   messagesSent             Message[]                 @relation("MessageSender")
@@ -4564,16 +4568,22 @@ model RepublicanKhural {
   republicKey String  @unique // "buryad", "russian", "tuvan", etc.
   description String?
 
-  // Leadership
-  chairmanSeatId String? // Elected chairman
-  chairmanUserId String?
+  // Leadership — term-limited chairman (max 2 terms × 4 years)
+  chairmanSeatId    String?   // Elected chairman's seat
+  chairmanUserId    String?   // Elected chairman's userId
+  chairmanTermStart DateTime? // Current term start
+  chairmanTermEnd   DateTime? // Current term end (= termStart + 4 years)
+  chairmanTermCount Int       @default(0) // How many terms served (max 2)
 
   // Parent Confederation
   confederationId String?
   confederation   ConfederativeKhural? @relation("ConfederationRepublics", fields: [confederationId], references: [id])
 
-  // Member Tumens
+  // Member Tumeds
   memberTumeds Tumed[] @relation("RepublicTumens")
+
+  // Term history (for 2-term limit enforcement)
+  chairmanHistory KhuralChairmanTerm[] @relation("RepublicChairmen")
 
   // Statistics
   totalMembers Int @default(0)
@@ -4594,6 +4604,7 @@ model RepublicanKhural {
   @@index([republicKey])
   @@index([confederationId])
   @@index([isActive])
+  @@index([chairmanUserId])
 }
 
 /// Confederative Khural — Supreme federal parliament
@@ -4603,9 +4614,18 @@ model ConfederativeKhural {
   name        String  @default("Confederative Khural of the Siberian Confederation")
   description String?
 
-  // Leadership
-  speakerSeatId String? // Elected speaker
+  // Speaker of the house (permanent role, not term-limited)
+  speakerSeatId String?
   speakerUserId String?
+
+  // Rotating Secretary (1 year term, strict rotation — each republic representative only once)
+  secretaryUserId    String?   // Current secretary's userId
+  secretaryRepublicId String? // Which republic they represent
+  secretaryTermStart DateTime? // Current term start
+  secretaryTermEnd   DateTime? // Current term end (= termStart + 1 year)
+
+  // Secretary term history (@@unique ensures no-repeat rotation)
+  secretaryHistory KhuralSecretaryTerm[] @relation("ConfederationSecretaries")
 
   // Member Republics
   memberRepublics RepublicanKhural[] @relation("ConfederationRepublics")
@@ -4618,6 +4638,56 @@ model ConfederativeKhural {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+/// KhuralChairmanTerm — Tracks each term of Republican Khural Chairman
+/// Enforces max 2 terms × 4 years per user per republic
+/// Ограничение: не более 2 сроков по 4 года для одного Председателя
+model KhuralChairmanTerm {
+  id         String           @id @default(uuid())
+  republicId String
+  republic   RepublicanKhural @relation("RepublicChairmen", fields: [republicId], references: [id], onDelete: Cascade)
+
+  userId     String
+  user       User             @relation("ChairmanTerms", fields: [userId], references: [id])
+
+  seatId     String?   // Seat held during this term
+  termNumber Int       // 1 or 2 (max 2)
+  termStart  DateTime
+  termEnd    DateTime? // null if current active term
+  endReason  String?   // "term_expired" | "resigned" | "removed"
+
+  createdAt DateTime @default(now())
+
+  @@index([republicId])
+  @@index([userId])
+  @@index([republicId, userId]) // Fast lookup for term-count check
+}
+
+/// KhuralSecretaryTerm — Tracks each rotation of Confederative Secretary
+/// @@unique enforces STRICT ROTATION: each republic's representative can only serve ONCE
+/// Ограничение: 1 срок 1 год, строгая ротация без повтора
+model KhuralSecretaryTerm {
+  id              String              @id @default(uuid())
+  confederationId String
+  confederation   ConfederativeKhural @relation("ConfederationSecretaries", fields: [confederationId], references: [id], onDelete: Cascade)
+
+  userId     String
+  user       User   @relation("SecretaryTerms", fields: [userId], references: [id])
+
+  republicId String // Which republic they represent
+  termStart  DateTime
+  termEnd    DateTime? // null if current active term
+  endReason  String?   // "term_expired" | "resigned"
+
+  createdAt DateTime @default(now())
+
+  @@unique([confederationId, userId]) // STRICT: each person can only serve once as secretary
+  @@index([confederationId])
+  @@index([userId])
+  @@index([republicId])
 }
 
 // ==============================================================================

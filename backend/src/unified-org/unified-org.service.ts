@@ -513,7 +513,7 @@ export class UnifiedOrgService {
       ...perms,
     }));
 
-    await this.prisma.orgPermission.createMany({ data: permissionData as any });
+    await this.prisma.orgPermission.createMany({ data: permissionData });
   }
 
   /**
@@ -1050,7 +1050,7 @@ export class UnifiedOrgService {
       where: { organizationId_role: { organizationId: orgId, role: member.role } },
     });
 
-    if (!perms || !(perms as any)[permission]) {
+    if (!perms || !perms[permission as keyof typeof perms]) {
       throw new ForbiddenException(`You do not have ${permission} permission (role: ${member.role})`);
     }
   }
@@ -1073,7 +1073,7 @@ export class UnifiedOrgService {
       await this.prisma.notification.create({
         data: {
           userId,
-          type: data.type as any,
+          type: data.type as Prisma.NotificationCreateInput['type'],
           title: data.title,
           body: data.body,
           linkUrl: data.linkUrl,
