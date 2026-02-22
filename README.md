@@ -5,12 +5,12 @@
 [![License](https://img.shields.io/badge/license-proprietary-red)]()
 [![Stage](https://img.shields.io/badge/stage-post--MVP-green)]()
 [![L1](https://img.shields.io/badge/ALTAN%20L1-Cosmos%20SDK-blue)]()
-[![Backend](https://img.shields.io/badge/backend-61%20NestJS%20modules-blueviolet)]()
+[![Backend](https://img.shields.io/badge/backend-63%20NestJS%20modules-blueviolet)]()
 [![Frontend](https://img.shields.io/badge/frontend-Next.js%2016%20+%20Shadcn%20UI-orange)]()
 [![Contracts](https://img.shields.io/badge/contracts-133%20Solidity-yellow)]()
-[![Tests](https://img.shields.io/badge/tests-176%20suites%20·%2095.85%25%20coverage-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-182%20suites%20·%2095.85%25%20coverage-brightgreen)]()
 
-> **Latest Update (Feb 18, 2026):** 95.85% backend test coverage (176 spec files) · 133 smart contracts (39,855 LOC) · Complete Russian→English frontend translation · MUI→Shadcn UI migration · 148 DB models · 61 NestJS modules · 65 frontend pages · Full blockchain architecture · 3 Government Services · Docker + CI/CD
+> **Latest Update (Feb 22, 2026):** 95.85% backend test coverage (182 spec files) · 133 smart contracts (39,855 LOC) · Complete Russian→English frontend translation · MUI→Shadcn UI migration · 152+ DB models · 63 NestJS modules · 65 frontend pages · Full blockchain architecture · 5 Government Services · Docker + CI/CD
 
 ---
 
@@ -28,18 +28,18 @@ Built for the **Siberian Confederation**, a sovereign digital state with constit
 |--------|-------|----------|
 | **Backend production code** | ~48,900 lines (TypeScript) | `backend/src/` |
 | **Frontend production code** | ~8,500 lines (TypeScript/TSX) | `src/` |
-| **Test code** | ~25,900 lines (TypeScript) | `*.spec.ts` |
+| **Test code** | ~26,000 lines (TypeScript) | `*.spec.ts` |
 | **Smart contracts** | 133 Solidity contracts, 39,855 LOC | `chain/contracts/` |
 | **ALTAN L1 blockchain** | 3,028 lines (Go/Cosmos SDK) | `packages/blockchain-l1/` |
 | **x/corelaw module** | 448 lines (constitutional law) | `packages/blockchain-l1/x/corelaw/` |
-| **Prisma schema** | 5,487 lines (148 models, 98 enums) | `backend/prisma/schema.prisma` |
-| **Backend modules** | 61 NestJS modules | `backend/src/*/` |
-| **Services** | 97 injectable services | `*.service.ts` |
-| **Controllers** | 70 REST controllers | `*.controller.ts` |
-| **Test suites** | 176 unit + 7 E2E = 183 total | `*.spec.ts` + `test/*.e2e-spec.ts` |
-| **Test coverage** | **95.85%** backend line coverage | Jest |
+| **Prisma schema** | 6,364 lines | `backend/prisma/schema.prisma` |
+| **Backend modules** | 63 NestJS modules | `backend/src/*/` |
+| **Services** | 110 injectable services | `*.service.ts` |
+| **Controllers** | 78 REST controllers | `*.controller.ts` |
+| **Test suites** | 182 unit + 7 E2E = 189 total | `*.spec.ts` + `test/*.e2e-spec.ts` |
+| **Test coverage** | **95.85%+** backend line coverage | Jest |
 | **Frontend pages** | 65 routes | `src/app/` |
-| **Total codebase** | **~132,000 lines** of source code | — |
+| **Total codebase** | **~133,000 lines** of source code | — |
 
 ---
 
@@ -143,6 +143,8 @@ graph TB
 | ⚔️ **Disputes** | `disputes/`, `complaints/` | ✅ | Hierarchical dispute resolution, complaints |
 | 📝 **Work Acts** | `work-acts/` | ✅ | Universal work system, quest-based labor |
 | 💬 **Messaging** | `messaging/` | ✅ | Platform messaging system |
+| 🛡️ **Inauguration** | `inauguration/` | ✅ | Career logs, Legal trace, Personal Guard |
+| 📑 **Legal Contracts**| `legal-contract/` | ✅ | Temple templates, Multi-signature contracts |
 
 ### Government Services — ✅ Recently Enabled
 
@@ -226,8 +228,8 @@ inomad-client/  (Monorepo — ~137,000 lines)
 │   ├── components/               # React UI components
 │   └── lib/                      # API wrappers, hooks, utilities
 │
-├── backend/                      # NestJS 10 API server (61 modules)
-│   ├── src/                      # 70 controllers, 97 services
+├── backend/                      # NestJS 10 API server (63 modules)
+│   ├── src/                      # 78 controllers, 110 services
 │   │   ├── auth/                 # Authentication (JWT, guards, MPC)
 │   │   ├── bank/                 # Citizen & institutional banking
 │   │   ├── central-bank/         # ALTAN monetary policy
@@ -236,6 +238,8 @@ inomad-client/  (Monorepo — ~137,000 lines)
 │   │   ├── migration-service/    # Passport office (9 endpoints)
 │   │   ├── zags-service/         # Civil registry (13 endpoints)
 │   │   ├── land-registry-service/ # Cadastral & property (14 endpoints)
+│   │   ├── inauguration/         # Personal Guard & Trace (5 endpoints)
+│   │   ├── legal-contract/       # Temple & Multi-sig (9 endpoints)
 │   │   ├── marketplace/          # E-commerce, job marketplace
 │   │   ├── distribution/         # UBI, pension, sovereign fund
 │   │   ├── guilds/               # Professional associations
@@ -253,8 +257,8 @@ inomad-client/  (Monorepo — ~137,000 lines)
 │   │   ├── work-acts/            # Universal work system
 │   │   ├── messaging/            # Platform messaging
 │   │   └── ... (20 more)         # Education, calendar, temple, etc.
-│   ├── prisma/                   # Schema (5,487 lines, 148 models, 98 enums)
-│   └── test/                     # E2E tests (7 suites) + 176 unit spec files
+│   ├── prisma/                   # Schema (6,364 lines)
+│   └── test/                     # E2E tests (7 suites) + 182 unit spec files
 │
 ├── chain/                        # Smart contracts (Foundry)
 │   ├── contracts/                # 133 Solidity contracts (39,855 LOC)
