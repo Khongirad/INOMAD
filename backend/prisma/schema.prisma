@@ -244,6 +244,9 @@ model User {
   chairmanTermHistory  KhuralChairmanTerm[]  @relation("ChairmanTerms")
   secretaryTermHistory KhuralSecretaryTerm[] @relation("SecretaryTerms")
 
+  // Career Log — positions held in the decimal hierarchy (Personal Guard mechanic)
+  careerHistory CareerLog[] @relation("UserCareer")
+
   // Messaging
   conversationParticipants ConversationParticipant[] @relation("UserConversations")
   messagesSent             Message[]                 @relation("MessageSender")
@@ -6117,3 +6120,102 @@ model KhuralBallot {
   @@index([voterId])
 }
 
+
+// ==============================================================================
+// CAREER LOG & PERSONAL GUARD — Sprint 4
+// Decimal hierarchy career tracking + Leader's Personal Arbad Apparatus
+// ==============================================================================
+
+/// Which level of the hierarchy does a CareerLog record represent?
+enum CareerRole {
+  ARBAD    // Family unit (10 families)
+  ZUN      // 10 Arbads = 100 families
+  MYANGAD  // 10 Zuns   = 1,000 families
+  TUMED    // 10 Myangads = 10,000 families
+}
+
+/// LEADER = elected head; STAFF = the 9 Arbad members who form the Leader's Apparatus
+enum CareerType {
+  LEADER
+  STAFF
+}
+
+/// ACTIVE = serving; COMPLETED = term ended normally or promoted; REVOKED = removed
+enum CareerStatus {
+  ACTIVE
+  COMPLETED
+  REVOKED
+}
+
+/// CareerLog — digital record of every leadership/staff appointment.
+/// The key Personal Guard mechanic: when a Leader moves up, their original 9 Arbad
+/// members follow as STAFF (type=STAFF, leaderId=leaderCareerLogId).
+/// Each record carries a cryptographic contractHash and 2-year expiry.
+model CareerLog {
+  id     String @id @default(uuid())
+
+  // Who holds this position
+  userId String
+  user   User   @relation("UserCareer", fields: [userId], references: [id])
+
+  role   CareerRole
+  type   CareerType
+  status CareerStatus @default(ACTIVE)
+
+  // Personal Guard bond — STAFF records point to their Leader's CareerLog
+  // Safety: service enforces userId != leader.userId (no self-guard)
+  leaderId String?
+  leader   CareerLog?  @relation("LeaderStaff", fields: [leaderId], references: [id])
+  staff    CareerLog[] @relation("LeaderStaff")
+
+  // Which org entity is this position within?
+  arbadId   String? // FamilyArbad.id (uuid) — if role=ARBAD
+  zunId     String? // Zun.id           — if role=ZUN
+  myangadId String? // Myangad.id       — if role=MYANGAD
+  tumedId   String? // Tumed.id         — if role=TUMED
+
+  // Digital Oath Contract
+  contractHash   String   @unique // SHA-256(leaderId|staffIds|lawIds|timestamp)
+  inaugurationAt DateTime @default(now())
+  expiresAt      DateTime // inauguratedAt + 2 years (strict)
+  exitReason     String?  // "Promotion" | "Term Expired" | "Recall"
+
+  // Laws this appointment swears to uphold
+  lawRefs CareerLawRef[]
+
+  @@index([userId])
+  @@index([leaderId])
+  @@index([status])
+  @@index([role, status])
+  @@index([expiresAt])         // fast cron expiry scan
+  @@index([userId, status])    // fast "active career" lookup
+}
+
+/// LawArticle — a Constitution article, Statute section, or Charter clause
+/// that can be attached to a CareerLog oath via CareerLawRef.
+model LawArticle {
+  id       String @id @default(uuid())
+  code     String @unique // "CONST-12-3" | "STAT-ZUN-7" | "CHARTER-MYANGAD-2"
+  title    String
+  body     String @db.Text
+  source   String // "Constitution" | "Zun Statute" | "Myangad Charter" | "Tumed Charter"
+  isActive Boolean @default(true)
+
+  careerRefs CareerLawRef[]
+
+  @@index([source])
+  @@index([isActive])
+}
+
+/// CareerLawRef — many-to-many join between a CareerLog and the LawArticles it swears to.
+/// Cascade delete on CareerLog (if log removed, law links removed too).
+model CareerLawRef {
+  careerLogId  String
+  lawArticleId String
+
+  careerLog CareerLog  @relation(fields: [careerLogId], references: [id], onDelete: Cascade)
+  law       LawArticle @relation(fields: [lawArticleId], references: [id])
+
+  @@id([careerLogId, lawArticleId])
+  @@index([lawArticleId])
+}

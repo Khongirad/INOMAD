@@ -68,6 +68,7 @@ import { PublicSquareModule } from './public-square/public-square.module';
 import { CIKModule } from './cik/cik.module';
 import { GovernanceModule } from './governance/governance.module';
 import { JudicialModule } from './judicial/judicial.module';
+import { InaugurationModule } from './inauguration/inauguration.module';
 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
@@ -145,6 +146,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     CIKModule,          // Центральная Избирательная Комиссия + Khural elections
     GovernanceModule,   // Public governance state snapshot API
     JudicialModule,     // Judicial system: cases, hearings, verdicts
+    InaugurationModule, // Career Log, Personal Guard & Legal-Trace system
   ],
 
   providers: [
