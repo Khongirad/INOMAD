@@ -55,6 +55,7 @@ describe('UnifiedOrgService', () => {
         create: jest.fn(),
         update: jest.fn(),
         findMany: jest.fn(),
+        findUnique: jest.fn(),
         count: jest.fn(),
       },
       tumed: {
@@ -64,6 +65,7 @@ describe('UnifiedOrgService', () => {
       zun: {
         update: jest.fn(),
         findMany: jest.fn(),
+        findUnique: jest.fn(),
         count: jest.fn(),
       },
       republicanKhural: {
@@ -79,7 +81,12 @@ describe('UnifiedOrgService', () => {
       familyArbad: {
         findFirst: jest.fn(),
       },
-      $transaction: jest.fn(),
+      $queryRaw: jest.fn(),
+      $executeRaw: jest.fn().mockResolvedValue(1),
+      $transaction: jest.fn().mockImplementation((cbOrArr: any, _opts?: any) => {
+        if (typeof cbOrArr === 'function') return cbOrArr(prisma);
+        return Promise.all(cbOrArr.map((q: any) => q));
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -365,16 +372,31 @@ describe('UnifiedOrgService', () => {
   });
 
   describe('assignZunToMyangad', () => {
-    it('assigns zun', async () => {
-      prisma.zun.count.mockResolvedValue(5);
+    it('assigns zun via Serializable $transaction', async () => {
+      prisma.$queryRaw.mockResolvedValue([{ id: 'm1' }]); // FOR UPDATE lock
+      prisma.zun.count.mockResolvedValue(5); // 5/10 — not full
+      prisma.zun.findUnique.mockResolvedValue({ id: 'z1', myangadId: null }); // unassigned
       prisma.zun.update.mockResolvedValue({ id: 'z1', myangadId: 'm1' });
 
       const result = await service.assignZunToMyangad('z1', 'm1');
       expect(result.myangadId).toBe('m1');
     });
 
+    it('throws NotFoundException if myangad not found by FOR UPDATE', async () => {
+      prisma.$queryRaw.mockResolvedValue([]); // empty = not found
+      await expect(service.assignZunToMyangad('z1', 'm-bad')).rejects.toThrow(NotFoundException);
+    });
+
     it('throws if myangad full (10 zuns)', async () => {
+      prisma.$queryRaw.mockResolvedValue([{ id: 'm1' }]);
       prisma.zun.count.mockResolvedValue(10);
+      await expect(service.assignZunToMyangad('z1', 'm1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws if zun already assigned', async () => {
+      prisma.$queryRaw.mockResolvedValue([{ id: 'm1' }]);
+      prisma.zun.count.mockResolvedValue(5);
+      prisma.zun.findUnique.mockResolvedValue({ id: 'z1', myangadId: 'm-other' });
       await expect(service.assignZunToMyangad('z1', 'm1')).rejects.toThrow(BadRequestException);
     });
   });
@@ -388,16 +410,31 @@ describe('UnifiedOrgService', () => {
   });
 
   describe('assignMyangadToTumed', () => {
-    it('assigns myangad to tumed', async () => {
-      prisma.myangad.count.mockResolvedValue(5);
+    it('assigns myangad via Serializable $transaction', async () => {
+      prisma.$queryRaw.mockResolvedValue([{ id: 't1' }]); // FOR UPDATE lock
+      prisma.myangad.count.mockResolvedValue(5); // 5/10 — not full
+      prisma.myangad.findUnique.mockResolvedValue({ id: 'm1', tumedId: null }); // unassigned
       prisma.myangad.update.mockResolvedValue({ id: 'm1', tumedId: 't1' });
 
       const result = await service.assignMyangadToTumed('m1', 't1');
       expect(result.tumedId).toBe('t1');
     });
 
+    it('throws NotFoundException if tumed not found by FOR UPDATE', async () => {
+      prisma.$queryRaw.mockResolvedValue([]); // empty = not found
+      await expect(service.assignMyangadToTumed('m1', 't-bad')).rejects.toThrow(NotFoundException);
+    });
+
     it('throws if tumed full (10 myangads)', async () => {
+      prisma.$queryRaw.mockResolvedValue([{ id: 't1' }]);
       prisma.myangad.count.mockResolvedValue(10);
+      await expect(service.assignMyangadToTumed('m1', 't1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws if myangad already assigned', async () => {
+      prisma.$queryRaw.mockResolvedValue([{ id: 't1' }]);
+      prisma.myangad.count.mockResolvedValue(5);
+      prisma.myangad.findUnique.mockResolvedValue({ id: 'm1', tumedId: 't-other' });
       await expect(service.assignMyangadToTumed('m1', 't1')).rejects.toThrow(BadRequestException);
     });
   });
@@ -411,14 +448,14 @@ describe('UnifiedOrgService', () => {
   });
 
   describe('getHierarchyTree', () => {
-    it('returns full hierarchy including standalone entities', async () => {
+    it('returns hierarchy with standalone entities', async () => {
       prisma.confederativeKhural.findFirst.mockResolvedValue({ id: 'conf1', memberRepublics: [] });
       prisma.republicanKhural.findMany.mockResolvedValue([]);
       prisma.tumed.findMany.mockResolvedValue([]);
       prisma.myangad.findMany.mockResolvedValue([]);
       prisma.zun.findMany.mockResolvedValue([{ id: 'z1' }]);
 
-      const result = await service.getHierarchyTree();
+      const result = await service.getHierarchyTree() as any;
       expect(result.confederation).toBeDefined();
       expect(result.standalone.zuns).toHaveLength(1);
     });

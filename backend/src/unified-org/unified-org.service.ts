@@ -12,6 +12,7 @@ import {
   MemberRole,
   RatingCategory,
   PowerBranchType,
+  Prisma,
 } from '@prisma/client';
 import {
   CreateOrganizationDto,
@@ -589,19 +590,26 @@ export class UnifiedOrgService {
   }
 
   /**
-   * Assign a Zun to a Myangad
+   * Assign a Zun to a Myangad — B1 FIX: Serializable $transaction + FOR UPDATE
    */
   async assignZunToMyangad(zunId: string, myangadId: string) {
-    // Check max 10 Zuns per Myangad
-    const count = await this.prisma.zun.count({ where: { myangadId } });
-    if (count >= 10) {
-      throw new BadRequestException('Myangad already has 10 Zuns (maximum reached)');
-    }
+    return this.prisma.$transaction(async (tx) => {
+      // Lock Myangad row to prevent concurrent over-assignment
+      const [row] = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM "Myangad" WHERE id = ${myangadId}::uuid FOR UPDATE`;
+      if (!row) throw new NotFoundException('Myangad not found');
 
-    return this.prisma.zun.update({
-      where: { id: zunId },
-      data: { myangadId },
-    });
+      const count = await tx.zun.count({ where: { myangadId } });
+      if (count >= 10) {
+        throw new BadRequestException(`Myangad is full: ${count}/10 Zuns`);
+      }
+
+      const zun = await tx.zun.findUnique({ where: { id: zunId } });
+      if (!zun) throw new NotFoundException('Zun not found');
+      if (zun.myangadId) throw new BadRequestException('Zun is already assigned to a Myangad');
+
+      return tx.zun.update({ where: { id: zunId }, data: { myangadId } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
   /**
@@ -619,18 +627,26 @@ export class UnifiedOrgService {
   }
 
   /**
-   * Assign a Myangad to a Tumed
+   * Assign a Myangad to a Tumed — B1 FIX: Serializable $transaction + FOR UPDATE
    */
   async assignMyangadToTumed(myangadId: string, tumedId: string) {
-    const count = await this.prisma.myangad.count({ where: { tumedId } });
-    if (count >= 10) {
-      throw new BadRequestException('Tumed already has 10 Myangads (maximum reached)');
-    }
+    return this.prisma.$transaction(async (tx) => {
+      // Lock Tumed row to prevent concurrent over-assignment
+      const [row] = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM "Tumed" WHERE id = ${tumedId}::uuid FOR UPDATE`;
+      if (!row) throw new NotFoundException('Tumed not found');
 
-    return this.prisma.myangad.update({
-      where: { id: myangadId },
-      data: { tumedId },
-    });
+      const count = await tx.myangad.count({ where: { tumedId } });
+      if (count >= 10) {
+        throw new BadRequestException(`Tumed is full: ${count}/10 Myangads`);
+      }
+
+      const myangad = await tx.myangad.findUnique({ where: { id: myangadId } });
+      if (!myangad) throw new NotFoundException('Myangad not found');
+      if (myangad.tumedId) throw new BadRequestException('Myangad is already assigned to a Tumed');
+
+      return tx.myangad.update({ where: { id: myangadId }, data: { tumedId } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
   /**
@@ -648,59 +664,52 @@ export class UnifiedOrgService {
   }
 
   /**
-   * Get full hierarchy view (Confederation → Republic → Tumed → Myangad → Zun)
+   * Get hierarchy tree — lightweight paginated version (no 200MB payloads)
+   * Use query params to drill down: tumedId → myangadId → zunId
    */
-  async getHierarchyTree() {
-    const confederation = await this.prisma.confederativeKhural.findFirst({
-      include: {
-        memberRepublics: {
-          include: {
-            memberTumeds: {
-              include: {
-                memberMyangads: {
-                  include: {
-                    memberZuns: {
-                      select: {
-                        id: true,
-                        name: true,
-                        zunId: true,
-                        elderSeatId: true,
-                        isActive: true,
-                        _count: { select: { memberArbads: true } },
-                      },
-                    },
-                  },
-                },
-              },
-            },
+  async getHierarchyTree(opts: { tumedId?: string; myangadId?: string; take?: number } = {}) {
+    const { take = 10 } = opts;
+
+    if (opts.myangadId) {
+      return this.prisma.myangad.findUnique({
+        where: { id: opts.myangadId },
+        include: {
+          memberZuns: { select: { id: true, name: true, isActive: true, _count: { select: { memberArbads: true } } }, take },
+          tumed: { select: { id: true, name: true } },
+        },
+      });
+    }
+
+    if (opts.tumedId) {
+      return this.prisma.tumed.findUnique({
+        where: { id: opts.tumedId },
+        include: {
+          memberMyangads: {
+            select: { id: true, name: true, region: true, totalMembers: true, totalArbads: true,
+              _count: { select: { memberZuns: true } } },
+            take,
           },
+          republic: { select: { id: true, name: true } },
+        },
+      });
+    }
+
+    // Top level: Confederation → Republics → Tumed summaries only
+    const confederation = await this.prisma.confederativeKhural.findFirst({
+      select: { id: true, name: true, totalMembers: true, totalRepublics: true,
+        memberRepublics: {
+          select: { id: true, name: true, republicKey: true, totalMembers: true, totalTumens: true,
+            memberTumeds: { select: { id: true, name: true, region: true, totalMembers: true }, take } },
         },
       },
     });
 
-    // Also get standalone (unlinked) entities
-    const standaloneRepublics = await this.prisma.republicanKhural.findMany({
-      where: { confederationId: null },
-    });
-    const standaloneTumeds = await this.prisma.tumed.findMany({
-      where: { republicId: null },
-    });
-    const standaloneMyangads = await this.prisma.myangad.findMany({
-      where: { tumedId: null },
-    });
-    const standaloneZuns = await this.prisma.zun.findMany({
-      where: { myangadId: null },
-    });
+    const standaloneRepublics = await this.prisma.republicanKhural.findMany({ where: { confederationId: null }, take });
+    const standaloneTumeds = await this.prisma.tumed.findMany({ where: { republicId: null }, take });
+    const standaloneMyangads = await this.prisma.myangad.findMany({ where: { tumedId: null }, take });
+    const standaloneZuns = await this.prisma.zun.findMany({ where: { myangadId: null }, take });
 
-    return {
-      confederation,
-      standalone: {
-        republics: standaloneRepublics,
-        tumeds: standaloneTumeds,
-        myangads: standaloneMyangads,
-        zuns: standaloneZuns,
-      },
-    };
+    return { confederation, standalone: { republics: standaloneRepublics, tumeds: standaloneTumeds, myangads: standaloneMyangads, zuns: standaloneZuns } };
   }
 
   // ===========================================================================
@@ -722,7 +731,7 @@ export class UnifiedOrgService {
     const limit = filters?.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.OrganizationWhereInput = {};
     if (filters?.type) where.type = filters.type;
     if (filters?.branch) where.branch = filters.branch;
     if (filters?.republic) where.republic = filters.republic;

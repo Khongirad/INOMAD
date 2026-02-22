@@ -1,3 +1,4 @@
+import { TransactionType } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
@@ -77,7 +78,7 @@ export class UBISchedulerService {
             pensionFund.id,
             user.id,
             ECONOMIC_CONSTANTS.UBI_WEEKLY_AMOUNT,
-            'REWARD' as any,
+            TransactionType.REWARD,
             TRANSACTION_REASONS.UBI_WEEKLY,
           );
 
@@ -264,7 +265,7 @@ export class UBISchedulerService {
           pensionFund.id,
           user.id,
           ECONOMIC_CONSTANTS.UBI_WEEKLY_AMOUNT,
-          'REWARD' as any,
+          TransactionType.REWARD,
           TRANSACTION_REASONS.UBI_WEEKLY,
         );
 

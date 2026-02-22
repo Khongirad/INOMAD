@@ -1,3 +1,4 @@
+import { TransactionType } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BankRewardService } from '../bank/bank-reward.service';
@@ -148,7 +149,7 @@ export class CitizenAllocationService {
         pensionFundUser.id, // From Pension Fund
         userId, // To citizen
         LEVEL_1_ALLOCATION,
-        'REWARD' as any, // TransactionType.REWARD - system allocation
+        TransactionType.REWARD, // TransactionType.REWARD - system allocation
         TRANSACTION_REASONS.LEVEL_1_VERIFICATION,
       );
 
@@ -236,7 +237,7 @@ export class CitizenAllocationService {
         pensionFundUser.id,
         userId,
         LEVEL_2_ALLOCATION,
-        'REWARD' as any,
+        TransactionType.REWARD,
         TRANSACTION_REASONS.LEVEL_2_ARBAD,
       );
 
@@ -382,7 +383,7 @@ export class CitizenAllocationService {
         pensionFundUser.id,
         userId,
         LEVEL_3_ALLOCATION,
-        'REWARD' as any,
+        TransactionType.REWARD,
         TRANSACTION_REASONS.LEVEL_3_ZUN,
       );
 
