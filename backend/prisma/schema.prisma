@@ -247,6 +247,11 @@ model User {
   // Career Log — positions held in the decimal hierarchy (Personal Guard mechanic)
   careerHistory CareerLog[] @relation("UserCareer")
 
+  // Legal Ecosystem — Sprint 5
+  legalContractsAsPartyA LegalContract[]      @relation("LegalContractPartyA")
+  legalContractsAsPartyB LegalContract[]      @relation("LegalContractPartyB")
+  contractSignatories    ContractSignatory[]  @relation("ContractSignatories")
+
   // Messaging
   conversationParticipants ConversationParticipant[] @relation("UserConversations")
   messagesSent             Message[]                 @relation("MessageSender")
@@ -6219,3 +6224,141 @@ model CareerLawRef {
   @@id([careerLogId, lawArticleId])
   @@index([lawArticleId])
 }
+
+// ==============================================================================
+// LEGAL ECOSYSTEM & TEMPLE OF HEAVEN — Sprint 5
+// Temple (Executive) vs Ministry of Justice (Judicial) — separation of powers
+// ==============================================================================
+
+/// Status lifecycle: DRAFT → PENDING_SIGNATURES → ACTIVE → COMPLETED → ARCHIVED
+/// REVOKED can happen from any mutable state.
+enum ContractStatus {
+  DRAFT
+  PENDING_SIGNATURES
+  ACTIVE
+  COMPLETED
+  REVOKED
+  ARCHIVED
+}
+
+/// The three legal roles that can sign a contract.
+/// NOTARY  — ranks the contract stamp (Temple's arm)
+/// LAWYER  — independent judicial auditor (Ministry of Justice)
+/// MEDIATOR — commission-based intermediary (max 1% total across all mediators)
+enum SignatoryRole {
+  NOTARY
+  LAWYER
+  MEDIATOR
+}
+
+/// ContractTemplate — the canonical contract blueprints owned by Temple Scholars.
+/// Only Scholars can create/update templates. The `bodyTemplate` field is a
+/// Mustache/Handlebars-style text with placeholders: {{partyA}}, {{bankReq}}, etc.
+/// requiredRank: minimum notary rank needed to stamp any contract of this type.
+model ContractTemplate {
+  id           String  @id @default(uuid())
+  code         String  @unique  // "ZUN-LABOR-v1" | "MYANGAD-SERVICE-v2"
+  title        String
+  bodyTemplate String  @db.Text // Template text with {{placeholders}}
+  source       String  @default("Temple of Heaven")
+  requiredRank Int     @default(1) // min notary rank to accept this contract
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  contracts LegalContract[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+/// LegalContract — the primary contract entity.
+/// Created ONLY via ChanceryService.generateFromTemplate() (Rule 3).
+/// bankRequisites and legalAddress are immutable after creation.
+/// Lawyers may ONLY modify customConditions.
+/// contractHash is set ONLY when all signatories have confirmed (Rule 4).
+model LegalContract {
+  id         String @id @default(uuid())
+  templateId String
+  template   ContractTemplate @relation(fields: [templateId], references: [id])
+
+  title String
+
+  // Parties (immutable — pulled from UserProfile at creation)
+  partyAId String
+  partyA   User   @relation("LegalContractPartyA", fields: [partyAId], references: [id])
+  partyBId String
+  partyB   User   @relation("LegalContractPartyB", fields: [partyBId], references: [id])
+
+  // Immutable financial & address fields (Rule 3 guard)
+  bankRequisites Json   // { partyA: { bank, account, bic }, partyB: {...} }
+  legalAddress   String // primary party's registered legal address
+
+  // Lawyers may only write to this field
+  customConditions String? @db.Text
+
+  // Status & rank
+  status       ContractStatus @default(DRAFT)
+  requiredRank Int            // copied from template.requiredRank at creation
+
+  // Multi-sig final hash — NULL until Rule 4 passes
+  contractHash String? @unique // SHA-256(all signatureHashes + timestamp)
+  activatedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime? // 2-year optional expiry (cron auto-archives)
+
+  signatories ContractSignatory[]
+  snapshot    TempleSnapshot?
+
+  @@index([status])
+  @@index([partyAId])
+  @@index([partyBId])
+  @@index([templateId])
+  @@index([expiresAt])   // cron archive scan
+}
+
+/// ContractSignatory — one row per participant in the multi-sig chain.
+/// MEDIATOR rows: feePercent must be set. SUM(all mediator feePercent) ≤ 1.00% (Rule 1).
+/// NOTARY rows:   notaryRank must be ≥ contract.requiredRank (Rule 2).
+/// signatureHash is set once isConfirmed = true.
+model ContractSignatory {
+  id         String @id @default(uuid())
+  contractId String
+  contract   LegalContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User   @relation("ContractSignatories", fields: [userId], references: [id])
+  role       SignatoryRole
+
+  // NOTARY specific
+  notaryRank Int? // notary's rank level, must be ≥ contract.requiredRank
+
+  // MEDIATOR specific — Rule 1: SUM ≤ 1.0% across all mediators for this contract
+  feePercent Decimal? @db.Decimal(5, 4) // e.g. 0.0033 = 0.33%
+
+  // Cryptographic confirmation
+  signatureHash String?  @unique // SHA-256(userId|contractId|role|timestamp)
+  isConfirmed   Boolean  @default(false)
+  confirmedAt   DateTime?
+
+  @@unique([contractId, userId]) // one slot per user per contract
+  @@index([contractId, role])
+  @@index([contractId, isConfirmed])
+  @@index([userId])
+}
+
+/// TempleSnapshot — immutable cold storage record created when a contract is ARCHIVED.
+/// The snapshotJson contains the full contract state + all signatory hashes frozen forever.
+/// archiveHash = SHA-256(JSON.stringify(snapshotJson)) — verifiable cold proof.
+model TempleSnapshot {
+  id           String  @id @default(uuid())
+  contractId   String  @unique
+  contract     LegalContract @relation(fields: [contractId], references: [id])
+
+  snapshotJson Json    // Full frozen state: contract + signatories + hashes
+  archivedAt   DateTime @default(now())
+  archiveHash  String  @unique // SHA-256(snapshotJson) — immutable proof
+
+  @@index([archivedAt])
+}
+
